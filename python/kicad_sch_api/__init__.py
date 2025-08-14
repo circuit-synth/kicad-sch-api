@@ -42,7 +42,7 @@ Advanced Usage:
         print(f"Found {len(issues)} validation issues")
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __author__ = "Circuit-Synth"
 __email__ = "info@circuit-synth.com"
 
@@ -54,7 +54,7 @@ from .library.cache import SymbolLibraryCache, get_symbol_cache
 from .utils.validation import ValidationError, ValidationIssue
 
 # Version info
-VERSION_INFO = (0, 0, 1)
+VERSION_INFO = (0, 0, 2)
 
 # Public API
 __all__ = [
