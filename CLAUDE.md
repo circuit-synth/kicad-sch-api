@@ -107,26 +107,10 @@ Create test schematics in `tests/reference_kicad_projects/` covering:
 - **pytest**: Testing framework
 - **uv**: Package and environment management
 
-## Context Portal Integration
-
-This repository includes **Context Portal** for enhanced AI-assisted development:
-
-```bash
-# Start Context Portal server
-cd tools/context-portal && uvx context-portal --workspace kicad-sch-api --port 8001
-
-# Query API design decisions
-uvx context-portal query "S-expression parsing strategies"
-```
-
-Context Portal provides **structured project memory** across development sessions, enabling AI assistants to maintain context about API design decisions and schematic manipulation patterns.
-
 ## Related Projects
 
 - **circuit-synth**: Parent project and source of transferred logic
 - **kicad-skip**: Foundation library for S-expression parsing
-- **KiCAD-MCP-Server**: Alternative MCP implementation for comparison
-- **Context Portal**: AI-assisted project memory system
 
 ---
 

@@ -16,7 +16,7 @@ maintainers = [
 ]
 keywords = [
     "kicad", "schematic", "eda", "electronics", "circuit-design", 
-    "ai", "mcp", "automation", "pcb"
+    "ai", "automation", "pcb"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -39,9 +39,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-mcp = [
-    "mcp>=0.1.0",
-]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0", 

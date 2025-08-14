@@ -2,13 +2,11 @@
 
 **Professional KiCAD Schematic Manipulation Library with AI Agent Integration**
 
-A modern, high-performance Python library for programmatic manipulation of KiCAD schematic files (.kicad_sch) with exact format preservation, enhanced component management, and native AI agent support via Model Context Protocol (MCP).
 
 ## 🚀 Key Features
 
 - **📋 Exact Format Preservation**: Output matches KiCAD's native formatting exactly
 - **⚡ High Performance**: Optimized for large schematics with symbol caching
-- **🤖 AI Agent Integration**: Native MCP server for seamless AI agent interaction
 - **🔧 Enhanced API**: Intuitive object-oriented interface with bulk operations
 - **📚 Advanced Library Management**: Multi-source symbol lookup and caching
 - **✅ Professional Validation**: Comprehensive error collection and reporting
@@ -21,7 +19,6 @@ A modern, high-performance Python library for programmatic manipulation of KiCAD
 | **Schematic Support** | ✅ Full | ✅ Full | ❌ PCB Only |
 | **Format Preservation** | ✅ Exact | ❌ Basic | N/A |
 | **Performance** | ✅ Optimized | ⚠️ Basic | N/A |
-| **AI Integration** | ✅ Native MCP | ❌ None | ❌ None |
 | **Library Management** | ✅ Advanced | ⚠️ Basic | N/A |
 | **Runtime Dependencies** | ❌ None | ❌ None | ✅ KiCAD Required |
 
@@ -36,8 +33,6 @@ git clone https://github.com/circuit-synth/kicad-sch-api.git
 cd kicad-sch-api/python
 pip install -e .
 
-# For AI agent integration (MCP server)
-cd ../mcp-server
 npm install
 npm run build
 ```
@@ -94,15 +89,12 @@ stats = sch.get_performance_stats()
 print(f"Cache hit rate: {stats['symbol_cache']['hit_rate_percent']}%")
 ```
 
-### AI Agent Integration (MCP)
 
-Configure in Claude Desktop or compatible MCP client:
 
 ```json
 {
   "kicad-sch": {
     "command": "node",
-    "args": ["/path/to/kicad-sch-api/mcp-server/dist/index.js"],
     "env": {
       "PYTHON_PATH": "python3",
       "KICAD_SCH_API_PATH": "/path/to/kicad-sch-api/python"
@@ -118,7 +110,6 @@ User: "Create a voltage divider circuit with two 10k resistors"
 
 Claude: I'll create a voltage divider circuit for you.
 
-[Agent automatically uses MCP tools to:]
 1. Create new schematic
 2. Add R1 (10k resistor) at (100, 100)
 3. Add R2 (10k resistor) at (100, 150) 
@@ -140,8 +131,6 @@ The library consists of two main components:
 - **Symbol Caching**: High-performance library symbol management
 - **Comprehensive Validation**: Error collection and professional reporting
 
-### MCP Server (AI Integration)
-- **TypeScript MCP Server**: Implements Anthropic's MCP specification
 - **Python Bridge**: Reliable subprocess communication
 - **Comprehensive Tools**: 15+ tools for complete schematic manipulation
 - **Professional Error Handling**: Detailed error context for AI agents
@@ -153,8 +142,6 @@ The library consists of two main components:
 cd python
 python -m pytest tests/ -v --cov=kicad_sch_api
 
-# MCP server tests  
-cd mcp-server
 npm test
 
 # Format preservation tests
