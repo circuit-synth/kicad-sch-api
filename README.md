@@ -44,22 +44,19 @@ npm run build
 ```python
 import kicad_sch_api as ksa
 
-# Load existing schematic
-sch = ksa.load_schematic('my_circuit.kicad_sch')
+# Create new schematic
+sch = ksa.create_schematic('My Circuit')
 
 # Add components
-resistor = sch.components.add('Device:R', ref='R1', value='10k', pos=(100, 100))
-capacitor = sch.components.add('Device:C', ref='C1', value='0.1uF', pos=(150, 100))
+resistor = sch.components.add('Device:R', reference='R1', value='10k', position=(100, 100))
+capacitor = sch.components.add('Device:C', reference='C1', value='0.1uF', position=(150, 100))
 
 # Update properties
 resistor.footprint = 'Resistor_SMD:R_0603_1608Metric'
 resistor.set_property('MPN', 'RC0603FR-0710KL')
 
-# Connect components
-sch.add_wire(resistor.get_pin_position('2'), capacitor.get_pin_position('1'))
-
 # Save with exact format preservation
-sch.save()  # Preserves original formatting exactly
+sch.save('my_circuit.kicad_sch')
 ```
 
 ### Advanced Operations

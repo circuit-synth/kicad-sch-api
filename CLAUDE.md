@@ -55,11 +55,11 @@ npm start
 ```python
 import kicad_sch_api as ksa
 
-# Load schematic
-sch = ksa.load_schematic('circuit.kicad_sch')
+# Create new schematic
+sch = ksa.create_schematic('My Circuit')
 
 # Add components
-resistor = sch.components.add('Device:R', ref='R1', value='10k', pos=(100, 100))
+resistor = sch.components.add('Device:R', reference='R1', value='10k', position=(100, 100))
 
 # Update properties
 resistor.footprint = 'Resistor_SMD:R_0603_1608Metric'
