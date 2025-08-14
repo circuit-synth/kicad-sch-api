@@ -96,7 +96,7 @@ class TestAllReferenceProjects:
         
         return len(differences) == 0, differences
     
-    def test_reference_project(self, project_name: str):
+    def _test_reference_project(self, project_name: str):
         """Generic test pattern for any reference project."""
         print(f"\n--- Testing {project_name} ---")
         
@@ -148,43 +148,43 @@ class TestAllReferenceProjects:
     # Individual test methods for each reference project
     def test_blank_schematic(self):
         """Test blank schematic recreation."""
-        assert self.test_reference_project("blank_schematic"), "Blank schematic test failed"
+        assert self._test_reference_project("blank_schematic"), "Blank schematic test failed"
     
     def test_single_resistor(self):
         """Test single resistor recreation."""
-        assert self.test_reference_project("single_resistor"), "Single resistor test failed"
+        assert self._test_reference_project("single_resistor"), "Single resistor test failed"
     
     def test_two_resistors(self):
         """Test two resistors recreation."""
-        assert self.test_reference_project("two_resistors"), "Two resistors test failed"
+        assert self._test_reference_project("two_resistors"), "Two resistors test failed"
     
     def test_resistor_divider(self):
         """Test resistor divider recreation."""
-        assert self.test_reference_project("resistor_divider"), "Resistor divider test failed"
+        assert self._test_reference_project("resistor_divider"), "Resistor divider test failed"
     
     def test_single_wire(self):
         """Test single wire schematic (component recreation only)."""
-        assert self.test_reference_project("single_wire"), "Single wire test failed"
+        assert self._test_reference_project("single_wire"), "Single wire test failed"
     
     def test_single_label(self):
         """Test single label schematic (component recreation only)."""
-        assert self.test_reference_project("single_label"), "Single label test failed"
+        assert self._test_reference_project("single_label"), "Single label test failed"
     
     def test_single_label_hierarchical(self):
         """Test single hierarchical label schematic (component recreation only)."""
-        assert self.test_reference_project("single_label_hierarchical"), "Single hierarchical label test failed"
+        assert self._test_reference_project("single_label_hierarchical"), "Single hierarchical label test failed"
     
     def test_single_text(self):
         """Test single text schematic (component recreation only)."""
-        assert self.test_reference_project("single_text"), "Single text test failed"
+        assert self._test_reference_project("single_text"), "Single text test failed"
     
     def test_single_text_box(self):
         """Test single text box schematic (component recreation only)."""
-        assert self.test_reference_project("single_text_box"), "Single text box test failed"
+        assert self._test_reference_project("single_text_box"), "Single text box test failed"
     
     def test_single_hierarchical_sheet(self):
         """Test single hierarchical sheet schematic (component recreation only)."""
-        assert self.test_reference_project("single_hierarchical_sheet"), "Single hierarchical sheet test failed"
+        assert self._test_reference_project("single_hierarchical_sheet"), "Single hierarchical sheet test failed"
 
 
 def main():

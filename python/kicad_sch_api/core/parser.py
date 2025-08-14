@@ -321,7 +321,11 @@ class SExpressionParser:
                         elif prop_name == "Footprint":
                             symbol_data["footprint"] = prop_data.get("value")
                         else:
-                            symbol_data["properties"][prop_name] = prop_data.get("value")
+                            # Unescape quotes in property values when loading
+                            prop_value = prop_data.get("value")
+                            if prop_value:
+                                prop_value = str(prop_value).replace('\\"', '"')
+                            symbol_data["properties"][prop_name] = prop_value
                 elif element_type == "in_bom":
                     symbol_data["in_bom"] = sub_item[1] == "yes" if len(sub_item) > 1 else True
                 elif element_type == "on_board":
@@ -395,11 +399,14 @@ class SExpressionParser:
             sexp.append([sexpdata.Symbol("property"), "Reference", symbol_data["reference"]])
         if symbol_data.get("value"):
             sexp.append([sexpdata.Symbol("property"), "Value", symbol_data["value"]])
-        if symbol_data.get("footprint"):
-            sexp.append([sexpdata.Symbol("property"), "Footprint", symbol_data["footprint"]])
+        footprint = symbol_data.get("footprint")
+        if footprint is not None:  # Include empty strings but not None
+            sexp.append([sexpdata.Symbol("property"), "Footprint", footprint])
 
         for prop_name, prop_value in symbol_data.get("properties", {}).items():
-            sexp.append([sexpdata.Symbol("property"), prop_name, prop_value])
+            # Escape quotes in property values for proper S-expression format
+            escaped_value = str(prop_value).replace('"', '\\"')
+            sexp.append([sexpdata.Symbol("property"), prop_name, escaped_value])
 
         # Add BOM and board settings
         sexp.append([sexpdata.Symbol("in_bom"), "yes" if symbol_data.get("in_bom", True) else "no"])

@@ -5,6 +5,9 @@ This test verifies that kicad-sch-api can handle schematics with hierarchical sh
 Note: Full hierarchical sheet recreation may require additional API development.
 """
 
+import sys
+from pathlib import Path
+
 from .base_reference_test import BaseReferenceTest
 
 
