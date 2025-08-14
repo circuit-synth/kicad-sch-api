@@ -12,6 +12,7 @@ import pytest
 
 from kicad_sch_api.core.parser import SExpressionParser
 from kicad_sch_api.core.schematic import Schematic
+from kicad_sch_api.core.types import Point
 from kicad_sch_api.utils.validation import ValidationError
 
 logger = logging.getLogger(__name__)

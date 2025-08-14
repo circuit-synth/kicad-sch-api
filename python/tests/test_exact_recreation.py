@@ -43,7 +43,7 @@ class TestExactRecreation:
     @pytest.fixture
     def reference_dir(self):
         """Path to reference KiCAD projects."""
-        return Path(__file__).parent / "reference_kicad_projects"
+        return Path(__file__).parent / "reference_tests" / "reference_kicad_projects"
     
     def test_exact_blank_schematic(self, reference_dir):
         """Test exact recreation of blank schematic - should be perfect match."""
@@ -327,14 +327,14 @@ class TestAPIUsabilityForRecreation:
         sch = ksa.create_schematic("usability_test")
         
         # Test the documented API from CLAUDE.md
-        resistor = sch.components.add('Device:R', ref='R1', value='10k', pos=(100, 100))
+        resistor = sch.components.add('Device:R', reference='R1', value='10k', position=(100, 100))
         
         # Verify the API works as documented
         assert resistor.reference == 'R1'
         assert resistor.lib_id == 'Device:R'
         assert resistor.value == '10k'
-        assert resistor.position.x == 100
-        assert resistor.position.y == 100
+        assert resistor.position.x == 100.0
+        assert resistor.position.y == 100.0
     
     def test_property_management_api(self):
         """Test that property management API works as documented."""

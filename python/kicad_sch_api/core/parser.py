@@ -200,7 +200,7 @@ class SExpressionParser:
             element_type = str(item[0]) if isinstance(item[0], sexpdata.Symbol) else None
 
             if element_type == "version":
-                schematic_data["version"] = item[1] if len(item) > 1 else None
+                schematic_data["version"] = str(item[1]) if len(item) > 1 else None
             elif element_type == "generator":
                 schematic_data["generator"] = item[1] if len(item) > 1 else None
             elif element_type == "uuid":

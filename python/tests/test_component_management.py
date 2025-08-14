@@ -161,7 +161,7 @@ class TestComponentManagement:
 
         # Test value pattern filtering
         k_values = self.sch.components.filter(value_pattern="k")
-        assert len(k_values) == 4  # R1, R2, R3, L1 (10k, 22k, 1k, 10uH)
+        assert len(k_values) == 3  # R1, R2, R3 (10k, 22k, 1k)
 
         # Test reference pattern filtering
         r_components = self.sch.components.filter(reference_pattern=r"R\d+")
@@ -296,7 +296,7 @@ class TestComponentManagement:
         # Verify statistics
         assert stats["total_components"] == 4
         assert stats["unique_references"] == 4
-        assert stats["libraries_used"] == 2  # Device for R and C
+        assert stats["libraries_used"] == 1  # All use Device library
 
         # Check library breakdown
         lib_breakdown = stats["library_breakdown"]

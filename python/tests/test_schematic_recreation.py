@@ -23,7 +23,7 @@ class TestSchematicRecreation:
     @pytest.fixture
     def reference_dir(self):
         """Path to reference KiCAD projects."""
-        return Path(__file__).parent / "reference_kicad_projects"
+        return Path(__file__).parent / "reference_tests" / "reference_kicad_projects"
     
     def setup_method(self):
         """Set up test environment."""
