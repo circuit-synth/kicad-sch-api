@@ -244,9 +244,9 @@ class SExpressionParser:
         if schematic_data.get("title_block"):
             sexp_data.append(self._title_block_to_sexp(schematic_data["title_block"]))
 
-        # Add lib_symbols
-        if schematic_data.get("lib_symbols"):
-            sexp_data.append(self._lib_symbols_to_sexp(schematic_data["lib_symbols"]))
+        # Add lib_symbols (always include for KiCAD compatibility)
+        lib_symbols = schematic_data.get("lib_symbols", {})
+        sexp_data.append(self._lib_symbols_to_sexp(lib_symbols))
 
         # Add components
         for component in schematic_data.get("components", []):
@@ -263,6 +263,11 @@ class SExpressionParser:
         # Add labels
         for label in schematic_data.get("labels", []):
             sexp_data.append(self._label_to_sexp(label))
+
+        # Add symbol_instances (required by KiCAD)
+        symbol_instances = schematic_data.get("symbol_instances", [])
+        if symbol_instances or schematic_data.get("components"):
+            sexp_data.append([sexpdata.Symbol("symbol_instances")])
 
         return sexp_data
 
@@ -435,8 +440,16 @@ class SExpressionParser:
 
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:
         """Convert lib_symbols to S-expression."""
-        # Implementation for lib_symbols conversion
-        return [sexpdata.Symbol("lib_symbols")]
+        sexp = [sexpdata.Symbol("lib_symbols")]
+        
+        # Add each symbol definition
+        for symbol_name, symbol_def in lib_symbols.items():
+            if isinstance(symbol_def, dict):
+                symbol_sexp = [sexpdata.Symbol("symbol"), symbol_name]
+                # Add symbol definition details (for now, basic structure)
+                sexp.append(symbol_sexp)
+        
+        return sexp
 
     def get_validation_issues(self) -> List[ValidationIssue]:
         """Get list of validation issues from last parse operation."""
