@@ -87,7 +87,7 @@ class SchematicValidator:
         """
         self.strict = strict
         self.issues = []
-        self._valid_reference_pattern = re.compile(r"^[A-Z]+[0-9]*$")
+        self._valid_reference_pattern = re.compile(r"^(#?[A-Z]+[0-9]*)$")
         self._valid_lib_id_pattern = re.compile(r"^[^:]+:[^:]+$")
 
     def validate_schematic_data(self, schematic_data: Dict[str, Any]) -> List[ValidationIssue]:
@@ -133,7 +133,7 @@ class SchematicValidator:
         Validate component reference format.
 
         Args:
-            reference: Reference to validate (e.g., "R1", "U5")
+            reference: Reference to validate (e.g., "R1", "U5", "#PWR01")
 
         Returns:
             True if reference is valid
@@ -231,7 +231,7 @@ class SchematicValidator:
                     message=f"{context}: Invalid reference format: {reference}",
                     level=ValidationLevel.ERROR,
                     context={"reference": reference},
-                    suggestion="Reference should match pattern: [A-Z]+[0-9]*",
+                    suggestion="Reference should match pattern: [A-Z]+[0-9]* or #[A-Z]+[0-9]* (for power symbols)",
                 )
             )
 

@@ -471,9 +471,13 @@ class ComponentCollection:
         matching = self.filter(**criteria)
 
         for component in matching:
-            # Update basic properties
+            # Update basic properties and handle special cases
             for key, value in updates.items():
-                if hasattr(component, key):
+                if key == 'properties' and isinstance(value, dict):
+                    # Handle properties dictionary specially
+                    for prop_name, prop_value in value.items():
+                        component.set_property(prop_name, str(prop_value))
+                elif hasattr(component, key) and key not in ['properties']:
                     setattr(component, key, value)
                 else:
                     # Add as custom property
