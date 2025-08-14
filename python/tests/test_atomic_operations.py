@@ -99,12 +99,16 @@ class TestAtomicOperations:
         """Test validation of reference format."""
         sch = Schematic.create("Test Circuit")
 
-        # Try invalid reference formats
-        invalid_refs = ["1R", "R-1", "r1", "R 1", ""]
+        # Try invalid reference formats  
+        invalid_refs = ["1R", "R-1", "r1", "R 1"]  # Empty string is auto-generated, not invalid
 
         for invalid_ref in invalid_refs:
             with pytest.raises(ValidationError, match="Invalid reference format"):
                 sch.components.add("Device:R", invalid_ref, "10k")
+        
+        # Test that empty string triggers auto-generation (correct behavior)
+        comp = sch.components.add("Device:R", "", "10k")
+        assert comp.reference.startswith("R"), "Empty reference should auto-generate R-prefix"
 
     def test_invalid_lib_id_format(self):
         """Test validation of lib_id format."""

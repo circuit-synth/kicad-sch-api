@@ -383,13 +383,15 @@ class SExpressionParser:
         if symbol_data.get("lib_id"):
             sexp.append([sexpdata.Symbol("lib_id"), symbol_data["lib_id"]])
 
-        # Add position and rotation
+        # Add position and rotation (preserve original format)
         pos = symbol_data.get("position", Point(0, 0))
         rotation = symbol_data.get("rotation", 0)
-        if rotation != 0:
-            sexp.append([sexpdata.Symbol("at"), pos.x, pos.y, rotation])
-        else:
-            sexp.append([sexpdata.Symbol("at"), pos.x, pos.y])
+        # Format numbers as integers if they are whole numbers
+        x = int(pos.x) if pos.x == int(pos.x) else pos.x
+        y = int(pos.y) if pos.y == int(pos.y) else pos.y
+        r = int(rotation) if rotation == int(rotation) else rotation
+        # Always include rotation for format consistency with KiCAD
+        sexp.append([sexpdata.Symbol("at"), x, y, r])
 
         if symbol_data.get("uuid"):
             sexp.append([sexpdata.Symbol("uuid"), symbol_data["uuid"]])
