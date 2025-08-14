@@ -113,4 +113,5 @@ mcp-server/.npm/
 *.temp
 *.temporary
 
+
 *.pypirc

@@ -116,41 +116,48 @@ This repository uses a **Code Memory Bank** system to maintain persistent develo
 The `.memory_bank/` directory contains:
 
 - **activeContext.md**: Current development session state and focus areas
-- **decisionLog.md**: Technical decisions, trade-offs, and architectural choices
+- **decisionLog.md**: Technical decisions, trade-offs, and architectural choices (ADR format)
 - **productContext.md**: Project overview, value proposition, and target users
 - **progress.md**: Completed milestones, current tasks, and next priorities
-- **config.yaml**: Memory bank configuration and development modes
+- **features/**: PRDs for planned features (create directory as needed)
 
-### Development Modes
+### Memory Bank Usage - REQUIRED WORKFLOW
 
-Use these modes to optimize AI assistance for different types of work:
+**⚠️ IMPORTANT**: All development work MUST follow the memory bank workflow to maintain project context and decision history.
 
-1. **Architect Mode**: High-level API design and system architecture decisions
-2. **Code Mode**: Implementation, S-expression parsing, performance optimization  
-3. **Ask Mode**: Documentation, knowledge sharing, API usage guidance
-4. **Debug Mode**: Format compatibility, parsing errors, validation issues
+#### Before Starting Any Work:
+1. **Read existing context**: Review `.memory_bank/` files to understand current state
+2. **Update active context**: Document what you're working on and why
+3. **Check decision log**: Ensure new work aligns with previous architectural decisions
 
-### Memory Bank Commands
+#### For New Features:
+1. **Write PRD**: Create Product Requirements Document in `.memory_bank/features/`
+2. **Update decision log**: Document architectural choices and trade-offs
+3. **Update progress**: Track milestones and implementation status
 
+#### Memory Bank Commands:
 ```bash
-# Update memory bank (use when context changes significantly)
-# Command: "UMB" or "update memory bank"
+# REQUIRED: Update memory bank after any significant work
+/umb
 
-# Query memory bank for relevant context
-# Natural language queries about past decisions, patterns, etc.
+# Query past decisions and context
+# Example: "What decisions were made about S-expression parsing?"
 ```
 
-### Usage Pattern
+#### Memory Bank Structure:
+- **activeContext.md**: Current session state, focus areas, active files
+- **decisionLog.md**: All architectural decisions with rationale (ADR format)
+- **productContext.md**: Project overview, value proposition, target users
+- **progress.md**: Milestones, current tasks, success metrics
+- **features/**: PRDs for planned features (create directory as needed)
 
-The memory bank automatically maintains context about:
-- API design decisions and rationale
-- S-expression parsing and formatting strategies
-- Performance optimization techniques
-- Symbol library management approaches
-- Testing patterns and validation strategies
-- KiCAD compatibility preservation methods
+#### Required Workflow Pattern:
+1. **Before coding**: Read memory bank context, write feature PRD
+2. **During development**: Update active context with current work
+3. **After completing work**: Update decision log and progress
+4. **Use /umb command**: Update memory bank before ending session
 
-This enables AI assistants to maintain rich context about the library's development patterns, architectural decisions, and implementation approaches across development sessions.
+This ensures continuity of development decisions and maintains institutional knowledge across all AI development sessions.
 
 ## Related Projects
 
