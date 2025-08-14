@@ -390,6 +390,14 @@ class Schematic:
     def _sync_components_to_data(self):
         """Sync component collection state back to data structure."""
         self._data["components"] = [comp._data.__dict__ for comp in self._components]
+        
+        # Populate lib_symbols with symbols used by components
+        lib_symbols = {}
+        for comp in self._components:
+            if comp.lib_id and comp.lib_id not in lib_symbols:
+                lib_symbols[comp.lib_id] = {"definition": "basic"}
+        
+        self._data["lib_symbols"] = lib_symbols
 
     @staticmethod
     def _create_empty_schematic_data() -> Dict[str, Any]:

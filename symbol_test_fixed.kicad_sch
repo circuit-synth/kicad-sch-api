@@ -1,0 +1,86 @@
+(kicad_sch
+	(version 20230121)
+	(generator "kicad-sch-api")
+	(uuid "40dbf26b-0626-49da-8443-3a9d1e908017")
+	(title_block
+		(title "Symbol Test"))
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes))
+			(pin_names
+				(offset 0))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27))))
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27))))
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27))
+					(hide yes)))
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27))
+					(hide yes)))
+			(embedded_fonts no))
+		(symbol "Device:C"
+			(pin_numbers
+				(hide yes))
+			(pin_names
+				(offset 0))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27))))
+			(property "Value" "C"
+				(at 0.635 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27))))
+			(property "Footprint" ""
+				(at 0 -1.27 0)
+				(effects
+					(font
+						(size 1.27 1.27))
+					(hide yes)))
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27))
+					(hide yes)))
+			(embedded_fonts no)))
+	(symbol
+		(lib_id "Device:R")
+		(at 100 100 0)
+		(uuid "711c97db-ae37-4420-a79e-6bdbb2d8f329")
+		(property "Reference" "R1")
+		(property "Value" "10k")
+		(in_bom yes)
+		(on_board yes))
+	(symbol
+		(lib_id "Device:C")
+		(at 150 100 0)
+		(uuid "e6e4acf3-18fc-46f9-9c70-62ad14b46c89")
+		(property "Reference" "C1")
+		(property "Value" "0.1uF")
+		(in_bom yes)
+		(on_board yes))
+	(symbol_instances))
