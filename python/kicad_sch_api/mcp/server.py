@@ -67,7 +67,7 @@ class MCPInterface:
         return {
             "success": True,
             "message": "kicad-sch-api MCP interface is ready",
-            "version": "1.0.0",
+            "version": "0.0.1",
         }
 
     def load_schematic(self, params: Dict[str, Any]) -> Dict[str, Any]:

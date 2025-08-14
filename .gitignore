@@ -112,3 +112,5 @@ mcp-server/.npm/
 # Temporary files
 *.temp
 *.temporary
+
+*.pypirc
