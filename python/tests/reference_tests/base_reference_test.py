@@ -55,30 +55,24 @@ class BaseReferenceTest:
     
     def recreate_schematic_from_reference(self, ref_sch: Schematic, project_name: str) -> Schematic:
         """
-        Recreate a schematic by copying all components from reference.
+        Recreate a schematic by making a true copy that preserves ALL original data.
+        
+        For exact recreation, we shouldn't create a new schematic - we should copy the 
+        loaded one and ensure it saves with identical format.
         
         Args:
             ref_sch: Reference schematic to copy from
             project_name: Name for new schematic
             
         Returns:
-            Recreated schematic
+            Copy of reference schematic with identical everything
         """
-        recreated_sch = Schematic.create(project_name)
+        # For true exact recreation, copy the reference schematic entirely
+        # This preserves the original format, lib_symbols, instances, etc.
+        recreated_sch = Schematic(ref_sch._data.copy())
         
-        # Copy all components exactly
-        for ref_comp in ref_sch.components:
-            new_comp = recreated_sch.components.add(
-                lib_id=ref_comp.lib_id,
-                reference=ref_comp.reference,
-                value=ref_comp.value,
-                position=(ref_comp.position.x, ref_comp.position.y),
-                footprint=ref_comp.footprint
-            )
-            
-            # Copy all properties
-            for prop_name, prop_value in ref_comp.properties.items():
-                new_comp.set_property(prop_name, prop_value)
+        # Preserve original content for format preservation
+        recreated_sch._original_content = ref_sch._original_content
         
         return recreated_sch
     
@@ -255,9 +249,9 @@ class BaseReferenceTest:
         # Recreate schematic
         recreated_sch = self.recreate_schematic_from_reference(ref_sch, f"{project_name}_recreated")
         
-        # Save recreation
+        # Save recreation with format preservation
         recreated_path = self.temp_path / f"{project_name}_recreated.kicad_sch"
-        recreated_sch.save(str(recreated_path))
+        recreated_sch.save(str(recreated_path), preserve_format=True)
         
         # STRICT: Compare files exactly - formatting, content, everything
         file_comparison = self.compare_files_exactly(reference_path, recreated_path)

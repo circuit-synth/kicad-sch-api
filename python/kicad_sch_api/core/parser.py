@@ -179,7 +179,9 @@ class SExpressionParser:
         schematic_data = {
             "version": None,
             "generator": None,
+            "generator_version": None,
             "uuid": None,
+            "paper": None,
             "title_block": {},
             "components": [],
             "wires": [],
@@ -203,6 +205,10 @@ class SExpressionParser:
                 schematic_data["version"] = str(item[1]) if len(item) > 1 else None
             elif element_type == "generator":
                 schematic_data["generator"] = item[1] if len(item) > 1 else None
+            elif element_type == "generator_version":
+                schematic_data["generator_version"] = item[1] if len(item) > 1 else None
+            elif element_type == "paper":
+                schematic_data["paper"] = item[1] if len(item) > 1 else None
             elif element_type == "uuid":
                 schematic_data["uuid"] = item[1] if len(item) > 1 else None
             elif element_type == "title_block":
@@ -232,13 +238,17 @@ class SExpressionParser:
         """Convert internal schematic format to S-expression data."""
         sexp_data = [sexpdata.Symbol("kicad_sch")]
 
-        # Add version and generator
+        # Add version and generator info
         if schematic_data.get("version"):
-            sexp_data.append([sexpdata.Symbol("version"), schematic_data["version"]])
+            sexp_data.append([sexpdata.Symbol("version"), int(schematic_data["version"])])
         if schematic_data.get("generator"):
             sexp_data.append([sexpdata.Symbol("generator"), schematic_data["generator"]])
+        if schematic_data.get("generator_version"):
+            sexp_data.append([sexpdata.Symbol("generator_version"), schematic_data["generator_version"]])
         if schematic_data.get("uuid"):
             sexp_data.append([sexpdata.Symbol("uuid"), schematic_data["uuid"]])
+        if schematic_data.get("paper"):
+            sexp_data.append([sexpdata.Symbol("paper"), schematic_data["paper"]])
 
         # Add title block
         if schematic_data.get("title_block"):

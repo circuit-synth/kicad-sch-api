@@ -101,19 +101,30 @@ class Schematic:
         return cls(schematic_data, str(file_path))
 
     @classmethod
-    def create(cls, name: str = "Untitled", version: str = "20230121") -> "Schematic":
+    def create(cls, name: str = "Untitled", version: str = "20250114", 
+               generator: str = "eeschema", generator_version: str = "9.0",
+               paper: str = "A4", uuid: str = None) -> "Schematic":
         """
-        Create a new empty schematic.
+        Create a new empty schematic with configurable parameters.
 
         Args:
             name: Schematic name
-            version: KiCAD version string
+            version: KiCAD version (default: "20250114")
+            generator: Generator name (default: "eeschema") 
+            generator_version: Generator version (default: "9.0")
+            paper: Paper size (default: "A4")
+            uuid: Specific UUID (auto-generated if None)
 
         Returns:
             New empty Schematic object
         """
         schematic_data = cls._create_empty_schematic_data()
         schematic_data["version"] = version
+        schematic_data["generator"] = generator
+        schematic_data["generator_version"] = generator_version
+        schematic_data["paper"] = paper
+        if uuid:
+            schematic_data["uuid"] = uuid
         schematic_data["title_block"] = {"title": name}
 
         logger.info(f"Created new schematic: {name}")
@@ -258,6 +269,42 @@ class Schematic:
         issues.extend(component_issues)
 
         return issues
+    
+    # Focused helper functions for specific KiCAD sections
+    def add_lib_symbols_section(self, lib_symbols: Dict[str, Any]):
+        """Add or update lib_symbols section with specific symbol definitions."""
+        self._data["lib_symbols"] = lib_symbols
+        self._modified = True
+    
+    def add_instances_section(self, instances: Dict[str, Any]):
+        """Add instances section for component placement tracking."""
+        self._data["instances"] = instances
+        self._modified = True
+    
+    def add_sheet_instances_section(self, sheet_instances: List[Dict]):
+        """Add sheet_instances section for hierarchical design."""
+        self._data["sheet_instances"] = sheet_instances  
+        self._modified = True
+    
+    def set_paper_size(self, paper: str):
+        """Set paper size (A4, A3, etc.)."""
+        self._data["paper"] = paper
+        self._modified = True
+    
+    def set_version_info(self, version: str, generator: str = "eeschema", generator_version: str = "9.0"):
+        """Set version and generator information."""
+        self._data["version"] = version
+        self._data["generator"] = generator  
+        self._data["generator_version"] = generator_version
+        self._modified = True
+    
+    def copy_metadata_from(self, source_schematic: "Schematic"):
+        """Copy all metadata from another schematic (version, generator, paper, etc.)."""
+        metadata_fields = ["version", "generator", "generator_version", "paper", "uuid", "title_block"]
+        for field in metadata_fields:
+            if field in source_schematic._data:
+                self._data[field] = source_schematic._data[field]
+        self._modified = True
 
     def get_summary(self) -> Dict[str, Any]:
         """Get summary information about the schematic."""
@@ -403,9 +450,11 @@ class Schematic:
     def _create_empty_schematic_data() -> Dict[str, Any]:
         """Create empty schematic data structure."""
         return {
-            "version": "20230121",
-            "generator": "kicad-sch-api",
+            "version": "20250114",
+            "generator": "eeschema",
+            "generator_version": "9.0",
             "uuid": str(uuid.uuid4()),
+            "paper": "A4",
             "title_block": {
                 "title": "Untitled",
                 "date": "",
