@@ -1,0 +1,52 @@
+project_name: "kicad-sch-api"
+repository_focus: "Professional KiCAD schematic manipulation library"
+
+# Memory bank configuration
+memory_bank:
+  directory: ".memory_bank"
+  auto_update: true
+  categories:
+    - architecture
+    - api_design
+    - performance
+    - testing
+    - compatibility
+    - integration
+
+# Development modes
+modes:
+  architect:
+    focus: "API design and system architecture"
+    custom_instructions: |
+      Focus on high-level API design decisions, object model choices, and architectural patterns for schematic manipulation.
+      
+  code:
+    focus: "Implementation and core development"
+    custom_instructions: |
+      Focus on S-expression parsing, component management, format preservation, and performance optimization for KiCAD schematic files.
+      
+  ask:
+    focus: "Documentation and knowledge sharing"
+    custom_instructions: |
+      Focus on explaining schematic manipulation concepts, API usage patterns, and integration strategies.
+      
+  debug:
+    focus: "Troubleshooting and problem solving"
+    custom_instructions: |
+      Focus on format compatibility issues, parsing errors, symbol library problems, and validation failures.
+
+# Context tracking
+context:
+  key_files:
+    - "python/kicad_sch_api/core/schematic.py"
+    - "python/kicad_sch_api/core/components.py"  
+    - "python/kicad_sch_api/core/parser.py"
+    - "python/kicad_sch_api/core/formatter.py"
+    - "python/kicad_sch_api/library/cache.py"
+  
+  key_concepts:
+    - "S-expression parsing and formatting"
+    - "Enhanced object model vs kicad-skip"
+    - "Symbol library caching and performance"
+    - "Exact format preservation strategies"
+    - "Component management and bulk operations"

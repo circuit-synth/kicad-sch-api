@@ -107,6 +107,51 @@ Create test schematics in `tests/reference_kicad_projects/` covering:
 - **pytest**: Testing framework
 - **uv**: Package and environment management
 
+## Memory Bank System
+
+This repository uses a **Code Memory Bank** system to maintain persistent development context and knowledge across sessions.
+
+### Memory Bank Structure
+
+The `.memory_bank/` directory contains:
+
+- **activeContext.md**: Current development session state and focus areas
+- **decisionLog.md**: Technical decisions, trade-offs, and architectural choices
+- **productContext.md**: Project overview, value proposition, and target users
+- **progress.md**: Completed milestones, current tasks, and next priorities
+- **config.yaml**: Memory bank configuration and development modes
+
+### Development Modes
+
+Use these modes to optimize AI assistance for different types of work:
+
+1. **Architect Mode**: High-level API design and system architecture decisions
+2. **Code Mode**: Implementation, S-expression parsing, performance optimization  
+3. **Ask Mode**: Documentation, knowledge sharing, API usage guidance
+4. **Debug Mode**: Format compatibility, parsing errors, validation issues
+
+### Memory Bank Commands
+
+```bash
+# Update memory bank (use when context changes significantly)
+# Command: "UMB" or "update memory bank"
+
+# Query memory bank for relevant context
+# Natural language queries about past decisions, patterns, etc.
+```
+
+### Usage Pattern
+
+The memory bank automatically maintains context about:
+- API design decisions and rationale
+- S-expression parsing and formatting strategies
+- Performance optimization techniques
+- Symbol library management approaches
+- Testing patterns and validation strategies
+- KiCAD compatibility preservation methods
+
+This enables AI assistants to maintain rich context about the library's development patterns, architectural decisions, and implementation approaches across development sessions.
+
 ## Related Projects
 
 - **circuit-synth**: Parent project and source of transferred logic
@@ -114,4 +159,4 @@ Create test schematics in `tests/reference_kicad_projects/` covering:
 
 ---
 
-*This project significantly enhances kicad-skip with professional features and native AI integration.*
+*This project significantly enhances kicad-skip with professional features and development memory management.*
