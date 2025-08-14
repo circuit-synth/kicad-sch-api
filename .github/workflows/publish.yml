@@ -1,0 +1,96 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v1
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        cd python
+        uv pip install build twine
+
+    - name: Verify tests pass
+      run: |
+        cd python
+        uv pip install -e .[dev]
+        uv run pytest tests/ -v
+
+    - name: Build package
+      run: |
+        cd python
+        python -m build
+
+    - name: Check package
+      run: |
+        cd python
+        twine check dist/*
+
+    - name: Publish to Test PyPI
+      if: github.event.release.prerelease
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      run: |
+        cd python
+        twine upload --repository testpypi dist/*
+
+    - name: Publish to PyPI
+      if: "!github.event.release.prerelease"
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        cd python
+        twine upload dist/*
+
+  publish-mcp-server:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install dependencies
+      run: |
+        cd mcp-server
+        npm ci
+
+    - name: Build MCP server
+      run: |
+        cd mcp-server
+        npm run build
+
+    - name: Test MCP server
+      run: |
+        cd mcp-server
+        npm test
+
+    - name: Publish to npm
+      run: |
+        cd mcp-server
+        npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

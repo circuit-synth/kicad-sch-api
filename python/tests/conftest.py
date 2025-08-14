@@ -9,13 +9,10 @@ from pathlib import Path
 import pytest
 
 # Configure logging for tests
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-)
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 # Reduce noise from some modules during testing
-logging.getLogger('kicad_sch_api.library.cache').setLevel(logging.WARNING)
+logging.getLogger("kicad_sch_api.library.cache").setLevel(logging.WARNING)
 
 
 @pytest.fixture
@@ -28,7 +25,7 @@ def temp_dir():
 @pytest.fixture
 def sample_schematic_content():
     """Sample schematic content for testing."""
-    return '''(kicad_sch (version 20250114) (generator "eeschema")
+    return """(kicad_sch (version 20250114) (generator "eeschema")
     (uuid "test-schematic-uuid-1234")
     (paper "A4")
     (title_block
@@ -100,14 +97,14 @@ def sample_schematic_content():
     (symbol_instances
         (path "/" (reference "R1") (unit 1))
     )
-)'''
+)"""
 
 
 @pytest.fixture
 def sample_schematic_file(temp_dir, sample_schematic_content):
     """Create a sample schematic file for testing."""
     sch_path = temp_dir / "sample.kicad_sch"
-    with open(sch_path, 'w', encoding='utf-8') as f:
+    with open(sch_path, "w", encoding="utf-8") as f:
         f.write(sample_schematic_content)
     return sch_path
 
@@ -115,19 +112,19 @@ def sample_schematic_file(temp_dir, sample_schematic_content):
 @pytest.fixture
 def blank_schematic_content():
     """Minimal blank schematic content."""
-    return '''(kicad_sch (version 20250114) (generator "eeschema")
+    return """(kicad_sch (version 20250114) (generator "eeschema")
     (uuid "blank-schematic-uuid")
     (paper "A4")
     (lib_symbols)
     (symbol_instances)
-)'''
+)"""
 
 
 @pytest.fixture
 def blank_schematic_file(temp_dir, blank_schematic_content):
     """Create a blank schematic file for testing."""
     sch_path = temp_dir / "blank.kicad_sch"
-    with open(sch_path, 'w', encoding='utf-8') as f:
+    with open(sch_path, "w", encoding="utf-8") as f:
         f.write(blank_schematic_content)
     return sch_path
 
@@ -137,42 +134,43 @@ def reset_global_caches():
     """Reset global caches before each test."""
     # Reset symbol cache between tests
     from kicad_sch_api.library.cache import _global_cache
+
     if _global_cache:
         _global_cache.clear_cache()
 
 
 class TestHelpers:
     """Helper methods for tests."""
-    
+
     @staticmethod
     def assert_schematic_valid(sch):
         """Assert that schematic passes basic validation."""
         issues = sch.validate()
-        errors = [issue for issue in issues if issue.level.value in ('error', 'critical')]
+        errors = [issue for issue in issues if issue.level.value in ("error", "critical")]
         if errors:
             error_messages = [str(error) for error in errors]
             pytest.fail(f"Schematic validation failed: {'; '.join(error_messages)}")
-    
+
     @staticmethod
     def assert_file_contains_component(file_path, reference, lib_id=None, value=None):
         """Assert that file contains specified component."""
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             content = f.read()
-        
+
         assert f'"Reference" "{reference}"' in content
-        
+
         if lib_id:
             assert f'(lib_id "{lib_id}")' in content
-        
+
         if value:
             assert f'"Value" "{value}"' in content
-    
+
     @staticmethod
     def assert_file_not_contains_component(file_path, reference):
         """Assert that file does not contain specified component."""
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             content = f.read()
-        
+
         assert f'"Reference" "{reference}"' not in content
 
 

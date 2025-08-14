@@ -1,0 +1,34 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "f6fc565a-8f21-45ef-bd3d-28242ce62f5d")
+	(paper "A4")
+	(lib_symbols)
+	(text_box "Text box goes here"
+		(exclude_from_sim no)
+		(at 116.84 71.12 0)
+		(size 59.69 35.56)
+		(margins 0.9525 0.9525 0.9525 0.9525)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "a69934dd-d568-46b9-a23e-b7430f8dde27")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

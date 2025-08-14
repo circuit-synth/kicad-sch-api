@@ -2,4 +2,4 @@
 
 from .server import MCPInterface
 
-__all__ = ['MCPInterface']
+__all__ = ["MCPInterface"]

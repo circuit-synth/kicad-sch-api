@@ -1,0 +1,24 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "6bf2f65c-0bca-40c3-9358-201b78fa0ce1")
+	(paper "A4")
+	(lib_symbols)
+	(text "Text here"
+		(exclude_from_sim no)
+		(at 127.254 76.454 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "75828646-ddf2-40d1-a577-89c89fb017da")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

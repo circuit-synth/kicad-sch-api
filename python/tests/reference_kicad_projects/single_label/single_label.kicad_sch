@@ -1,0 +1,24 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "53ff471c-9135-47b5-af2d-5e6bd6f09c50")
+	(paper "A4")
+	(lib_symbols)
+	(label "LABEL_1"
+		(at 130.81 73.66 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4eb31e2e-679d-4257-b0f7-2b7d4ed9bc2a")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

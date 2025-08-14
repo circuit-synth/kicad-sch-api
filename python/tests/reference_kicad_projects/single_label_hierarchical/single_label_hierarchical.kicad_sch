@@ -1,0 +1,25 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "9474d8c0-f3da-44e4-941c-9c4d3105bed4")
+	(paper "A4")
+	(lib_symbols)
+	(hierarchical_label "HIERARCHICAL_LABEL_1"
+		(shape input)
+		(at 129.54 91.44 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b686d569-0da9-49df-86d8-41a8572455f6")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

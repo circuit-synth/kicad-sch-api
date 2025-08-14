@@ -1,0 +1,59 @@
+# MANIFEST.in for kicad-sch-api PyPI package
+
+# Include documentation files
+include README.md
+include CHANGELOG.md
+include CONTRIBUTING.md
+include LICENSE
+
+# Include project configuration
+include pyproject.toml
+
+# Include Python package data
+recursive-include python/kicad_sch_api *.py
+recursive-include python/kicad_sch_api *.json
+recursive-include python/kicad_sch_api *.yaml
+recursive-include python/kicad_sch_api *.yml
+
+# Include test data (for validation)
+recursive-include python/tests/reference_kicad_projects *.kicad_sch
+recursive-include python/tests/reference_kicad_projects *.kicad_pro
+recursive-include python/tests/reference_kicad_projects *.md
+
+# Include MCP server as documentation/examples
+recursive-include mcp-server/src *.ts
+include mcp-server/package.json
+include mcp-server/tsconfig.json
+include mcp-server/README.md
+
+# Include Claude development commands
+recursive-include .claude *.md
+
+# Include examples (when created)
+recursive-include examples *.py
+recursive-include examples *.md
+
+# Exclude development files
+exclude .gitignore
+exclude .pre-commit-config.yaml
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude __pycache__
+global-exclude .pytest_cache
+global-exclude htmlcov
+global-exclude .coverage
+global-exclude *.backup
+global-exclude *.log
+
+# Exclude submodules from package
+exclude submodules
+recursive-exclude submodules *
+
+# Exclude development artifacts
+global-exclude *.egg-info
+global-exclude .venv
+global-exclude .uv
+global-exclude node_modules
+global-exclude dist
+global-exclude build
