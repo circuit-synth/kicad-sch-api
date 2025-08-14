@@ -1,0 +1,48 @@
+(kicad_sch
+	(version 20230121)
+	(generator "kicad-sch-api")
+	(uuid "ea7041f3-6f53-4762-bd67-c0943d4b9f14")
+	(title_block
+		(title "test_recreation"))
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes))
+			(pin_names
+				(offset 0))
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27))))
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27))))
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27))
+					(hide yes)))
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27))
+					(hide yes)))
+			(embedded_fonts no)))
+	(symbol
+		(lib_id "Device:R")
+		(at 93.98 81.28 0)
+		(uuid "b97657cf-c8b9-4924-8c45-70b3685bebd1")
+		(property "Reference" "R1")
+		(property "Value" "10k")
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric")
+		(in_bom yes)
+		(on_board yes))
+	(symbol_instances))

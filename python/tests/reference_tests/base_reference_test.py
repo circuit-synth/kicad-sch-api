@@ -128,6 +128,61 @@ class BaseReferenceTest:
         
         return result
     
+    def compare_files_exactly(self, reference_path: Path, recreated_path: Path) -> Dict:
+        """
+        Perform EXACT file comparison including formatting, whitespace, everything.
+        
+        This is the strict validation that catches ALL differences.
+        """
+        import difflib
+        import filecmp
+        
+        result = {
+            'files_identical': False,
+            'byte_identical': False,
+            'line_count_match': False,
+            'diff_lines': [],
+            'formatting_differences': []
+        }
+        
+        # STRICT: Byte-for-byte comparison
+        with open(reference_path, 'rb') as f:
+            ref_bytes = f.read()
+        
+        with open(recreated_path, 'rb') as f:
+            rec_bytes = f.read()
+        
+        result['byte_identical'] = (ref_bytes == rec_bytes)
+        
+        # Text-level comparison for analysis
+        with open(reference_path, 'r') as f:
+            ref_lines = f.readlines()
+        
+        with open(recreated_path, 'r') as f:
+            rec_lines = f.readlines()
+        
+        result['line_count_match'] = (len(ref_lines) == len(rec_lines))
+        result['files_identical'] = filecmp.cmp(reference_path, recreated_path, shallow=False)
+        
+        if not result['files_identical']:
+            # Generate detailed diff
+            diff = list(difflib.unified_diff(
+                ref_lines,
+                rec_lines,
+                fromfile="reference",
+                tofile="recreated",
+                lineterm=''
+            ))
+            result['diff_lines'] = diff
+            
+            # Analyze formatting differences
+            for line in diff:
+                if line.startswith('+ ') or line.startswith('- '):
+                    if '\t' in line or '  ' in line:
+                        result['formatting_differences'].append(line.strip())
+        
+        return result
+    
     def _compare_component_properties(self, ref_comp, rec_comp, tolerance: float) -> List[str]:
         """Compare properties of two components."""
         differences = []
@@ -186,7 +241,13 @@ class BaseReferenceTest:
         return Schematic.load(str(temp_path))
     
     def assert_schematic_recreation_successful(self, project_name: str):
-        """Complete test pattern for successful schematic recreation."""
+        """Complete test pattern for successful schematic recreation with EXACT file matching."""
+        reference_dir = Path(__file__).parent / "reference_kicad_projects"
+        reference_path = reference_dir / project_name / f"{project_name}.kicad_sch"
+        
+        if not reference_path.exists():
+            pytest.skip(f"Reference file not found: {reference_path}")
+        
         # Load reference
         ref_sch = self.load_reference_schematic(project_name)
         assert ref_sch is not None, f"Failed to load reference {project_name}"
@@ -194,18 +255,35 @@ class BaseReferenceTest:
         # Recreate schematic
         recreated_sch = self.recreate_schematic_from_reference(ref_sch, f"{project_name}_recreated")
         
-        # Save and reload to verify persistence
-        saved_recreated = self.save_and_reload_schematic(recreated_sch, f"{project_name}_saved")
+        # Save recreation
+        recreated_path = self.temp_path / f"{project_name}_recreated.kicad_sch"
+        recreated_sch.save(str(recreated_path))
         
-        # Compare schematics
-        comparison = self.compare_schematics(ref_sch, saved_recreated)
+        # STRICT: Compare files exactly - formatting, content, everything
+        file_comparison = self.compare_files_exactly(reference_path, recreated_path)
         
-        # Assert success
-        assert comparison['success'], f"Recreation failed for {project_name}: {comparison['differences']}"
-        assert comparison['component_count_match'], f"Component count mismatch for {project_name}"
+        if not file_comparison['files_identical']:
+            # Detailed failure analysis
+            diff_summary = []
+            if not file_comparison['line_count_match']:
+                diff_summary.append(f"Line count differs")
+            if file_comparison.get('major_differences'):
+                diff_summary.append(f"{len(file_comparison['major_differences'])} major content differences")
+            if file_comparison.get('formatting_differences'):
+                diff_summary.append(f"{len(file_comparison['formatting_differences'])} formatting differences")
+            
+            # Show first few differences for debugging
+            diff_preview = file_comparison['diff_lines'][:10] if file_comparison['diff_lines'] else []
+            
+            pytest.fail(
+                f"EXACT FILE COMPARISON FAILED for {project_name}\\n"
+                f"Issues: {', '.join(diff_summary)}\\n"
+                f"First differences: {diff_preview}\\n"
+                f"Use 'diff {reference_path} {recreated_path}' for full details"
+            )
         
         return {
             'reference': ref_sch,
-            'recreated': saved_recreated,
-            'comparison': comparison
+            'recreated': recreated_sch,
+            'file_comparison': file_comparison
         }
