@@ -5,4 +5,48 @@
 	(uuid "c2e250c4-9b71-42fe-b461-bc470de112b7")
 	(paper "A4")
 	(lib_symbols)
+	(hierarchical_label "NET3"
+		(shape input)
+		(at 152.4 133.35 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "6274812c-fd7d-4dc7-8a38-44520fd2ef19")
+	)
+	(hierarchical_label "NET1"
+		(shape input)
+		(at 139.7 81.28 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "72eb6eb3-a3ab-4fc7-8a57-283991c40052")
+	)
+	(hierarchical_label "NET2"
+		(shape input)
+		(at 82.55 107.95 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "a1a1f09c-c683-422d-ac69-415b9ece94ff")
+	)
+	(hierarchical_label "NET4"
+		(shape input)
+		(at 96.52 166.37 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d0823a7e-1926-4566-b7a9-2d9025fe1b64")
+	)
 )

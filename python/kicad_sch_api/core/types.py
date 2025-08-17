@@ -326,6 +326,14 @@ class Sheet:
     name: str
     filename: str
     pins: List["SheetPin"] = field(default_factory=list)
+    exclude_from_sim: bool = False
+    in_bom: bool = True
+    on_board: bool = True
+    dnp: bool = False
+    fields_autoplaced: bool = True
+    stroke_width: float = 0.1524
+    stroke_type: str = "solid"
+    fill_color: Tuple[float, float, float, float] = (0, 0, 0, 0.0)
 
     def __post_init__(self):
         if not self.uuid:

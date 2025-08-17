@@ -39,10 +39,10 @@ class TestRunner:
             "test_single_wire.py",  # Now implemented!
             "test_power_symbols.py",  # Now implemented!
             "test_single_label.py",  # Now implemented!
+            "test_single_hierarchical_sheet.py",  # Now implemented!
             # These require APIs not yet implemented:
             # "test_single_text.py",
             # "test_single_text_box.py",
-            # "test_single_hierarchical_sheet.py",
             # "test_multi_component.py",
         ]
     
@@ -402,6 +402,36 @@ class TestRunner:
         assert "justify left bottom" in content, "Expected label justification not found"
         
         print(f"✅ test_single_label.py: Generated valid schematic with local label")
+        
+        # Clean up
+        if generated_path.exists():
+            generated_path.unlink()
+
+    def test_single_hierarchical_sheet(self):
+        """Test hierarchical sheet generation."""
+        success, output, generated_path = self._run_test_script("test_single_hierarchical_sheet.py")
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Validate schematic structure
+        is_valid, msg = self._validate_schematic(generated_path)
+        assert is_valid, f"Invalid schematic: {msg}"
+        
+        # Check component count (should be 0 for sheet only)
+        component_count = self._count_components(generated_path)
+        assert component_count == 0, f"Expected 0 components, found {component_count}"
+        
+        # Check for sheet in content
+        with open(generated_path, 'r') as f:
+            content = f.read()
+        assert "sheet" in content, "Hierarchical sheet not found in output"
+        assert "subcircuit1" in content, "Sheet name not found"
+        assert "subcircuit1.kicad_sch" in content, "Sheet filename not found"
+        assert "at 137.16 69.85" in content, "Expected sheet position not found"
+        assert "size 26.67 34.29" in content, "Expected sheet size not found"
+        
+        print(f"✅ test_single_hierarchical_sheet.py: Generated valid schematic with hierarchical sheet")
         
         # Clean up
         if generated_path.exists():

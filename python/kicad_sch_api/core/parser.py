@@ -287,6 +287,10 @@ class SExpressionParser:
         for hlabel in schematic_data.get("hierarchical_labels", []):
             sexp_data.append(self._hierarchical_label_to_sexp(hlabel))
 
+        # Add hierarchical sheets
+        for sheet in schematic_data.get("sheets", []):
+            sexp_data.append(self._sheet_to_sexp(sheet, schematic_data.get("uuid")))
+
         # Add sheet_instances (required by KiCAD)
         sheet_instances = schematic_data.get("sheet_instances", [])
         if sheet_instances:
@@ -709,6 +713,118 @@ class SExpressionParser:
             sexp.append([sexpdata.Symbol("uuid"), hlabel_data["uuid"]])
         
         return sexp
+
+    def _sheet_to_sexp(self, sheet_data: Dict[str, Any], schematic_uuid: str) -> List[Any]:
+        """Convert hierarchical sheet to S-expression."""
+        sexp = [sexpdata.Symbol("sheet")]
+        
+        # Add position
+        pos = sheet_data["position"]
+        x, y = pos["x"], pos["y"]
+        if isinstance(x, float) and x.is_integer():
+            x = int(x)
+        if isinstance(y, float) and y.is_integer():
+            y = int(y)
+        sexp.append([sexpdata.Symbol("at"), x, y])
+        
+        # Add size
+        size = sheet_data["size"]
+        w, h = size["width"], size["height"]
+        sexp.append([sexpdata.Symbol("size"), w, h])
+        
+        # Add basic properties
+        sexp.append([sexpdata.Symbol("exclude_from_sim"), 
+                    sexpdata.Symbol("yes" if sheet_data.get("exclude_from_sim", False) else "no")])
+        sexp.append([sexpdata.Symbol("in_bom"), 
+                    sexpdata.Symbol("yes" if sheet_data.get("in_bom", True) else "no")])
+        sexp.append([sexpdata.Symbol("on_board"), 
+                    sexpdata.Symbol("yes" if sheet_data.get("on_board", True) else "no")])
+        sexp.append([sexpdata.Symbol("dnp"), 
+                    sexpdata.Symbol("yes" if sheet_data.get("dnp", False) else "no")])
+        sexp.append([sexpdata.Symbol("fields_autoplaced"), 
+                    sexpdata.Symbol("yes" if sheet_data.get("fields_autoplaced", True) else "no")])
+        
+        # Add stroke
+        stroke_width = sheet_data.get("stroke_width", 0.1524)
+        stroke_type = sheet_data.get("stroke_type", "solid")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+        
+        # Add fill
+        fill_color = sheet_data.get("fill_color", (0, 0, 0, 0.0))
+        fill_sexp = [sexpdata.Symbol("fill")]
+        fill_sexp.append([sexpdata.Symbol("color"), fill_color[0], fill_color[1], fill_color[2], fill_color[3]])
+        sexp.append(fill_sexp)
+        
+        # Add UUID
+        if "uuid" in sheet_data:
+            sexp.append([sexpdata.Symbol("uuid"), sheet_data["uuid"]])
+        
+        # Add sheet properties (name and filename)
+        name = sheet_data.get("name", "Sheet")
+        filename = sheet_data.get("filename", "sheet.kicad_sch")
+        
+        # Sheetname property
+        name_prop = [sexpdata.Symbol("property"), "Sheetname", name]
+        name_prop.append([sexpdata.Symbol("at"), x, y - 0.7116, 0])  # Above sheet
+        name_prop.append([sexpdata.Symbol("effects"),
+                         [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                         [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")]])
+        sexp.append(name_prop)
+        
+        # Sheetfile property  
+        file_prop = [sexpdata.Symbol("property"), "Sheetfile", filename]
+        file_prop.append([sexpdata.Symbol("at"), x, y + h + 0.5754, 0])  # Below sheet
+        file_prop.append([sexpdata.Symbol("effects"),
+                         [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                         [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("top")]])
+        sexp.append(file_prop)
+        
+        # Add sheet pins if any
+        for pin in sheet_data.get("pins", []):
+            pin_sexp = self._sheet_pin_to_sexp(pin)
+            sexp.append(pin_sexp)
+        
+        # Add instances
+        if schematic_uuid:
+            instances_sexp = [sexpdata.Symbol("instances")]
+            project_name = sheet_data.get("project_name", "")
+            page_number = sheet_data.get("page_number", "2")
+            project_sexp = [sexpdata.Symbol("project"), project_name]
+            path_sexp = [sexpdata.Symbol("path"), f"/{schematic_uuid}"]
+            path_sexp.append([sexpdata.Symbol("page"), page_number])
+            project_sexp.append(path_sexp)
+            instances_sexp.append(project_sexp)
+            sexp.append(instances_sexp)
+        
+        return sexp
+
+    def _sheet_pin_to_sexp(self, pin_data: Dict[str, Any]) -> List[Any]:
+        """Convert sheet pin to S-expression."""
+        pin_sexp = [sexpdata.Symbol("pin"), pin_data["name"], sexpdata.Symbol(pin_data.get("pin_type", "input"))]
+        
+        # Add position
+        pos = pin_data["position"]
+        x, y = pos["x"], pos["y"]
+        rotation = pin_data.get("rotation", 0)
+        pin_sexp.append([sexpdata.Symbol("at"), x, y, rotation])
+        
+        # Add UUID
+        if "uuid" in pin_data:
+            pin_sexp.append([sexpdata.Symbol("uuid"), pin_data["uuid"]])
+        
+        # Add effects
+        size = pin_data.get("size", 1.27)
+        effects = [sexpdata.Symbol("effects")]
+        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
+        effects.append(font)
+        justify = pin_data.get("justify", "right")
+        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify)])
+        pin_sexp.append(effects)
+        
+        return pin_sexp
 
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:
         """Convert lib_symbols to S-expression."""

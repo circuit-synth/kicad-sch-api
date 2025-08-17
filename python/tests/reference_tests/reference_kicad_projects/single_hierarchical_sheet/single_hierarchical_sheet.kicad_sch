@@ -39,6 +39,46 @@
 				(justify left top)
 			)
 		)
+		(pin "NET1" input
+			(at 163.83 77.47 0)
+			(uuid "adb66f51-2859-4ace-9abe-5e0b55f948be")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "NET2" input
+			(at 152.4 104.14 270)
+			(uuid "0c836392-4429-40d9-91c2-d87405912244")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NET3" input
+			(at 137.16 88.9 180)
+			(uuid "c166d84a-1fa1-4e90-92b4-f8b6a553b2ad")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NET4" input
+			(at 149.86 69.85 90)
+			(uuid "fe1dfbfa-ad4a-4fc0-96a5-37056490ac1e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
 		(instances
 			(project "single_hierarchical_sheet"
 				(path "/bfabd21f-2733-4953-b034-506cb9fdf9ab"

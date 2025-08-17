@@ -16,7 +16,7 @@ from ..utils.validation import SchematicValidator, ValidationError, ValidationIs
 from .components import ComponentCollection
 from .formatter import ExactFormatter
 from .parser import SExpressionParser
-from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape, WireType
+from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape, WireType, Sheet
 from .wires import WireCollection
 from .junctions import JunctionCollection
 
@@ -553,6 +553,83 @@ class Schematic:
                 logger.debug(f"Removed local label: {label_uuid}")
                 return True
         return False
+
+    def add_sheet(
+        self,
+        name: str,
+        filename: str,
+        position: Union[Point, Tuple[float, float]], 
+        size: Union[Point, Tuple[float, float]],
+        stroke_width: float = 0.1524,
+        stroke_type: str = "solid",
+        exclude_from_sim: bool = False,
+        in_bom: bool = True,
+        on_board: bool = True,
+        project_name: str = "",
+        page_number: str = "2"
+    ) -> str:
+        """
+        Add a hierarchical sheet.
+
+        Args:
+            name: Sheet name (displayed above sheet)
+            filename: Sheet filename (.kicad_sch file)
+            position: Sheet position (top-left corner)
+            size: Sheet size (width, height)
+            stroke_width: Border line width
+            stroke_type: Border line type
+            exclude_from_sim: Exclude from simulation
+            in_bom: Include in BOM
+            on_board: Include on board
+            project_name: Project name for instances
+            page_number: Page number for instances
+
+        Returns:
+            UUID of created sheet
+        """
+        if isinstance(position, tuple):
+            position = Point(position[0], position[1])
+        if isinstance(size, tuple):
+            size = Point(size[0], size[1])
+
+        sheet = Sheet(
+            uuid=str(uuid.uuid4()),
+            position=position,
+            size=size,
+            name=name,
+            filename=filename,
+            exclude_from_sim=exclude_from_sim,
+            in_bom=in_bom,
+            on_board=on_board,
+            stroke_width=stroke_width,
+            stroke_type=stroke_type
+        )
+
+        if "sheets" not in self._data:
+            self._data["sheets"] = []
+
+        self._data["sheets"].append({
+            "uuid": sheet.uuid,
+            "position": {"x": sheet.position.x, "y": sheet.position.y},
+            "size": {"width": sheet.size.x, "height": sheet.size.y},
+            "name": sheet.name,
+            "filename": sheet.filename,
+            "exclude_from_sim": sheet.exclude_from_sim,
+            "in_bom": sheet.in_bom,
+            "on_board": sheet.on_board,
+            "dnp": sheet.dnp,
+            "fields_autoplaced": sheet.fields_autoplaced,
+            "stroke_width": sheet.stroke_width,
+            "stroke_type": sheet.stroke_type,
+            "fill_color": sheet.fill_color,
+            "pins": [],  # Sheet pins added separately
+            "project_name": project_name,
+            "page_number": page_number
+        })
+        self._modified = True
+
+        logger.debug(f"Added hierarchical sheet: {name} ({filename}) at {position}")
+        return sheet.uuid
 
     # Library management
     @property
