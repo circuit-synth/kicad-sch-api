@@ -67,7 +67,13 @@ def main():
         end=(91.44, 81.28)
     )
     
-    # TODO: Add junction at (91.44, 81.28) when junction API is implemented
+    # Add junction at the wire intersection point
+    sch.junctions.add(
+        position=(91.44, 81.28),
+        diameter=0,
+        color=(0, 0, 0, 0)
+    )
+    
     # TODO: Add VOUT label at (100.33, 81.28) when local label API is implemented
     
     sch.save("test_resistor_divider.kicad_sch")

@@ -280,13 +280,15 @@ class TestRunner:
         component_count = self._count_components(generated_path)
         assert component_count == 4, f"Expected 4 components, found {component_count}"
         
-        # Check for wires in content
+        # Check for wires and junction in content
         with open(generated_path, 'r') as f:
             content = f.read()
         assert "wire" in content, "Wires not found in output"
+        assert "junction" in content, "Junction not found in output"
+        assert "at 91.44 81.28" in content, "Expected junction position not found"
         assert "xy 100.33 81.28" in content, "Expected wire coordinate not found"
         
-        print(f"✅ test_resistor_divider.py: Generated valid schematic with 4 components and wires")
+        print(f"✅ test_resistor_divider.py: Generated valid schematic with 4 components, wires, and junction")
         
         # Clean up
         if generated_path.exists():

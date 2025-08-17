@@ -614,8 +614,42 @@ class SExpressionParser:
 
     def _junction_to_sexp(self, junction_data: Dict[str, Any]) -> List[Any]:
         """Convert junction to S-expression."""
-        # Implementation for junction conversion
-        return [sexpdata.Symbol("junction")]
+        sexp = [sexpdata.Symbol("junction")]
+        
+        # Add position
+        pos = junction_data["position"]
+        if isinstance(pos, dict):
+            x, y = pos["x"], pos["y"]
+        elif isinstance(pos, (list, tuple)) and len(pos) >= 2:
+            x, y = pos[0], pos[1]
+        else:
+            # Assume it's a Point object
+            x, y = pos.x, pos.y
+        
+        # Format coordinates properly
+        if isinstance(x, float) and x.is_integer():
+            x = int(x)
+        if isinstance(y, float) and y.is_integer():
+            y = int(y)
+        
+        sexp.append([sexpdata.Symbol("at"), x, y])
+        
+        # Add diameter
+        diameter = junction_data.get("diameter", 0)
+        sexp.append([sexpdata.Symbol("diameter"), diameter])
+        
+        # Add color (RGBA)
+        color = junction_data.get("color", (0, 0, 0, 0))
+        if isinstance(color, (list, tuple)) and len(color) >= 4:
+            sexp.append([sexpdata.Symbol("color"), color[0], color[1], color[2], color[3]])
+        else:
+            sexp.append([sexpdata.Symbol("color"), 0, 0, 0, 0])
+        
+        # Add UUID
+        if "uuid" in junction_data:
+            sexp.append([sexpdata.Symbol("uuid"), junction_data["uuid"]])
+        
+        return sexp
 
     def _label_to_sexp(self, label_data: Dict[str, Any]) -> List[Any]:
         """Convert label to S-expression."""

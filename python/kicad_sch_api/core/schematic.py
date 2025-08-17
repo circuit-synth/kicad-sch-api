@@ -18,6 +18,7 @@ from .formatter import ExactFormatter
 from .parser import SExpressionParser
 from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape, WireType
 from .wires import WireCollection
+from .junctions import JunctionCollection
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +89,29 @@ class Schematic:
                 wires.append(wire)
         self._wires = WireCollection(wires)
 
+        # Initialize junction collection
+        junction_data = self._data.get("junctions", [])
+        junctions = []
+        for junction_dict in junction_data:
+            if isinstance(junction_dict, dict):
+                # Convert dict to Junction object
+                position = junction_dict.get("position", {"x": 0, "y": 0})
+                if isinstance(position, dict):
+                    pos = Point(position["x"], position["y"])
+                elif isinstance(position, (list, tuple)):
+                    pos = Point(position[0], position[1])
+                else:
+                    pos = position
+                
+                junction = Junction(
+                    uuid=junction_dict.get("uuid", str(uuid.uuid4())),
+                    position=pos,
+                    diameter=junction_dict.get("diameter", 0),
+                    color=junction_dict.get("color", (0, 0, 0, 0))
+                )
+                junctions.append(junction)
+        self._junctions = JunctionCollection(junctions)
+
         # Track modifications for save optimization
         self._modified = False
         self._last_save_time = None
@@ -96,7 +120,7 @@ class Schematic:
         self._operation_count = 0
         self._total_operation_time = 0.0
 
-        logger.debug(f"Schematic initialized with {len(self._components)} components and {len(self._wires)} wires")
+        logger.debug(f"Schematic initialized with {len(self._components)} components, {len(self._wires)} wires, and {len(self._junctions)} junctions")
 
     @classmethod
     def load(cls, file_path: Union[str, Path]) -> "Schematic":
@@ -168,6 +192,11 @@ class Schematic:
         return self._wires
 
     @property
+    def junctions(self) -> JunctionCollection:
+        """Collection of all junctions in the schematic."""
+        return self._junctions
+
+    @property
     def version(self) -> Optional[str]:
         """KiCAD version string."""
         return self._data.get("version")
@@ -226,9 +255,10 @@ class Schematic:
         if errors:
             raise ValidationError("Cannot save schematic with validation errors", errors)
 
-        # Update data structure with current component and wire state
+        # Update data structure with current component, wire, and junction state
         self._sync_components_to_data()
         self._sync_wires_to_data()
+        self._sync_junctions_to_data()
 
         # Write file
         if preserve_format and self._original_content:
@@ -562,6 +592,20 @@ class Schematic:
             wire_data.append(wire_dict)
         
         self._data["wires"] = wire_data
+
+    def _sync_junctions_to_data(self):
+        """Sync junction collection state back to data structure."""
+        junction_data = []
+        for junction in self._junctions:
+            junction_dict = {
+                "uuid": junction.uuid,
+                "position": {"x": junction.position.x, "y": junction.position.y},
+                "diameter": junction.diameter,
+                "color": junction.color
+            }
+            junction_data.append(junction_dict)
+        
+        self._data["junctions"] = junction_data
 
     def _convert_symbol_to_kicad_format(self, symbol: "SymbolDefinition", lib_id: str) -> Dict[str, Any]:
         """Convert SymbolDefinition to KiCAD lib_symbols format using raw parsed data."""

@@ -241,7 +241,8 @@ class Junction:
 
     uuid: str
     position: Point
-    diameter: float = 1.27  # Standard junction diameter
+    diameter: float = 0  # KiCAD default diameter
+    color: Tuple[int, int, int, int] = (0, 0, 0, 0)  # RGBA color
 
     def __post_init__(self):
         if not self.uuid:
