@@ -275,11 +275,17 @@ class TestRunner:
         is_valid, msg = self._validate_schematic(generated_path)
         assert is_valid, f"Invalid schematic: {msg}"
         
-        # Check component count
+        # Check component count (2 resistors + 2 power symbols)
         component_count = self._count_components(generated_path)
-        assert component_count == 2, f"Expected 2 components, found {component_count}"
+        assert component_count == 4, f"Expected 4 components, found {component_count}"
         
-        print(f"✅ test_resistor_divider.py: Generated valid schematic with 2 components")
+        # Check for wires in content
+        with open(generated_path, 'r') as f:
+            content = f.read()
+        assert "wire" in content, "Wires not found in output"
+        assert "xy 100.33 81.28" in content, "Expected wire coordinate not found"
+        
+        print(f"✅ test_resistor_divider.py: Generated valid schematic with 4 components and wires")
         
         # Clean up
         if generated_path.exists():
