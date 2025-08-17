@@ -16,7 +16,7 @@ from ..utils.validation import SchematicValidator, ValidationError, ValidationIs
 from .components import ComponentCollection
 from .formatter import ExactFormatter
 from .parser import SExpressionParser
-from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire
+from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape
 
 logger = logging.getLogger(__name__)
 
@@ -370,6 +370,68 @@ class Schematic:
                 del wires[i]
                 self._modified = True
                 logger.debug(f"Removed wire: {wire_uuid}")
+                return True
+        return False
+
+    # Label management
+    def add_hierarchical_label(
+        self, 
+        text: str, 
+        position: Union[Point, Tuple[float, float]], 
+        shape: HierarchicalLabelShape = HierarchicalLabelShape.INPUT,
+        rotation: float = 0.0,
+        size: float = 1.27
+    ) -> str:
+        """
+        Add a hierarchical label.
+
+        Args:
+            text: Label text
+            position: Label position
+            shape: Label shape/direction
+            rotation: Text rotation in degrees
+            size: Font size
+
+        Returns:
+            UUID of created hierarchical label
+        """
+        if isinstance(position, tuple):
+            position = Point(position[0], position[1])
+
+        label = Label(
+            uuid=str(uuid.uuid4()),
+            position=position,
+            text=text,
+            label_type=LabelType.HIERARCHICAL,
+            rotation=rotation,
+            size=size,
+            shape=shape
+        )
+
+        if "hierarchical_labels" not in self._data:
+            self._data["hierarchical_labels"] = []
+
+        self._data["hierarchical_labels"].append({
+            "uuid": label.uuid,
+            "position": {"x": label.position.x, "y": label.position.y},
+            "text": label.text,
+            "shape": label.shape.value,
+            "rotation": label.rotation,
+            "size": label.size
+        })
+        self._modified = True
+
+        logger.debug(f"Added hierarchical label: {text} at {position}")
+        return label.uuid
+
+    def remove_hierarchical_label(self, label_uuid: str) -> bool:
+        """Remove hierarchical label by UUID."""
+        labels = self._data.get("hierarchical_labels", [])
+        for i, label in enumerate(labels):
+            if label.get("uuid") == label_uuid:
+                del labels[i]
+                self._modified = True
+                logger.debug(f"Removed hierarchical label: {label_uuid}")
                 return True
         return False
 

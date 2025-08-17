@@ -35,10 +35,10 @@ class TestRunner:
             "test_two_resistors.py", 
             "test_blank_schematic.py",
             "test_resistor_divider.py",
+            "test_single_label_hierarchical.py",  # Now implemented!
             # These require APIs not yet implemented:
             # "test_single_wire.py",
             # "test_single_label.py",
-            # "test_single_label_hierarchical.py",
             # "test_single_text.py",
             # "test_single_text_box.py",
             # "test_single_hierarchical_sheet.py",
@@ -280,6 +280,33 @@ class TestRunner:
         assert component_count == 2, f"Expected 2 components, found {component_count}"
         
         print(f"✅ test_resistor_divider.py: Generated valid schematic with 2 components")
+        
+        # Clean up
+        if generated_path.exists():
+            generated_path.unlink()
+
+    def test_single_label_hierarchical(self):
+        """Test hierarchical label generation."""
+        success, output, generated_path = self._run_test_script("test_single_label_hierarchical.py")
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Validate schematic structure
+        is_valid, msg = self._validate_schematic(generated_path)
+        assert is_valid, f"Invalid schematic: {msg}"
+        
+        # Check component count (should be 0 for hierarchical label only)
+        component_count = self._count_components(generated_path)
+        assert component_count == 0, f"Expected 0 components, found {component_count}"
+        
+        # Check for hierarchical label in content
+        with open(generated_path, 'r') as f:
+            content = f.read()
+        assert "hierarchical_label" in content, "Hierarchical label not found in output"
+        assert "HIERARCHICAL_LABEL_1" in content, "Expected label text not found"
+        
+        print(f"✅ test_single_label_hierarchical.py: Generated valid schematic with hierarchical label")
         
         # Clean up
         if generated_path.exists():

@@ -213,7 +213,7 @@ class ExactFormatter:
             return self._format_property(lst, indent_level)
         elif tag == "pin":
             return self._format_pin(lst, indent_level)
-        elif tag in ("symbol", "wire", "junction", "label"):
+        elif tag in ("symbol", "wire", "junction", "label", "hierarchical_label"):
             return self._format_component_like(lst, indent_level, rule)
         else:
             return self._format_generic_multiline(lst, indent_level, rule)

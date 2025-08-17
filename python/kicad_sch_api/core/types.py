@@ -226,6 +226,17 @@ class LabelType(Enum):
     HIERARCHICAL = "hierarchical_label"
 
 
+class HierarchicalLabelShape(Enum):
+    """Hierarchical label shapes/directions."""
+    
+    INPUT = "input"
+    OUTPUT = "output"
+    BIDIRECTIONAL = "bidirectional"
+    TRISTATE = "tri_state"
+    PASSIVE = "passive"
+    UNSPECIFIED = "unspecified"
+
+
 @dataclass
 class Label:
     """Text label in schematic."""
@@ -236,6 +247,7 @@ class Label:
     label_type: LabelType = LabelType.LOCAL
     rotation: float = 0.0
     size: float = 1.27
+    shape: Optional[HierarchicalLabelShape] = None  # Only for hierarchical labels
 
     def __post_init__(self):
         if not self.uuid:
@@ -244,6 +256,11 @@ class Label:
         self.label_type = (
             LabelType(self.label_type) if isinstance(self.label_type, str) else self.label_type
         )
+        
+        if self.shape:
+            self.shape = (
+                HierarchicalLabelShape(self.shape) if isinstance(self.shape, str) else self.shape
+            )
 
 
 @dataclass

@@ -283,6 +283,10 @@ class SExpressionParser:
         for label in schematic_data.get("labels", []):
             sexp_data.append(self._label_to_sexp(label))
 
+        # Add hierarchical labels
+        for hlabel in schematic_data.get("hierarchical_labels", []):
+            sexp_data.append(self._hierarchical_label_to_sexp(hlabel))
+
         # Add sheet_instances (required by KiCAD)
         sheet_instances = schematic_data.get("sheet_instances", [])
         if sheet_instances:
@@ -536,6 +540,34 @@ class SExpressionParser:
         """Convert label to S-expression."""
         # Implementation for label conversion
         return [sexpdata.Symbol("label")]
+
+    def _hierarchical_label_to_sexp(self, hlabel_data: Dict[str, Any]) -> List[Any]:
+        """Convert hierarchical label to S-expression."""
+        sexp = [sexpdata.Symbol("hierarchical_label"), hlabel_data["text"]]
+        
+        # Add shape
+        shape = hlabel_data.get("shape", "input")
+        sexp.append([sexpdata.Symbol("shape"), sexpdata.Symbol(shape)])
+        
+        # Add position
+        pos = hlabel_data["position"]
+        x, y = pos["x"], pos["y"]
+        rotation = hlabel_data.get("rotation", 0)
+        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
+        
+        # Add effects (font properties)
+        size = hlabel_data.get("size", 1.27)
+        effects = [sexpdata.Symbol("effects")]
+        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
+        effects.append(font)
+        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol("left")])
+        sexp.append(effects)
+        
+        # Add UUID
+        if "uuid" in hlabel_data:
+            sexp.append([sexpdata.Symbol("uuid"), hlabel_data["uuid"]])
+        
+        return sexp
 
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:
         """Convert lib_symbols to S-expression."""
