@@ -542,6 +542,13 @@ class SExpressionParser:
                 else:
                     # Assume it's a Point object
                     x, y = point.x, point.y
+                
+                # Format coordinates properly (avoid unnecessary .0 for integers)
+                if isinstance(x, float) and x.is_integer():
+                    x = int(x)
+                if isinstance(y, float) and y.is_integer():
+                    y = int(y)
+                    
                 pts_sexp.append([sexpdata.Symbol("xy"), x, y])
             sexp.append(pts_sexp)
         
@@ -549,6 +556,11 @@ class SExpressionParser:
         stroke_width = wire_data.get("stroke_width", 0)
         stroke_type = wire_data.get("stroke_type", "default")
         stroke_sexp = [sexpdata.Symbol("stroke")]
+        
+        # Format stroke width (use int for 0, preserve float for others)
+        if isinstance(stroke_width, float) and stroke_width == 0.0:
+            stroke_width = 0
+        
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
         sexp.append(stroke_sexp)
