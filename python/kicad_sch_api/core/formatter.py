@@ -189,7 +189,8 @@ class ExactFormatter:
         elements = []
         for i, element in enumerate(lst):
             if i in rule.quote_indices and isinstance(element, str):
-                elements.append(f'"{element}"')
+                escaped_element = self._escape_string(element)
+                elements.append(f'"{escaped_element}"')
             else:
                 elements.append(self._format_element(element, 0))
         return f"({' '.join(elements)})"
@@ -227,7 +228,9 @@ class ExactFormatter:
         next_indent = "\t" * (indent_level + 1)
 
         # Property format: (property "Name" "Value" (at x y rotation) (effects ...))
-        result = f'({lst[0]} "{lst[1]}" "{lst[2]}"'
+        escaped_name = self._escape_string(str(lst[1]))
+        escaped_value = self._escape_string(str(lst[2]))
+        result = f'({lst[0]} "{escaped_name}" "{escaped_value}"'
 
         # Add position and effects on separate lines
         for element in lst[3:]:
@@ -299,7 +302,8 @@ class ExactFormatter:
                 result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
             else:
                 if i in rule.quote_indices and isinstance(element, str):
-                    result += f' "{element}"'
+                    escaped_element = self._escape_string(element)
+                    result += f' "{escaped_element}"'
                 else:
                     result += f" {self._format_element(element, 0)}"
 
@@ -318,6 +322,11 @@ class ExactFormatter:
                 return False
 
         return True
+
+    def _escape_string(self, text: str) -> str:
+        """Escape quotes in string for S-expression formatting."""
+        # Replace double quotes with escaped quotes
+        return text.replace('"', '\\"')
 
     def _needs_quoting(self, text: str) -> bool:
         """Check if string needs to be quoted."""

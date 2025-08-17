@@ -14,7 +14,7 @@ def main():
         position=(91.44, 69.85),
         footprint="",
         datasheet="",
-        description="Power symbol creates a global label with name \"+3.3V\""
+        description="Power symbol creates a global label with name +3.3V"
     )
     
     gnd = sch.components.add(
@@ -24,7 +24,7 @@ def main():
         position=(91.44, 95.25),
         footprint="",
         datasheet="",
-        description="Power symbol creates a global label with name \"GND\" , ground"
+        description="Power symbol creates a global label with name GND, ground"
     )
     
     # Add resistors (matching reference positions)
