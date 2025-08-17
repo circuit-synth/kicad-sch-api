@@ -408,30 +408,75 @@ class SExpressionParser:
         # Always include rotation for format consistency with KiCAD
         sexp.append([sexpdata.Symbol("at"), x, y, r])
 
+        # Add unit (required by KiCAD)
+        unit = symbol_data.get("unit", 1)
+        sexp.append([sexpdata.Symbol("unit"), unit])
+
+        # Add simulation and board settings (required by KiCAD)
+        sexp.append([sexpdata.Symbol("exclude_from_sim"), "no"])
+        sexp.append([sexpdata.Symbol("in_bom"), "yes" if symbol_data.get("in_bom", True) else "no"])
+        sexp.append([sexpdata.Symbol("on_board"), "yes" if symbol_data.get("on_board", True) else "no"])
+        sexp.append([sexpdata.Symbol("dnp"), "no"])
+        sexp.append([sexpdata.Symbol("fields_autoplaced"), "yes"])
+
         if symbol_data.get("uuid"):
             sexp.append([sexpdata.Symbol("uuid"), symbol_data["uuid"]])
 
-        # Add properties
+        # Add properties with proper positioning and effects
         if symbol_data.get("reference"):
-            sexp.append([sexpdata.Symbol("property"), "Reference", symbol_data["reference"]])
+            ref_prop = self._create_property_with_positioning(
+                "Reference", symbol_data["reference"], pos, 0, "left"
+            )
+            sexp.append(ref_prop)
+            
         if symbol_data.get("value"):
-            sexp.append([sexpdata.Symbol("property"), "Value", symbol_data["value"]])
+            val_prop = self._create_property_with_positioning(
+                "Value", symbol_data["value"], pos, 1, "left"
+            )
+            sexp.append(val_prop)
+            
         footprint = symbol_data.get("footprint")
         if footprint is not None:  # Include empty strings but not None
-            sexp.append([sexpdata.Symbol("property"), "Footprint", footprint])
+            fp_prop = self._create_property_with_positioning(
+                "Footprint", footprint, pos, 2, "left", hide=True
+            )
+            sexp.append(fp_prop)
 
         for prop_name, prop_value in symbol_data.get("properties", {}).items():
-            # Escape quotes in property values for proper S-expression format
             escaped_value = str(prop_value).replace('"', '\\"')
-            sexp.append([sexpdata.Symbol("property"), prop_name, escaped_value])
-
-        # Add BOM and board settings
-        sexp.append([sexpdata.Symbol("in_bom"), "yes" if symbol_data.get("in_bom", True) else "no"])
-        sexp.append(
-            [sexpdata.Symbol("on_board"), "yes" if symbol_data.get("on_board", True) else "no"]
-        )
+            prop = self._create_property_with_positioning(
+                prop_name, escaped_value, pos, 3, "left", hide=True
+            )
+            sexp.append(prop)
 
         return sexp
+
+    def _create_property_with_positioning(self, prop_name: str, prop_value: str, 
+                                        component_pos: Point, offset_index: int, 
+                                        justify: str = "left", hide: bool = False) -> List[Any]:
+        """Create a property with proper positioning and effects like KiCAD."""
+        # Calculate property position relative to component
+        # Based on KiCAD's automatic positioning algorithm
+        prop_x = component_pos.x + 2.54  # Standard offset to the right
+        prop_y = component_pos.y - (1.27 * offset_index)  # Stack properties vertically
+        
+        prop_sexp = [
+            sexpdata.Symbol("property"), 
+            prop_name, 
+            prop_value,
+            [sexpdata.Symbol("at"), 
+             round(prop_x, 4) if prop_x != int(prop_x) else int(prop_x),
+             round(prop_y, 4) if prop_y != int(prop_y) else int(prop_y), 
+             0],
+            [sexpdata.Symbol("effects"),
+             [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+             [sexpdata.Symbol("justify"), sexpdata.Symbol(justify)]]
+        ]
+        
+        if hide:
+            prop_sexp[4].append([sexpdata.Symbol("hide"), sexpdata.Symbol("yes")])
+            
+        return prop_sexp
 
     def _wire_to_sexp(self, wire_data: Dict[str, Any]) -> List[Any]:
         """Convert wire to S-expression."""
