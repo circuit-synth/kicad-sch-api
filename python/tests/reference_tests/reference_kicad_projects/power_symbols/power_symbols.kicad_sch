@@ -1,12 +1,9 @@
 (kicad_sch
 	(version 20250114)
 	(generator "eeschema")
-	(generator_version 9.0)
-	(uuid "dc573442-1a5c-4aaa-9ded-0bfcd2a9ad64")
-	(paper A4)
-	(title_block
-		(title "Resistor Divider")
-	)
+	(generator_version "9.0")
+	(uuid "81a52d2e-122b-4a87-8546-0564d52bc16d")
+	(paper "A4")
 	(lib_symbols
 		(symbol "power:+3.3V"
 			(power)
@@ -76,8 +73,7 @@
 			(symbol "+3.3V_0_1"
 				(polyline
 					(pts
-						(xy -0.762 1.27)
-						(xy 0 2.54)
+						(xy -0.762 1.27) (xy 0 2.54)
 					)
 					(stroke
 						(width 0)
@@ -89,8 +85,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 2.54)
-						(xy 0.762 1.27)
+						(xy 0 2.54) (xy 0.762 1.27)
 					)
 					(stroke
 						(width 0)
@@ -102,8 +97,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 0)
-						(xy 0 2.54)
+						(xy 0 0) (xy 0 2.54)
 					)
 					(stroke
 						(width 0)
@@ -118,16 +112,20 @@
 				(pin power_in line
 					(at 0 0 90)
 					(length 0)
-					(name "~" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
-					(number "1" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
 				)
 			)
 			(embedded_fonts no)
@@ -200,12 +198,7 @@
 			(symbol "GND_0_1"
 				(polyline
 					(pts
-						(xy 0 0)
-						(xy 0 -1.27)
-						(xy 1.27 -1.27)
-						(xy 0 -2.54)
-						(xy -1.27 -1.27)
-						(xy 0 -1.27)
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
 					)
 					(stroke
 						(width 0)
@@ -220,40 +213,47 @@
 				(pin power_in line
 					(at 0 0 270)
 					(length 0)
-					(name "~" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
-					(number "1" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
 				)
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:R"
+		(symbol "power:VDD"
+			(power)
 			(pin_numbers
 				(hide yes)
 			)
 			(pin_names
 				(offset 0)
+				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "R"
-				(at 2.032 0 90)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
-			(property "Value" "R"
-				(at 0 0 90)
+			(property "Value" "VDD"
+				(at 0 3.556 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -261,15 +261,6 @@
 				)
 			)
 			(property "Footprint" ""
-				(at -1.778 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
 				(at 0 0 0)
 				(effects
 					(font
@@ -278,7 +269,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Resistor"
+			(property "Datasheet" ""
 				(at 0 0 0)
 				(effects
 					(font
@@ -287,7 +278,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "R res resistor"
+			(property "Description" "Power symbol creates a global label with name \"VDD\""
 				(at 0 0 0)
 				(effects
 					(font
@@ -296,7 +287,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_fp_filters" "R_*"
+			(property "ki_keywords" "global power"
 				(at 0 0 0)
 				(effects
 					(font
@@ -305,12 +296,37 @@
 					(hide yes)
 				)
 			)
-			(symbol "R_0_1"
-				(rectangle
-					(start -1.016 -2.54)
-					(end 1.016 2.54)
+			(symbol "VDD_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
 					(stroke
-						(width 0.254)
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
 						(type default)
 					)
 					(fill
@@ -318,103 +334,89 @@
 					)
 				)
 			)
-			(symbol "R_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 1.27)
-					(name "~" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
-					(number "1" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
-				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 1.27)
-					(name "~" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
-					(number "2" (effects
-	(font
-		(size 1.27 1.27)
-	)
-))
+			(symbol "VDD_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
 				)
 			)
 			(embedded_fonts no)
 		)
 	)
 	(symbol
-		(lib_id "power:+3.3V")
-		(at 91.44 69.85 0)
+		(lib_id "power:GND")
+		(at 154.94 69.85 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "eba7d062-e8cb-4d85-ad98-2a6875a506df")
+		(uuid "20b2aed5-ef48-4823-a4de-a706bb2bf7ce")
 		(property "Reference" "#PWR02"
-			(at 93.98 68.58 0)
+			(at 154.94 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(hide yes)
 			)
 		)
-		(property "Value" "+3.3V"
-			(at 93.98 71.12 0)
+		(property "Value" "GND"
+			(at 154.94 74.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
 		(property "Footprint" ""
-			(at 93.98 73.66 0)
+			(at 154.94 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 				(hide yes)
 			)
 		)
-		(property "datasheet" ""
-			(at 93.98 74.93 0)
+		(property "Datasheet" ""
+			(at 154.94 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 				(hide yes)
 			)
 		)
-		(property "description" "Power symbol creates a global label with name +3.3V"
-			(at 93.98 74.93 0)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 154.94 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "d21df611-505d-4ee1-978c-5f22ff3a6ea1")
+			(uuid "7170e950-13c4-4e93-8b90-36dc24752aa0")
 		)
 		(instances
-			(project "simple_circuit"
-				(path "/dc573442-1a5c-4aaa-9ded-0bfcd2a9ad64"
+			(project ""
+				(path "/81a52d2e-122b-4a87-8546-0564d52bc16d"
 					(reference "#PWR02")
 					(unit 1)
 				)
@@ -422,259 +424,141 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 91.44 95.25 0)
+		(lib_id "power:VDD")
+		(at 113.03 115.57 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "3e545f6c-11c5-4f09-970d-5209f03dc687")
-		(property "Reference" "#PWR01"
-			(at 93.98 93.98 0)
+		(uuid "2936e677-1373-4b4b-b06d-099147caba00")
+		(property "Reference" "#PWR03"
+			(at 113.03 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(hide yes)
 			)
 		)
-		(property "Value" "GND"
-			(at 93.98 96.52 0)
+		(property "Value" "VDD"
+			(at 113.03 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
 		(property "Footprint" ""
-			(at 93.98 99.06 0)
+			(at 113.03 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 				(hide yes)
 			)
 		)
-		(property "datasheet" ""
-			(at 93.98 100.33 0)
+		(property "Datasheet" ""
+			(at 113.03 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 				(hide yes)
 			)
 		)
-		(property "description" "Power symbol creates a global label with name GND, ground"
-			(at 93.98 100.33 0)
+		(property "Description" "Power symbol creates a global label with name \"VDD\""
+			(at 113.03 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "7a35397c-310f-4183-b2cd-3a2a9f3b3d31")
+			(uuid "054a9c22-f70f-4813-8eb2-1a265f9a672c")
 		)
 		(instances
-			(project "simple_circuit"
-				(path "/dc573442-1a5c-4aaa-9ded-0bfcd2a9ad64"
+			(project ""
+				(path "/81a52d2e-122b-4a87-8546-0564d52bc16d"
+					(reference "#PWR03")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 78.74 64.77 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "882e0db3-f19a-4754-bb25-0978f6df8663")
+		(property "Reference" "#PWR01"
+			(at 78.74 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 78.74 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 78.74 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 78.74 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 78.74 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7ca463d5-0a67-498f-a5b7-eb1958400236")
+		)
+		(instances
+			(project ""
+				(path "/81a52d2e-122b-4a87-8546-0564d52bc16d"
 					(reference "#PWR01")
 					(unit 1)
 				)
 			)
 		)
 	)
-	(symbol
-		(lib_id "Device:R")
-		(at 91.44 73.66 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "1ad1f4ad-4808-41c0-8aec-908b33f19115")
-		(property "Reference" "R1"
-			(at 93.98 72.39 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 93.98 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 93.98 77.47 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "datasheet" "~"
-			(at 93.98 78.74 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "description" "Resistor"
-			(at 93.98 78.74 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "2a17a8bf-bdec-48ec-afe3-059f486654e9")
-		)
-		(pin "2"
-			(uuid "4d681a2b-63d7-4dff-8ff5-a7ef0e5b63cc")
-		)
-		(instances
-			(project "simple_circuit"
-				(path "/dc573442-1a5c-4aaa-9ded-0bfcd2a9ad64"
-					(reference "R1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 91.44 91.44 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "1e4c80c7-e5dd-4fb8-9faf-80b80821a0ca")
-		(property "Reference" "R2"
-			(at 93.98 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10k"
-			(at 93.98 92.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 93.98 95.25 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "datasheet" "~"
-			(at 93.98 96.52 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(property "description" "Resistor"
-			(at 93.98 96.52 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "66e9a771-ac0f-4144-958d-9e8e2f46d282")
-		)
-		(pin "2"
-			(uuid "dfa16ec4-8115-4fb6-bb4d-f970456b0ec2")
-		)
-		(instances
-			(project "simple_circuit"
-				(path "/dc573442-1a5c-4aaa-9ded-0bfcd2a9ad64"
-					(reference "R2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts
-			(xy 100.33 81.28)
-			(xy 91.44 81.28)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ddb83d6e-8c4b-4c38-8d61-c9a570c65001")
-	)
-	(wire
-		(pts
-			(xy 91.44 81.28)
-			(xy 91.44 77.47)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "55dcbd36-ca83-4f8f-abb4-fb6f8e06157a")
-	)
-	(wire
-		(pts
-			(xy 91.44 87.63)
-			(xy 91.44 81.28)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "200840fb-4f3c-4451-97b8-2fbe9d9f686e")
-	)
 	(sheet_instances
 		(path "/"
 			(page "1")
 		)
 	)
-	(symbol_instances)
 	(embedded_fonts no)
 )

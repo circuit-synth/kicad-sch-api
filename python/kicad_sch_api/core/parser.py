@@ -445,16 +445,27 @@ class SExpressionParser:
             sexp.append([sexpdata.Symbol("uuid"), symbol_data["uuid"]])
 
         # Add properties with proper positioning and effects
+        lib_id = symbol_data.get("lib_id", "")
+        is_power_symbol = "power:" in lib_id
+        
         if symbol_data.get("reference"):
+            # Power symbol references should be hidden by default
+            ref_hide = is_power_symbol
             ref_prop = self._create_property_with_positioning(
-                "Reference", symbol_data["reference"], pos, 0, "left"
+                "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide
             )
             sexp.append(ref_prop)
             
         if symbol_data.get("value"):
-            val_prop = self._create_property_with_positioning(
-                "Value", symbol_data["value"], pos, 1, "left"
-            )
+            # Power symbol values need different positioning 
+            if is_power_symbol:
+                val_prop = self._create_power_symbol_value_property(
+                    symbol_data["value"], pos, lib_id
+                )
+            else:
+                val_prop = self._create_property_with_positioning(
+                    "Value", symbol_data["value"], pos, 1, "left"
+                )
             sexp.append(val_prop)
             
         footprint = symbol_data.get("footprint")
@@ -524,6 +535,36 @@ class SExpressionParser:
         if hide:
             prop_sexp[4].append([sexpdata.Symbol("hide"), sexpdata.Symbol("yes")])
             
+        return prop_sexp
+
+    def _create_power_symbol_value_property(self, value: str, component_pos: Point, lib_id: str) -> List[Any]:
+        """Create Value property for power symbols with correct positioning."""
+        # Power symbols have different value positioning based on type
+        if "GND" in lib_id:
+            # GND value goes below the symbol
+            prop_x = component_pos.x
+            prop_y = component_pos.y + 5.08  # Below GND symbol
+        elif "+3.3V" in lib_id or "VDD" in lib_id:
+            # Positive voltage values go below the symbol  
+            prop_x = component_pos.x
+            prop_y = component_pos.y - 5.08  # Above symbol (negative offset)
+        else:
+            # Default power symbol positioning
+            prop_x = component_pos.x
+            prop_y = component_pos.y + 3.556
+        
+        prop_sexp = [
+            sexpdata.Symbol("property"), 
+            "Value", 
+            value,
+            [sexpdata.Symbol("at"), 
+             round(prop_x, 4) if prop_x != int(prop_x) else int(prop_x),
+             round(prop_y, 4) if prop_y != int(prop_y) else int(prop_y), 
+             0],
+            [sexpdata.Symbol("effects"),
+             [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]]]
+        ]
+        
         return prop_sexp
 
     def _wire_to_sexp(self, wire_data: Dict[str, Any]) -> List[Any]:

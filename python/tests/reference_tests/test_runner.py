@@ -37,6 +37,7 @@ class TestRunner:
             "test_resistor_divider.py",
             "test_single_label_hierarchical.py",  # Now implemented!
             "test_single_wire.py",  # Now implemented!
+            "test_power_symbols.py",  # Now implemented!
             # These require APIs not yet implemented:
             # "test_single_label.py",
             # "test_single_text.py",
@@ -341,6 +342,35 @@ class TestRunner:
         assert "xy 135.89 63.5" in content, "Expected wire end point not found"
         
         print(f"✅ test_single_wire.py: Generated valid schematic with wire")
+        
+        # Clean up
+        if generated_path.exists():
+            generated_path.unlink()
+
+    def test_power_symbols(self):
+        """Test power symbols generation."""
+        success, output, generated_path = self._run_test_script("test_power_symbols.py")
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Validate schematic structure
+        is_valid, msg = self._validate_schematic(generated_path)
+        assert is_valid, f"Invalid schematic: {msg}"
+        
+        # Check component count (3 power symbols)
+        component_count = self._count_components(generated_path)
+        assert component_count == 3, f"Expected 3 components, found {component_count}"
+        
+        # Check for power symbols in content
+        with open(generated_path, 'r') as f:
+            content = f.read()
+        assert "power:+3.3V" in content, "+3.3V power symbol not found"
+        assert "power:GND" in content, "GND power symbol not found"
+        assert "power:VDD" in content, "VDD power symbol not found"
+        assert "(hide yes)" in content, "References should be hidden"
+        
+        print(f"✅ test_power_symbols.py: Generated valid schematic with 3 power symbols")
         
         # Clean up
         if generated_path.exists():
