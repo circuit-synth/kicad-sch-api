@@ -631,6 +631,58 @@ class Schematic:
         logger.debug(f"Added hierarchical sheet: {name} ({filename}) at {position}")
         return sheet.uuid
 
+    def add_sheet_pin(
+        self,
+        sheet_uuid: str,
+        name: str,
+        pin_type: str = "input",
+        position: Union[Point, Tuple[float, float]] = (0, 0),
+        rotation: float = 0,
+        size: float = 1.27,
+        justify: str = "right"
+    ) -> str:
+        """
+        Add a pin to a hierarchical sheet.
+
+        Args:
+            sheet_uuid: UUID of the sheet to add pin to
+            name: Pin name (NET1, NET2, etc.)
+            pin_type: Pin type (input, output, bidirectional, etc.)
+            position: Pin position relative to sheet
+            rotation: Pin rotation in degrees
+            size: Font size for pin label
+            justify: Text justification (left, right, center)
+
+        Returns:
+            UUID of created sheet pin
+        """
+        if isinstance(position, tuple):
+            position = Point(position[0], position[1])
+
+        pin_uuid = str(uuid.uuid4())
+        
+        # Find the sheet in the data
+        sheets = self._data.get("sheets", [])
+        for sheet in sheets:
+            if sheet.get("uuid") == sheet_uuid:
+                # Add pin to the sheet's pins list
+                pin_data = {
+                    "uuid": pin_uuid,
+                    "name": name,
+                    "pin_type": pin_type,
+                    "position": {"x": position.x, "y": position.y},
+                    "rotation": rotation,
+                    "size": size,
+                    "justify": justify
+                }
+                sheet["pins"].append(pin_data)
+                self._modified = True
+                
+                logger.debug(f"Added sheet pin: {name} ({pin_type}) to sheet {sheet_uuid}")
+                return pin_uuid
+        
+        raise ValueError(f"Sheet with UUID '{sheet_uuid}' not found")
+
     # Library management
     @property
     def libraries(self) -> "LibraryManager":
