@@ -575,6 +575,14 @@ class Schematic:
             "labels": [],
             "nets": [],
             "lib_symbols": {},
+            "sheet_instances": [
+                {
+                    "path": "/",
+                    "page": "1"
+                }
+            ],
+            "symbol_instances": [],
+            "embedded_fonts": "no",
         }
 
     # Context manager support for atomic operations

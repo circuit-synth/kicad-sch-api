@@ -189,6 +189,9 @@ class SExpressionParser:
             "labels": [],
             "nets": [],
             "lib_symbols": {},
+            "sheet_instances": [],
+            "symbol_instances": [],
+            "embedded_fonts": None,
         }
 
         # Process top-level elements
@@ -231,6 +234,12 @@ class SExpressionParser:
                     schematic_data["labels"].append(label)
             elif element_type == "lib_symbols":
                 schematic_data["lib_symbols"] = self._parse_lib_symbols(item)
+            elif element_type == "sheet_instances":
+                schematic_data["sheet_instances"] = self._parse_sheet_instances(item)
+            elif element_type == "symbol_instances":
+                schematic_data["symbol_instances"] = self._parse_symbol_instances(item)
+            elif element_type == "embedded_fonts":
+                schematic_data["embedded_fonts"] = item[1] if len(item) > 1 else None
 
         return schematic_data
 
@@ -274,10 +283,19 @@ class SExpressionParser:
         for label in schematic_data.get("labels", []):
             sexp_data.append(self._label_to_sexp(label))
 
+        # Add sheet_instances (required by KiCAD)
+        sheet_instances = schematic_data.get("sheet_instances", [])
+        if sheet_instances:
+            sexp_data.append(self._sheet_instances_to_sexp(sheet_instances))
+
         # Add symbol_instances (required by KiCAD)
         symbol_instances = schematic_data.get("symbol_instances", [])
         if symbol_instances or schematic_data.get("components"):
             sexp_data.append([sexpdata.Symbol("symbol_instances")])
+
+        # Add embedded_fonts (required by KiCAD)
+        if schematic_data.get("embedded_fonts") is not None:
+            sexp_data.append([sexpdata.Symbol("embedded_fonts"), schematic_data["embedded_fonts"]])
 
         return sexp_data
 
@@ -583,6 +601,39 @@ class SExpressionParser:
         symbol_sexp.append([sexpdata.Symbol("embedded_fonts"), sexpdata.Symbol("no")])
         
         return symbol_sexp
+
+    def _parse_sheet_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
+        """Parse sheet_instances section."""
+        sheet_instances = []
+        for sheet_item in item[1:]:  # Skip 'sheet_instances' header
+            if isinstance(sheet_item, list) and len(sheet_item) > 0:
+                sheet_data = {"path": "/", "page": "1"}
+                for element in sheet_item[1:]:  # Skip element header
+                    if isinstance(element, list) and len(element) >= 2:
+                        key = str(element[0]) if isinstance(element[0], sexpdata.Symbol) else str(element[0])
+                        if key == "path":
+                            sheet_data["path"] = element[1]
+                        elif key == "page":
+                            sheet_data["page"] = element[1]
+                sheet_instances.append(sheet_data)
+        return sheet_instances
+
+    def _parse_symbol_instances(self, item: List[Any]) -> List[Any]:
+        """Parse symbol_instances section."""
+        # For now, just return the raw structure minus the header
+        return item[1:] if len(item) > 1 else []
+
+    def _sheet_instances_to_sexp(self, sheet_instances: List[Dict[str, Any]]) -> List[Any]:
+        """Convert sheet_instances to S-expression."""
+        sexp = [sexpdata.Symbol("sheet_instances")]
+        for sheet in sheet_instances:
+            # Create: (path "/" (page "1"))
+            sheet_sexp = [
+                sexpdata.Symbol("path"), sheet.get("path", "/"),
+                [sexpdata.Symbol("page"), str(sheet.get("page", "1"))]
+            ]
+            sexp.append(sheet_sexp)
+        return sexp
 
     def get_validation_issues(self) -> List[ValidationIssue]:
         """Get list of validation issues from last parse operation."""

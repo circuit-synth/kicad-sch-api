@@ -2,16 +2,19 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version 9.0)
-	(uuid "0149745f-4e08-4129-8f18-85bfd3dff3e2")
+	(uuid "56a99eff-1540-4d98-aa12-e8d1fb4f6248")
 	(paper A4)
 	(title_block
-		(title "Simple Circuit"))
+		(title "Simple Circuit")
+	)
 	(lib_symbols
 		(symbol "Device:R"
 			(pin_numbers
-				(hide yes))
+				(hide yes)
+			)
 			(pin_names
-				(offset 0))
+				(offset 0)
+			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -19,71 +22,109 @@
 				(at 2.032 0 90)
 				(effects
 					(font
-						(size 1.27 1.27))))
+						(size 1.27 1.27)
+					)
+				)
+			)
 			(property "Value" "R"
 				(at 0 0 90)
 				(effects
 					(font
-						(size 1.27 1.27))))
+						(size 1.27 1.27)
+					)
+				)
+			)
 			(property "Footprint" ""
 				(at -1.778 0 90)
 				(effects
 					(font
-						(size 1.27 1.27))
-					(hide yes)))
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
 			(property "Datasheet" "~"
 				(at 0 0 0)
 				(effects
 					(font
-						(size 1.27 1.27))
-					(hide yes)))
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
 			(property "Description" "Resistor"
 				(at 0 0 0)
 				(effects
 					(font
-						(size 1.27 1.27))
-					(hide yes)))
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
 			(property "ki_keywords" "R res resistor"
 				(at 0 0 0)
 				(effects
 					(font
-						(size 1.27 1.27))
-					(hide yes)))
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
 			(property "ki_fp_filters" "R_*"
 				(at 0 0 0)
 				(effects
 					(font
-						(size 1.27 1.27))
-					(hide yes)))
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
 			(symbol "R_0_1"
 				(rectangle
 					(start -1.016 -2.54)
 					(end 1.016 2.54)
 					(stroke
 						(width 0.254)
-						(type default))
+						(type default)
+					)
 					(fill
-						(type none))))
+						(type none)
+					)
+				)
+			)
 			(symbol "R_1_1"
 				(pin passive line
 					(at 0 3.81 270)
 					(length 1.27)
 					(name "~" (effects
 	(font
-		(size 1.27 1.27))))
+		(size 1.27 1.27)
+	)
+))
 					(number "1" (effects
 	(font
-		(size 1.27 1.27)))))
+		(size 1.27 1.27)
+	)
+))
+				)
 				(pin passive line
 					(at 0 -3.81 90)
 					(length 1.27)
 					(name "~" (effects
 	(font
-		(size 1.27 1.27))))
+		(size 1.27 1.27)
+	)
+))
 					(number "2" (effects
 	(font
-		(size 1.27 1.27))))))
-			(embedded_fonts no)))
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
 	(symbol
 		(lib_id "Device:R")
 		(at 100 100 0)
@@ -93,23 +134,45 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "4b686496-a53b-4825-8fe2-20fe687c3437")
+		(uuid "b4ebe220-51ef-4156-9ae0-2615abb4a0d3")
 		(property "Reference" "R1"
 			(at 102.54 98.73 0)
 			(effects
 				(font
-					(size 1.27 1.27))
-				(justify left)))
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(property "Value" "10k"
 			(at 102.54 101.27 0)
 			(effects
 				(font
-					(size 1.27 1.27))
-				(justify left)))
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
 		(pin "1"
-			(uuid "e426019f-3e33-44f4-bd1e-e26dd153f556"))
+			(uuid "ccc6f8a6-98d9-448c-a089-c68bf672cb0c")
+		)
 		(pin "2"
-			(uuid "5ba0fc12-d8f8-4308-ae05-68f33215dc62"))
+			(uuid "2b8a01e7-ec0b-4049-837b-40fc6657ca1f")
+		)
 		(instances
-			(project "simple_circuit" (path "/9d4d9269-d775-4e3a-a2b9-d17cf97d721e" (reference "R1") (unit 1)))))
-	(symbol_instances))
+			(project "simple_circuit"
+				(path "/b820464d-ba53-4df6-8301-e55492dc6243"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(symbol_instances)
+	(embedded_fonts no)
+)

@@ -86,8 +86,8 @@ class ExactFormatter:
         self.rules["number"] = FormatRule(inline=True, quote_indices={1})  # Pin numbers should be quoted
         self.rules["name"] = FormatRule(inline=True, quote_indices={1})    # Pin names should be quoted
         self.rules["instances"] = FormatRule(inline=False)
-        self.rules["project"] = FormatRule(inline=True, quote_indices={1})
-        self.rules["path"] = FormatRule(inline=True, quote_indices={1})
+        self.rules["project"] = FormatRule(inline=False, quote_indices={1})
+        self.rules["path"] = FormatRule(inline=False, quote_indices={1})
         self.rules["reference"] = FormatRule(inline=True, quote_indices={1})
 
         # Wire elements
@@ -114,6 +114,12 @@ class ExactFormatter:
         self.rules["thickness"] = FormatRule(inline=True)
         self.rules["justify"] = FormatRule(inline=True)
         self.rules["hide"] = FormatRule(inline=True)
+
+        # Sheet instances and metadata
+        self.rules["sheet_instances"] = FormatRule(inline=False)
+        self.rules["symbol_instances"] = FormatRule(inline=False)
+        self.rules["embedded_fonts"] = FormatRule(inline=True)
+        self.rules["page"] = FormatRule(inline=True, quote_indices={1})
 
     def format(self, data: Any) -> str:
         """
@@ -230,7 +236,7 @@ class ExactFormatter:
             else:
                 result += f" {element}"
 
-        result += ")"
+        result += f"\n{indent})"
         return result
 
     def _format_pin(self, lst: List[Any], indent_level: int) -> str:
@@ -256,7 +262,7 @@ class ExactFormatter:
             if isinstance(element, list):
                 result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
         
-        result += ")"
+        result += f"\n{indent})"
         return result
 
     def _format_component_like(self, lst: List[Any], indent_level: int, rule: FormatRule) -> str:
@@ -278,7 +284,7 @@ class ExactFormatter:
                 else:
                     result += f" {self._format_element(element, 0)}"
 
-        result += ")"
+        result += f"\n{indent})"
         return result
 
     def _format_generic_multiline(self, lst: List[Any], indent_level: int, rule: FormatRule) -> str:
@@ -297,7 +303,7 @@ class ExactFormatter:
                 else:
                     result += f" {self._format_element(element, 0)}"
 
-        result += ")"
+        result += f"\n{indent})"
         return result
 
     def _should_format_inline(self, lst: List[Any], rule: FormatRule) -> bool:

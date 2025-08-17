@@ -165,6 +165,17 @@ uv run pytest -m "validation" -v  # Error handling and validation
 - **Performance Optimization**: Symbol caching, indexed lookups, bulk operations
 - **Professional Validation**: Comprehensive error collection and reporting
 
+## Claude Code Configuration
+
+This project includes a `.claude/settings.json` file that configures Claude Code for optimal development:
+
+- **Default Model**: Claude Sonnet 4 (claude-sonnet-4-20250514)
+- **Automated Hooks**:
+  - Format preservation tests run after code changes
+  - Code quality checks on Python file modifications
+
+The configuration enforces the project's core requirements automatically.
+
 ## Dependencies
 
 - **sexpdata**: S-expression parsing foundation from kicad-skip
