@@ -1,1 +1,0 @@
-"""Test utilities for kicad-sch-api testing."""
