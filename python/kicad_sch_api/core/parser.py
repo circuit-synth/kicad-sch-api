@@ -652,9 +652,35 @@ class SExpressionParser:
         return sexp
 
     def _label_to_sexp(self, label_data: Dict[str, Any]) -> List[Any]:
-        """Convert label to S-expression."""
-        # Implementation for label conversion
-        return [sexpdata.Symbol("label")]
+        """Convert local label to S-expression."""
+        sexp = [sexpdata.Symbol("label"), label_data["text"]]
+        
+        # Add position
+        pos = label_data["position"]
+        x, y = pos["x"], pos["y"]
+        rotation = label_data.get("rotation", 0)
+        
+        # Format coordinates properly
+        if isinstance(x, float) and x.is_integer():
+            x = int(x)
+        if isinstance(y, float) and y.is_integer():
+            y = int(y)
+            
+        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
+        
+        # Add effects (font properties)
+        size = label_data.get("size", 1.27)
+        effects = [sexpdata.Symbol("effects")]
+        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
+        effects.append(font)
+        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")])
+        sexp.append(effects)
+        
+        # Add UUID
+        if "uuid" in label_data:
+            sexp.append([sexpdata.Symbol("uuid"), label_data["uuid"]])
+        
+        return sexp
 
     def _hierarchical_label_to_sexp(self, hlabel_data: Dict[str, Any]) -> List[Any]:
         """Convert hierarchical label to S-expression."""

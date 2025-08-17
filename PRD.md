@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-kicad-sch-api is an independent, professional Python library for programmatic KiCAD schematic manipulation with exact format preservation. Built as a foundational library for tools and AI agents, it provides complete CRUD operations, multi-source component library integration, and a modern Python API designed for extensibility and performance.
+`kicad-sch-api` is an independent, professional Python library for programmatic KiCAD schematic manipulation with exact format preservation. Built as a foundational library for tools and AI agents, it provides complete CRUD operations, multi-source component library integration, and a modern Python API designed for extensibility and performance.
 
 ## Product Vision
 

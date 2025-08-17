@@ -38,8 +38,8 @@ class TestRunner:
             "test_single_label_hierarchical.py",  # Now implemented!
             "test_single_wire.py",  # Now implemented!
             "test_power_symbols.py",  # Now implemented!
+            "test_single_label.py",  # Now implemented!
             # These require APIs not yet implemented:
-            # "test_single_label.py",
             # "test_single_text.py",
             # "test_single_text_box.py",
             # "test_single_hierarchical_sheet.py",
@@ -280,15 +280,16 @@ class TestRunner:
         component_count = self._count_components(generated_path)
         assert component_count == 4, f"Expected 4 components, found {component_count}"
         
-        # Check for wires and junction in content
+        # Check for wires, junction, and label in content
         with open(generated_path, 'r') as f:
             content = f.read()
         assert "wire" in content, "Wires not found in output"
         assert "junction" in content, "Junction not found in output"
+        assert 'label "VOUT"' in content, "VOUT label not found in output"
         assert "at 91.44 81.28" in content, "Expected junction position not found"
         assert "xy 100.33 81.28" in content, "Expected wire coordinate not found"
         
-        print(f"✅ test_resistor_divider.py: Generated valid schematic with 4 components, wires, and junction")
+        print(f"✅ test_resistor_divider.py: Generated complete resistor divider with components, wires, junction, and VOUT label")
         
         # Clean up
         if generated_path.exists():
@@ -373,6 +374,34 @@ class TestRunner:
         assert "(hide yes)" in content, "References should be hidden"
         
         print(f"✅ test_power_symbols.py: Generated valid schematic with 3 power symbols")
+        
+        # Clean up
+        if generated_path.exists():
+            generated_path.unlink()
+
+    def test_single_label(self):
+        """Test local label generation."""
+        success, output, generated_path = self._run_test_script("test_single_label.py")
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Validate schematic structure
+        is_valid, msg = self._validate_schematic(generated_path)
+        assert is_valid, f"Invalid schematic: {msg}"
+        
+        # Check component count (should be 0 for label only)
+        component_count = self._count_components(generated_path)
+        assert component_count == 0, f"Expected 0 components, found {component_count}"
+        
+        # Check for label in content
+        with open(generated_path, 'r') as f:
+            content = f.read()
+        assert 'label "LABEL_1"' in content, "Local label not found in output"
+        assert "at 130.81 73.66" in content, "Expected label position not found"
+        assert "justify left bottom" in content, "Expected label justification not found"
+        
+        print(f"✅ test_single_label.py: Generated valid schematic with local label")
         
         # Clean up
         if generated_path.exists():

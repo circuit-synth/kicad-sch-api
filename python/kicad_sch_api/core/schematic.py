@@ -497,6 +497,63 @@ class Schematic:
                 return True
         return False
 
+    def add_label(
+        self, 
+        text: str, 
+        position: Union[Point, Tuple[float, float]], 
+        rotation: float = 0.0,
+        size: float = 1.27
+    ) -> str:
+        """
+        Add a local label.
+
+        Args:
+            text: Label text
+            position: Label position
+            rotation: Text rotation in degrees
+            size: Font size
+
+        Returns:
+            UUID of created label
+        """
+        if isinstance(position, tuple):
+            position = Point(position[0], position[1])
+
+        label = Label(
+            uuid=str(uuid.uuid4()),
+            position=position,
+            text=text,
+            label_type=LabelType.LOCAL,
+            rotation=rotation,
+            size=size
+        )
+
+        if "labels" not in self._data:
+            self._data["labels"] = []
+
+        self._data["labels"].append({
+            "uuid": label.uuid,
+            "position": {"x": label.position.x, "y": label.position.y},
+            "text": label.text,
+            "rotation": label.rotation,
+            "size": label.size
+        })
+        self._modified = True
+
+        logger.debug(f"Added local label: {text} at {position}")
+        return label.uuid
+
+    def remove_label(self, label_uuid: str) -> bool:
+        """Remove local label by UUID."""
+        labels = self._data.get("labels", [])
+        for i, label in enumerate(labels):
+            if label.get("uuid") == label_uuid:
+                del labels[i]
+                self._modified = True
+                logger.debug(f"Removed local label: {label_uuid}")
+                return True
+        return False
+
     # Library management
     @property
     def libraries(self) -> "LibraryManager":

@@ -74,10 +74,16 @@ def main():
         color=(0, 0, 0, 0)
     )
     
-    # TODO: Add VOUT label at (100.33, 81.28) when local label API is implemented
+    # Add VOUT label at the output point
+    sch.add_label(
+        text="VOUT",
+        position=(100.33, 81.28),
+        rotation=0,
+        size=1.27
+    )
     
     sch.save("test_resistor_divider.kicad_sch")
-    print("✅ Created resistor divider with wires")
+    print("✅ Created complete resistor divider with wires, junction, and VOUT label")
     
     import subprocess
     subprocess.run(["open", "test_resistor_divider.kicad_sch"])
