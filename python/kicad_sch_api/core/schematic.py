@@ -11,6 +11,8 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import sexpdata
+
 from ..library.cache import get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
 from .components import ComponentCollection
@@ -882,15 +884,92 @@ class Schematic:
         
         for comp in self._components:
             if comp.lib_id and comp.lib_id not in lib_symbols:
+                logger.debug(f"🔧 SCHEMATIC: Processing component {comp.lib_id}")
+                
                 # Get the actual symbol definition
                 symbol_def = cache.get_symbol(comp.lib_id)
                 if symbol_def:
+                    logger.debug(f"🔧 SCHEMATIC: Loaded symbol {comp.lib_id}")
                     lib_symbols[comp.lib_id] = self._convert_symbol_to_kicad_format(symbol_def, comp.lib_id)
+                    
+                    # Check if this symbol extends another symbol using multiple methods
+                    extends_parent = None
+                    
+                    # Method 1: Check raw_kicad_data
+                    if hasattr(symbol_def, 'raw_kicad_data') and symbol_def.raw_kicad_data:
+                        extends_parent = self._check_symbol_extends(symbol_def.raw_kicad_data)
+                        logger.debug(f"🔧 SCHEMATIC: Checked raw_kicad_data for {comp.lib_id}, extends: {extends_parent}")
+                    
+                    # Method 2: Check raw_data attribute  
+                    if not extends_parent and hasattr(symbol_def, '__dict__'):
+                        for attr_name, attr_value in symbol_def.__dict__.items():
+                            if attr_name == 'raw_data':
+                                logger.debug(f"🔧 SCHEMATIC: Checking raw_data for extends: {type(attr_value)}")
+                                extends_parent = self._check_symbol_extends(attr_value)
+                                if extends_parent:
+                                    logger.debug(f"🔧 SCHEMATIC: Found extends in raw_data: {extends_parent}")
+                                    
+                    # Method 3: Check the extends attribute directly
+                    if not extends_parent and hasattr(symbol_def, 'extends'):
+                        extends_parent = symbol_def.extends
+                        logger.debug(f"🔧 SCHEMATIC: Found extends attribute: {extends_parent}")
+                    
+                    if extends_parent:
+                        # Load the parent symbol too
+                        parent_lib_id = f"{comp.lib_id.split(':')[0]}:{extends_parent}"
+                        logger.debug(f"🔧 SCHEMATIC: Loading parent symbol: {parent_lib_id}")
+                        
+                        if parent_lib_id not in lib_symbols:
+                            parent_symbol_def = cache.get_symbol(parent_lib_id)
+                            if parent_symbol_def:
+                                lib_symbols[parent_lib_id] = self._convert_symbol_to_kicad_format(parent_symbol_def, parent_lib_id)
+                                logger.debug(f"🔧 SCHEMATIC: Successfully loaded parent symbol: {parent_lib_id} for {comp.lib_id}")
+                            else:
+                                logger.warning(f"🔧 SCHEMATIC: Failed to load parent symbol: {parent_lib_id}")
+                        else:
+                            logger.debug(f"🔧 SCHEMATIC: Parent symbol {parent_lib_id} already loaded")
+                    else:
+                        logger.debug(f"🔧 SCHEMATIC: No extends found for {comp.lib_id}")
                 else:
                     # Fallback for unknown symbols
+                    logger.warning(f"🔧 SCHEMATIC: Failed to load symbol {comp.lib_id}, using fallback")
                     lib_symbols[comp.lib_id] = {"definition": "basic"}
         
         self._data["lib_symbols"] = lib_symbols
+        
+        # Debug: Log the final lib_symbols structure
+        logger.debug(f"🔧 FINAL: lib_symbols contains {len(lib_symbols)} symbols:")
+        for sym_id in lib_symbols.keys():
+            logger.debug(f"🔧 FINAL: - {sym_id}")
+            # Check if this symbol has extends
+            sym_data = lib_symbols[sym_id]
+            if isinstance(sym_data, list) and len(sym_data) > 2:
+                for item in sym_data[1:]:
+                    if isinstance(item, list) and len(item) >= 2:
+                        if item[0] == sexpdata.Symbol('extends'):
+                            logger.debug(f"🔧 FINAL: - {sym_id} extends {item[1]}")
+                            break
+
+    def _check_symbol_extends(self, symbol_data: Any) -> Optional[str]:
+        """Check if symbol extends another symbol and return parent name."""
+        logger.debug(f"🔧 EXTENDS: Checking symbol data type: {type(symbol_data)}")
+        
+        if not isinstance(symbol_data, list):
+            logger.debug(f"🔧 EXTENDS: Not a list, returning None")
+            return None
+        
+        logger.debug(f"🔧 EXTENDS: Checking {len(symbol_data)} items for extends directive")
+        
+        for i, item in enumerate(symbol_data[1:], 1):
+            logger.debug(f"🔧 EXTENDS: Item {i}: {type(item)} - {item if not isinstance(item, list) else f'list[{len(item)}]'}")
+            if isinstance(item, list) and len(item) >= 2:
+                if item[0] == sexpdata.Symbol('extends'):
+                    parent_name = str(item[1]).strip('"')
+                    logger.debug(f"🔧 EXTENDS: Found extends directive: {parent_name}")
+                    return parent_name
+        
+        logger.debug(f"🔧 EXTENDS: No extends directive found")
+        return None
 
     def _sync_wires_to_data(self):
         """Sync wire collection state back to data structure."""
@@ -984,6 +1063,19 @@ class Schematic:
         # Replace the symbol name with the full lib_id
         if len(modified_data) >= 2:
             modified_data[1] = lib_id  # Change 'R' to 'Device:R'
+        
+        # Fix extends directive to use full lib_id
+        logger.debug(f"🔧 CONVERT: Processing {len(modified_data)} items for {lib_id}")
+        for i, item in enumerate(modified_data[1:], 1):
+            if isinstance(item, list) and len(item) >= 2:
+                logger.debug(f"🔧 CONVERT: Item {i}: {item[0]} = {item[1] if len(item) > 1 else 'N/A'}")
+                if item[0] == sexpdata.Symbol('extends'):
+                    # Convert bare symbol name to full lib_id
+                    parent_name = str(item[1]).strip('"')
+                    parent_lib_id = f"{lib_id.split(':')[0]}:{parent_name}"
+                    modified_data[i][1] = parent_lib_id
+                    logger.debug(f"🔧 CONVERT: Fixed extends directive: {parent_name} -> {parent_lib_id}")
+                    break
         
         # Fix string/symbol conversion issues in pin definitions
         print(f"🔧 DEBUG: Before fix - checking for pin definitions...")

@@ -1,0 +1,3 @@
+[submodule "python/submodules/circuit-synth"]
+	path = python/submodules/circuit-synth
+	url = https://github.com/circuit-synth/circuit-synth.git
