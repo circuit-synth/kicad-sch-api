@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version 9.0)
-	(uuid "56a99eff-1540-4d98-aa12-e8d1fb4f6248")
+	(uuid "9bae8aa0-2a10-402d-bcd1-f83ce99fad42")
 	(paper A4)
 	(title_block
 		(title "Simple Circuit")
@@ -134,7 +134,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "b4ebe220-51ef-4156-9ae0-2615abb4a0d3")
+		(uuid "0c40db8a-4deb-4277-8d42-6a4fd9b2cc2f")
 		(property "Reference" "R1"
 			(at 102.54 98.73 0)
 			(effects
@@ -153,15 +153,45 @@
 				(justify left)
 			)
 		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 102.54 103.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "datasheet" "~"
+			(at 102.54 105.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "description" "Resistor"
+			(at 102.54 105.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
 		(pin "1"
-			(uuid "ccc6f8a6-98d9-448c-a089-c68bf672cb0c")
+			(uuid "dfc4871e-ec67-4ed9-b381-8cfa9e6f2777")
 		)
 		(pin "2"
-			(uuid "2b8a01e7-ec0b-4049-837b-40fc6657ca1f")
+			(uuid "41e4280a-49c4-4116-ae9c-999bcbcc3d54")
 		)
 		(instances
 			(project "simple_circuit"
-				(path "/b820464d-ba53-4df6-8301-e55492dc6243"
+				(path "/9bae8aa0-2a10-402d-bcd1-f83ce99fad42"
 					(reference "R1")
 					(unit 1)
 				)

@@ -487,7 +487,7 @@ class Schematic:
                     }
                 },
                 "Datasheet": {
-                    "value": symbol.datasheet or "~",
+                    "value": getattr(symbol, 'Datasheet', None) or getattr(symbol, 'datasheet', None) or "~",
                     "at": [0, 0, 0],
                     "effects": {
                         "font": {"size": [1.27, 1.27]},
@@ -495,7 +495,7 @@ class Schematic:
                     }
                 },
                 "Description": {
-                    "value": symbol.description,
+                    "value": getattr(symbol, 'Description', None) or getattr(symbol, 'description', None) or "Resistor",
                     "at": [0, 0, 0],
                     "effects": {
                         "font": {"size": [1.27, 1.27]},

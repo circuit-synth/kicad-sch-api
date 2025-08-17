@@ -435,14 +435,18 @@ class SymbolLibraryCache:
                         prop_name = item[1]
                         prop_value = item[2]
                         
+                        logger.debug(f"🔧 Processing property: {prop_name} = {prop_value}")
                         if prop_name == sexpdata.Symbol('Reference'):
                             result["reference_prefix"] = str(prop_value)
+                            logger.debug(f"🔧 Set reference_prefix: {str(prop_value)}")
                         elif prop_name == sexpdata.Symbol('Description'):
-                            result["description"] = str(prop_value)
+                            result["Description"] = str(prop_value)  # Keep original case
+                            logger.debug(f"🔧 Set Description: {str(prop_value)}")
                         elif prop_name == sexpdata.Symbol('ki_keywords'):
                             result["keywords"] = str(prop_value)
                         elif prop_name == sexpdata.Symbol('Datasheet'):
-                            result["datasheet"] = str(prop_value)
+                            result["Datasheet"] = str(prop_value)  # Keep original case
+                            logger.debug(f"🔧 Set Datasheet: {str(prop_value)}")
 
             # Extract pins (this is simplified - pins are in symbol sub-definitions)
             # For now, we'll extract pins from the actual symbol structure

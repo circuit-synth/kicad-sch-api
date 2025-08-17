@@ -269,7 +269,7 @@ class SExpressionParser:
 
         # Add components
         for component in schematic_data.get("components", []):
-            sexp_data.append(self._symbol_to_sexp(component))
+            sexp_data.append(self._symbol_to_sexp(component, schematic_data.get("uuid")))
 
         # Add wires
         for wire in schematic_data.get("wires", []):
@@ -409,7 +409,7 @@ class SExpressionParser:
             sexp.append([sexpdata.Symbol(key), value])
         return sexp
 
-    def _symbol_to_sexp(self, symbol_data: Dict[str, Any]) -> List[Any]:
+    def _symbol_to_sexp(self, symbol_data: Dict[str, Any], schematic_uuid: str = None) -> List[Any]:
         """Convert symbol to S-expression."""
         sexp = [sexpdata.Symbol("symbol")]
 
@@ -476,7 +476,9 @@ class SExpressionParser:
 
         # Add instances section (required by KiCAD)
         project_name = "simple_circuit"  # TODO: Get from schematic context
-        root_uuid = symbol_data.get("root_uuid", str(uuid.uuid4()))
+        root_uuid = schematic_uuid or symbol_data.get("root_uuid", str(uuid.uuid4()))
+        logger.debug(f"🔧 Using UUID {root_uuid} for component {symbol_data.get('reference', 'unknown')}")
+        logger.debug(f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}")
         sexp.append([
             sexpdata.Symbol("instances"),
             [sexpdata.Symbol("project"), project_name,
