@@ -19,7 +19,12 @@ def main():
     )
     
     sch.save("test_single_hierarchical_sheet.kicad_sch")
-    print("✅ Created single hierarchical sheet")
+    
+    # Create the referenced sub-schematic file so KiCAD can load it
+    sub_sch = ksa.create_schematic("subcircuit1")
+    sub_sch.save("subcircuit1.kicad_sch")
+    
+    print("✅ Created single hierarchical sheet with sub-schematic")
     
     import subprocess
     subprocess.run(["open", "test_single_hierarchical_sheet.kicad_sch"])
