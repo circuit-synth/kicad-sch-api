@@ -528,8 +528,36 @@ class SExpressionParser:
 
     def _wire_to_sexp(self, wire_data: Dict[str, Any]) -> List[Any]:
         """Convert wire to S-expression."""
-        # Implementation for wire conversion
-        return [sexpdata.Symbol("wire")]
+        sexp = [sexpdata.Symbol("wire")]
+        
+        # Add points (pts section)
+        points = wire_data.get("points", [])
+        if len(points) >= 2:
+            pts_sexp = [sexpdata.Symbol("pts")]
+            for point in points:
+                if isinstance(point, dict):
+                    x, y = point["x"], point["y"]
+                elif isinstance(point, (list, tuple)) and len(point) >= 2:
+                    x, y = point[0], point[1]
+                else:
+                    # Assume it's a Point object
+                    x, y = point.x, point.y
+                pts_sexp.append([sexpdata.Symbol("xy"), x, y])
+            sexp.append(pts_sexp)
+        
+        # Add stroke information
+        stroke_width = wire_data.get("stroke_width", 0)
+        stroke_type = wire_data.get("stroke_type", "default")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+        
+        # Add UUID
+        if "uuid" in wire_data:
+            sexp.append([sexpdata.Symbol("uuid"), wire_data["uuid"]])
+        
+        return sexp
 
     def _junction_to_sexp(self, junction_data: Dict[str, Any]) -> List[Any]:
         """Convert junction to S-expression."""

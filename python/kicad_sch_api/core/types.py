@@ -178,10 +178,10 @@ class Wire:
     """Wire connection in schematic."""
 
     uuid: str
-    start: Point
-    end: Point
+    points: List[Point]  # Support for multi-point wires
     wire_type: WireType = WireType.WIRE
     stroke_width: float = 0.0
+    stroke_type: str = "default"
 
     def __post_init__(self):
         if not self.uuid:
@@ -190,18 +190,48 @@ class Wire:
         self.wire_type = (
             WireType(self.wire_type) if isinstance(self.wire_type, str) else self.wire_type
         )
+        
+        # Ensure we have at least 2 points
+        if len(self.points) < 2:
+            raise ValueError("Wire must have at least 2 points")
+
+    @classmethod
+    def from_start_end(cls, uuid: str, start: Point, end: Point, **kwargs) -> "Wire":
+        """Create wire from start and end points (convenience method)."""
+        return cls(uuid=uuid, points=[start, end], **kwargs)
+
+    @property
+    def start(self) -> Point:
+        """First point of the wire."""
+        return self.points[0]
+
+    @property
+    def end(self) -> Point:
+        """Last point of the wire."""
+        return self.points[-1]
 
     @property
     def length(self) -> float:
-        """Wire length."""
-        return self.start.distance_to(self.end)
+        """Total wire length (sum of all segments)."""
+        total = 0.0
+        for i in range(len(self.points) - 1):
+            total += self.points[i].distance_to(self.points[i + 1])
+        return total
+
+    def is_simple(self) -> bool:
+        """Check if wire is a simple 2-point wire."""
+        return len(self.points) == 2
 
     def is_horizontal(self) -> bool:
-        """Check if wire is horizontal."""
+        """Check if wire is horizontal (only for simple wires)."""
+        if not self.is_simple():
+            return False
         return abs(self.start.y - self.end.y) < 0.001
 
     def is_vertical(self) -> bool:
-        """Check if wire is vertical."""
+        """Check if wire is vertical (only for simple wires)."""
+        if not self.is_simple():
+            return False
         return abs(self.start.x - self.end.x) < 0.001
 
 

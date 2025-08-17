@@ -6,11 +6,14 @@ import kicad_sch_api as ksa
 def main():
     sch = ksa.create_schematic("Single Wire")
     
-    # TODO: Add wire when wire API is implemented
-    # sch.wires.add(start=(100, 100), end=(150, 100))
+    # Add wire matching the reference schematic
+    sch.wires.add(
+        start=(114.3, 63.5),
+        end=(135.89, 63.5)
+    )
     
     sch.save("test_single_wire.kicad_sch")
-    print("✅ Created single wire (no wire implementation yet)")
+    print("✅ Created single wire")
     
     import subprocess
     subprocess.run(["open", "test_single_wire.kicad_sch"])

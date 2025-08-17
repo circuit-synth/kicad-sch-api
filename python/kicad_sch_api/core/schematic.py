@@ -16,7 +16,8 @@ from ..utils.validation import SchematicValidator, ValidationError, ValidationIs
 from .components import ComponentCollection
 from .formatter import ExactFormatter
 from .parser import SExpressionParser
-from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape
+from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape, WireType
+from .wires import WireCollection
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,31 @@ class Schematic:
         ]
         self._components = ComponentCollection(component_symbols)
 
+        # Initialize wire collection
+        wire_data = self._data.get("wires", [])
+        wires = []
+        for wire_dict in wire_data:
+            if isinstance(wire_dict, dict):
+                # Convert dict to Wire object
+                points = []
+                for point_data in wire_dict.get("points", []):
+                    if isinstance(point_data, dict):
+                        points.append(Point(point_data["x"], point_data["y"]))
+                    elif isinstance(point_data, (list, tuple)):
+                        points.append(Point(point_data[0], point_data[1]))
+                    else:
+                        points.append(point_data)
+                
+                wire = Wire(
+                    uuid=wire_dict.get("uuid", str(uuid.uuid4())),
+                    points=points,
+                    wire_type=WireType(wire_dict.get("wire_type", "wire")),
+                    stroke_width=wire_dict.get("stroke_width", 0.0),
+                    stroke_type=wire_dict.get("stroke_type", "default")
+                )
+                wires.append(wire)
+        self._wires = WireCollection(wires)
+
         # Track modifications for save optimization
         self._modified = False
         self._last_save_time = None
@@ -70,7 +96,7 @@ class Schematic:
         self._operation_count = 0
         self._total_operation_time = 0.0
 
-        logger.debug(f"Schematic initialized with {len(self._components)} components")
+        logger.debug(f"Schematic initialized with {len(self._components)} components and {len(self._wires)} wires")
 
     @classmethod
     def load(cls, file_path: Union[str, Path]) -> "Schematic":
@@ -137,6 +163,11 @@ class Schematic:
         return self._components
 
     @property
+    def wires(self) -> WireCollection:
+        """Collection of all wires in the schematic."""
+        return self._wires
+
+    @property
     def version(self) -> Optional[str]:
         """KiCAD version string."""
         return self._data.get("version")
@@ -195,8 +226,9 @@ class Schematic:
         if errors:
             raise ValidationError("Cannot save schematic with validation errors", errors)
 
-        # Update data structure with current component state
+        # Update data structure with current component and wire state
         self._sync_components_to_data()
+        self._sync_wires_to_data()
 
         # Write file
         if preserve_format and self._original_content:
@@ -515,6 +547,21 @@ class Schematic:
                     lib_symbols[comp.lib_id] = {"definition": "basic"}
         
         self._data["lib_symbols"] = lib_symbols
+
+    def _sync_wires_to_data(self):
+        """Sync wire collection state back to data structure."""
+        wire_data = []
+        for wire in self._wires:
+            wire_dict = {
+                "uuid": wire.uuid,
+                "points": [{"x": p.x, "y": p.y} for p in wire.points],
+                "wire_type": wire.wire_type.value,
+                "stroke_width": wire.stroke_width,
+                "stroke_type": wire.stroke_type
+            }
+            wire_data.append(wire_dict)
+        
+        self._data["wires"] = wire_data
 
     def _convert_symbol_to_kicad_format(self, symbol: "SymbolDefinition", lib_id: str) -> Dict[str, Any]:
         """Convert SymbolDefinition to KiCAD lib_symbols format using raw parsed data."""
