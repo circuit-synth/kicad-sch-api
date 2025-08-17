@@ -295,6 +295,45 @@ class Label:
 
 
 @dataclass
+class Text:
+    """Free text element in schematic."""
+
+    uuid: str
+    position: Point
+    text: str
+    rotation: float = 0.0
+    size: float = 1.27
+    exclude_from_sim: bool = False
+
+    def __post_init__(self):
+        if not self.uuid:
+            self.uuid = str(uuid4())
+
+
+@dataclass
+class TextBox:
+    """Text box element with border in schematic."""
+
+    uuid: str
+    position: Point
+    size: Point  # Width, height
+    text: str
+    rotation: float = 0.0
+    font_size: float = 1.27
+    margins: Tuple[float, float, float, float] = (0.9525, 0.9525, 0.9525, 0.9525)  # top, right, bottom, left
+    stroke_width: float = 0.0
+    stroke_type: str = "solid"
+    fill_type: str = "none"
+    justify_horizontal: str = "left"
+    justify_vertical: str = "top"
+    exclude_from_sim: bool = False
+
+    def __post_init__(self):
+        if not self.uuid:
+            self.uuid = str(uuid4())
+
+
+@dataclass
 class Net:
     """Electrical net connecting components."""
 

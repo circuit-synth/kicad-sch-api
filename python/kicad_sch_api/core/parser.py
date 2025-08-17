@@ -291,6 +291,14 @@ class SExpressionParser:
         for sheet in schematic_data.get("sheets", []):
             sexp_data.append(self._sheet_to_sexp(sheet, schematic_data.get("uuid")))
 
+        # Add text elements
+        for text in schematic_data.get("texts", []):
+            sexp_data.append(self._text_to_sexp(text))
+
+        # Add text boxes
+        for text_box in schematic_data.get("text_boxes", []):
+            sexp_data.append(self._text_box_to_sexp(text_box))
+
         # Add sheet_instances (required by KiCAD)
         sheet_instances = schematic_data.get("sheet_instances", [])
         if sheet_instances:
@@ -825,6 +833,103 @@ class SExpressionParser:
         pin_sexp.append(effects)
         
         return pin_sexp
+
+    def _text_to_sexp(self, text_data: Dict[str, Any]) -> List[Any]:
+        """Convert text element to S-expression."""
+        sexp = [sexpdata.Symbol("text"), text_data["text"]]
+        
+        # Add exclude_from_sim
+        exclude_sim = text_data.get("exclude_from_sim", False)
+        sexp.append([sexpdata.Symbol("exclude_from_sim"), 
+                    sexpdata.Symbol("yes" if exclude_sim else "no")])
+        
+        # Add position
+        pos = text_data["position"]
+        x, y = pos["x"], pos["y"]
+        rotation = text_data.get("rotation", 0)
+        
+        # Format coordinates properly
+        if isinstance(x, float) and x.is_integer():
+            x = int(x)
+        if isinstance(y, float) and y.is_integer():
+            y = int(y)
+            
+        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
+        
+        # Add effects (font properties)
+        size = text_data.get("size", 1.27)
+        effects = [sexpdata.Symbol("effects")]
+        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
+        effects.append(font)
+        sexp.append(effects)
+        
+        # Add UUID
+        if "uuid" in text_data:
+            sexp.append([sexpdata.Symbol("uuid"), text_data["uuid"]])
+        
+        return sexp
+
+    def _text_box_to_sexp(self, text_box_data: Dict[str, Any]) -> List[Any]:
+        """Convert text box element to S-expression."""
+        sexp = [sexpdata.Symbol("text_box"), text_box_data["text"]]
+        
+        # Add exclude_from_sim
+        exclude_sim = text_box_data.get("exclude_from_sim", False)
+        sexp.append([sexpdata.Symbol("exclude_from_sim"), 
+                    sexpdata.Symbol("yes" if exclude_sim else "no")])
+        
+        # Add position
+        pos = text_box_data["position"]
+        x, y = pos["x"], pos["y"]
+        rotation = text_box_data.get("rotation", 0)
+        
+        # Format coordinates properly
+        if isinstance(x, float) and x.is_integer():
+            x = int(x)
+        if isinstance(y, float) and y.is_integer():
+            y = int(y)
+            
+        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
+        
+        # Add size
+        size = text_box_data["size"]
+        w, h = size["width"], size["height"]
+        sexp.append([sexpdata.Symbol("size"), w, h])
+        
+        # Add margins
+        margins = text_box_data.get("margins", (0.9525, 0.9525, 0.9525, 0.9525))
+        sexp.append([sexpdata.Symbol("margins"), margins[0], margins[1], margins[2], margins[3]])
+        
+        # Add stroke
+        stroke_width = text_box_data.get("stroke_width", 0)
+        stroke_type = text_box_data.get("stroke_type", "solid")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+        
+        # Add fill
+        fill_type = text_box_data.get("fill_type", "none")
+        fill_sexp = [sexpdata.Symbol("fill")]
+        fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
+        sexp.append(fill_sexp)
+        
+        # Add effects (font properties and justification)
+        font_size = text_box_data.get("font_size", 1.27)
+        justify_h = text_box_data.get("justify_horizontal", "left")
+        justify_v = text_box_data.get("justify_vertical", "top")
+        
+        effects = [sexpdata.Symbol("effects")]
+        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), font_size, font_size]]
+        effects.append(font)
+        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify_h), sexpdata.Symbol(justify_v)])
+        sexp.append(effects)
+        
+        # Add UUID
+        if "uuid" in text_box_data:
+            sexp.append([sexpdata.Symbol("uuid"), text_box_data["uuid"]])
+        
+        return sexp
 
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:
         """Convert lib_symbols to S-expression."""

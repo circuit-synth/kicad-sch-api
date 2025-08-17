@@ -40,9 +40,9 @@ class TestRunner:
             "test_power_symbols.py",  # Now implemented!
             "test_single_label.py",  # Now implemented!
             "test_single_hierarchical_sheet.py",  # Now implemented!
+            "test_single_text.py",  # Now implemented!
+            "test_single_text_box.py",  # Now implemented!
             # These require APIs not yet implemented:
-            # "test_single_text.py",
-            # "test_single_text_box.py",
             # "test_multi_component.py",
         ]
     
@@ -432,6 +432,62 @@ class TestRunner:
         assert "size 26.67 34.29" in content, "Expected sheet size not found"
         
         print(f"✅ test_single_hierarchical_sheet.py: Generated valid schematic with hierarchical sheet")
+        
+        # Clean up
+        if generated_path.exists():
+            generated_path.unlink()
+
+    def test_single_text(self):
+        """Test text element generation."""
+        success, output, generated_path = self._run_test_script("test_single_text.py")
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Validate schematic structure
+        is_valid, msg = self._validate_schematic(generated_path)
+        assert is_valid, f"Invalid schematic: {msg}"
+        
+        # Check component count (should be 0 for text only)
+        component_count = self._count_components(generated_path)
+        assert component_count == 0, f"Expected 0 components, found {component_count}"
+        
+        # Check for text in content
+        with open(generated_path, 'r') as f:
+            content = f.read()
+        assert 'text "Text here"' in content, "Text element not found in output"
+        assert "at 127.254 76.454" in content, "Expected text position not found"
+        
+        print(f"✅ test_single_text.py: Generated valid schematic with text element")
+        
+        # Clean up
+        if generated_path.exists():
+            generated_path.unlink()
+
+    def test_single_text_box(self):
+        """Test text box element generation."""
+        success, output, generated_path = self._run_test_script("test_single_text_box.py")
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Validate schematic structure
+        is_valid, msg = self._validate_schematic(generated_path)
+        assert is_valid, f"Invalid schematic: {msg}"
+        
+        # Check component count (should be 0 for text box only)
+        component_count = self._count_components(generated_path)
+        assert component_count == 0, f"Expected 0 components, found {component_count}"
+        
+        # Check for text box in content
+        with open(generated_path, 'r') as f:
+            content = f.read()
+        assert 'text_box "Text box goes here"' in content, "Text box element not found in output"
+        assert "at 116.84 71.12" in content, "Expected text box position not found"
+        assert "size 59.69 35.56" in content, "Expected text box size not found"
+        assert "margins 0.9525" in content, "Expected text box margins not found"
+        
+        print(f"✅ test_single_text_box.py: Generated valid schematic with text box element")
         
         # Clean up
         if generated_path.exists():

@@ -16,7 +16,7 @@ from ..utils.validation import SchematicValidator, ValidationError, ValidationIs
 from .components import ComponentCollection
 from .formatter import ExactFormatter
 from .parser import SExpressionParser
-from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape, WireType, Sheet
+from .types import Junction, Label, Net, Point, SchematicSymbol, TitleBlock, Wire, LabelType, HierarchicalLabelShape, WireType, Sheet, Text, TextBox
 from .wires import WireCollection
 from .junctions import JunctionCollection
 
@@ -682,6 +682,134 @@ class Schematic:
                 return pin_uuid
         
         raise ValueError(f"Sheet with UUID '{sheet_uuid}' not found")
+
+    def add_text(
+        self,
+        text: str,
+        position: Union[Point, Tuple[float, float]],
+        rotation: float = 0.0,
+        size: float = 1.27,
+        exclude_from_sim: bool = False
+    ) -> str:
+        """
+        Add a text element.
+
+        Args:
+            text: Text content
+            position: Text position
+            rotation: Text rotation in degrees
+            size: Font size
+            exclude_from_sim: Exclude from simulation
+
+        Returns:
+            UUID of created text element
+        """
+        if isinstance(position, tuple):
+            position = Point(position[0], position[1])
+
+        text_element = Text(
+            uuid=str(uuid.uuid4()),
+            position=position,
+            text=text,
+            rotation=rotation,
+            size=size,
+            exclude_from_sim=exclude_from_sim
+        )
+
+        if "texts" not in self._data:
+            self._data["texts"] = []
+
+        self._data["texts"].append({
+            "uuid": text_element.uuid,
+            "position": {"x": text_element.position.x, "y": text_element.position.y},
+            "text": text_element.text,
+            "rotation": text_element.rotation,
+            "size": text_element.size,
+            "exclude_from_sim": text_element.exclude_from_sim
+        })
+        self._modified = True
+
+        logger.debug(f"Added text: '{text}' at {position}")
+        return text_element.uuid
+
+    def add_text_box(
+        self,
+        text: str,
+        position: Union[Point, Tuple[float, float]],
+        size: Union[Point, Tuple[float, float]],
+        rotation: float = 0.0,
+        font_size: float = 1.27,
+        margins: Tuple[float, float, float, float] = (0.9525, 0.9525, 0.9525, 0.9525),
+        stroke_width: float = 0.0,
+        stroke_type: str = "solid",
+        fill_type: str = "none",
+        justify_horizontal: str = "left",
+        justify_vertical: str = "top",
+        exclude_from_sim: bool = False
+    ) -> str:
+        """
+        Add a text box element.
+
+        Args:
+            text: Text content
+            position: Text box position (top-left corner)
+            size: Text box size (width, height)
+            rotation: Text rotation in degrees
+            font_size: Font size
+            margins: Margins (top, right, bottom, left)
+            stroke_width: Border line width
+            stroke_type: Border line type
+            fill_type: Fill type (none, solid, etc.)
+            justify_horizontal: Horizontal text alignment
+            justify_vertical: Vertical text alignment
+            exclude_from_sim: Exclude from simulation
+
+        Returns:
+            UUID of created text box element
+        """
+        if isinstance(position, tuple):
+            position = Point(position[0], position[1])
+        if isinstance(size, tuple):
+            size = Point(size[0], size[1])
+
+        text_box = TextBox(
+            uuid=str(uuid.uuid4()),
+            position=position,
+            size=size,
+            text=text,
+            rotation=rotation,
+            font_size=font_size,
+            margins=margins,
+            stroke_width=stroke_width,
+            stroke_type=stroke_type,
+            fill_type=fill_type,
+            justify_horizontal=justify_horizontal,
+            justify_vertical=justify_vertical,
+            exclude_from_sim=exclude_from_sim
+        )
+
+        if "text_boxes" not in self._data:
+            self._data["text_boxes"] = []
+
+        self._data["text_boxes"].append({
+            "uuid": text_box.uuid,
+            "position": {"x": text_box.position.x, "y": text_box.position.y},
+            "size": {"width": text_box.size.x, "height": text_box.size.y},
+            "text": text_box.text,
+            "rotation": text_box.rotation,
+            "font_size": text_box.font_size,
+            "margins": text_box.margins,
+            "stroke_width": text_box.stroke_width,
+            "stroke_type": text_box.stroke_type,
+            "fill_type": text_box.fill_type,
+            "justify_horizontal": text_box.justify_horizontal,
+            "justify_vertical": text_box.justify_vertical,
+            "exclude_from_sim": text_box.exclude_from_sim
+        })
+        self._modified = True
+
+        logger.debug(f"Added text box: '{text}' at {position} size {size}")
+        return text_box.uuid
 
     # Library management
     @property
