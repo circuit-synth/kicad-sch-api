@@ -410,8 +410,8 @@ class SymbolLibraryCache:
             with open(library_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # Parse the S-expression
-            parsed = sexpdata.loads(content)
+            # Parse the S-expression with symbol preservation
+            parsed = sexpdata.loads(content, true=None, false=None, nil=None)
             
             # Find the symbol we're looking for
             symbol_data = self._find_symbol_in_parsed_data(parsed, symbol_name)

@@ -47,7 +47,14 @@ def main():
             print(f"🔧 DEBUG: Lib_symbols[{lib_id}] type: {type(lib_data)}")
             if isinstance(lib_data, list):
                 print(f"🔧 DEBUG: Lib_symbols[{lib_id}] length: {len(lib_data)}")
-                print(f"🔧 DEBUG: Lib_symbols[{lib_id}] first few items: {lib_data[:3] if len(lib_data) > 3 else lib_data}")
+                # Look for pin definitions to debug
+                for i, item in enumerate(lib_data):
+                    if isinstance(item, list) and len(item) > 0:
+                        if (hasattr(item[0], 'value') if hasattr(item[0], 'value') else str(item[0])) == 'symbol':
+                            for j, subitem in enumerate(item):
+                                if isinstance(subitem, list) and len(subitem) >= 3:
+                                    if (hasattr(subitem[0], 'value') if hasattr(subitem[0], 'value') else str(subitem[0])) == 'pin':
+                                        print(f"🔧 DEBUG: Found pin: {subitem[:3]} - types: {[type(x) for x in subitem[:3]]}")
     
     # Save the schematic
     output_file = "simple_circuit.kicad_sch"

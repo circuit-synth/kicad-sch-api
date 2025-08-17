@@ -508,19 +508,50 @@ class Schematic:
 
     def _convert_raw_symbol_data(self, raw_data: List, lib_id: str) -> Dict[str, Any]:
         """Convert raw parsed KiCAD symbol data to dictionary format for S-expression generation."""
-        # The raw_data is the parsed S-expression from the .kicad_sym file
-        # We need to modify the symbol name to use the full lib_id for schematic context
-        
-        # Make a copy and modify the symbol name to use full lib_id
         import copy
+        import sexpdata
+        
+        # Make a copy and fix symbol name and string/symbol issues
         modified_data = copy.deepcopy(raw_data)
         
-        # The structure is [Symbol('symbol'), 'R', ...]
         # Replace the symbol name with the full lib_id
         if len(modified_data) >= 2:
             modified_data[1] = lib_id  # Change 'R' to 'Device:R'
         
+        # Fix string/symbol conversion issues in pin definitions
+        print(f"🔧 DEBUG: Before fix - checking for pin definitions...")
+        self._fix_symbol_strings_recursively(modified_data)
+        print(f"🔧 DEBUG: After fix - symbol strings fixed")
+        
         return modified_data
+
+    def _fix_symbol_strings_recursively(self, data):
+        """Recursively fix string/symbol issues in parsed S-expression data."""
+        import sexpdata
+        
+        if isinstance(data, list):
+            for i, item in enumerate(data):
+                if isinstance(item, list):
+                    # Check for pin definitions that need fixing
+                    if (len(item) >= 3 and 
+                        item[0] == sexpdata.Symbol('pin')):
+                        print(f"🔧 DEBUG: Found pin definition: {item[:3]} - types: {[type(x) for x in item[:3]]}")
+                        # Fix pin type and shape - ensure they are symbols not strings
+                        if isinstance(item[1], str):
+                            print(f"🔧 DEBUG: Converting pin type '{item[1]}' to symbol")
+                            item[1] = sexpdata.Symbol(item[1])  # pin type: "passive" -> passive
+                        if len(item) >= 3 and isinstance(item[2], str):
+                            print(f"🔧 DEBUG: Converting pin shape '{item[2]}' to symbol")
+                            item[2] = sexpdata.Symbol(item[2])  # pin shape: "line" -> line
+                    
+                    # Recursively process nested lists
+                    self._fix_symbol_strings_recursively(item)
+                elif isinstance(item, str):
+                    # Fix common KiCAD keywords that should be symbols
+                    if item in ['yes', 'no', 'default', 'none', 'left', 'right', 'center']:
+                        data[i] = sexpdata.Symbol(item)
+        
+        return data
 
     @staticmethod
     def _create_empty_schematic_data() -> Dict[str, Any]:

@@ -82,7 +82,7 @@ class ExactFormatter:
         )
 
         # Pins and connections  
-        self.rules["pin"] = FormatRule(inline=False, quote_indices=set())
+        self.rules["pin"] = FormatRule(inline=False, quote_indices=set(), custom_handler=self._format_pin)
         self.rules["number"] = FormatRule(inline=True, quote_indices={1})  # Pin numbers should be quoted
         self.rules["name"] = FormatRule(inline=True, quote_indices={1})    # Pin names should be quoted
         self.rules["instances"] = FormatRule(inline=False)
@@ -205,6 +205,8 @@ class ExactFormatter:
         # Handle different multiline formats based on tag
         if tag == "property":
             return self._format_property(lst, indent_level)
+        elif tag == "pin":
+            return self._format_pin(lst, indent_level)
         elif tag in ("symbol", "wire", "junction", "label"):
             return self._format_component_like(lst, indent_level, rule)
         else:
@@ -228,6 +230,32 @@ class ExactFormatter:
             else:
                 result += f" {element}"
 
+        result += ")"
+        return result
+
+    def _format_pin(self, lst: List[Any], indent_level: int) -> str:
+        """Format pin elements with context-aware quoting."""
+        if len(lst) < 2:
+            return self._format_inline(lst, FormatRule())
+            
+        indent = "\t" * indent_level
+        next_indent = "\t" * (indent_level + 1)
+        
+        # Check if this is a lib_symbols pin (passive/line) or component pin ("1")
+        if len(lst) >= 3 and isinstance(lst[2], sexpdata.Symbol):
+            # lib_symbols context: (pin passive line ...)
+            result = f"({lst[0]} {lst[1]} {lst[2]}"
+            start_index = 3
+        else:
+            # component context: (pin "1" ...)  
+            result = f'({lst[0]} "{lst[1]}"'
+            start_index = 2
+            
+        # Add remaining elements on separate lines
+        for element in lst[start_index:]:
+            if isinstance(element, list):
+                result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
+        
         result += ")"
         return result
 

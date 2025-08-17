@@ -1,10 +1,10 @@
-# CLAUDE.md - kicad-sch-api
+# CLAUDE.md
 
-This file provides guidance to Claude Code when working on the kicad-sch-api project.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-kicad-sch-api is a professional KiCAD schematic manipulation library with exact format preservation and AI agent integration via MCP server.
+kicad-sch-api is a professional KiCAD schematic manipulation library with exact format preservation. The core focus is building robust Python library functionality before implementing MCP server integration.
 
 ## Architecture
 
@@ -14,40 +14,62 @@ kicad-sch-api/
 │   ├── kicad_sch_api/              # Main package
 │   │   ├── core/                   # Core schematic functionality
 │   │   ├── library/                # Symbol library management
-│   │   ├── mcp/                    # MCP server interface
 │   │   └── utils/                  # Validation and utilities
 │   └── tests/                      # Comprehensive test suite
-├── mcp-server/                     # TypeScript MCP server
-└── submodules/kicad-skip/          # Foundation library
+├── submodules/kicad-skip/          # Foundation S-expression library
+└── simple_circuit.kicad_sch        # Test schematic for development
 ```
 
 ## Key Commands
 
-### Development
+### Development Environment Setup
 ```bash
-# Install in development mode
+# Install in development mode (from python/ directory)
+cd python
 uv pip install -e .
 
-# Run tests
-uv run pytest tests/ -v
-
-# Run specific test
-uv run pytest tests/test_component_management.py::TestComponentManagement::test_component_creation_and_access -v
-
-# Format code
-uv run black kicad_sch_api/ tests/
-uv run isort kicad_sch_api/ tests/
+# Or install with dev dependencies
+uv pip install -e ".[dev]"
 ```
 
-### MCP Server
+### Testing Commands
 ```bash
-# Build MCP server
-cd mcp-server
-npm install
-npm run build
+# Run all tests with coverage
+uv run pytest tests/ -v
 
-# Start MCP server
-npm start
+# Run specific test file
+uv run pytest tests/test_component_management.py -v
+
+# Run specific test method
+uv run pytest tests/test_component_management.py::TestComponentManagement::test_component_creation_and_access -v
+
+# Run format preservation tests (critical for this project)
+uv run pytest tests/test_format_preservation.py -v
+uv run pytest tests/test_exact_file_diff.py -v
+
+# Run tests with markers
+uv run pytest -m "format" -v          # Format preservation tests
+uv run pytest -m "integration" -v     # Integration tests
+uv run pytest -m "unit" -v           # Unit tests
+```
+
+### Code Quality (ALWAYS run before commits)
+```bash
+# Format code
+uv run black python/kicad_sch_api/ python/tests/
+uv run isort python/kicad_sch_api/ python/tests/
+
+# Type checking
+uv run mypy python/kicad_sch_api/
+
+# Linting
+uv run flake8 python/kicad_sch_api/ python/tests/
+
+# Run all quality checks
+uv run black python/kicad_sch_api/ python/tests/ && \
+uv run isort python/kicad_sch_api/ python/tests/ && \
+uv run mypy python/kicad_sch_api/ && \
+uv run flake8 python/kicad_sch_api/ python/tests/
 ```
 
 ## Core API Usage
@@ -75,37 +97,79 @@ sch.components.bulk_update(
 sch.save()
 ```
 
-## Testing Strategy
+## Testing Strategy & Format Preservation
 
-### Reference Schematics
-Create test schematics in `tests/reference_kicad_projects/` covering:
-- Basic components (R, L, C, D)
-- Labels (local, global, hierarchical)
-- Hierarchical sheets
-- Complex components (ESP32, USB-C, multi-unit ICs)
-- Graphics and text elements
+**CRITICAL**: This project's core differentiator is exact format preservation. Always verify output matches KiCAD exactly.
 
-### Test Categories
-- **Unit tests**: Individual component functionality
-- **Integration tests**: File I/O and round-trip validation
-- **Format preservation**: Exact output matching KiCAD
-- **Performance tests**: Large schematics, bulk operations
-- **MCP tests**: AI agent integration
+### Format Preservation Testing
+```bash
+# Run format preservation tests after any changes
+uv run pytest tests/test_format_preservation.py -v
+uv run pytest tests/test_exact_file_diff.py -v
+
+# Test specific reference projects
+uv run pytest tests/reference_tests/test_single_resistor.py -v
+```
+
+### Reference Test Schematics
+Located in `tests/reference_kicad_projects/`, manually created in KiCAD:
+- `single_resistor/` - Basic component test
+- `two_resistors/` - Multiple components
+- `resistor_divider/` - Connected circuit
+- `single_wire/` - Wire routing
+- `single_label/` - Text labels
+- `single_hierarchical_sheet/` - Hierarchical design
+- `blank_schematic/` - Empty schematic baseline
+
+### Test Categories & Markers
+```bash
+# Specific test types (use pytest markers)
+uv run pytest -m "format" -v      # Format preservation (CRITICAL)
+uv run pytest -m "integration" -v # File I/O and round-trip validation  
+uv run pytest -m "unit" -v        # Individual component functionality
+uv run pytest -m "performance" -v # Large schematic performance
+uv run pytest -m "validation" -v  # Error handling and validation
+```
+
+### Debugging Pattern
+**Standard workflow for implementing new features:**
+
+1. **Manual Reference Creation**: Create simple KiCAD project manually to establish expected output
+2. **Logic Development**: Write Python logic to generate the same output
+3. **Extensive Debug Prints**: Add lots of debug prints to understand parsing/formatting
+4. **Exact Diff Validation**: Use file diff tests to ensure byte-perfect output matching
 
 ## Key Principles
 
 1. **Exact Format Preservation**: Core differentiator from kicad-skip
 2. **Performance First**: Symbol caching, indexed lookups, bulk operations
 3. **Professional Quality**: Comprehensive validation, error collection
-4. **AI-Ready**: Native MCP integration for agent workflows
+4. **Foundation First**: Build robust Python library before MCP/AI integration
 5. **Enhanced UX**: Modern object-oriented API vs kicad-skip's verbose interface
+
+## Core Architecture Patterns
+
+### S-Expression Processing
+- **Parser** (`core/parser.py`): Converts KiCAD files to Python objects
+- **Formatter** (`core/formatter.py`): Converts Python objects back to exact KiCAD format
+- **Types** (`core/types.py`): Dataclasses for schematic elements (Point, Component, Wire, etc.)
+
+### Component Management  
+- **Schematic** (`core/schematic.py`): Main entry point, loads/saves files
+- **ComponentCollection** (`core/components.py`): Enhanced collection with filtering, bulk operations
+- **SymbolLibraryCache** (`library/cache.py`): Symbol lookup and caching system
+
+### Key Design Patterns
+- **Exact Format Preservation**: Every S-expression maintains original formatting
+- **Object-Oriented API**: Modern Python interface vs kicad-skip's verbose approach  
+- **Performance Optimization**: Symbol caching, indexed lookups, bulk operations
+- **Professional Validation**: Comprehensive error collection and reporting
 
 ## Dependencies
 
-- **sexpdata**: S-expression parsing foundation
-- **typing-extensions**: Type hint support for older Python
-- **pytest**: Testing framework
-- **uv**: Package and environment management
+- **sexpdata**: S-expression parsing foundation from kicad-skip
+- **typing-extensions**: Type hint support for older Python versions
+- **uv**: Primary package and environment manager (NOT pip/venv)
 
 ## Memory Bank System
 
@@ -123,7 +187,7 @@ The `.memory_bank/` directory contains:
 
 ### Memory Bank Usage - REQUIRED WORKFLOW
 
-**⚠️ IMPORTANT**: All development work MUST follow the memory bank workflow to maintain project context and decision history.
+**⚠️ CRITICAL**: All development work MUST follow the memory bank workflow to maintain project context and decision history. Claude Code instances have not been following these instructions consistently - this MUST be enforced.
 
 #### Before Starting Any Work:
 1. **Read existing context**: Review `.memory_bank/` files to understand current state

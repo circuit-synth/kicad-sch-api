@@ -449,6 +449,24 @@ class SExpressionParser:
             )
             sexp.append(prop)
 
+        # Add pin UUID assignments (required by KiCAD)  
+        for pin in symbol_data.get("pins", []):
+            pin_uuid = str(uuid.uuid4())
+            # Ensure pin number is a string for proper quoting
+            pin_number = str(pin.number)
+            sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
+
+        # Add instances section (required by KiCAD)
+        project_name = "simple_circuit"  # TODO: Get from schematic context
+        root_uuid = symbol_data.get("root_uuid", str(uuid.uuid4()))
+        sexp.append([
+            sexpdata.Symbol("instances"),
+            [sexpdata.Symbol("project"), project_name,
+             [sexpdata.Symbol("path"), f"/{root_uuid}",
+              [sexpdata.Symbol("reference"), symbol_data.get("reference", "U?")],
+              [sexpdata.Symbol("unit"), symbol_data.get("unit", 1)]]]
+        ])
+
         return sexp
 
     def _create_property_with_positioning(self, prop_name: str, prop_value: str, 
@@ -456,9 +474,15 @@ class SExpressionParser:
                                         justify: str = "left", hide: bool = False) -> List[Any]:
         """Create a property with proper positioning and effects like KiCAD."""
         # Calculate property position relative to component
-        # Based on KiCAD's automatic positioning algorithm
+        # Based on KiCAD's positioning: Reference above component, Value below
         prop_x = component_pos.x + 2.54  # Standard offset to the right
-        prop_y = component_pos.y - (1.27 * offset_index)  # Stack properties vertically
+        
+        if prop_name == "Reference":
+            prop_y = component_pos.y - 1.27  # Reference above component
+        elif prop_name == "Value":
+            prop_y = component_pos.y + 1.27  # Value below component  
+        else:
+            prop_y = component_pos.y + (1.27 * (offset_index + 1))  # Other properties below
         
         prop_sexp = [
             sexpdata.Symbol("property"), 

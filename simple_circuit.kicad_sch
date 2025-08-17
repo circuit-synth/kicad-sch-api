@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version 9.0)
-	(uuid "6bd49112-9782-405f-9425-95d640946651")
+	(uuid "0149745f-4e08-4129-8f18-85bfd3dff3e2")
 	(paper A4)
 	(title_block
 		(title "Simple Circuit"))
@@ -93,17 +93,23 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "f2cc707e-23fa-4460-9bbb-7fc39db15dd0")
+		(uuid "4b686496-a53b-4825-8fe2-20fe687c3437")
 		(property "Reference" "R1"
-			(at 102.54 100 0)
+			(at 102.54 98.73 0)
 			(effects
 				(font
 					(size 1.27 1.27))
 				(justify left)))
 		(property "Value" "10k"
-			(at 102.54 98.73 0)
+			(at 102.54 101.27 0)
 			(effects
 				(font
 					(size 1.27 1.27))
-				(justify left))))
+				(justify left)))
+		(pin "1"
+			(uuid "e426019f-3e33-44f4-bd1e-e26dd153f556"))
+		(pin "2"
+			(uuid "5ba0fc12-d8f8-4308-ae05-68f33215dc62"))
+		(instances
+			(project "simple_circuit" (path "/9d4d9269-d775-4e3a-a2b9-d17cf97d721e" (reference "R1") (unit 1)))))
 	(symbol_instances))
