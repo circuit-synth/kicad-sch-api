@@ -16,7 +16,7 @@ kicad-sch-api/
 │   │   ├── library/                # Symbol library management
 │   │   └── utils/                  # Validation and utilities
 │   └── tests/                      # Comprehensive test suite
-├── submodules/kicad-skip/          # Foundation S-expression library
+├── python/                          # Core Python library
 └── simple_circuit.kicad_sch        # Test schematic for development
 ```
 
@@ -141,11 +141,11 @@ uv run pytest -m "validation" -v  # Error handling and validation
 
 ## Key Principles
 
-1. **Exact Format Preservation**: Core differentiator from kicad-skip
+1. **Exact Format Preservation**: Core differentiator for KiCAD compatibility
 2. **Performance First**: Symbol caching, indexed lookups, bulk operations
 3. **Professional Quality**: Comprehensive validation, error collection
 4. **Foundation First**: Build robust Python library before MCP/AI integration
-5. **Enhanced UX**: Modern object-oriented API vs kicad-skip's verbose interface
+5. **Enhanced UX**: Modern object-oriented API with pythonic interface
 
 ## Core Architecture Patterns
 
@@ -161,7 +161,7 @@ uv run pytest -m "validation" -v  # Error handling and validation
 
 ### Key Design Patterns
 - **Exact Format Preservation**: Every S-expression maintains original formatting
-- **Object-Oriented API**: Modern Python interface vs kicad-skip's verbose approach  
+- **Object-Oriented API**: Modern Python interface with clean design  
 - **Performance Optimization**: Symbol caching, indexed lookups, bulk operations
 - **Professional Validation**: Comprehensive error collection and reporting
 
@@ -178,7 +178,7 @@ The configuration enforces the project's core requirements automatically.
 
 ## Dependencies
 
-- **sexpdata**: S-expression parsing foundation from kicad-skip
+- **sexpdata**: S-expression parsing library
 - **typing-extensions**: Type hint support for older Python versions
 - **uv**: Primary package and environment manager (NOT pip/venv)
 
@@ -237,8 +237,8 @@ This ensures continuity of development decisions and maintains institutional kno
 ## Related Projects
 
 - **circuit-synth**: Parent project and source of transferred logic
-- **kicad-skip**: Foundation library for S-expression parsing
+- **circuit-synth**: Parent project and source of transferred logic
 
 ---
 
-*This project significantly enhances kicad-skip with professional features and development memory management.*
+*This project provides professional KiCAD schematic manipulation with development memory management.*

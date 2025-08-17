@@ -14,13 +14,13 @@
 
 ## 🆚 vs. Existing Solutions
 
-| Feature | kicad-sch-api | kicad-skip | KiCAD Official API |
-|---------|---------------|------------|-------------------|
-| **Schematic Support** | ✅ Full | ✅ Full | ❌ PCB Only |
+| Feature | kicad-sch-api | Other Solutions | KiCAD Official API |
+|---------|---------------|-----------------|-------------------|
+| **Schematic Support** | ✅ Full | ⚠️ Varies | ❌ PCB Only |
 | **Format Preservation** | ✅ Exact | ❌ Basic | N/A |
 | **Performance** | ✅ Optimized | ⚠️ Basic | N/A |
-| **Library Management** | ✅ Advanced | ⚠️ Basic | N/A |
-| **Runtime Dependencies** | ❌ None | ❌ None | ✅ KiCAD Required |
+| **Library Management** | ✅ Advanced | ⚠️ Limited | N/A |
+| **Runtime Dependencies** | ❌ None | ⚠️ Varies | ✅ KiCAD Required |
 
 ## 📦 Installation
 
@@ -156,7 +156,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## 🔗 Related Projects
 
 - **[circuit-synth](https://github.com/circuit-synth/circuit-synth)**: Comprehensive circuit design automation
-- **[kicad-skip](https://github.com/psychogenic/kicad-skip)**: Foundation S-expression parser
+- **[sexpdata](https://github.com/jd-boyd/sexpdata)**: S-expression parsing library
 
 ---
 

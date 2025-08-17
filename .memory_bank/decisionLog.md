@@ -8,13 +8,13 @@
 
 **Context**: Need for professional KiCAD schematic manipulation without losing format fidelity.
 
-**Decision**: Build upon kicad-skip foundation but provide object-oriented API layer.
+**Decision**: Use sexpdata library for S-expression parsing with custom object-oriented API layer.
 
 **Rationale**:
-- kicad-skip provides solid S-expression parsing but verbose interface
+- sexpdata is a proven, lightweight S-expression parser
 - Object-oriented API improves developer experience
 - Maintains exact format preservation as core differentiator
-- Allows gradual enhancement without breaking foundation
+- Independent implementation allows full control
 
 **Consequences**:
 - ✅ Clean separation between parsing and API layers

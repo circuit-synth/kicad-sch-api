@@ -25,11 +25,11 @@
 
 ## Key Differentiators
 
-### vs kicad-skip (Foundation Library)
-- **Enhanced API**: Object-oriented vs verbose S-expression manipulation
-- **Format Preservation**: Exact output matching vs functional-only changes
+### vs Other Solutions
+- **Enhanced API**: Object-oriented design with modern Python patterns
+- **Format Preservation**: Exact output matching KiCAD native format
 - **Performance**: Optimized for large schematics and bulk operations
-- **AI Integration**: Native MCP server vs no agent support
+- **AI Integration**: Native MCP server for agent workflows
 
 ### vs Manual KiCAD Usage
 - **Automation**: Bulk operations that would take hours manually
@@ -43,7 +43,7 @@ Core Library (Python)     MCP Server (TypeScript)     AI Agents
        ↓                        ↓                        ↓
    Schematic API  ←→  Model Context Protocol  ←→  Claude/GPT/etc
        ↓
-S-expression Parser (kicad-skip foundation)
+S-expression Parser (sexpdata library)
        ↓  
    KiCAD Files (.kicad_sch)
 ```

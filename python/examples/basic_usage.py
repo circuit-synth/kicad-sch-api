@@ -173,7 +173,7 @@ def main():
 
     print("\n🎉 Basic usage example completed successfully!")
     print("\nKey takeaways:")
-    print("  • Enhanced API: resistor.value = '10k' (vs kicad-skip's verbose syntax)")
+    print("  • Modern API: Clean, pythonic interface for schematic manipulation")
     print("  • Fast operations: O(1) component lookup and bulk updates")
     print("  • Format preservation: Exact KiCAD compatibility guaranteed")
     print("  • Professional validation: Comprehensive error detection")

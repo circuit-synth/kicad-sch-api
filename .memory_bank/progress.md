@@ -7,7 +7,7 @@
 **Status**: Complete
 
 #### Completed Features
-- **S-expression Parsing**: Built on kicad-skip foundation with format preservation
+- **S-expression Parsing**: Built with sexpdata library with format preservation
 - **Component Management**: Add, modify, delete components with full property support
 - **Schematic Loading**: Parse .kicad_sch files with exact structure preservation
 - **Property System**: Handle custom properties, footprints, values, references

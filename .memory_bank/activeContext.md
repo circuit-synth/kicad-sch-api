@@ -47,8 +47,8 @@
 - `python/kicad_sch_api/utils/`: Validation and utilities
 
 ### Foundation
-- `submodules/kicad-skip/`: S-expression parsing foundation
-- Built upon but significantly enhanced for professional usage
+- Uses `sexpdata` library for S-expression parsing
+- Independent professional implementation
 
 ### Documentation & Planning
 - `CLAUDE.md`: AI development guidance and command reference
