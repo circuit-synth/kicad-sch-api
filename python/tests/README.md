@@ -4,15 +4,15 @@
 
 The kicad-sch-api test framework has been refactored to use a cleaner, more maintainable approach:
 
-1. **Top-level test scripts** (`test_*.py` in project root) - Simple Python scripts that demonstrate API usage
-2. **Test runner** (`python/tests/test_runner.py`) - Validates that test scripts run and produce valid KiCAD files
-3. **Reference projects** (`python/tests/reference_tests/reference_kicad_projects/`) - Manually created KiCAD projects for validation
+1. **Test scripts** (`test_*.py` in `reference_tests/`) - Simple Python scripts that demonstrate API usage
+2. **Test runner** (`reference_tests/test_runner.py`) - Validates that test scripts run and produce valid KiCAD files
+3. **Reference projects** (`reference_tests/reference_kicad_projects/`) - Manually created KiCAD projects for validation
 
 ## Test Structure
 
-### Top-Level Test Scripts
+### Test Scripts
 
-Located in the project root, these scripts serve as both tests and examples:
+Located in `python/tests/reference_tests/`, these scripts serve as both tests and examples:
 
 - `test_single_resistor.py` - Creates a schematic with one resistor
 - `test_two_resistors.py` - Creates a schematic with two resistors
@@ -49,22 +49,23 @@ For exact format preservation testing, use `test_against_references.py`:
 ```bash
 # Run all structural tests
 cd python
-uv run pytest tests/test_runner.py -v
+uv run pytest tests/reference_tests/test_runner.py -v
 
 # Run specific test
-uv run pytest tests/test_runner.py::TestRunner::test_single_resistor -v
+uv run pytest tests/reference_tests/test_runner.py::TestRunner::test_single_resistor -v
 ```
 
 ### Reference Comparison
 ```bash
 # Compare against reference projects (may show formatting differences)
 cd python
-uv run pytest tests/test_against_references.py -v
+uv run pytest tests/reference_tests/test_against_references.py -v
 ```
 
 ### Manual Testing
 ```bash
 # Run individual test script
+cd python/tests/reference_tests
 uv run python test_single_resistor.py
 
 # Opens generated file in KiCAD (macOS)
@@ -89,7 +90,7 @@ open test_single_resistor.kicad_sch
 
 ## Adding New Tests
 
-1. Create a new `test_*.py` file in the project root
+1. Create a new `test_*.py` file in `python/tests/reference_tests/`
 2. Follow the existing pattern:
    ```python
    import kicad_sch_api as ksa

@@ -1,42 +1,19 @@
-"""
-Test recreation of single_label reference project.
+#!/usr/bin/env python3
+"""Test: Single label matching reference."""
 
-This test verifies that kicad-sch-api can handle schematics with labels.
-Note: Full label recreation may require additional API development.
-"""
+import kicad_sch_api as ksa
 
-from .base_reference_test import BaseReferenceTest
-
-
-class TestSingleLabel(BaseReferenceTest):
-    """Test recreation of single label schematic."""
+def main():
+    sch = ksa.create_schematic("Single Label")
     
-    def test_single_label_schematic_loading(self):
-        """Test that the single label schematic loads successfully."""
-        ref_sch = self.load_reference_schematic("single_label")
-        
-        assert ref_sch is not None, "Single label schematic should load successfully"
-        assert hasattr(ref_sch, 'components'), "Should have components collection"
-        
-        print(f"✅ Single label schematic loaded: {len(ref_sch.components)} components")
+    # TODO: Add label when label API is implemented
+    # sch.labels.add(text="VCC", position=(100, 100))
     
-    def test_single_label_component_recreation(self):
-        """Test recreation of components in single label schematic."""
-        ref_sch = self.load_reference_schematic("single_label")
-        
-        # Recreate the schematic components
-        recreated_sch = self.recreate_schematic_from_reference(ref_sch, "single_label_components")
-        
-        # Basic validation - components should match
-        assert len(recreated_sch.components) == len(ref_sch.components), "Component count should match"
-        
-        print(f"✅ Single label component recreation: {len(recreated_sch.components)} components")
+    sch.save("test_single_label.kicad_sch")
+    print("✅ Created single label (no label implementation yet)")
     
-    def test_single_label_future_enhancement_placeholder(self):
-        """Placeholder test for future label handling enhancement."""
-        ref_sch = self.load_reference_schematic("single_label")
-        
-        assert ref_sch is not None, "Schematic should load"
-        
-        # TODO: Add label recreation tests when API supports labels
-        print("⚠ Label recreation not yet implemented - placeholder test passed")
+    import subprocess
+    subprocess.run(["open", "test_single_label.kicad_sch"])
+
+if __name__ == "__main__":
+    main()

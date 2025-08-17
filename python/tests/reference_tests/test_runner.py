@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Simplified test runner that validates top-level test scripts.
+Simplified test runner that validates test scripts.
 
 This test runner:
-1. Executes each test_*.py file from the project root
+1. Executes each test_*.py file from the reference_tests directory
 2. Validates that they produce valid KiCAD schematic files
 3. Performs basic structural validation
 """
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
 import sexpdata
@@ -28,7 +28,8 @@ class TestRunner:
     @classmethod
     def setup_class(cls):
         """Set up test environment."""
-        cls.project_root = Path(__file__).parent.parent.parent
+        cls.project_root = Path(__file__).parent.parent.parent.parent
+        cls.test_dir = Path(__file__).parent  # reference_tests directory
         cls.test_scripts = [
             "test_single_resistor.py",
             "test_two_resistors.py", 
@@ -54,7 +55,7 @@ class TestRunner:
         Returns:
             (success, output, generated_file_path)
         """
-        script_path = self.project_root / script_name
+        script_path = self.test_dir / script_name
         
         if not script_path.exists():
             return False, f"Script not found: {script_path}", None
@@ -288,7 +289,7 @@ class TestRunner:
         """Verify all expected test scripts exist."""
         missing = []
         for script_name in self.test_scripts:
-            script_path = self.project_root / script_name
+            script_path = self.test_dir / script_name
             if not script_path.exists():
                 missing.append(script_name)
         

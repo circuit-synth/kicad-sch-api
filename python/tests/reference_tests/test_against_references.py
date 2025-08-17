@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Test framework that runs top-level test scripts and compares output against reference KiCAD projects.
+Test framework that runs test scripts and compares output against reference KiCAD projects.
 
 This framework:
-1. Executes each test_*.py file from the project root
+1. Executes each test_*.py file from the reference_tests directory
 2. Compares generated .kicad_sch files against reference projects
 3. Reports exact format preservation and functional correctness
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
 
@@ -28,9 +28,10 @@ class TestAgainstReferences:
     @classmethod
     def setup_class(cls):
         """Set up test environment."""
-        cls.project_root = Path(__file__).parent.parent.parent
-        cls.reference_dir = Path(__file__).parent / "reference_tests" / "reference_kicad_projects"
-        cls.test_scripts = list(cls.project_root.glob("test_*.py"))
+        cls.project_root = Path(__file__).parent.parent.parent.parent
+        cls.test_dir = Path(__file__).parent  # reference_tests directory
+        cls.reference_dir = Path(__file__).parent / "reference_kicad_projects"
+        cls.test_scripts = list(cls.test_dir.glob("test_*.py"))
         
         # Mapping of test script names to reference project names
         cls.test_to_reference = {
@@ -173,7 +174,7 @@ class TestAgainstReferences:
     
     def test_single_resistor(self):
         """Test single resistor generation against reference."""
-        script_path = self.project_root / "test_single_resistor.py"
+        script_path = self.test_dir / "test_single_resistor.py"
         reference_name = self.test_to_reference[script_path.name]
         
         if not reference_name:
@@ -213,7 +214,7 @@ class TestAgainstReferences:
     
     def test_two_resistors(self):
         """Test two resistors generation against reference."""
-        script_path = self.project_root / "test_two_resistors.py"
+        script_path = self.test_dir / "test_two_resistors.py"
         reference_name = self.test_to_reference[script_path.name]
         
         if not reference_name:
@@ -253,7 +254,7 @@ class TestAgainstReferences:
     
     def test_blank_schematic(self):
         """Test blank schematic generation against reference."""
-        script_path = self.project_root / "test_blank_schematic.py"
+        script_path = self.test_dir / "test_blank_schematic.py"
         reference_name = self.test_to_reference[script_path.name]
         
         if not reference_name:
