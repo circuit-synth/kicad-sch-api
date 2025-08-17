@@ -438,13 +438,89 @@ class Schematic:
         """Sync component collection state back to data structure."""
         self._data["components"] = [comp._data.__dict__ for comp in self._components]
         
-        # Populate lib_symbols with symbols used by components
+        # Populate lib_symbols with actual symbol definitions used by components
         lib_symbols = {}
+        cache = get_symbol_cache()
+        
         for comp in self._components:
             if comp.lib_id and comp.lib_id not in lib_symbols:
-                lib_symbols[comp.lib_id] = {"definition": "basic"}
+                # Get the actual symbol definition
+                symbol_def = cache.get_symbol(comp.lib_id)
+                if symbol_def:
+                    lib_symbols[comp.lib_id] = self._convert_symbol_to_kicad_format(symbol_def, comp.lib_id)
+                else:
+                    # Fallback for unknown symbols
+                    lib_symbols[comp.lib_id] = {"definition": "basic"}
         
         self._data["lib_symbols"] = lib_symbols
+
+    def _convert_symbol_to_kicad_format(self, symbol: "SymbolDefinition", lib_id: str) -> Dict[str, Any]:
+        """Convert SymbolDefinition to KiCAD lib_symbols format using raw parsed data."""
+        # If we have raw KiCAD data from the library file, use it directly
+        if hasattr(symbol, 'raw_kicad_data') and symbol.raw_kicad_data:
+            return self._convert_raw_symbol_data(symbol.raw_kicad_data, lib_id)
+        
+        # Fallback: create basic symbol structure  
+        return {
+            "pin_numbers": {"hide": "yes"},
+            "pin_names": {"offset": 0},
+            "exclude_from_sim": "no",
+            "in_bom": "yes", 
+            "on_board": "yes",
+            "properties": {
+                "Reference": {
+                    "value": symbol.reference_prefix,
+                    "at": [2.032, 0, 90],
+                    "effects": {"font": {"size": [1.27, 1.27]}}
+                },
+                "Value": {
+                    "value": symbol.reference_prefix,
+                    "at": [0, 0, 90],
+                    "effects": {"font": {"size": [1.27, 1.27]}}
+                },
+                "Footprint": {
+                    "value": "",
+                    "at": [-1.778, 0, 90],
+                    "effects": {
+                        "font": {"size": [1.27, 1.27]},
+                        "hide": "yes"
+                    }
+                },
+                "Datasheet": {
+                    "value": symbol.datasheet or "~",
+                    "at": [0, 0, 0],
+                    "effects": {
+                        "font": {"size": [1.27, 1.27]},
+                        "hide": "yes"
+                    }
+                },
+                "Description": {
+                    "value": symbol.description,
+                    "at": [0, 0, 0],
+                    "effects": {
+                        "font": {"size": [1.27, 1.27]},
+                        "hide": "yes"
+                    }
+                }
+            },
+            "embedded_fonts": "no"
+        }
+
+    def _convert_raw_symbol_data(self, raw_data: List, lib_id: str) -> Dict[str, Any]:
+        """Convert raw parsed KiCAD symbol data to dictionary format for S-expression generation."""
+        # The raw_data is the parsed S-expression from the .kicad_sym file
+        # We need to modify the symbol name to use the full lib_id for schematic context
+        
+        # Make a copy and modify the symbol name to use full lib_id
+        import copy
+        modified_data = copy.deepcopy(raw_data)
+        
+        # The structure is [Symbol('symbol'), 'R', ...]
+        # Replace the symbol name with the full lib_id
+        if len(modified_data) >= 2:
+            modified_data[1] = lib_id  # Change 'R' to 'Device:R'
+        
+        return modified_data
 
     @staticmethod
     def _create_empty_schematic_data() -> Dict[str, Any]:

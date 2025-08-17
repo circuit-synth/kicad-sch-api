@@ -454,7 +454,11 @@ class SExpressionParser:
         
         # Add each symbol definition
         for symbol_name, symbol_def in lib_symbols.items():
-            if isinstance(symbol_def, dict):
+            if isinstance(symbol_def, list):
+                # Raw S-expression data from parsed library file - use directly
+                sexp.append(symbol_def)
+            elif isinstance(symbol_def, dict):
+                # Dictionary format - convert to S-expression
                 symbol_sexp = self._create_basic_symbol_definition(symbol_name)
                 sexp.append(symbol_sexp)
         

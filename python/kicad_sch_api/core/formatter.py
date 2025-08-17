@@ -81,8 +81,10 @@ class ExactFormatter:
             inline=False, quote_indices={1, 2}, custom_handler=self._format_property
         )
 
-        # Pins and connections
-        self.rules["pin"] = FormatRule(inline=False, quote_indices={1, 2})
+        # Pins and connections  
+        self.rules["pin"] = FormatRule(inline=False, quote_indices=set())
+        self.rules["number"] = FormatRule(inline=True, quote_indices={1})  # Pin numbers should be quoted
+        self.rules["name"] = FormatRule(inline=True, quote_indices={1})    # Pin names should be quoted
         self.rules["instances"] = FormatRule(inline=False)
         self.rules["project"] = FormatRule(inline=True, quote_indices={1})
         self.rules["path"] = FormatRule(inline=True, quote_indices={1})

@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import sexpdata
+
 from ..core.types import PinShape, PinType, Point, SchematicPin
 from ..utils.validation import ValidationError
 
@@ -36,6 +38,9 @@ class SymbolDefinition:
     unit_names: Dict[int, str] = field(default_factory=dict)
     power_symbol: bool = False
     graphic_elements: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Raw KiCAD data for exact format preservation
+    raw_kicad_data: Any = None
 
     # Performance metrics
     load_time: float = 0.0
@@ -364,21 +369,29 @@ class SymbolLibraryCache:
         start_time = time.time()
 
         try:
-            # This is a simplified version - in reality, you'd parse the .kicad_sym file
-            # For now, create a basic symbol definition
             library_name, symbol_name = lib_id.split(":", 1)
 
-            # Create basic symbol definition
-            # In a real implementation, this would parse the actual .kicad_sym file
+            # Parse the .kicad_sym file to find the symbol
+            symbol_data = self._parse_kicad_symbol_file(library_path, symbol_name)
+            if not symbol_data:
+                logger.warning(f"Symbol {symbol_name} not found in {library_path}")
+                return None
+
+            # Create SymbolDefinition from parsed data
             symbol = SymbolDefinition(
                 lib_id=lib_id,
                 name=symbol_name,
                 library=library_name,
-                reference_prefix=self._guess_reference_prefix(symbol_name),
-                description=f"{symbol_name} component",
-                pins=[],  # Would be loaded from actual file
+                reference_prefix=symbol_data.get("reference_prefix", "U"),
+                description=symbol_data.get("description", ""),
+                keywords=symbol_data.get("keywords", ""),
+                datasheet=symbol_data.get("datasheet", "~"),
+                pins=symbol_data.get("pins", []),
                 load_time=time.time() - start_time,
             )
+
+            # Store the raw symbol data for later use in schematic generation
+            symbol.raw_kicad_data = symbol_data.get("raw_data", {})
 
             self._symbols[lib_id] = symbol
             self._symbol_index[symbol_name] = lib_id
@@ -389,6 +402,160 @@ class SymbolLibraryCache:
 
         except Exception as e:
             logger.error(f"Error loading symbol {lib_id} from {library_path}: {e}")
+            return None
+
+    def _parse_kicad_symbol_file(self, library_path: Path, symbol_name: str) -> Optional[Dict[str, Any]]:
+        """Parse a KiCAD .kicad_sym file to extract a specific symbol."""
+        try:
+            with open(library_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            # Parse the S-expression
+            parsed = sexpdata.loads(content)
+            
+            # Find the symbol we're looking for
+            symbol_data = self._find_symbol_in_parsed_data(parsed, symbol_name)
+            if not symbol_data:
+                return None
+
+            # Extract symbol information
+            result = {
+                "raw_data": symbol_data,  # Store the raw parsed data
+                "reference_prefix": "U",  # Default
+                "description": "",
+                "keywords": "",
+                "datasheet": "~",
+                "pins": []
+            }
+
+            # Extract properties from the symbol
+            for item in symbol_data[1:]:
+                if isinstance(item, list) and len(item) > 0:
+                    if item[0] == sexpdata.Symbol('property'):
+                        prop_name = item[1]
+                        prop_value = item[2]
+                        
+                        if prop_name == sexpdata.Symbol('Reference'):
+                            result["reference_prefix"] = str(prop_value)
+                        elif prop_name == sexpdata.Symbol('Description'):
+                            result["description"] = str(prop_value)
+                        elif prop_name == sexpdata.Symbol('ki_keywords'):
+                            result["keywords"] = str(prop_value)
+                        elif prop_name == sexpdata.Symbol('Datasheet'):
+                            result["datasheet"] = str(prop_value)
+
+            # Extract pins (this is simplified - pins are in symbol sub-definitions)
+            # For now, we'll extract pins from the actual symbol structure
+            result["pins"] = self._extract_pins_from_symbol(symbol_data)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error parsing {library_path}: {e}")
+            return None
+
+    def _find_symbol_in_parsed_data(self, parsed_data: List, symbol_name: str) -> Optional[List]:
+        """Find a specific symbol in parsed KiCAD library data."""
+        if not isinstance(parsed_data, list):
+            return None
+
+        # Search through the parsed data for the symbol
+        for item in parsed_data:
+            if isinstance(item, list) and len(item) >= 2:
+                if (item[0] == sexpdata.Symbol('symbol') and 
+                    len(item) > 1 and 
+                    str(item[1]).strip('"') == symbol_name):
+                    return item
+                    
+        return None
+
+    def _extract_pins_from_symbol(self, symbol_data: List) -> List[SchematicPin]:
+        """Extract pins from symbol data."""
+        pins = []
+        
+        # Look for symbol sub-definitions like "R_1_1" that contain pins
+        for item in symbol_data[1:]:
+            if isinstance(item, list) and len(item) > 0:
+                if item[0] == sexpdata.Symbol('symbol'):
+                    # This is a symbol unit definition, look for pins
+                    pins.extend(self._extract_pins_from_unit(item))
+                    
+        return pins
+
+    def _extract_pins_from_unit(self, unit_data: List) -> List[SchematicPin]:
+        """Extract pins from a symbol unit definition."""
+        pins = []
+        
+        for item in unit_data[1:]:
+            if isinstance(item, list) and len(item) > 0:
+                if item[0] == sexpdata.Symbol('pin'):
+                    pin = self._parse_pin_definition(item)
+                    if pin:
+                        pins.append(pin)
+                        
+        return pins
+
+    def _parse_pin_definition(self, pin_data: List) -> Optional[SchematicPin]:
+        """Parse a pin definition from KiCAD format."""
+        try:
+            # pin_data format: (pin passive line (at 0 3.81 270) (length 1.27) ...)
+            pin_type_str = str(pin_data[1]) if len(pin_data) > 1 else "passive"
+            pin_shape_str = str(pin_data[2]) if len(pin_data) > 2 else "line"
+            
+            position = Point(0, 0)
+            length = 2.54
+            rotation = 0
+            name = "~"
+            number = "1"
+            
+            # Parse pin attributes
+            for item in pin_data[3:]:
+                if isinstance(item, list) and len(item) > 0:
+                    if item[0] == sexpdata.Symbol('at'):
+                        # (at x y rotation)
+                        if len(item) >= 3:
+                            position = Point(float(item[1]), float(item[2]))
+                            if len(item) >= 4:
+                                rotation = float(item[3])
+                    elif item[0] == sexpdata.Symbol('length'):
+                        length = float(item[1])
+                    elif item[0] == sexpdata.Symbol('name'):
+                        name = str(item[1]).strip('"')
+                    elif item[0] == sexpdata.Symbol('number'):
+                        number = str(item[1]).strip('"')
+
+            # Map pin type
+            pin_type = PinType.PASSIVE
+            if pin_type_str == "input":
+                pin_type = PinType.INPUT
+            elif pin_type_str == "output":
+                pin_type = PinType.OUTPUT
+            elif pin_type_str == "bidirectional":
+                pin_type = PinType.BIDIRECTIONAL
+            elif pin_type_str == "power_in":
+                pin_type = PinType.POWER_IN
+            elif pin_type_str == "power_out":
+                pin_type = PinType.POWER_OUT
+
+            # Map pin shape
+            pin_shape = PinShape.LINE
+            if pin_shape_str == "inverted":
+                pin_shape = PinShape.INVERTED
+            elif pin_shape_str == "clock":
+                pin_shape = PinShape.CLOCK
+
+            return SchematicPin(
+                number=number,
+                name=name,
+                position=position,
+                pin_type=pin_type,
+                pin_shape=pin_shape,
+                length=length,
+                rotation=rotation,
+            )
+
+        except Exception as e:
+            logger.error(f"Error parsing pin definition: {e}")
             return None
 
     def _load_library(self, library_path: Path) -> bool:
@@ -471,6 +638,8 @@ class SymbolLibraryCache:
                     Path("/usr/share/kicad/symbols"),
                     Path("/usr/local/share/kicad/symbols"),
                     Path.home() / ".local/share/kicad/symbols",
+                    # macOS KiCAD.app bundle path
+                    Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols"),
                 ]
             )
 
@@ -482,7 +651,10 @@ class SymbolLibraryCache:
             ]
         )
 
-        return [path for path in search_paths if path.exists()]
+        logger.debug(f"Potential library search paths: {search_paths}")
+        existing_paths = [path for path in search_paths if path.exists()]
+        logger.debug(f"Existing library search paths: {existing_paths}")
+        return existing_paths
 
     def _load_persistent_index(self):
         """Load persistent symbol index from disk."""
