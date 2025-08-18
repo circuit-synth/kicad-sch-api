@@ -87,7 +87,7 @@ class SchematicValidator:
         """
         self.strict = strict
         self.issues = []
-        self._valid_reference_pattern = re.compile(r"^(#[A-Z]+[0-9]+|[A-Z]+[0-9]*)$")
+        self._valid_reference_pattern = re.compile(r"^(#[A-Z]+[0-9]+|[A-Z]+[0-9]*[A-Z]?)$")
         self._valid_lib_id_pattern = re.compile(r"^[^:]+:[^:]+$")
 
     def validate_schematic_data(self, schematic_data: Dict[str, Any]) -> List[ValidationIssue]:

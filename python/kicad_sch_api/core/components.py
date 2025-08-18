@@ -290,6 +290,7 @@ class ComponentCollection:
         value: str = "",
         position: Optional[Union[Point, Tuple[float, float]]] = None,
         footprint: Optional[str] = None,
+        unit: int = 1,
         **properties,
     ) -> Component:
         """
@@ -301,6 +302,7 @@ class ComponentCollection:
             value: Component value
             position: Component position (auto-placed if None)
             footprint: Component footprint
+            unit: Unit number for multi-unit components (1-based)
             **properties: Additional component properties
 
         Returns:
@@ -340,6 +342,7 @@ class ComponentCollection:
             reference=reference,
             value=value,
             footprint=footprint,
+            unit=unit,
             properties=properties,
         )
 
