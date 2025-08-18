@@ -1,13 +1,13 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "kicad-sch-api"
-version = "0.0.2"
+version = "0.1.0"
 description = "Professional KiCAD schematic manipulation library with exact format preservation and AI agent integration"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Circuit-Synth", email = "info@circuit-synth.com"}
 ]
@@ -23,7 +23,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9", 
@@ -37,6 +36,9 @@ dependencies = [
     "sexpdata>=0.0.3",
     "typing-extensions>=4.0.0; python_version<'3.11'",
 ]
+
+[project.scripts]
+kicad-sch-api = "kicad_sch_api.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -62,17 +64,12 @@ Repository = "https://github.com/circuit-synth/kicad-sch-api.git"
 "Bug Reports" = "https://github.com/circuit-synth/kicad-sch-api/issues"
 Changelog = "https://github.com/circuit-synth/kicad-sch-api/blob/main/CHANGELOG.md"
 
-[project.scripts]
-kicad-sch-api = "kicad_sch_api.cli:main"
-
 [tool.setuptools]
-package-dir = {"" = "python"}
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["python"]
 include = ["kicad_sch_api*"]
-exclude = ["tests*"]
+exclude = ["tests*", "submodules*"]
 
 [tool.setuptools.package-data]
 kicad_sch_api = ["py.typed"]
@@ -131,7 +128,7 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
-src_paths = ["python/kicad_sch_api", "python/tests"]
+src_paths = ["kicad_sch_api", "tests"]
 
 [tool.mypy]
 python_version = "3.8"
@@ -156,7 +153,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.coverage.run]
-source = ["python/kicad_sch_api"]
+source = ["kicad_sch_api"]
 omit = [
     "*/tests/*",
     "*/test_*",

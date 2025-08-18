@@ -10,15 +10,15 @@ include LICENSE
 include pyproject.toml
 
 # Include Python package data
-recursive-include python/kicad_sch_api *.py
-recursive-include python/kicad_sch_api *.json
-recursive-include python/kicad_sch_api *.yaml
-recursive-include python/kicad_sch_api *.yml
+recursive-include kicad_sch_api *.py
+recursive-include kicad_sch_api *.json
+recursive-include kicad_sch_api *.yaml
+recursive-include kicad_sch_api *.yml
 
 # Include test data (for validation)
-recursive-include python/tests/reference_kicad_projects *.kicad_sch
-recursive-include python/tests/reference_kicad_projects *.kicad_pro
-recursive-include python/tests/reference_kicad_projects *.md
+recursive-include tests/reference_tests/reference_kicad_projects *.kicad_sch
+recursive-include tests/reference_tests/reference_kicad_projects *.kicad_pro
+recursive-include tests/reference_tests/reference_kicad_projects *.md
 
 # Include MCP server as documentation/examples
 recursive-include mcp-server/src *.ts
