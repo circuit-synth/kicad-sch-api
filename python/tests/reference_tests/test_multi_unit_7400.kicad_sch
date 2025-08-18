@@ -1,0 +1,1267 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version 9.0)
+	(uuid "c66c187c-7b00-4167-9890-05f30a8e3dbf")
+	(paper A4)
+	(title_block
+		(title "Multi-Unit 7400 NAND Gates")
+	)
+	(lib_symbols
+		(symbol "74xx:7400"
+			(property "Reference" "U"
+				(at 0 1.27 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "7400"
+				(at 0 -1.27 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "http://www.ti.com/lit/gpn/sn7400"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "quad 2-input NAND gate"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "TTL nand 2-input"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "DIP*W7.62mm* SO14*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(pin_names
+				(offset 1.016)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(symbol "7400_1_1"
+				(arc
+					(start 0 3.81)
+					(mid 3.7934 0)
+					(end 0 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 -3.81)
+						(xy 0 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input line
+					(at -7.62 2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "1" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input line
+					(at -7.62 -2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "2" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output inverted
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "3" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_1_2"
+				(arc
+					(start -3.81 3.81)
+					(mid -2.589 0)
+					(end -3.81 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 3.81)
+						(xy -0.635 3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start 3.81 0)
+					(mid 2.1855 -2.584)
+					(end -0.6096 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start -0.6096 3.81)
+					(mid 2.1928 2.5924)
+					(end 3.81 0)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.635 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 3.81)
+						(xy -3.556 3.4036)
+						(xy -3.0226 2.2606)
+						(xy -2.6924 1.0414)
+						(xy -2.6162 -0.254)
+						(xy -2.7686 -1.4986)
+						(xy -3.175 -2.7178)
+						(xy -3.81 -3.81)
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width -25.4)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input inverted
+					(at -7.62 2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "1" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input inverted
+					(at -7.62 -2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "2" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output line
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "3" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_2_1"
+				(arc
+					(start 0 3.81)
+					(mid 3.7934 0)
+					(end 0 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 -3.81)
+						(xy 0 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input line
+					(at -7.62 2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "4" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input line
+					(at -7.62 -2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "5" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output inverted
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "6" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_2_2"
+				(arc
+					(start -3.81 3.81)
+					(mid -2.589 0)
+					(end -3.81 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 3.81)
+						(xy -0.635 3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start 3.81 0)
+					(mid 2.1855 -2.584)
+					(end -0.6096 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start -0.6096 3.81)
+					(mid 2.1928 2.5924)
+					(end 3.81 0)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.635 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 3.81)
+						(xy -3.556 3.4036)
+						(xy -3.0226 2.2606)
+						(xy -2.6924 1.0414)
+						(xy -2.6162 -0.254)
+						(xy -2.7686 -1.4986)
+						(xy -3.175 -2.7178)
+						(xy -3.81 -3.81)
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width -25.4)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input inverted
+					(at -7.62 2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "4" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input inverted
+					(at -7.62 -2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "5" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output line
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "6" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_3_1"
+				(arc
+					(start 0 3.81)
+					(mid 3.7934 0)
+					(end 0 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 -3.81)
+						(xy 0 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input line
+					(at -7.62 2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "9" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input line
+					(at -7.62 -2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "10" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output inverted
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "8" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_3_2"
+				(arc
+					(start -3.81 3.81)
+					(mid -2.589 0)
+					(end -3.81 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 3.81)
+						(xy -0.635 3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start 3.81 0)
+					(mid 2.1855 -2.584)
+					(end -0.6096 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start -0.6096 3.81)
+					(mid 2.1928 2.5924)
+					(end 3.81 0)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.635 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 3.81)
+						(xy -3.556 3.4036)
+						(xy -3.0226 2.2606)
+						(xy -2.6924 1.0414)
+						(xy -2.6162 -0.254)
+						(xy -2.7686 -1.4986)
+						(xy -3.175 -2.7178)
+						(xy -3.81 -3.81)
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width -25.4)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input inverted
+					(at -7.62 2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "9" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input inverted
+					(at -7.62 -2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "10" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output line
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "8" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_4_1"
+				(arc
+					(start 0 3.81)
+					(mid 3.7934 0)
+					(end 0 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 -3.81)
+						(xy 0 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input line
+					(at -7.62 2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "12" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input line
+					(at -7.62 -2.54 0)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "13" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output inverted
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "11" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_4_2"
+				(arc
+					(start -3.81 3.81)
+					(mid -2.589 0)
+					(end -3.81 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 3.81)
+						(xy -0.635 3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start 3.81 0)
+					(mid 2.1855 -2.584)
+					(end -0.6096 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(arc
+					(start -0.6096 3.81)
+					(mid 2.1928 2.5924)
+					(end 3.81 0)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.635 3.81)
+						(xy -3.81 3.81)
+						(xy -3.81 3.81)
+						(xy -3.556 3.4036)
+						(xy -3.0226 2.2606)
+						(xy -2.6924 1.0414)
+						(xy -2.6162 -0.254)
+						(xy -2.7686 -1.4986)
+						(xy -3.175 -2.7178)
+						(xy -3.81 -3.81)
+						(xy -3.81 -3.81)
+						(xy -0.635 -3.81)
+					)
+					(stroke
+						(width -25.4)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin input inverted
+					(at -7.62 2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "12" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin input inverted
+					(at -7.62 -2.54 0)
+					(length 4.318)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "13" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin output line
+					(at 7.62 0 180)
+					(length 3.81)
+					(name "~" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "11" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_5_0"
+				(pin power_in line
+					(at 0 12.7 270)
+					(length 5.08)
+					(name "VCC" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "14" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+				(pin power_in line
+					(at 0 -12.7 90)
+					(length 5.08)
+					(name "GND" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+					(number "7" (effects
+	(font
+		(size 1.27 1.27)
+	)
+))
+				)
+			)
+			(symbol "7400_5_1"
+				(rectangle
+					(start -5.08 7.62)
+					(end 5.08 -7.62)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "74xx:7400")
+		(at 150 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ead17c9e-1dd4-4381-bc42-33449e613791")
+		(property "Reference" "U1A"
+			(at 152.54 78.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "7400"
+			(at 152.54 81.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
+			(at 152.54 83.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "datasheet" "https://www.ti.com/lit/ds/symlink/sn74ls00.pdf"
+			(at 152.54 85.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "description" "Quad 2-input NAND gate"
+			(at 152.54 85.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "simple_circuit"
+				(path "/c66c187c-7b00-4167-9890-05f30a8e3dbf"
+					(reference "U1A")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "74xx:7400")
+		(at 150 120 0)
+		(unit 2)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "1e4da4ff-95e5-4d2f-87d4-75e02a2c5fda")
+		(property "Reference" "U1B"
+			(at 152.54 118.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "7400"
+			(at 152.54 121.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
+			(at 152.54 123.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "datasheet" "https://www.ti.com/lit/ds/symlink/sn74ls00.pdf"
+			(at 152.54 125.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "description" "Quad 2-input NAND gate"
+			(at 152.54 125.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "simple_circuit"
+				(path "/c66c187c-7b00-4167-9890-05f30a8e3dbf"
+					(reference "U1B")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "74xx:7400")
+		(at 100 180 0)
+		(unit 3)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "14e74f1e-04c9-44bf-9fd6-8b2f4de0dcf5")
+		(property "Reference" "U1C"
+			(at 102.54 178.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "7400"
+			(at 102.54 181.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
+			(at 102.54 183.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "datasheet" "https://www.ti.com/lit/ds/symlink/sn74ls00.pdf"
+			(at 102.54 185.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "description" "Quad 2-input NAND gate"
+			(at 102.54 185.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "simple_circuit"
+				(path "/c66c187c-7b00-4167-9890-05f30a8e3dbf"
+					(reference "U1C")
+					(unit 3)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "74xx:7400")
+		(at 100 220 0)
+		(unit 4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "c87ee5f1-c9bb-4f0f-95ec-f8047f123f70")
+		(property "Reference" "U1D"
+			(at 102.54 218.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "7400"
+			(at 102.54 221.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
+			(at 102.54 223.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "datasheet" "https://www.ti.com/lit/ds/symlink/sn74ls00.pdf"
+			(at 102.54 225.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "description" "Quad 2-input NAND gate"
+			(at 102.54 225.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "simple_circuit"
+				(path "/c66c187c-7b00-4167-9890-05f30a8e3dbf"
+					(reference "U1D")
+					(unit 4)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "74xx:7400")
+		(at 180 100 0)
+		(unit 5)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7a9c07d1-5cec-4958-8563-9f89ad6301aa")
+		(property "Reference" "U1E"
+			(at 182.54 98.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "7400"
+			(at 182.54 101.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_DIP:DIP-14_W7.62mm"
+			(at 182.54 103.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "datasheet" "https://www.ti.com/lit/ds/symlink/sn74ls00.pdf"
+			(at 182.54 105.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "description" "Quad 2-input NAND gate"
+			(at 182.54 105.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "simple_circuit"
+				(path "/c66c187c-7b00-4167-9890-05f30a8e3dbf"
+					(reference "U1E")
+					(unit 5)
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(symbol_instances)
+	(embedded_fonts no)
+)

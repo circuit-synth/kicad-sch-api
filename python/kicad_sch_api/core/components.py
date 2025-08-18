@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 from ..library.cache import SymbolDefinition, get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
 from .types import Point, SchematicPin, SchematicSymbol
+from .ic_manager import ICManager
 
 logger = logging.getLogger(__name__)
 
@@ -361,6 +362,65 @@ class ComponentCollection:
 
         logger.info(f"Added component: {reference} ({lib_id})")
         return component
+
+    def add_ic(
+        self,
+        lib_id: str,
+        reference_prefix: str,
+        position: Optional[Union[Point, Tuple[float, float]]] = None,
+        value: str = "",
+        footprint: Optional[str] = None,
+        layout_style: str = "vertical",
+        **properties,
+    ) -> ICManager:
+        """
+        Add a multi-unit IC with automatic unit placement.
+
+        Args:
+            lib_id: Library identifier for the IC (e.g., "74xx:7400")
+            reference_prefix: Base reference (e.g., "U1" → U1A, U1B, etc.)
+            position: Base position for auto-layout (auto-placed if None)
+            value: IC value (defaults to symbol name)
+            footprint: IC footprint
+            layout_style: Layout algorithm ("vertical", "grid", "functional")
+            **properties: Common properties for all units
+
+        Returns:
+            ICManager object for position overrides and management
+
+        Example:
+            ic = sch.components.add_ic("74xx:7400", "U1", position=(100, 100))
+            ic.place_unit(1, position=(150, 80))  # Override Gate A position
+        """
+        # Set default position if not provided
+        if position is None:
+            position = self._find_available_position()
+        elif isinstance(position, tuple):
+            position = Point(position[0], position[1])
+
+        # Set default value to symbol name if not provided
+        if not value:
+            value = lib_id.split(":")[-1]  # "74xx:7400" → "7400"
+
+        # Create IC manager for this multi-unit component
+        ic_manager = ICManager(lib_id, reference_prefix, position, self)
+        
+        # Generate all unit components
+        unit_components = ic_manager.generate_components(
+            value=value,
+            footprint=footprint,
+            properties=properties
+        )
+
+        # Add all units to the collection
+        for component_data in unit_components:
+            component = Component(component_data, self)
+            self._add_to_indexes(component)
+
+        self._modified = True
+        logger.info(f"Added multi-unit IC: {reference_prefix} ({lib_id}) with {len(unit_components)} units")
+        
+        return ic_manager
 
     def remove(self, reference: str) -> bool:
         """
