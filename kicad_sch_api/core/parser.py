@@ -259,9 +259,10 @@ class SExpressionParser:
         if schematic_data.get("paper"):
             sexp_data.append([sexpdata.Symbol("paper"), schematic_data["paper"]])
 
-        # Add title block
-        if schematic_data.get("title_block"):
-            sexp_data.append(self._title_block_to_sexp(schematic_data["title_block"]))
+        # Add title block only if it has non-default content
+        title_block = schematic_data.get("title_block")
+        if title_block and any(title_block.get(key) for key in ["title", "company", "revision", "date", "comments"]):
+            sexp_data.append(self._title_block_to_sexp(title_block))
 
         # Add lib_symbols (always include for KiCAD compatibility)
         lib_symbols = schematic_data.get("lib_symbols", {})

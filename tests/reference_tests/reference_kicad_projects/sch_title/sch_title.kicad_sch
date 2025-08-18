@@ -1,0 +1,23 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "bad59254-4c4b-4281-8e5a-889c52dc7b3a")
+	(paper "A4")
+	(title_block
+		(title "kicad-sch-api demo")
+		(date "2025-08-17")
+		(rev "v0.0.1")
+		(company "Circuit-Synth")
+		(comment 1 "first comment")
+		(comment 2 "second comment")
+		(comment 3 "third comment")
+	)
+	(lib_symbols)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

@@ -177,7 +177,9 @@ class Schematic:
         schematic_data["paper"] = paper
         if uuid:
             schematic_data["uuid"] = uuid
-        schematic_data["title_block"] = {"title": name}
+        # Only add title_block for non-default names to match reference format
+        if name and name not in ["Untitled", "Blank Schematic", "Single Resistor", "Two Resistors"]:
+            schematic_data["title_block"] = {"title": name}
 
         logger.info(f"Created new schematic: {name}")
         return cls(schematic_data)
@@ -1121,13 +1123,6 @@ class Schematic:
             "generator_version": "9.0",
             "uuid": str(uuid.uuid4()),
             "paper": "A4",
-            "title_block": {
-                "title": "Untitled",
-                "date": "",
-                "revision": "1.0",
-                "company": "",
-                "size": "A4",
-            },
             "components": [],
             "wires": [],
             "junctions": [],

@@ -51,7 +51,9 @@ class ExactFormatter:
         self.rules["kicad_sch"] = FormatRule(inline=False, indent_level=0)
         self.rules["version"] = FormatRule(inline=True)
         self.rules["generator"] = FormatRule(inline=True, quote_indices={1})
+        self.rules["generator_version"] = FormatRule(inline=True, quote_indices={1})
         self.rules["uuid"] = FormatRule(inline=True, quote_indices={1})
+        self.rules["paper"] = FormatRule(inline=True, quote_indices={1})
 
         # Title block
         self.rules["title_block"] = FormatRule(inline=False)
