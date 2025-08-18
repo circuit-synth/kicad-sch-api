@@ -91,10 +91,10 @@ class ICManager:
     def _place_default_units(self):
         """Place default units for common IC types."""
         # For 74xx logic ICs, typically have units 1-4 (logic) + unit 5 (power)
-        unit_spacing = 40  # Standard vertical spacing between units
-        power_offset = (80, 0)  # Power unit offset from base
+        unit_spacing = 12.7  # Tight vertical spacing (0.5 inch in mm)
+        power_offset = (25.4, 0)  # Power unit offset (1 inch right)
         
-        # Place logic units (1-4) vertically
+        # Place logic units (1-4) vertically in a tight column
         for unit in range(1, 5):
             unit_pos = Point(
                 self.base_position.x,
@@ -102,15 +102,15 @@ class ICManager:
             )
             self._unit_positions[unit] = unit_pos
             
-        # Place power unit (5) separately
+        # Place power unit (5) to the right of logic units
         if 5 not in self._unit_positions:
             power_pos = Point(
                 self.base_position.x + power_offset[0],
-                self.base_position.y + power_offset[1]
+                self.base_position.y + unit_spacing  # Align with second gate
             )
             self._unit_positions[5] = power_pos
 
-        logger.debug(f"Auto-placed {len(self._unit_positions)} units")
+        logger.debug(f"Auto-placed {len(self._unit_positions)} units with tight spacing")
 
     def place_unit(self, unit: int, position: Union[Point, Tuple[float, float]]):
         """
