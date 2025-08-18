@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kicad-sch-api"
-version = "0.1.0"
+version = "0.1.1"
 description = "Professional KiCAD schematic manipulation library with exact format preservation and AI agent integration"
 readme = "README.md"
 license = "MIT"
 authors = [
-    {name = "Circuit-Synth", email = "info@circuit-synth.com"}
+    {name = "Circuit-Synth", email = "shane@circuit-synth.com"}
 ]
 maintainers = [
-    {name = "Circuit-Synth", email = "info@circuit-synth.com"}
+    {name = "Circuit-Synth", email = "shane@circuit-synth.com"}
 ]
 keywords = [
     "kicad", "schematic", "eda", "electronics", "circuit-design", 
