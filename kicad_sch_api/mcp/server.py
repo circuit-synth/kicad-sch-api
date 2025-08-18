@@ -188,7 +188,26 @@ def get_schematic_info() -> Dict[str, Any]:
 @mcp.tool()
 def add_component(lib_id: str, reference: str, value: str, 
                  position: Tuple[float, float], **properties) -> Dict[str, Any]:
-    """Add a component to the current schematic with enhanced error handling."""
+    """Add a component to the current schematic with enhanced error handling.
+    
+    IMPORTANT DESIGN RULES:
+    1. REFERENCES: Always provide proper component references (R1, R2, C1, C2, etc.)
+       - Never use "?" or leave references undefined
+       - Use standard prefixes: R=resistor, C=capacitor, U=IC, D=diode, L=inductor
+    
+    2. COMPONENT SPACING: Space components appropriately for readability
+       - Minimum 50 units between components 
+       - Use grid-aligned positions (multiples of 25.4 or 12.7)
+       - Leave room for labels and connections
+    
+    3. FOOTPRINTS: Specify appropriate footprints in properties
+       - Common SMD: R_0603_1608Metric, C_0603_1608Metric
+       - Through-hole: R_Axial_DIN0207, C_Disc_D3.0mm
+       
+    4. VALUES: Use standard component values
+       - Resistors: 1k, 10k, 100k (E12 series)  
+       - Capacitors: 100nF, 10uF, 100uF
+    """
     try:
         if not state.is_loaded():
             return {
@@ -219,6 +238,13 @@ def add_component(lib_id: str, reference: str, value: str,
                 ],
                 "help": "Use search_components() to find valid component lib_ids"
             }
+        
+        # Validate and fix reference if needed
+        if reference == "?" or not reference or reference.strip() == "":
+            # Auto-generate proper reference based on component type
+            prefix = _get_reference_prefix(lib_id)
+            reference = _generate_next_reference(state.current_schematic, prefix)
+            logger.info(f"Auto-generated reference: {reference} for {lib_id}")
         
         # Add component using our API
         component = state.current_schematic.components.add(
@@ -529,7 +555,26 @@ def get_search_stats() -> Dict[str, Any]:
 def add_hierarchical_sheet(name: str, filename: str, position: Tuple[float, float], 
                           size: Tuple[float, float], project_name: str = "",
                           page_number: str = "2") -> Dict[str, Any]:
-    """Add a hierarchical sheet to the current schematic."""
+    """Add a hierarchical sheet to the current schematic.
+    
+    HIERARCHICAL DESIGN WORKFLOW:
+    1. MAIN SCHEMATIC: Add this sheet to your main schematic
+    2. CREATE SUBCIRCUIT: Use create_schematic() for the sub-schematic
+    3. ADD SHEET PINS: Use add_sheet_pin() to create connection points on the sheet
+    4. ADD COMPONENTS: Switch to subcircuit, add components normally
+    5. ADD LABELS: In subcircuit, use add_hierarchical_label() on component pins
+    6. NAME MATCHING: Sheet pin names must exactly match hierarchical label names
+    
+    SHEET SIZING GUIDELINES:
+    - Minimum: (80, 60) for simple sheets
+    - Standard: (100, 80) for most subcircuits  
+    - Large: (150, 100) for complex subcircuits
+    
+    POSITIONING:
+    - Leave space around sheet for connections
+    - Align with main schematic grid (multiples of 25.4)
+    - Position where sheet pins will connect logically to main circuit
+    """
     try:
         if not state.is_loaded():
             return {
@@ -568,7 +613,29 @@ def add_hierarchical_sheet(name: str, filename: str, position: Tuple[float, floa
 def add_sheet_pin(sheet_uuid: str, name: str, pin_type: str = "input", 
                   position: Tuple[float, float] = (0, 0), rotation: float = 0,
                   size: float = 1.27) -> Dict[str, Any]:
-    """Add a pin to a hierarchical sheet for connecting to parent schematic."""
+    """Add a pin to a hierarchical sheet for connecting to parent schematic.
+    
+    SHEET PIN POSITIONING (relative to sheet origin):
+    - LEFT EDGE: (0, Y) - for inputs entering the sheet
+    - RIGHT EDGE: (sheet_width, Y) - for outputs leaving the sheet  
+    - TOP EDGE: (X, 0) - for control signals
+    - BOTTOM EDGE: (X, sheet_height) - for power/ground
+    
+    CRITICAL NAMING RULE:
+    Sheet pin names MUST exactly match hierarchical label names in the subcircuit!
+    Example: Sheet pin "VCC" connects to hierarchical label "VCC"
+    
+    PIN TYPES USAGE:
+    - input: Power coming in, control signals in
+    - output: Data/signals leaving the sheet 
+    - bidirectional: I2C, SPI data lines
+    - passive: Ground connections, analog signals
+    
+    POSITIONING EXAMPLES for 100×80 sheet:
+    - Power in: (0, 10) and (0, 20)
+    - Signals out: (100, 15) and (100, 25)
+    - Ground: (50, 80) - bottom center
+    """
     try:
         if not state.is_loaded():
             return {
@@ -620,7 +687,30 @@ def add_sheet_pin(sheet_uuid: str, name: str, pin_type: str = "input",
 def add_hierarchical_label(text: str, position: Tuple[float, float], 
                           label_type: str = "input", rotation: float = 0,
                           size: float = 1.27) -> Dict[str, Any]:
-    """Add a hierarchical label for connecting to parent schematic via sheet pins."""
+    """Add a hierarchical label for connecting to parent schematic via sheet pins.
+    
+    CRITICAL PLACEMENT RULES:
+    1. POSITION: Place labels directly on component pins, not floating
+       - Must touch the actual pin connection point
+       - Use component pin positions, not arbitrary locations
+       
+    2. ROTATION: Labels must face AWAY from the component
+       - 0° = right-facing (for pins on left side of component)
+       - 180° = left-facing (for pins on right side of component) 
+       - 90° = up-facing (for pins on bottom of component)
+       - 270° = down-facing (for pins on top of component)
+       
+    3. NET NAMES: Use clear, descriptive names
+       - Power: VCC, 3V3, 5V, GND, VBAT
+       - Signals: SDA, SCL, TX, RX, CLK, DATA
+       - Custom: INPUT_A, OUTPUT_B, CTRL_SIGNAL
+       
+    4. LABEL TYPES:
+       - input: Signal enters this sheet (power in, data in)
+       - output: Signal leaves this sheet (power out, data out)
+       - bidirectional: Signal goes both ways (I2C, SPI)
+       - passive: Non-directional (GND, analog)
+    """
     try:
         if not state.is_loaded():
             return {
@@ -721,6 +811,62 @@ def list_hierarchical_sheets() -> Dict[str, Any]:
             "message": f"Error listing hierarchical sheets: {str(e)}",
             "errorDetails": traceback.format_exc()
         }
+
+def _get_reference_prefix(lib_id: str) -> str:
+    """Get the standard reference prefix for a component type."""
+    lib_id_lower = lib_id.lower()
+    
+    # Common component prefixes based on IPC standards
+    if 'resistor' in lib_id_lower or ':r' in lib_id_lower or lib_id.endswith(':R'):
+        return 'R'
+    elif 'capacitor' in lib_id_lower or ':c' in lib_id_lower or lib_id.endswith(':C'):
+        return 'C'
+    elif 'inductor' in lib_id_lower or ':l' in lib_id_lower or lib_id.endswith(':L'):
+        return 'L'
+    elif 'diode' in lib_id_lower or ':d' in lib_id_lower or 'led' in lib_id_lower:
+        return 'D'
+    elif 'transistor' in lib_id_lower or ':q' in lib_id_lower or 'fet' in lib_id_lower:
+        return 'Q'
+    elif any(ic_type in lib_id_lower for ic_type in ['mcu', 'microcontroller', 'processor', 'amplifier', 'regulator', 'ic']):
+        return 'U'
+    elif 'crystal' in lib_id_lower or 'oscillator' in lib_id_lower:
+        return 'Y'
+    elif 'connector' in lib_id_lower or 'header' in lib_id_lower:
+        return 'J'
+    elif 'switch' in lib_id_lower or 'button' in lib_id_lower:
+        return 'SW'
+    elif 'fuse' in lib_id_lower:
+        return 'F'
+    else:
+        # Default fallback
+        return 'U'
+
+def _generate_next_reference(schematic, prefix: str) -> str:
+    """Generate the next available reference for a given prefix."""
+    try:
+        existing_refs = []
+        if hasattr(schematic, 'components'):
+            # Get all existing references with this prefix
+            for comp in schematic.components:
+                if hasattr(comp, 'reference') and comp.reference.startswith(prefix):
+                    ref = comp.reference
+                    # Extract number from reference (e.g., 'R1' -> 1)
+                    try:
+                        num_part = ref[len(prefix):]
+                        if num_part.isdigit():
+                            existing_refs.append(int(num_part))
+                    except (ValueError, IndexError):
+                        continue
+        
+        # Find next available number
+        next_num = 1
+        while next_num in existing_refs:
+            next_num += 1
+            
+        return f"{prefix}{next_num}"
+    except Exception:
+        # Fallback to R1, C1, etc.
+        return f"{prefix}1"
 
 def _suggest_common_footprints(symbol) -> List[str]:
     """Suggest common footprints for a component type using SymbolDefinition."""
@@ -1021,6 +1167,85 @@ The server suggests appropriate footprints for each component:
 5. Validate your design before saving
 
 The server will guide you with suggestions and error messages if components don't exist!
+"""
+
+@mcp.prompt()  
+def schematic_design_guidelines() -> str:
+    """Essential schematic design guidelines for AI agents creating professional KiCAD schematics."""
+    return """# KiCAD Schematic Design Guidelines for AI Agents
+
+## CRITICAL COMPONENT PLACEMENT RULES
+
+### 1. Component References - NEVER USE "?"
+- **ALWAYS** assign proper references: R1, R2, C1, C2, U1, etc.
+- **NEVER** leave references as "?" - this creates invalid schematics
+- Use standard prefixes: R=resistor, C=capacitor, U=IC, D=diode, L=inductor, Q=transistor
+
+### 2. Component Spacing & Grid Alignment
+- **Minimum spacing**: 50 units between components
+- **Grid alignment**: Use multiples of 25.4 (100mil) or 12.7 (50mil)
+- **Examples**: (100,100), (150,100), (100,150) - NOT (103,97) random positions
+
+### 3. Hierarchical Labels - CRITICAL POSITIONING
+- **Must touch component pins directly** - not floating in space
+- **Must face away from component** using proper rotation:
+  * 0° = right-facing (for left-side pins)
+  * 180° = left-facing (for right-side pins)  
+  * 90° = up-facing (for bottom pins)
+  * 270° = down-facing (for top pins)
+
+## HIERARCHICAL DESIGN WORKFLOW
+
+### Step-by-Step Process:
+1. **Main schematic**: add_hierarchical_sheet() first
+2. **Create subcircuit**: create_schematic() for new sheet file
+3. **Add sheet pins**: add_sheet_pin() on the sheet rectangle
+4. **Switch to subcircuit**: load_schematic() the new file
+5. **Add components**: Normal component placement in subcircuit
+6. **Add hierarchical labels**: On component pins with EXACT same names as sheet pins
+7. **Save both**: Save main and subcircuit schematics
+
+### Name Matching Rule:
+Sheet pin "VCC" ↔ Hierarchical label "VCC" (MUST match exactly!)
+
+## COMMON DESIGN PATTERNS
+
+### Power Distribution:
+```
+- VCC/3V3/5V labels on power input pins
+- GND labels on ground pins  
+- Use "input" type for power coming into sheet
+- Use "passive" type for ground connections
+```
+
+### Signal Routing:
+```
+- Clear signal names: CLK, DATA, TX, RX, CS, MOSI, MISO
+- Use "output" for signals leaving a sheet
+- Use "input" for signals entering a sheet
+- Use "bidirectional" for I2C (SDA/SCL), SPI data
+```
+
+### Component Values:
+```
+- Standard resistor values: 1k, 10k, 100k, 1M (E12 series)
+- Standard capacitor values: 100nF, 1uF, 10uF, 100uF  
+- Specify footprints: R_0603_1608Metric, C_0603_1608Metric
+```
+
+## ERROR PREVENTION
+
+### Before creating any schematic:
+1. Plan component references (R1, R2, C1, etc.) - never use "?"
+2. Calculate component positions with proper spacing
+3. Plan hierarchical label names to match sheet pins exactly
+4. Verify label positions are on actual component pins
+5. Check label rotations face away from components
+
+### Testing Your Design:
+- Use list_components() to verify references are assigned
+- Use get_schematic_info() to check component count
+- Ensure hierarchical labels have matching sheet pins
 """
 
 @mcp.prompt()
