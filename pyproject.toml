@@ -33,12 +33,15 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "fastmcp>=2.0.0",
+    "mcp[cli]>=1.13.0",
     "sexpdata>=0.0.3",
     "typing-extensions>=4.0.0; python_version<'3.11'",
 ]
 
 [project.scripts]
 kicad-sch-api = "kicad_sch_api.cli:main"
+kicad-sch-mcp = "kicad_sch_api.mcp.server:main"
 
 [project.optional-dependencies]
 dev = [
@@ -50,6 +53,10 @@ dev = [
     "flake8>=4.0.0",
     "mypy>=1.0.0",
     "pre-commit>=3.0.0",
+]
+mcp = [
+    "mcp[cli]>=1.0.0",
+    "fastmcp>=2.0.0",
 ]
 docs = [
     "sphinx>=5.0.0",
