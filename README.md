@@ -1,153 +1,260 @@
-# kicad-sch-api
+# KiCAD Schematic MCP Server
 
-**Professional KiCAD Schematic Manipulation Library with AI Agent Integration**
+**Professional KiCAD Schematic Manipulation with Claude Code Integration**
 
+Transform natural language into professional KiCAD schematics using AI. This MCP (Model Context Protocol) server provides Claude Code with powerful tools for creating, editing, and managing KiCAD schematic files with exact format preservation.
 
-## 🚀 Key Features
+## 🚀 Quick Start - One Command Installation
 
+**For macOS/Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/circuit-synth/kicad-sch-api/main/install.sh | bash
+```
+
+**For Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/circuit-synth/kicad-sch-api/main/install.ps1 | iex
+```
+
+**⏱️ Installation time: 2 minutes | Setup time: 30 seconds | Ready to design! 🚀**
+
+## ✨ What You Get
+
+After installation, use natural language in Claude Code to:
+
+```
+"Create a voltage divider with two 10kΩ resistors"
+"Add an ESP32 microcontroller with USB connector" 
+"Generate a hierarchical schematic with power supply subcircuit"
+"Export component list with manufacturer part numbers"
+```
+
+## 🎯 Key Features
+
+- **🤖 AI-Native**: Built specifically for Claude Code integration
 - **📋 Exact Format Preservation**: Output matches KiCAD's native formatting exactly
-- **⚡ High Performance**: Optimized for large schematics with symbol caching
-- **🔧 Enhanced API**: Intuitive object-oriented interface with bulk operations
-- **📚 Advanced Library Management**: Multi-source symbol lookup and caching
-- **✅ Professional Validation**: Comprehensive error collection and reporting
-- **🎯 KiCAD 9 Optimized**: Built specifically for latest KiCAD format
+- **⚡ High Performance**: Optimized for large schematics with intelligent caching
+- **🏗️ Hierarchical Design**: Full support for complex multi-sheet schematics
+- **📚 Component Discovery**: Intelligent search across 13,000+ KiCAD symbols
+- **🔍 Advanced Analysis**: Component filtering, area selection, and validation
+- **✅ Professional Quality**: Comprehensive error handling and reporting
 
 ## 🆚 vs. Existing Solutions
 
-| Feature | kicad-sch-api | Other Solutions | KiCAD Official API |
-|---------|---------------|-----------------|-------------------|
-| **Schematic Support** | ✅ Full | ⚠️ Varies | ❌ PCB Only |
-| **Format Preservation** | ✅ Exact | ❌ Basic | N/A |
-| **Performance** | ✅ Optimized | ⚠️ Basic | N/A |
-| **Library Management** | ✅ Advanced | ⚠️ Limited | N/A |
-| **Runtime Dependencies** | ❌ None | ⚠️ Varies | ✅ KiCAD Required |
+| Feature | kicad-sch-api | Other Solutions | KiCAD Native |
+|---------|---------------|-----------------|--------------|
+| **AI Integration** | ✅ Claude Code | ❌ None | ❌ None |
+| **Format Preservation** | ✅ Exact | ⚠️ Basic | ✅ Native |
+| **Component Discovery** | ✅ 13,000+ | ⚠️ Limited | ⚠️ Manual |
+| **Hierarchical Support** | ✅ Complete | ⚠️ Varies | ✅ Native |
+| **Performance** | ✅ Optimized | ⚠️ Basic | ⚠️ GUI Only |
+| **Automation** | ✅ Full API | ❌ None | ⚠️ Limited |
 
-## 📦 Installation
+## 📦 Installation Options
+
+Choose the method that works best for you:
+
+### 🚀 Option 1: One-Click Setup (Recommended)
+
+The installation script automatically:
+- ✅ Installs the MCP server via pip
+- ✅ Configures Claude Code MCP settings
+- ✅ Tests the connection
+- ✅ Displays usage examples
+
+### 🐳 Option 2: Docker Container
 
 ```bash
-# Install from PyPI (coming soon)
-pip install kicad-sch-api
+# Pull and run the container
+docker run -d --name kicad-mcp -p 3000:3000 circuitsynth/kicad-sch-api:latest
+```
 
-# Or install from source
+### 🛠️ Option 3: From Source (Developers)
+
+```bash
 git clone https://github.com/circuit-synth/kicad-sch-api.git
-cd kicad-sch-api/python
+cd kicad-sch-api
 pip install -e .
-
-npm install
-npm run build
+kicad-sch-api --setup-claude-code
 ```
 
-## 🎯 Quick Start
+### 📦 Option 4: PyPI Package (Coming Soon)
 
-### Basic Schematic Manipulation
-
-```python
-import kicad_sch_api as ksa
-
-# Create new schematic
-sch = ksa.create_schematic('My Circuit')
-
-# Add components
-resistor = sch.components.add('Device:R', reference='R1', value='10k', position=(100, 100))
-capacitor = sch.components.add('Device:C', reference='C1', value='0.1uF', position=(150, 100))
-
-# Update properties
-resistor.footprint = 'Resistor_SMD:R_0603_1608Metric'
-resistor.set_property('MPN', 'RC0603FR-0710KL')
-
-# Save with exact format preservation
-sch.save('my_circuit.kicad_sch')
+```bash
+pip install kicad-sch-api
+kicad-sch-api --setup-claude-code
 ```
 
-### Advanced Operations
+## 🎯 Quick Start Examples
 
-```python
-# Bulk operations for large schematics
-resistors = sch.components.filter(lib_id='Device:R')
-for r in resistors:
-    r.set_property('Tolerance', '1%')
+### Basic Circuit Creation
 
-# Search and analysis
-power_components = sch.components.in_area(0, 0, 50, 50)
-high_value_resistors = sch.components.filter(
-    lib_id='Device:R', 
-    value_pattern='*k'  # Components with 'k' in value
-)
-
-# Validation and error checking
-issues = sch.validate()
-if issues:
-    print(f"Found {len(issues)} validation issues:")
-    for issue in issues:
-        print(f"  {issue}")
-
-# Performance statistics
-stats = sch.get_performance_stats()
-print(f"Cache hit rate: {stats['symbol_cache']['hit_rate_percent']}%")
+Ask Claude Code:
+```
+Create a simple LED circuit with a 220Ω current limiting resistor
 ```
 
+Claude Code will:
+1. Create a new schematic file
+2. Add LED component from Device library
+3. Add 220Ω resistor with proper footprint
+4. Connect components with wires
+5. Add power supply connections
+6. Save with exact KiCAD formatting
 
+### Advanced Hierarchical Design
+
+```
+Design a microcontroller board with separate power supply and USB interface subcircuits
+```
+
+Claude Code will:
+1. Create main schematic with hierarchical sheets
+2. Generate power supply subcircuit with regulators
+3. Create USB interface subcircuit with connectors
+4. Add inter-sheet connections and labels
+5. Export complete project with proper hierarchy
+
+### Component Discovery and Analysis
+
+```
+Find all operational amplifiers in the project and update their footprints to SOIC-8
+```
+
+Claude Code will:
+1. Search through all schematic sheets
+2. Identify op-amp components by symbol library
+3. Update footprint properties systematically
+4. Generate change report with before/after comparison
+
+## 🔧 Available Tools
+
+The MCP server provides Claude Code with comprehensive schematic manipulation capabilities:
+
+| Tool Category | Available Tools |
+|---------------|-----------------|
+| **Creation** | `create_schematic`, `add_component`, `add_wire`, `add_label` |
+| **Hierarchical** | `add_hierarchical_sheet`, `add_sheet_pin`, `add_hierarchical_label` |
+| **Discovery** | `search_components`, `list_available_symbols`, `get_component_info` |
+| **Analysis** | `list_components`, `get_connections`, `validate_schematic` |
+| **Export** | `save_schematic`, `export_netlist`, `generate_bom` |
+
+## ⚙️ Configuration
+
+### Automatic Configuration (Recommended)
+```bash
+kicad-sch-api --setup-claude-code
+```
+
+### Manual Configuration
+Add to your Claude Code MCP settings:
+
+**File Location:**
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%/Claude/claude_desktop_config.json`  
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
 ```json
 {
-  "kicad-sch": {
-    "command": "node",
-    "env": {
-      "PYTHON_PATH": "python3",
-      "KICAD_SCH_API_PATH": "/path/to/kicad-sch-api/python"
+  "mcpServers": {
+    "kicad-sch-api": {
+      "command": "kicad-sch-mcp",
+      "args": [],
+      "env": {}
     }
   }
 }
 ```
 
-Then use natural language with your AI agent:
+## ✅ Verification
 
+### Test Installation
+```bash
+kicad-sch-api --test
+kicad-sch-api --demo
 ```
-User: "Create a voltage divider circuit with two 10k resistors"
 
-Claude: I'll create a voltage divider circuit for you.
-
-1. Create new schematic
-2. Add R1 (10k resistor) at (100, 100)
-3. Add R2 (10k resistor) at (100, 150) 
-4. Connect components with wires
-5. Add voltage input and output labels
-6. Save schematic with exact formatting
-
-Your voltage divider circuit is ready! The circuit provides 50% voltage division
-with two 10kΩ resistors in series configuration.
+### In Claude Code
+Ask Claude Code:
 ```
+Test the KiCAD MCP server by creating a simple resistor circuit
+```
+
+If successful, you'll see Claude Code using the kicad-sch-api tools to create schematics.
 
 ## 🏗️ Architecture
 
-The library consists of two main components:
-
-### Python Library (Core)
+### Core Python Library
 - **Enhanced Object Model**: Intuitive API with fast component collections
 - **Exact Format Preservation**: S-expression writer that matches KiCAD output
 - **Symbol Caching**: High-performance library symbol management
 - **Comprehensive Validation**: Error collection and professional reporting
 
-- **Python Bridge**: Reliable subprocess communication
-- **Comprehensive Tools**: 15+ tools for complete schematic manipulation
+### MCP Server Integration
+- **Claude Code Tools**: 15+ tools for complete schematic manipulation
 - **Professional Error Handling**: Detailed error context for AI agents
+- **Component Discovery**: SQLite-indexed search across KiCAD libraries
+- **Hierarchical Support**: Full multi-sheet schematic capabilities
 
 ## 🧪 Testing & Quality
 
 ```bash
-# Python tests
-cd python
-python -m pytest tests/ -v --cov=kicad_sch_api
+# Test the MCP server
+kicad-sch-mcp --test
 
-npm test
+# Run comprehensive tests
+uv run pytest tests/ -v
 
-# Format preservation tests
-python -m pytest tests/test_format_preservation.py -v
+# Format preservation tests (critical)
+uv run pytest tests/test_format_preservation.py -v
+uv run pytest tests/test_exact_file_diff.py -v
+
+# Code quality checks
+uv run black kicad_sch_api/ tests/
+uv run mypy kicad_sch_api/
+uv run flake8 kicad_sch_api/ tests/
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**"Command not found: kicad-sch-mcp"**
+```bash
+# Check installation status
+kicad-sch-api --status
+
+# Add to PATH permanently
+export PATH="/Library/Frameworks/Python.framework/Versions/3.12/bin:$PATH"
+```
+
+**"Component libraries not found"**
+```bash
+# Initialize component cache
+kicad-sch-api --init-cache
+
+# Check KiCAD installation
+kicad-sch-api --check-kicad
+```
+
+**"MCP server not responding"**
+```bash
+# View server logs
+kicad-sch-api --logs
+
+# Test server startup
+kicad-sch-mcp --debug
 ```
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! See [INSTALLATION.md](INSTALLATION.md) for setup details and [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+Key areas for contribution:
+- Additional KiCAD symbol library support
+- Enhanced component discovery algorithms
+- Performance optimizations for large schematics
+- New MCP tools and capabilities
 
 ## 📄 License
 
@@ -156,8 +263,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## 🔗 Related Projects
 
 - **[circuit-synth](https://github.com/circuit-synth/circuit-synth)**: Comprehensive circuit design automation
-- **[sexpdata](https://github.com/jd-boyd/sexpdata)**: S-expression parsing library
+- **[Claude Code](https://claude.ai/code)**: AI-powered development environment
+- **[MCP](https://modelcontextprotocol.io/)**: Model Context Protocol for AI tool integration
 
 ---
 
-**Built with ❤️ by the Circuit-Synth team**
+**Transform ideas into schematics with AI ⚡ Built with ❤️ by the Circuit-Synth team**

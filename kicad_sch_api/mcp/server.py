@@ -1203,6 +1203,44 @@ This hierarchical approach makes complex designs manageable and promotes reusabl
 
 def main():
     """Run the MCP server."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="KiCAD Schematic MCP Server")
+    parser.add_argument('--test', action='store_true', help='Run quick test and exit')
+    parser.add_argument('--debug', action='store_true', help='Enable debug logging')
+    parser.add_argument('--status', action='store_true', help='Show server status and exit')
+    parser.add_argument('--version', action='store_true', help='Show version and exit')
+    
+    args = parser.parse_args()
+    
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.debug("Debug logging enabled")
+    
+    if args.version:
+        print("KiCAD Schematic MCP Server v0.1.1")
+        return
+    
+    if args.status:
+        print("KiCAD Schematic MCP Server Status:")
+        print(f"  Component discovery: {len(get_search_index().get_categories()) if get_search_index() else 0} categories")
+        print(f"  Symbol cache: {get_symbol_cache().get_performance_stats()['total_symbols_cached']} symbols")
+        print("  Status: Ready")
+        return
+    
+    if args.test:
+        logger.info("Running MCP server test...")
+        try:
+            # Quick initialization test
+            ensure_index_built()
+            cache = get_symbol_cache()
+            stats = cache.get_performance_stats()
+            print(f"✅ Test passed: {stats['total_symbols_cached']} symbols, {len(get_search_index().get_categories())} categories")
+            return
+        except Exception as e:
+            print(f"❌ Test failed: {e}")
+            sys.exit(1)
+    
     logger.info("Starting KiCAD Schematic MCP Server...")
     try:
         mcp.run()
