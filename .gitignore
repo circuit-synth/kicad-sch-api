@@ -83,8 +83,6 @@ unique_function_calls.txt
 Dead_Code_Analysis_Report.md
 
 # Test outputs
-test_outputs/
-tests/test_outputs/
 *.tmp
 
 # Development artifacts

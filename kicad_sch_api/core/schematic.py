@@ -815,6 +815,38 @@ class Schematic:
         logger.debug(f"Added text box: '{text}' at {position} size {size}")
         return text_box.uuid
 
+    def set_title_block(
+        self,
+        title: str = "",
+        date: str = "",
+        rev: str = "",
+        company: str = "",
+        comments: Optional[Dict[int, str]] = None
+    ):
+        """
+        Set title block information.
+
+        Args:
+            title: Schematic title
+            date: Creation/revision date
+            rev: Revision number
+            company: Company name
+            comments: Numbered comments (1, 2, 3, etc.)
+        """
+        if comments is None:
+            comments = {}
+
+        self._data["title_block"] = {
+            "title": title,
+            "date": date,
+            "rev": rev,
+            "company": company,
+            "comments": comments
+        }
+        self._modified = True
+        
+        logger.debug(f"Set title block: {title} rev {rev}")
+
     # Library management
     @property
     def libraries(self) -> "LibraryManager":

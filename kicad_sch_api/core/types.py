@@ -409,7 +409,7 @@ class TitleBlock:
 
     title: str = ""
     company: str = ""
-    revision: str = ""
+    rev: str = ""  # KiCAD uses "rev" not "revision"
     date: str = ""
     size: str = "A4"
     comments: Dict[int, str] = field(default_factory=dict)

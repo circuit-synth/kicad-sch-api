@@ -59,7 +59,7 @@ class ExactFormatter:
         self.rules["title_block"] = FormatRule(inline=False)
         self.rules["title"] = FormatRule(inline=True, quote_indices={1})
         self.rules["company"] = FormatRule(inline=True, quote_indices={1})
-        self.rules["revision"] = FormatRule(inline=True, quote_indices={1})
+        self.rules["rev"] = FormatRule(inline=True, quote_indices={1})  # KiCAD uses "rev"
         self.rules["date"] = FormatRule(inline=True, quote_indices={1})
         self.rules["size"] = FormatRule(inline=True, quote_indices={1})
         self.rules["comment"] = FormatRule(inline=True, quote_indices={2})

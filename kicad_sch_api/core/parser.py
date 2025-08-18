@@ -422,8 +422,18 @@ class SExpressionParser:
     def _title_block_to_sexp(self, title_block: Dict[str, Any]) -> List[Any]:
         """Convert title block to S-expression."""
         sexp = [sexpdata.Symbol("title_block")]
-        for key, value in title_block.items():
-            sexp.append([sexpdata.Symbol(key), value])
+        
+        # Add standard fields
+        for key in ["title", "date", "rev", "company"]:
+            if key in title_block and title_block[key]:
+                sexp.append([sexpdata.Symbol(key), title_block[key]])
+        
+        # Add comments with special formatting
+        comments = title_block.get("comments", {})
+        if isinstance(comments, dict):
+            for comment_num, comment_text in comments.items():
+                sexp.append([sexpdata.Symbol("comment"), comment_num, comment_text])
+        
         return sexp
 
     def _symbol_to_sexp(self, symbol_data: Dict[str, Any], schematic_uuid: str = None) -> List[Any]:
