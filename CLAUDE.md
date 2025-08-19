@@ -144,8 +144,9 @@ uv run pytest -m "validation" -v  # Error handling and validation
 1. **Exact Format Preservation**: Core differentiator for KiCAD compatibility
 2. **Performance First**: Symbol caching, indexed lookups, bulk operations
 3. **Professional Quality**: Comprehensive validation, error collection
-4. **Foundation First**: Build robust Python library before MCP/AI integration
+4. **Foundation First**: Stable Python library that serves as foundation for MCP servers
 5. **Enhanced UX**: Modern object-oriented API with pythonic interface
+6. **MCP Compatibility**: Maintain stable API for external MCP servers to build upon
 
 ## Core Architecture Patterns
 
@@ -234,9 +235,34 @@ The `.memory_bank/` directory contains:
 
 This ensures continuity of development decisions and maintains institutional knowledge across all AI development sessions.
 
+## MCP Server Compatibility
+
+This library is designed as a stable foundation for MCP servers. Key compatibility requirements:
+
+### API Stability
+- **Public API**: All documented APIs are considered stable and maintained for backward compatibility
+- **Version Compatibility**: MCP servers should specify minimum required version (e.g., `kicad-sch-api>=0.2.0`)
+- **Error Handling**: Consistent exception handling for MCP servers to wrap and translate errors
+
+### MCP Server Integration Pattern
+```python
+# Standard pattern for MCP servers
+import kicad_sch_api as ksa
+
+@mcp_tool
+async def create_schematic(name: str):
+    try:
+        sch = ksa.create_schematic(name)
+        return success_response(f"Created schematic: {name}")
+    except Exception as e:
+        return error_response(f"Error creating schematic: {e}")
+```
+
+### Related MCP Servers
+- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: Reference implementation using standard MCP SDK
+
 ## Related Projects
 
-- **circuit-synth**: Parent project and source of transferred logic
 - **circuit-synth**: Parent project and source of transferred logic
 
 ---

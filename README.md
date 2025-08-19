@@ -124,19 +124,27 @@ netlist = sch.generate_netlist()
 net_info = netlist.analyze_net("VCC")
 ```
 
-## 🤖 AI Agent Integration (MCP Server)
+## 🤖 AI Agent Integration
 
-Use with Claude Code or other AI agents via Model Context Protocol:
+This library serves as the foundational layer for AI agent integration through dedicated MCP (Model Context Protocol) servers.
 
-### Setup MCP Server
+### MCP Server Integration
 
 ```bash
-# Install MCP server
-pip install kicad-sch-api[mcp]
+# Install the dedicated MCP server (separate package)
+pip install mcp-kicad-sch-api
 
-# Configure for Claude Code (automatic)
-kicad-sch-api --setup-claude-code
+# Configure for Claude Code
+code mcp install mcp-kicad-sch-api
 ```
+
+### Library Design for MCP Compatibility
+
+This library is specifically designed to provide:
+- **Stable API**: Consistent interface for MCP servers to build upon
+- **Format Preservation**: Guaranteed exact KiCAD output for reliable automation
+- **Professional Validation**: Component and library validation for quality assurance
+- **Performance**: Optimized for AI agent workloads with caching and bulk operations
 
 ### Usage with AI Agents
 
@@ -147,23 +155,8 @@ kicad-sch-api --setup-claude-code
 "Generate a hierarchical schematic with power supply subcircuit"
 ```
 
-The AI agent will use the MCP server to:
-1. Create professional schematics with proper component references
-2. Use hierarchical labels instead of messy wires
-3. Apply KiCAD design best practices automatically
-4. Generate clean, industry-standard layouts
-
-### Available MCP Tools
-
-| Tool | Description |
-|------|-------------|
-| `create_schematic` | Create new schematic files |
-| `add_component` | Add components with validation |
-| `search_components` | Find components in KiCAD libraries |
-| `add_hierarchical_sheet` | Create multi-sheet designs |
-| `validate_component` | Check component/footprint compatibility |
-| `list_components` | Get all components in schematic |
-| `save_schematic` | Save with exact format preservation |
+**Related MCP Servers:**
+- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: Full-featured MCP server built on this library
 
 ## 🏗️ Architecture
 
@@ -174,7 +167,6 @@ kicad_sch_api/
 ├── core/              # Core schematic manipulation
 ├── library/           # KiCAD library integration
 ├── integration/       # KiCAD CLI and tool integration
-├── mcp/              # MCP server for AI agents
 └── utils/            # Validation and utilities
 ```
 
@@ -183,7 +175,7 @@ kicad_sch_api/
 - **Building Block First**: Designed to be the foundation for other tools
 - **Exact Format Preservation**: Guaranteed byte-perfect KiCAD output
 - **Professional Quality**: Comprehensive error handling and validation
-- **AI-Native**: Built specifically for AI agent integration
+- **MCP Foundation**: Designed as a stable foundation for MCP servers and AI agents
 - **Performance Optimized**: Fast operations on large schematics
 
 ## 🧪 Testing & Quality
@@ -217,26 +209,27 @@ uv run flake8 kicad_sch_api/ tests/
 
 ## 🔗 Ecosystem
 
-This library is designed as a building block for specialized tools:
+This library serves as the foundation for specialized tools and MCP servers:
 
 ```python
 # Foundation library
 import kicad_sch_api as ksa
 
-# Specialized libraries (examples of what could be built)
-# import kicad_sourcing_tools as sourcing      # Component sourcing
-# import kicad_placement_optimizer as placement # Layout optimization  
-# import kicad_dfm_checker as dfm              # Manufacturing validation
+# MCP servers and specialized libraries built on this foundation:
+# - mcp-kicad-sch-api: Full MCP server for AI agents
+# - kicad_sourcing_tools: Component sourcing extensions
+# - kicad_placement_optimizer: Layout optimization
+# - kicad_dfm_checker: Manufacturing validation
 
 # Foundation provides reliable schematic manipulation
 sch = ksa.load_schematic('project.kicad_sch')
 
-# Specialized tools extend functionality
-# sourcing.update_component_sourcing(sch.components)
-# placement.optimize_layout(sch)
-# dfm.check_manufacturing_rules(sch)
+# All extensions use the same stable API
+# mcp_server.use_schematic(sch)      # MCP server integration
+# sourcing.update_sourcing(sch)      # Component sourcing
+# placement.optimize_layout(sch)     # Layout optimization
 
-# All save through foundation's format preservation
+# Foundation ensures exact format preservation
 sch.save()  # Guaranteed exact KiCAD format
 ```
 
@@ -264,6 +257,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🔗 Related Projects
 
+- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: MCP server for AI agents built on this library
 - **[circuit-synth](https://github.com/circuit-synth/circuit-synth)**: High-level circuit design automation using this library
 - **[Claude Code](https://claude.ai/code)**: AI development environment with MCP support
 - **[KiCAD](https://kicad.org/)**: Open source electronics design automation suite
