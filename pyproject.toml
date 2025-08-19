@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kicad-sch-api"
-version = "0.1.1"
+version = "0.1.2"
 description = "Professional KiCAD schematic manipulation library with exact format preservation and AI agent integration"
 readme = "README.md"
 license = "MIT"
