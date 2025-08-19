@@ -1,26 +1,51 @@
 # KiCAD Schematic API - Installation Guide
 
-## 🚀 Super Simple Setup (Recommended)
+## 🚀 New! Daemon-Style Setup (Recommended)
 
-**For new users - just run this one command:**
+**For best performance - persistent background MCP server:**
+
+```bash
+# Install and setup with daemon-style MCP server
+pip install 'kicad-sch-api[mcp]' && kicad-sch-api --setup-daemon
+```
+
+**✨ What's new with daemon mode:**
+- 🚀 **Persistent**: MCP server runs in background, no restart needed
+- ⚡ **Fast**: Better performance, no startup delays
+- 🔒 **Reliable**: No PATH issues or virtual environment problems
+- 🛠️ **Manageable**: Easy start/stop/restart controls
+
+**Daemon Management:**
+```bash
+kicad-sch-api --daemon-status     # Check if daemon is running
+kicad-sch-api --start-daemon      # Start daemon
+kicad-sch-api --stop-daemon       # Stop daemon  
+kicad-sch-api --restart-daemon    # Restart daemon
+```
+
+After setup, just restart Claude Code and try:
+```
+"Create a voltage divider with two 10kΩ resistors"
+```
+
+---
+
+## 📦 Legacy Setup (Still Works)
+
+**Traditional setup method:**
 
 ```bash
 # Install and setup everything automatically
-pip install kicad-sch-api[mcp] && kicad-sch-api --setup
+pip install 'kicad-sch-api[mcp]' && kicad-sch-api --setup
 ```
 
-**That's it!** This will:
+**What this does:**
 - ✅ Install the Python library
 - ✅ Install MCP server for AI agents  
 - ✅ Configure Claude Code automatically
 - ✅ Initialize component cache
 - ✅ Create a demo schematic
 - ✅ Test everything works
-
-After setup, just restart Claude Code and try:
-```
-"Create a voltage divider with two 10kΩ resistors"
-```
 
 ---
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kicad-sch-api"
-version = "0.1.4"
+version = "0.1.5"
 description = "Professional KiCAD schematic manipulation library with exact format preservation and AI agent integration"
 readme = "README.md"
 license = "MIT"
@@ -42,6 +42,12 @@ dependencies = [
 [project.scripts]
 kicad-sch-api = "kicad_sch_api.cli:main"
 kicad-sch-mcp = "kicad_sch_api.mcp.server:main"
+
+# New daemon-style entry points
+kicad-sch-daemon = "kicad_sch_api.daemon:main"
+kicad-sch-daemon-start = "kicad_sch_api.daemon:start_daemon"
+kicad-sch-daemon-stop = "kicad_sch_api.daemon:stop_daemon"
+kicad-sch-daemon-status = "kicad_sch_api.daemon:status_daemon"
 
 [project.optional-dependencies]
 dev = [
