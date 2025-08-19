@@ -84,7 +84,7 @@ pip install -e .
 kicad-sch-api --setup-claude-code
 ```
 
-### 📦 Option 4: PyPI Package (Coming Soon)
+### 📦 Option 4: PyPI Package
 
 ```bash
 pip install kicad-sch-api
@@ -102,11 +102,13 @@ Create a simple LED circuit with a 220Ω current limiting resistor
 
 Claude Code will:
 1. Create a new schematic file
-2. Add LED component from Device library
+2. Add LED component from Device library  
 3. Add 220Ω resistor with proper footprint
-4. Connect components with wires
+4. Connect components with hierarchical labels (no messy wires!)
 5. Add power supply connections
 6. Save with exact KiCAD formatting
+
+**Note**: Our enhanced AI guidance uses hierarchical labels instead of wires for cleaner, professional schematics.
 
 ### Advanced Hierarchical Design
 
@@ -133,17 +135,19 @@ Claude Code will:
 3. Update footprint properties systematically
 4. Generate change report with before/after comparison
 
-## 🔧 Available Tools
+## 🔧 Available MCP Tools
 
-The MCP server provides Claude Code with comprehensive schematic manipulation capabilities:
+The MCP server provides Claude Code with 15+ tools for complete schematic manipulation:
 
 | Tool Category | Available Tools |
 |---------------|-----------------|
-| **Creation** | `create_schematic`, `add_component`, `add_wire`, `add_label` |
-| **Hierarchical** | `add_hierarchical_sheet`, `add_sheet_pin`, `add_hierarchical_label` |
-| **Discovery** | `search_components`, `list_available_symbols`, `get_component_info` |
-| **Analysis** | `list_components`, `get_connections`, `validate_schematic` |
+| **Creation** | `create_schematic`, `add_component`, `add_hierarchical_label` |
+| **Hierarchical** | `add_hierarchical_sheet`, `add_sheet_pin`, `load_schematic` |
+| **Discovery** | `search_components`, `list_available_symbols`, `validate_component` |
+| **Analysis** | `list_components`, `get_schematic_info`, `browse_library` |
 | **Export** | `save_schematic`, `export_netlist`, `generate_bom` |
+
+**Enhanced AI Guidance**: Each tool includes comprehensive design rules and professional guidance to ensure clean, industry-standard schematics.
 
 ## ⚙️ Configuration
 
@@ -188,6 +192,73 @@ Test the KiCAD MCP server by creating a simple resistor circuit
 
 If successful, you'll see Claude Code using the kicad-sch-api tools to create schematics.
 
+## 🤖 How the MCP Server Works
+
+### **What is MCP?**
+The Model Context Protocol (MCP) allows AI agents like Claude Code to use external tools. Our MCP server gives Claude Code direct access to KiCAD schematic manipulation capabilities.
+
+### **Enhanced AI Guidance**
+Unlike basic tools, our MCP server includes comprehensive AI guidance:
+
+- **🚫 Wire-free Design**: AI defaults to hierarchical labels for clean schematics
+- **📏 Proper Sizing**: Hierarchical sheets sized correctly (60x40 to 100x60)  
+- **🔍 Component Validation**: Automatic "?" reference fixing and component validation
+- **📋 Professional Standards**: Industry-standard footprints and component values
+- **⚡ Smart Defaults**: Grid-aligned positioning and proper spacing
+
+### **User Experience**
+1. **Natural Language**: You speak normally to Claude Code
+2. **AI Translation**: Claude Code uses our MCP tools to manipulate KiCAD files  
+3. **Professional Output**: You get clean, industry-standard schematics
+4. **Exact Format**: Output matches KiCAD native formatting perfectly
+
+**Example Workflow:**
+```
+You: "Create a voltage divider"
+AI: Uses create_schematic() → add_component() → add_hierarchical_label() → save_schematic()
+Result: Professional KiCAD file with proper references, clean layout, no wire mess
+```
+
+## 🐍 Python API Usage
+
+For developers who want to use the core library directly:
+
+```python
+import kicad_sch_api as ksa
+
+# Create new schematic
+sch = ksa.create_schematic("My Circuit")
+
+# Add components with all properties
+sch.components.add(
+    lib_id="Device:R",
+    reference="R1", 
+    value="10k",
+    position=(100.0, 100.0),
+    footprint="Resistor_SMD:R_0603_1608Metric",
+    datasheet="~",
+    description="Resistor"
+)
+
+# Add second component  
+sch.components.add(
+    lib_id="Device:C",
+    reference="C1", 
+    value="100nF",
+    position=(150.0, 100.0),
+    footprint="Capacitor_SMD:C_0603_1608Metric"
+)
+
+# Save schematic
+sch.save("my_circuit.kicad_sch")
+```
+
+**Key Points:**
+- Use `sch.components.add()` with named parameters
+- Positions are tuples of floats: `(100.0, 100.0)`
+- All properties specified in single call (no separate assignment)
+- Footprint included as parameter, not property assignment
+
 ## 🏗️ Architecture
 
 ### Core Python Library
@@ -212,8 +283,11 @@ kicad-sch-mcp --test
 uv run pytest tests/ -v
 
 # Format preservation tests (critical)
-uv run pytest tests/test_format_preservation.py -v
-uv run pytest tests/test_exact_file_diff.py -v
+uv run pytest tests/reference_tests/ -v
+
+# Run specific reference tests
+uv run pytest tests/reference_tests/test_single_resistor.py -v
+uv run pytest tests/reference_tests/test_resistor_divider.py -v
 
 # Code quality checks
 uv run black kicad_sch_api/ tests/
