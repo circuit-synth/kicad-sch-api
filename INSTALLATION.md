@@ -1,82 +1,42 @@
-# KiCAD Schematic MCP Server - Installation Guide
-
-Choose the installation method that works best for you:
+# KiCAD Schematic API - Installation Guide
 
 ## 🚀 Quick Start (Recommended)
 
-### Option 1: One-Click Setup Script
-
-**For macOS/Linux:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/circuit-synth/kicad-sch-api/main/install.sh | bash
-```
-
-**For Windows (PowerShell):**
-```powershell
-iwr -useb https://raw.githubusercontent.com/circuit-synth/kicad-sch-api/main/install.ps1 | iex
-```
-
-This script will:
-- ✅ Install the MCP server via pip
-- ✅ Auto-configure Claude Code MCP settings
-- ✅ Test the connection
-- ✅ Display usage examples
-
----
-
-## 📦 Manual Installation Options
-
-### Option 2: PyPI Package (Coming Soon)
+### Python Package Installation
 
 ```bash
 # Install the package
 pip install kicad-sch-api
 
-# Auto-configure Claude Code
-kicad-sch-mcp --setup-claude-code
-
 # Test installation
-kicad-sch-mcp --test
+python -c "import kicad_sch_api as ksa; print('Installation successful!')"
 ```
 
-### Option 3: Docker Container
-
-```bash
-# Pull and run the container
-docker run -d --name kicad-mcp -p 3000:3000 circuitsynth/kicad-sch-api:latest
-
-# Add to Claude Code settings:
-{
-  "kicad-sch-api": {
-    "command": "docker",
-    "args": ["exec", "kicad-mcp", "kicad-sch-mcp"],
-    "env": {}
-  }
-}
-```
-
-### Option 4: From Source (Developers)
+### Development Installation
 
 ```bash
 # Clone and install
 git clone https://github.com/circuit-synth/kicad-sch-api.git
-cd kicad-sch-api
-pip install -e .
-
-# Configure Claude Code
-kicad-sch-mcp --setup-claude-code
+cd kicad-sch-api/python
+uv pip install -e .
 ```
 
 ---
 
-## ⚙️ Claude Code Configuration
+## 🤖 AI Agent Integration (MCP Server)
 
-### Automatic Configuration (Recommended)
+### MCP Server Setup
+The library includes an optional MCP server for AI agent integration:
+
 ```bash
-kicad-sch-mcp --setup-claude-code
+# Install with MCP support
+pip install kicad-sch-api[mcp]
+
+# Test MCP server
+python run_mcp_server.py
 ```
 
-### Manual Configuration
+### Claude Code Configuration
 Add this to your Claude Code MCP settings file:
 
 **Location:**
@@ -89,8 +49,8 @@ Add this to your Claude Code MCP settings file:
 {
   "mcpServers": {
     "kicad-sch-api": {
-      "command": "kicad-sch-mcp",
-      "args": [],
+      "command": "python",
+      "args": ["/path/to/kicad-sch-api/run_mcp_server.py"],
       "env": {}
     }
   }
@@ -101,22 +61,29 @@ Add this to your Claude Code MCP settings file:
 
 ## ✅ Verification
 
-### Test the Installation
-```bash
-# Quick test
-kicad-sch-mcp --test
+### Test Python Library
+```python
+import kicad_sch_api as ksa
 
-# Create a test schematic
-kicad-sch-mcp --demo
+# Create a simple schematic
+sch = ksa.create_schematic("Test Circuit")
+resistor = sch.components.add(
+    lib_id="Device:R",
+    reference="R1",
+    value="10k", 
+    position=(100, 100)
+)
+sch.save("test.kicad_sch")
+print("Library working correctly!")
 ```
 
-### In Claude Code
-Ask Claude Code:
+### Test MCP Server (if installed)
+Ask your AI agent:
 ```
 Create a simple schematic with a resistor and capacitor
 ```
 
-If successful, you'll see Claude Code using the kicad-sch-api MCP tools.
+If successful, you'll see the AI agent using the kicad-sch-api MCP tools.
 
 ---
 
@@ -124,29 +91,26 @@ If successful, you'll see Claude Code using the kicad-sch-api MCP tools.
 
 ### Common Issues
 
-**"Command not found: kicad-sch-mcp"**
+**"Module not found: kicad_sch_api"**
 ```bash
-# Ensure pip bin directory is in PATH
-pip show -f kicad-sch-api | grep Location
+# Verify installation
+pip list | grep kicad-sch-api
+
+# Check Python path
+python -c "import sys; print('\n'.join(sys.path))"
 ```
 
 **"MCP server not responding"**
 ```bash
-# Check server status
-kicad-sch-mcp --status
+# Test server directly
+python run_mcp_server.py
 
-# View logs
-kicad-sch-mcp --logs
+# Check for port conflicts or permission issues
 ```
 
 **"Component libraries not found"**
-```bash
-# Initialize component cache
-kicad-sch-mcp --init-cache
-
-# Check KiCAD installation
-kicad-sch-mcp --check-kicad
-```
+- Ensure KiCAD is installed and libraries are accessible
+- Check KiCAD library paths in system preferences
 
 ### Get Help
 
@@ -160,11 +124,12 @@ kicad-sch-mcp --check-kicad
 
 Once installed:
 
-1. **Learn the basics:** Check out the [Quick Start Guide](README.md#quick-start)
-2. **Explore examples:** Try the [Common Circuit Patterns](README.md#examples)
-3. **Build hierarchical designs:** Use the [Hierarchical Schematic Guide](HIERARCHICAL_GUIDE.md)
-4. **Join the community:** Share your projects and get help
+1. **Learn the basics:** Check out the [README.md](README.md) quick start guide
+2. **Explore examples:** Try the [examples/](examples/) directory
+3. **Build hierarchical designs:** Use hierarchical sheets for complex projects
+4. **AI Integration:** Set up the MCP server for AI agent integration
+5. **Join the community:** Share your projects and get help on GitHub
 
 ---
 
-**Installation time: 2 minutes | Setup time: 30 seconds | Ready to design! 🚀**
+**Python library: Ready to use! | MCP server: Optional for AI agents 🚀**
