@@ -25,7 +25,7 @@ uv pip install -e .
 
 ## 🤖 AI Agent Integration (MCP Server)
 
-### MCP Server Setup
+### MCP Server Setup  
 The library includes an optional MCP server for AI agent integration:
 
 ```bash
@@ -33,7 +33,7 @@ The library includes an optional MCP server for AI agent integration:
 pip install kicad-sch-api[mcp]
 
 # Test MCP server
-python run_mcp_server.py
+kicad-sch-mcp --test
 ```
 
 ### Claude Code Configuration
@@ -49,8 +49,8 @@ Add this to your Claude Code MCP settings file:
 {
   "mcpServers": {
     "kicad-sch-api": {
-      "command": "python",
-      "args": ["/path/to/kicad-sch-api/run_mcp_server.py"],
+      "command": "kicad-sch-mcp",
+      "args": [],
       "env": {}
     }
   }

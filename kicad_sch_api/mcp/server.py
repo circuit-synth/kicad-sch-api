@@ -1473,7 +1473,7 @@ def main():
         logger.debug("Debug logging enabled")
     
     if args.version:
-        print("KiCAD Schematic MCP Server v0.1.1")
+        print("KiCAD Schematic MCP Server v0.1.3")
         return
     
     if args.status:
