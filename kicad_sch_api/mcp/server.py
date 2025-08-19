@@ -305,7 +305,22 @@ def list_components() -> Dict[str, Any]:
 
 @mcp.tool()
 def add_wire(start_pos: Tuple[float, float], end_pos: Tuple[float, float]) -> Dict[str, Any]:
-    """Add a wire connection between two points."""
+    """Add a wire connection between two points.
+    
+    ⚠️  WARNING: AVOID USING WIRES IN MOST CASES!
+    
+    BETTER ALTERNATIVES:
+    1. **Use hierarchical labels instead** - add_hierarchical_label() for clean connections
+    2. **Use global labels** - add_label() with appropriate label type 
+    3. **Use power symbols** - for VCC/GND connections
+    
+    ONLY use wires for:
+    - Very short connections (< 25 units)
+    - Direct pin-to-pin connections on same component
+    - Internal component connections that can't use labels
+    
+    For hierarchical designs, NEVER use wires - use hierarchical labels exclusively!
+    """
     try:
         if not state.is_loaded():
             return {
@@ -566,9 +581,12 @@ def add_hierarchical_sheet(name: str, filename: str, position: Tuple[float, floa
     6. NAME MATCHING: Sheet pin names must exactly match hierarchical label names
     
     SHEET SIZING GUIDELINES:
-    - Minimum: (80, 60) for simple sheets
-    - Standard: (100, 80) for most subcircuits  
-    - Large: (150, 100) for complex subcircuits
+    - Small: (60, 40) for 2-3 pins (power supplies, simple filters)
+    - Medium: (80, 50) for 4-6 pins (op-amp circuits, basic MCU interfaces)  
+    - Large: (100, 60) for 7+ pins (complex subcircuits)
+    - Maximum: (120, 80) only for very complex sheets (avoid if possible)
+    
+    CRITICAL: Sheets are currently being created too large! Use smaller sizes for cleaner schematics.
     
     POSITIONING:
     - Leave space around sheet for connections
@@ -1174,7 +1192,13 @@ def schematic_design_guidelines() -> str:
     """Essential schematic design guidelines for AI agents creating professional KiCAD schematics."""
     return """# KiCAD Schematic Design Guidelines for AI Agents
 
-## CRITICAL COMPONENT PLACEMENT RULES
+## CRITICAL CONNECTION STRATEGY
+
+### ⚠️ AVOID WIRES - USE LABELS INSTEAD!
+- **NEVER use add_wire() in hierarchical designs**
+- **ALWAYS use hierarchical labels for connections**
+- **DEFAULT to labels even for simple connections**
+- Wires create messy, hard-to-read schematics
 
 ### 1. Component References - NEVER USE "?"
 - **ALWAYS** assign proper references: R1, R2, C1, C2, U1, etc.
@@ -1193,6 +1217,12 @@ def schematic_design_guidelines() -> str:
   * 180° = left-facing (for right-side pins)  
   * 90° = up-facing (for bottom pins)
   * 270° = down-facing (for top pins)
+
+### 4. Hierarchical Sheet Sizing - KEEP SMALL!
+- **Small sheets**: (60, 40) for 2-3 pins (power, simple circuits)
+- **Medium sheets**: (80, 50) for 4-6 pins (most subcircuits)
+- **Large sheets**: (100, 60) for 7+ pins (complex only)
+- **AVOID**: Sheets larger than (120, 80) - they're too big!
 
 ## HIERARCHICAL DESIGN WORKFLOW
 

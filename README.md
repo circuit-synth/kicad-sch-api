@@ -18,6 +18,12 @@ iwr -useb https://raw.githubusercontent.com/circuit-synth/kicad-sch-api/main/ins
 
 **⏱️ Installation time: 2 minutes | Setup time: 30 seconds | Ready to design! 🚀**
 
+## 📋 Prerequisites
+
+- **KiCAD 8.0+** installed (for component symbol libraries)
+- **Claude Code** installed ([download here](https://claude.ai/code))
+- **Python 3.8+** (automatically handled by installation script)
+
 ## ✨ What You Get
 
 After installation, use natural language in Claude Code to:
