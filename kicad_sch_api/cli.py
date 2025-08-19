@@ -279,6 +279,50 @@ def show_logs():
     else:
         print("  ~/.local/share/Claude/logs/mcp-server-kicad-sch-api.log")
 
+def setup_everything() -> bool:
+    """One-command setup that does everything automatically."""
+    print("🚀 KiCAD Schematic API - Complete Setup")
+    print("=" * 45)
+    print()
+    
+    success = True
+    
+    # 1. Test installation
+    print("Step 1/4: Testing installation...")
+    if not test_installation():
+        print("❌ Installation test failed. Please reinstall the package.")
+        return False
+    print()
+    
+    # 2. Initialize cache
+    print("Step 2/4: Initializing component cache...")
+    if not init_cache():
+        print("⚠️  Cache initialization failed, but continuing...")
+    print()
+    
+    # 3. Setup Claude Code
+    print("Step 3/4: Configuring Claude Code...")
+    if not setup_claude_code():
+        print("⚠️  Claude Code setup failed, but continuing...")
+    print()
+    
+    # 4. Create demo
+    print("Step 4/4: Creating demo schematic...")
+    if not create_demo():
+        print("⚠️  Demo creation failed, but setup is complete")
+    print()
+    
+    # Final status
+    print("🎉 Setup Complete!")
+    print()
+    print("Next steps:")
+    print("1. Restart Claude Code")
+    print("2. Try: 'Create a voltage divider with two 10kΩ resistors'")
+    print("3. Open demo_circuit.kicad_sch in KiCAD to see the example")
+    print()
+    
+    return True
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -286,19 +330,22 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  kicad-sch-api --setup-claude-code    # Configure Claude Code MCP
+  kicad-sch-api --setup                # Complete one-command setup (RECOMMENDED)
+  kicad-sch-api --setup-claude-code    # Configure Claude Code MCP only
   kicad-sch-api --test                 # Test installation
   kicad-sch-api --demo                 # Create demo schematic
-  kicad-sch-api --status               # Show status
+  kicad-sch-api --status               # Show detailed status
         """
     )
     
+    parser.add_argument('--setup', action='store_true',
+                       help='Complete one-command setup (RECOMMENDED for new users)')
     parser.add_argument('--setup-claude-code', action='store_true',
-                       help='Configure Claude Code MCP settings automatically')
+                       help='Configure Claude Code MCP settings only')
     parser.add_argument('--test', action='store_true',
                        help='Test that the installation is working')
     parser.add_argument('--status', action='store_true',
-                       help='Show installation and configuration status')
+                       help='Show detailed installation and configuration status')
     parser.add_argument('--demo', action='store_true',
                        help='Create a demo schematic')
     parser.add_argument('--init-cache', action='store_true',
@@ -310,13 +357,22 @@ Examples:
     
     args = parser.parse_args()
     
-    # If no arguments provided, show help
+    # If no arguments provided, suggest the simple setup
     if not any(vars(args).values()):
-        parser.print_help()
+        print("KiCAD Schematic API - Command Line Interface")
+        print()
+        print("For new users, run the complete setup:")
+        print("  kicad-sch-api --setup")
+        print()
+        print("For help with all options:")
+        print("  kicad-sch-api --help")
         return
     
     # Execute requested actions
     success = True
+    
+    if args.setup:
+        success &= setup_everything()
     
     if args.setup_claude_code:
         success &= setup_claude_code()

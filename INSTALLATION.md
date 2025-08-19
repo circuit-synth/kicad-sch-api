@@ -1,60 +1,60 @@
 # KiCAD Schematic API - Installation Guide
 
-## 🚀 Quick Start (Recommended)
+## 🚀 Super Simple Setup (Recommended)
 
-### Python Package Installation
+**For new users - just run this one command:**
 
 ```bash
-# Install the package
-pip install kicad-sch-api
-
-# Test installation
-python -c "import kicad_sch_api as ksa; print('Installation successful!')"
+# Install and setup everything automatically
+pip install kicad-sch-api[mcp] && kicad-sch-api --setup
 ```
 
-### Development Installation
+**That's it!** This will:
+- ✅ Install the Python library
+- ✅ Install MCP server for AI agents  
+- ✅ Configure Claude Code automatically
+- ✅ Initialize component cache
+- ✅ Create a demo schematic
+- ✅ Test everything works
 
-```bash
-# Clone and install
-git clone https://github.com/circuit-synth/kicad-sch-api.git
-cd kicad-sch-api/python
-uv pip install -e .
+After setup, just restart Claude Code and try:
+```
+"Create a voltage divider with two 10kΩ resistors"
 ```
 
 ---
 
-## 🤖 AI Agent Integration (MCP Server)
+## 📋 Manual Installation (Advanced Users)
 
-### MCP Server Setup  
-The library includes an optional MCP server for AI agent integration:
-
+### Python Library Only
 ```bash
-# Install with MCP support
+# Just the Python library
+pip install kicad-sch-api
+
+# Test basic functionality
+python -c "import kicad_sch_api as ksa; print('✅ Library working!')"
+```
+
+### With AI Agent Support
+```bash
+# Library + MCP server for AI agents
 pip install kicad-sch-api[mcp]
 
-# Test MCP server
+# One-command setup
+kicad-sch-api --setup
+
+# Or manual setup
+kicad-sch-api --setup-claude-code
 kicad-sch-mcp --test
 ```
 
-### Claude Code Configuration
-Add this to your Claude Code MCP settings file:
-
-**Location:**
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%/Claude/claude_desktop_config.json`  
-- **Linux:** `~/.config/Claude/claude_desktop_config.json`
-
-**Configuration:**
-```json
-{
-  "mcpServers": {
-    "kicad-sch-api": {
-      "command": "kicad-sch-mcp",
-      "args": [],
-      "env": {}
-    }
-  }
-}
+### Development Installation
+```bash
+# Clone and install from source
+git clone https://github.com/circuit-synth/kicad-sch-api.git
+cd kicad-sch-api
+uv pip install -e .[mcp]
+kicad-sch-api --setup
 ```
 
 ---
