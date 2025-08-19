@@ -37,34 +37,22 @@ def setup_claude_code() -> bool:
         backup_path.write_text(config_path.read_text())
         print(f"📁 Backed up existing config to: {backup_path}")
     
-    # Determine MCP command path
-    mcp_command = os.environ.get('FOUND_MCP_PATH', 'kicad-sch-mcp')
+    # Read existing config or create new one
+    if config_path.exists():
+        with open(config_path) as f:
+            config = json.load(f)
+    else:
+        config = {}
     
-    # If still using default, try to find the actual path
-    if mcp_command == 'kicad-sch-mcp':
-        python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-        possible_paths = [
-            f"/Library/Frameworks/Python.framework/Versions/{python_version}/bin/kicad-sch-mcp",
-            os.path.expanduser(f"~/Library/Python/{python_version}/bin/kicad-sch-mcp"),
-            os.path.expanduser("~/.local/bin/kicad-sch-mcp"),
-            "/usr/local/bin/kicad-sch-mcp"
-        ]
-        
-        for path_to_try in possible_paths:
-            if os.path.exists(path_to_try) and os.access(path_to_try, os.X_OK):
-                mcp_command = path_to_try
-                print(f"📍 Using MCP command at: {mcp_command}")
-                break
+    # Ensure mcpServers section exists
+    if "mcpServers" not in config:
+        config["mcpServers"] = {}
     
-    # Create new configuration
-    config = {
-        "mcpServers": {
-            "kicad-sch-api": {
-                "command": mcp_command,
-                "args": [],
-                "env": {}
-            }
-        }
+    # Use direct Python command - this is more reliable than trying to find binary paths
+    config["mcpServers"]["kicad-sch-api"] = {
+        "command": sys.executable,
+        "args": ["-m", "kicad_sch_api.mcp.server"],
+        "env": {}
     }
     
     # Write configuration
@@ -282,7 +270,7 @@ def show_logs():
 def setup_everything() -> bool:
     """One-command setup that does everything automatically."""
     print("🚀 KiCAD Schematic API - Complete Setup")
-    print("=" * 45)
+    print("=" * 40)
     print()
     
     success = True
@@ -300,7 +288,7 @@ def setup_everything() -> bool:
         print("⚠️  Cache initialization failed, but continuing...")
     print()
     
-    # 3. Setup Claude Code
+    # 3. Setup Claude Code (using direct Python command)
     print("Step 3/4: Configuring Claude Code...")
     if not setup_claude_code():
         print("⚠️  Claude Code setup failed, but continuing...")
@@ -315,96 +303,22 @@ def setup_everything() -> bool:
     # Final status
     print("🎉 Setup Complete!")
     print()
-    print("Next steps:")
+    print("✅ What was configured:")
+    print("  • MCP server ready for Claude Code")
+    print("  • Component discovery cache initialized")
+    print("  • Demo schematic created")
+    print()
+    print("🚀 Next steps:")
     print("1. Restart Claude Code")
     print("2. Try: 'Create a voltage divider with two 10kΩ resistors'")
     print("3. Open demo_circuit.kicad_sch in KiCAD to see the example")
     print()
+    print("🔍 To test manually:")
+    print("  python -m kicad_sch_api.mcp.server --test")
+    print()
     
     return True
 
-def setup_daemon() -> bool:
-    """Setup with daemon-style MCP server (RECOMMENDED)."""
-    print("🚀 KiCAD Schematic API - Daemon Setup")
-    print("=" * 50)
-    print("This will set up a persistent MCP daemon that runs in the background.")
-    print()
-    
-    success = True
-    
-    # 1. Test installation
-    print("Step 1/5: Testing installation...")
-    if not test_installation():
-        print("❌ Installation test failed. Please reinstall the package.")
-        return False
-    print()
-    
-    # 2. Initialize cache
-    print("Step 2/5: Initializing component cache...")
-    if not init_cache():
-        print("⚠️  Cache initialization failed, but continuing...")
-    print()
-    
-    # 3. Start daemon
-    print("Step 3/5: Starting MCP daemon...")
-    from .daemon import MCPDaemon
-    daemon = MCPDaemon()
-    
-    if daemon.is_running():
-        print("✅ Daemon is already running")
-    else:
-        if not daemon.start():
-            print("❌ Failed to start daemon")
-            return False
-    print()
-    
-    # 4. Configure Claude Code
-    print("Step 4/5: Configuring Claude Code...")
-    if not daemon._update_claude_config():
-        print("⚠️  Claude Code configuration failed, but daemon is running...")
-    else:
-        print("✅ Claude Code configured successfully")
-    print()
-    
-    # 5. Create demo
-    print("Step 5/5: Creating demo schematic...")
-    if not create_demo():
-        print("⚠️  Demo creation failed, but setup is complete")
-    print()
-    
-    # Final status
-    status = daemon.get_status()
-    print("🎉 Daemon Setup Complete!")
-    print()
-    print("✨ What's new with daemon mode:")
-    print("  • MCP server runs persistently in background")
-    print("  • No PATH issues or virtual environment problems")
-    print("  • Automatic startup after system reboot (if desired)")
-    print("  • Better performance and reliability")
-    print()
-    print("📊 Status:")
-    print(f"  Daemon running: {'✅ Yes' if status['running'] else '❌ No'}")
-    print(f"  Claude configured: {'✅ Yes' if status['claude_configured'] else '❌ No'}")
-    print(f"  Log file: {status['log_file']}")
-    print()
-    
-    if status['running'] and status['claude_configured']:
-        print("🚀 Next steps:")
-        print("1. Restart Claude Code")
-        print("2. Try: 'Create a voltage divider with two 10kΩ resistors'")
-        print("3. Open demo_circuit.kicad_sch in KiCAD to see the example")
-        print()
-        print("🔧 Daemon management:")
-        print("  kicad-sch-api --daemon-status    # Check status")
-        print("  kicad-sch-api --stop-daemon      # Stop daemon")
-        print("  kicad-sch-api --start-daemon     # Start daemon")
-        print("  kicad-sch-api --restart-daemon   # Restart daemon")
-    else:
-        print("⚠️  Setup incomplete. Check the status and try again.")
-        return False
-    
-    print()
-    return True
 
 def main():
     """Main CLI entry point."""
@@ -413,11 +327,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  kicad-sch-api --setup                # Complete one-command setup (RECOMMENDED)
-  kicad-sch-api --setup-daemon          # Setup with daemon-style MCP server
-  kicad-sch-api --start-daemon          # Start MCP daemon in background
-  kicad-sch-api --stop-daemon           # Stop MCP daemon
-  kicad-sch-api --daemon-status         # Show daemon status
+  kicad-sch-api --setup                 # Complete one-command setup (RECOMMENDED)
+  kicad-sch-api --setup-claude-code     # Configure Claude Code MCP settings only
   kicad-sch-api --test                  # Test installation
   kicad-sch-api --demo                  # Create demo schematic
         """
@@ -425,21 +336,9 @@ Examples:
     
     # Main setup options
     parser.add_argument('--setup', action='store_true',
-                       help='Complete one-command setup (RECOMMENDED for new users)')
-    parser.add_argument('--setup-daemon', action='store_true',
-                       help='Setup with daemon-style MCP server (RECOMMENDED)')
+                       help='Complete one-command setup (RECOMMENDED)')
     
-    # Daemon management
-    parser.add_argument('--start-daemon', action='store_true',
-                       help='Start MCP daemon in background')
-    parser.add_argument('--stop-daemon', action='store_true',
-                       help='Stop MCP daemon')
-    parser.add_argument('--restart-daemon', action='store_true',
-                       help='Restart MCP daemon')
-    parser.add_argument('--daemon-status', action='store_true',
-                       help='Show daemon status and logs')
-    
-    # Legacy/manual setup options
+    # Setup options
     parser.add_argument('--setup-claude-code', action='store_true',
                        help='Configure Claude Code MCP settings only')
     parser.add_argument('--test', action='store_true',
@@ -457,65 +356,21 @@ Examples:
     
     args = parser.parse_args()
     
-    # If no arguments provided, suggest the daemon setup
+    # If no arguments provided, suggest setup
     if not any(vars(args).values()):
         print("🚀 KiCAD Schematic API - Command Line Interface")
         print()
-        print("🌟 RECOMMENDED: Setup with daemon-style MCP server:")
-        print("  kicad-sch-api --setup-daemon")
-        print()
-        print("📖 For legacy setup:")
+        print("🌟 RECOMMENDED: Complete setup:")
         print("  kicad-sch-api --setup")
         print()
         print("🆘 For help with all options:")
         print("  kicad-sch-api --help")
         return
     
-    # Import daemon management after args check
-    from .daemon import MCPDaemon
-    
-    # Handle daemon commands
-    daemon = MCPDaemon()
-    
-    if args.start_daemon:
-        success = daemon.start()
-        sys.exit(0 if success else 1)
-    
-    if args.stop_daemon:
-        success = daemon.stop()
-        sys.exit(0 if success else 1)
-    
-    if args.restart_daemon:
-        success = daemon.restart()
-        sys.exit(0 if success else 1)
-    
-    if args.daemon_status:
-        status = daemon.get_status()
-        print(f"🚀 KiCAD Schematic MCP Server Status")
-        print("=" * 40)
-        print(f"Running: {'✅ Yes' if status['running'] else '❌ No'}")
-        
-        if status["pid"]:
-            print(f"PID: {status['pid']}")
-        
-        print(f"Log file: {status['log_file']}")
-        print(f"Claude configured: {'✅ Yes' if status['claude_configured'] else '❌ No'}")
-        
-        if not status["claude_configured"]:
-            print("\n⚠️  Claude Code not configured. Run with --setup-daemon to fix.")
-        
-        if status["running"]:
-            print("\n📜 Recent logs:")
-            daemon.show_logs(10)
-        
-        return
-    
     # Execute requested actions
     success = True
     
-    if args.setup_daemon:
-        success &= setup_daemon()
-    elif args.setup:
+    if args.setup:
         success &= setup_everything()
     
     if args.setup_claude_code:

@@ -1,51 +1,52 @@
 # KiCAD Schematic API - Installation Guide
 
-## 🚀 New! Daemon-Style Setup (Recommended)
+## 🚀 Quick Setup (Recommended)
 
-**For best performance - persistent background MCP server:**
-
-```bash
-# Install and setup with daemon-style MCP server
-pip install 'kicad-sch-api[mcp]' && kicad-sch-api --setup-daemon
-```
-
-**✨ What's new with daemon mode:**
-- 🚀 **Persistent**: MCP server runs in background, no restart needed
-- ⚡ **Fast**: Better performance, no startup delays
-- 🔒 **Reliable**: No PATH issues or virtual environment problems
-- 🛠️ **Manageable**: Easy start/stop/restart controls
-
-**Daemon Management:**
-```bash
-kicad-sch-api --daemon-status     # Check if daemon is running
-kicad-sch-api --start-daemon      # Start daemon
-kicad-sch-api --stop-daemon       # Stop daemon  
-kicad-sch-api --restart-daemon    # Restart daemon
-```
-
-After setup, just restart Claude Code and try:
-```
-"Create a voltage divider with two 10kΩ resistors"
-```
-
----
-
-## 📦 Legacy Setup (Still Works)
-
-**Traditional setup method:**
+**One-command installation and setup:**
 
 ```bash
 # Install and setup everything automatically
 pip install 'kicad-sch-api[mcp]' && kicad-sch-api --setup
 ```
 
-**What this does:**
-- ✅ Install the Python library
-- ✅ Install MCP server for AI agents  
-- ✅ Configure Claude Code automatically
-- ✅ Initialize component cache
-- ✅ Create a demo schematic
-- ✅ Test everything works
+**✨ What this does:**
+- ✅ Installs the Python library with MCP server support
+- ✅ Configures Claude Code automatically  
+- ✅ Initializes component discovery cache
+- ✅ Creates a demo schematic for testing
+- ✅ Uses reliable on-demand MCP server (no background processes)
+
+After setup, restart Claude Code and try:
+```
+"Create a voltage divider with two 10kΩ resistors"
+```
+
+---
+
+## 📦 Manual Installation (Advanced Users)
+
+**Step-by-step manual installation:**
+
+### Python Library Only
+```bash
+# Just the Python library
+pip install kicad-sch-api
+
+# Test basic functionality
+python -c "import kicad_sch_api as ksa; print('✅ Library working!')"
+```
+
+### With AI Agent Support
+```bash
+# Library + MCP server for AI agents
+pip install 'kicad-sch-api[mcp]'
+
+# Configure Claude Code
+kicad-sch-api --setup-claude-code
+
+# Test MCP server
+python -m kicad_sch_api.mcp.server --test
+```
 
 ---
 

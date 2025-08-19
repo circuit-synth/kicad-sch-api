@@ -1457,27 +1457,16 @@ This hierarchical approach makes complex designs manageable and promotes reusabl
 """
 
 def main():
-    """Run the MCP server."""
+    """Run the MCP server in standard on-demand mode."""
     import argparse
-    import os
-    import signal
-    import atexit
-    import time
     
     parser = argparse.ArgumentParser(description="KiCAD Schematic MCP Server")
     parser.add_argument('--test', action='store_true', help='Run quick test and exit')
     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
     parser.add_argument('--status', action='store_true', help='Show server status and exit')
     parser.add_argument('--version', action='store_true', help='Show version and exit')
-    parser.add_argument('--daemon', action='store_true', help='Run as daemon process')
-    parser.add_argument('--log-file', type=str, help='Log file path for daemon mode')
-    parser.add_argument('--pid-file', type=str, help='PID file path for daemon mode')
     
     args = parser.parse_args()
-    
-    # Handle daemon mode
-    if args.daemon:
-        return run_daemon(args.log_file, args.pid_file, args.debug)
     
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -1509,6 +1498,7 @@ def main():
     
     logger.info("Starting KiCAD Schematic MCP Server...")
     try:
+        # Run normally - Claude Desktop will manage the process lifecycle
         mcp.run()
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
@@ -1516,106 +1506,6 @@ def main():
         logger.error(f"Server error: {e}")
         sys.exit(1)
 
-def run_daemon(log_file: Optional[str] = None, pid_file: Optional[str] = None, debug: bool = False):
-    """Run the MCP server as a daemon process."""
-    import os
-    import sys
-    import signal
-    import atexit
-    from pathlib import Path
-    
-    # Default paths
-    if not log_file:
-        log_file = str(Path.home() / ".kicad-sch-api" / "mcp-daemon.log")
-    if not pid_file:
-        pid_file = str(Path.home() / ".kicad-sch-api" / "mcp-daemon.pid")
-    
-    # Ensure directory exists
-    Path(log_file).parent.mkdir(parents=True, exist_ok=True)
-    Path(pid_file).parent.mkdir(parents=True, exist_ok=True)
-    
-    # Daemonize process
-    try:
-        pid = os.fork()
-        if pid > 0:
-            # Exit parent process
-            sys.exit(0)
-    except OSError as e:
-        logger.error(f"Fork failed: {e}")
-        sys.exit(1)
-    
-    # Decouple from parent environment
-    os.chdir("/")
-    os.setsid()
-    os.umask(0)
-    
-    # Second fork
-    try:
-        pid = os.fork()
-        if pid > 0:
-            # Exit first child
-            sys.exit(0)
-    except OSError as e:
-        logger.error(f"Second fork failed: {e}")
-        sys.exit(1)
-    
-    # Redirect standard file descriptors
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
-    # Redirect to log file
-    with open(log_file, 'a') as f:
-        os.dup2(f.fileno(), sys.stdout.fileno())
-        os.dup2(f.fileno(), sys.stderr.fileno())
-    
-    # Close stdin
-    with open(os.devnull, 'r') as f:
-        os.dup2(f.fileno(), sys.stdin.fileno())
-    
-    # Write PID file
-    with open(pid_file, 'w') as f:
-        f.write(str(os.getpid()))
-    
-    # Setup signal handlers for graceful shutdown
-    def cleanup():
-        """Clean up PID file on exit."""
-        try:
-            os.unlink(pid_file)
-        except OSError:
-            pass
-    
-    def signal_handler(signum, frame):
-        """Handle shutdown signals."""
-        logger.info(f"Received signal {signum}, shutting down daemon...")
-        cleanup()
-        sys.exit(0)
-    
-    signal.signal(signal.SIGTERM, signal_handler)
-    signal.signal(signal.SIGINT, signal_handler)
-    atexit.register(cleanup)
-    
-    # Configure logging for daemon
-    log_handler = logging.FileHandler(log_file)
-    log_handler.setFormatter(logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    ))
-    
-    # Remove existing handlers and add file handler
-    logger.handlers.clear()
-    logger.addHandler(log_handler)
-    logger.setLevel(logging.DEBUG if debug else logging.INFO)
-    
-    # Start the MCP server
-    logger.info("Starting KiCAD Schematic MCP Server daemon...")
-    logger.info(f"PID: {os.getpid()}")
-    logger.info(f"Log file: {log_file}")
-    
-    try:
-        mcp.run()
-    except Exception as e:
-        logger.error(f"Daemon error: {e}")
-        cleanup()
-        sys.exit(1)
 
 if __name__ == "__main__":
     main()
