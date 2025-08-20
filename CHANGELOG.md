@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-01-20
+
+### Added
+- **Pin-to-Pin Wire Drawing**: Intelligent wire routing between component pins
+  - `add_wire_between_pins()` method for direct pin-to-pin connections
+  - `add_wire_to_pin()` method for connecting arbitrary points to component pins
+  - `get_component_pin_position()` method for pin position queries
+  - Automatic pin position calculation using existing pin positioning functionality
+  - Support for both Point objects and tuple coordinates
+  - Comprehensive error handling for invalid components and pins
+  - 11 dedicated test cases covering all functionality and edge cases
+
+### Enhanced
+- **Wire Management**: Improved wire creation with pin-aware routing
+  - Seamless integration with existing WireCollection
+  - UUID-based wire tracking for all pin-to-pin connections
+  - Maintains exact format preservation for all wire types
+
+### Technical Notes
+- Built on existing pin positioning functionality from recent commits
+- All wire drawing maintains KiCAD's coordinate system (inverted Y-axis)
+- Zero test failures achieved - comprehensive validation of all functionality
+- Example files included demonstrating voltage divider and complex circuit creation
+
 ## [0.3.0] - 2025-01-20
 
 ### Added
