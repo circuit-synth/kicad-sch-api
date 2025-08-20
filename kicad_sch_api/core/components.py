@@ -334,6 +334,13 @@ class ComponentCollection:
             position = self._find_available_position()
         elif isinstance(position, tuple):
             position = Point(position[0], position[1])
+        
+        # Always snap component position to KiCAD grid (1.27mm = 50mil)
+        from .geometry import snap_to_grid
+        snapped_pos = snap_to_grid((position.x, position.y), grid_size=1.27)
+        position = Point(snapped_pos[0], snapped_pos[1])
+        
+        logger.debug(f"Component {reference} position snapped to grid: ({position.x:.3f}, {position.y:.3f})")
 
         # Create component data
         component_data = SchematicSymbol(

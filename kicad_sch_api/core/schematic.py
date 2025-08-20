@@ -230,6 +230,60 @@ class Schematic:
         """Whether schematic has been modified since last save."""
         return self._modified or self._components._modified
 
+    # Pin positioning methods (migrated from circuit-synth)
+    def get_component_pin_position(self, reference: str, pin_number: str) -> Optional[Point]:
+        """
+        Get the absolute position of a component pin.
+        
+        Migrated from circuit-synth with enhanced logging for verification.
+
+        Args:
+            reference: Component reference (e.g., "R1")
+            pin_number: Pin number to find (e.g., "1", "2")
+
+        Returns:
+            Absolute position of the pin, or None if not found
+        """
+        from .pin_utils import get_component_pin_position
+        
+        # Find the component
+        component = None
+        for comp in self._components:
+            if comp.reference == reference:
+                component = comp
+                break
+        
+        if not component:
+            logger.warning(f"Component {reference} not found")
+            return None
+        
+        return get_component_pin_position(component, pin_number)
+    
+    def list_component_pins(self, reference: str) -> List[Tuple[str, Point]]:
+        """
+        List all pins for a component with their absolute positions.
+
+        Args:
+            reference: Component reference (e.g., "R1")
+
+        Returns:
+            List of (pin_number, absolute_position) tuples
+        """
+        from .pin_utils import list_component_pins
+        
+        # Find the component
+        component = None
+        for comp in self._components:
+            if comp.reference == reference:
+                component = comp
+                break
+        
+        if not component:
+            logger.warning(f"Component {reference} not found")
+            return []
+        
+        return list_component_pins(component)
+
     # File operations
     def save(self, file_path: Optional[Union[str, Path]] = None, preserve_format: bool = True):
         """
