@@ -4,3 +4,6 @@
 [submodule "submodules/circuit-synth"]
 	path = submodules/circuit-synth
 	url = https://github.com/circuit-synth/circuit-synth.git
+[submodule "submodules/kicad-skip"]
+	path = submodules/kicad-skip
+	url = https://github.com/psychogenic/kicad-skip.git
