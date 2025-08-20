@@ -1,0 +1,3 @@
+[submodule "submodules/mcp-kicad-sch-api"]
+	path = submodules/mcp-kicad-sch-api
+	url = https://github.com/circuit-synth/mcp-kicad-sch-api.git
