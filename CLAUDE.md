@@ -145,6 +145,22 @@ uv run pytest -m "performance" -v # Large schematic performance
 uv run pytest -m "validation" -v  # Error handling and validation
 ```
 
+### New Feature Testing Pattern
+**Standard workflow for implementing new features with exact KiCAD compatibility:**
+
+1. **Test Planning**: Identify what needs testing and describe the test case
+2. **Manual Reference Creation**: Create blank KiCAD schematic, manually add required elements
+3. **Reference Analysis**: Read the manually created schematic to understand exact KiCAD format
+4. **Python Implementation**: Write Python logic to generate the same output
+5. **Exact Format Validation**: Ensure Python output matches manual KiCAD output byte-perfectly
+
+**Interactive Testing Steps:**
+1. Claude creates blank schematic and opens it in KiCAD
+2. User manually edits schematic with required test elements
+3. Claude analyzes the edited schematic as reference format
+4. Claude creates unit test that generates identical output
+5. Test validates both functionality and exact KiCAD format compliance
+
 ### Debugging Pattern
 **Standard workflow for implementing new features:**
 
