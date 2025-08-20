@@ -282,7 +282,7 @@ class Schematic:
     def get_component_pin_position(self, reference: str, pin_number: str) -> Optional[Point]:
         """
         Get the absolute position of a component pin.
-        
+
         Migrated from circuit-synth with enhanced logging for verification.
 
         Args:
@@ -293,20 +293,20 @@ class Schematic:
             Absolute position of the pin, or None if not found
         """
         from .pin_utils import get_component_pin_position
-        
+
         # Find the component
         component = None
         for comp in self._components:
             if comp.reference == reference:
                 component = comp
                 break
-        
+
         if not component:
             logger.warning(f"Component {reference} not found")
             return None
-        
+
         return get_component_pin_position(component, pin_number)
-    
+
     def list_component_pins(self, reference: str) -> List[Tuple[str, Point]]:
         """
         List all pins for a component with their absolute positions.
@@ -318,18 +318,18 @@ class Schematic:
             List of (pin_number, absolute_position) tuples
         """
         from .pin_utils import list_component_pins
-        
+
         # Find the component
         component = None
         for comp in self._components:
             if comp.reference == reference:
                 component = comp
                 break
-        
+
         if not component:
             logger.warning(f"Component {reference} not found")
             return []
-        
+
         return list_component_pins(component)
 
     # File operations
@@ -528,16 +528,12 @@ class Schematic:
         if isinstance(end, tuple):
             end = Point(end[0], end[1])
 
-        wire = Wire(uuid=str(uuid.uuid4()), start=start, end=end)
-
-        if "wires" not in self._data:
-            self._data["wires"] = []
-
-        self._data["wires"].append(wire.__dict__)
+        # Use the wire collection to add the wire
+        wire_uuid = self._wires.add(start=start, end=end)
         self._modified = True
 
         logger.debug(f"Added wire: {start} -> {end}")
-        return wire.uuid
+        return wire_uuid
 
     def remove_wire(self, wire_uuid: str) -> bool:
         """Remove wire by UUID."""
@@ -622,6 +618,105 @@ class Schematic:
                 logger.debug(f"Removed hierarchical label: {label_uuid}")
                 return True
         return False
+
+    def add_wire_to_pin(
+        self, start_point: Union[Point, Tuple[float, float]], component_ref: str, pin_number: str
+    ) -> Optional[str]:
+        """
+        Draw a wire from a start point to a component pin.
+
+        Args:
+            start_point: Starting point of the wire
+            component_ref: Reference of the target component (e.g., "R1")
+            pin_number: Pin number on the component (e.g., "1")
+
+        Returns:
+            UUID of created wire, or None if pin position cannot be determined
+        """
+        from .pin_utils import get_component_pin_position
+
+        # Find the component
+        component = self.components.get(component_ref)
+        if not component:
+            logger.warning(f"Component {component_ref} not found")
+            return None
+
+        # Get the pin position
+        pin_position = get_component_pin_position(component, pin_number)
+        if not pin_position:
+            logger.warning(f"Could not determine position of pin {pin_number} on {component_ref}")
+            return None
+
+        # Create the wire
+        return self.add_wire(start_point, pin_position)
+
+    def add_wire_between_pins(
+        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
+    ) -> Optional[str]:
+        """
+        Draw a wire between two component pins.
+
+        Args:
+            component1_ref: Reference of the first component (e.g., "R1")
+            pin1_number: Pin number on the first component (e.g., "1")
+            component2_ref: Reference of the second component (e.g., "R2")
+            pin2_number: Pin number on the second component (e.g., "2")
+
+        Returns:
+            UUID of created wire, or None if either pin position cannot be determined
+        """
+        from .pin_utils import get_component_pin_position
+
+        # Find both components
+        component1 = self.components.get(component1_ref)
+        component2 = self.components.get(component2_ref)
+
+        if not component1:
+            logger.warning(f"Component {component1_ref} not found")
+            return None
+        if not component2:
+            logger.warning(f"Component {component2_ref} not found")
+            return None
+
+        # Get both pin positions
+        pin1_position = get_component_pin_position(component1, pin1_number)
+        pin2_position = get_component_pin_position(component2, pin2_number)
+
+        if not pin1_position:
+            logger.warning(f"Could not determine position of pin {pin1_number} on {component1_ref}")
+            return None
+        if not pin2_position:
+            logger.warning(f"Could not determine position of pin {pin2_number} on {component2_ref}")
+            return None
+
+        # Create the wire
+        return self.add_wire(pin1_position, pin2_position)
+
+    def get_component_pin_position(self, component_ref: str, pin_number: str) -> Optional[Point]:
+        """
+        Get the absolute position of a component pin.
+
+        Args:
+            component_ref: Reference of the component (e.g., "R1")
+            pin_number: Pin number on the component (e.g., "1")
+
+        Returns:
+            Absolute position of the pin, or None if not found
+        """
+        from .pin_utils import get_component_pin_position
+
+        component = self.components.get(component_ref)
+        if not component:
+            return None
+
+        return get_component_pin_position(component, pin_number)
+
+    # Legacy method names for compatibility
+    def connect_pins_with_wire(
+        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
+    ) -> Optional[str]:
+        """Legacy alias for add_wire_between_pins."""
+        return self.add_wire_between_pins(component1_ref, pin1_number, component2_ref, pin2_number)
 
     def add_label(
         self,
