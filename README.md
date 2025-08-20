@@ -13,6 +13,7 @@ Create and manipulate KiCAD schematic files programmatically with guaranteed exa
 - **⚡ High Performance**: Optimized for large schematics with intelligent caching
 - **🔍 Real KiCAD Library Integration**: Access to actual KiCAD symbol libraries and validation
 - **📐 Component Bounding Boxes**: Precise component boundary calculation and visualization
+- **🎨 Colored Rectangle Graphics**: KiCAD-compatible rectangles with all stroke types and colors
 - **🛣️ Manhattan Routing**: Intelligent wire routing with obstacle avoidance
 - **🤖 AI Agent Ready**: MCP server for seamless integration with AI development tools
 - **📚 Hierarchical Design**: Complete support for multi-sheet schematic projects
@@ -102,7 +103,60 @@ power_sch.save("power.kicad_sch")
 
 ## 🔧 Advanced Features
 
-### Pin-to-Pin Wiring (NEW in v0.3.1)
+### Component Bounding Boxes and Colored Graphics (NEW in v0.3.1)
+
+```python
+from kicad_sch_api.core.component_bounds import get_component_bounding_box
+
+# Add components
+resistor = sch.components.add("Device:R", "R1", "10k", (100, 100))
+opamp = sch.components.add("Amplifier_Operational:LM358", "U1", "LM358", (150, 100))
+
+# Get component bounding boxes
+bbox_body = get_component_bounding_box(resistor, include_properties=False)
+bbox_full = get_component_bounding_box(resistor, include_properties=True)
+
+# Draw colored bounding box rectangles
+sch.draw_bounding_box(bbox_body, stroke_width=0.5, stroke_color="blue", stroke_type="solid")
+sch.draw_bounding_box(bbox_full, stroke_width=0.3, stroke_color="red", stroke_type="dash")
+
+# Draw bounding boxes for all components at once
+bbox_uuids = sch.draw_component_bounding_boxes(
+    include_properties=True,
+    stroke_width=0.4,
+    stroke_color="green", 
+    stroke_type="dot"
+)
+```
+
+### Manhattan Routing with Obstacle Avoidance (NEW in v0.3.1)
+
+```python
+from kicad_sch_api.core.manhattan_routing import ManhattanRouter
+from kicad_sch_api.core.types import Point
+
+# Create router
+router = ManhattanRouter()
+
+# Add components that act as obstacles
+r1 = sch.components.add("Device:R", "R1", "1k", (50, 50))
+r2 = sch.components.add("Device:R", "R2", "2k", (150, 150))
+obstacle = sch.components.add("Device:C", "C1", "100nF", (100, 100))
+
+# Get obstacle bounding boxes
+obstacle_bbox = get_component_bounding_box(obstacle, include_properties=False)
+
+# Route around obstacles
+start_point = Point(r1.position.x, r1.position.y)
+end_point = Point(r2.position.x, r2.position.y)
+path = router.route_between_points(start_point, end_point, [obstacle_bbox], clearance=2.0)
+
+# Add wires along the path
+for i in range(len(path) - 1):
+    sch.wires.add(path[i], path[i + 1])
+```
+
+### Pin-to-Pin Wiring
 
 ```python
 # Connect component pins directly - automatically calculates pin positions
