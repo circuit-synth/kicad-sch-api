@@ -711,6 +711,55 @@ class Schematic:
 
         return get_component_pin_position(component, pin_number)
 
+    # Wire routing and connectivity methods
+    def auto_route_pins(self, comp1_ref: str, pin1_num: str, comp2_ref: str, pin2_num: str) -> Optional[str]:
+        """
+        Auto route between two pins with direct connection.
+        Ok to draw through other components.
+        
+        All positions are snapped to KiCAD's 1.27mm grid for exact electrical connections.
+        
+        Args:
+            comp1_ref: First component reference (e.g., 'R1')
+            pin1_num: First component pin number (e.g., '1')
+            comp2_ref: Second component reference (e.g., 'R2') 
+            pin2_num: Second component pin number (e.g., '2')
+            
+        Returns:
+            UUID of created wire, or None if routing failed
+        """
+        from .wire_routing import route_pins_direct, snap_to_kicad_grid
+        
+        # Get pin positions
+        pin1_pos = self.get_component_pin_position(comp1_ref, pin1_num)
+        pin2_pos = self.get_component_pin_position(comp2_ref, pin2_num)
+        
+        if not pin1_pos or not pin2_pos:
+            return None
+        
+        # Ensure positions are grid-snapped
+        pin1_pos = snap_to_kicad_grid(pin1_pos)
+        pin2_pos = snap_to_kicad_grid(pin2_pos)
+        
+        # Simple direct routing - just connect the pins
+        return self.add_wire(pin1_pos, pin2_pos)
+    
+    def are_pins_connected(self, comp1_ref: str, pin1_num: str, comp2_ref: str, pin2_num: str) -> bool:
+        """
+        Detect when two pins are connected via wire routing.
+        
+        Args:
+            comp1_ref: First component reference (e.g., 'R1')
+            pin1_num: First component pin number (e.g., '1')
+            comp2_ref: Second component reference (e.g., 'R2')
+            pin2_num: Second component pin number (e.g., '2')
+            
+        Returns:
+            True if pins are connected via wires, False otherwise
+        """
+        from .wire_routing import are_pins_connected
+        return are_pins_connected(self, comp1_ref, pin1_num, comp2_ref, pin2_num)
+    
     # Legacy method names for compatibility
     def connect_pins_with_wire(
         self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
