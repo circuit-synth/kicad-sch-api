@@ -59,6 +59,10 @@ capacitor = sch.components.add(
 # Add wires for connectivity
 sch.wires.add(start=(100, 110), end=(150, 110))
 
+# Pin-to-pin wiring (NEW in v0.3.1)
+wire_uuid = sch.add_wire_between_pins("R1", "2", "C1", "1")  # Connect R1 pin 2 to C1 pin 1
+external_wire = sch.add_wire_to_pin((50, 100), "R1", "1")   # Connect external point to R1 pin 1
+
 # Add labels for nets
 sch.add_label("VCC", position=(125, 110))
 
@@ -95,6 +99,25 @@ power_sch.save("power.kicad_sch")
 ```
 
 ## 🔧 Advanced Features
+
+### Pin-to-Pin Wiring (NEW in v0.3.1)
+
+```python
+# Connect component pins directly - automatically calculates pin positions
+wire_uuid = sch.add_wire_between_pins("R1", "2", "R2", "1")  # R1 pin 2 to R2 pin 1
+
+# Connect arbitrary point to component pin
+external_wire = sch.add_wire_to_pin((75, 125), "R1", "1")    # External point to R1 pin 1
+tuple_wire = sch.add_wire_to_pin(Point(100, 150), "C1", "2") # Using Point object
+
+# Get component pin positions for advanced operations
+pin_position = sch.get_component_pin_position("R1", "1")
+if pin_position:
+    print(f"R1 pin 1 is at ({pin_position.x:.2f}, {pin_position.y:.2f})")
+
+# Error handling - returns None for invalid components/pins
+invalid_wire = sch.add_wire_between_pins("R999", "1", "R1", "1")  # Returns None
+```
 
 ### Component Search and Management
 
