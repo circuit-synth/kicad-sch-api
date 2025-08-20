@@ -1163,6 +1163,81 @@ class Schematic:
 
         logger.debug(f"Set title block: {title} rev {rev}")
 
+    def draw_bounding_box(
+        self, 
+        bbox: 'BoundingBox', 
+        stroke_width: float = 0,
+        stroke_color: str = "default",
+        exclude_from_sim: bool = False
+    ) -> str:
+        """
+        Draw a component bounding box as a visual rectangle using KiCAD rectangle graphics.
+        
+        Args:
+            bbox: BoundingBox to draw
+            stroke_width: Line width for the rectangle
+            stroke_color: Color name for the rectangle (red, blue, green, etc.)
+            exclude_from_sim: Exclude from simulation
+            
+        Returns:
+            UUID of created rectangle element
+        """
+        # Import BoundingBox type
+        from .component_bounds import BoundingBox
+        
+        rect_uuid = str(uuid.uuid4())
+        
+        # Create rectangle data structure in KiCAD dictionary format
+        rectangle_data = {
+            "uuid": rect_uuid,
+            "start": {"x": bbox.min_x, "y": bbox.min_y},
+            "end": {"x": bbox.max_x, "y": bbox.max_y},
+            "stroke": {
+                "width": stroke_width,
+                "type": "default"
+            },
+            "fill": {"type": "none"}
+        }
+        
+        # Add to schematic data
+        if "graphics" not in self._data:
+            self._data["graphics"] = []
+        
+        self._data["graphics"].append(rectangle_data)
+        self._modified = True
+        
+        logger.debug(f"Drew bounding box rectangle: {bbox}")
+        return rect_uuid
+
+    def draw_component_bounding_boxes(
+        self, 
+        include_properties: bool = False,
+        stroke_width: float = 0.254,
+        stroke_color: str = "red"
+    ) -> List[str]:
+        """
+        Draw bounding boxes for all components in the schematic.
+        
+        Args:
+            include_properties: Include space for Reference/Value labels
+            stroke_width: Line width for rectangles
+            stroke_color: Color for rectangles
+            
+        Returns:
+            List of UUIDs for created polyline elements
+        """
+        from .component_bounds import get_component_bounding_box
+        
+        uuids = []
+        
+        for component in self._components:
+            bbox = get_component_bounding_box(component, include_properties)
+            rect_uuid = self.draw_bounding_box(bbox, stroke_width, stroke_color)
+            uuids.append(rect_uuid)
+            
+        logger.info(f"Drew {len(uuids)} component bounding boxes")
+        return uuids
+
     # Library management
     @property
     def libraries(self) -> "LibraryManager":

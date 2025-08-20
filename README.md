@@ -12,6 +12,8 @@ Create and manipulate KiCAD schematic files programmatically with guaranteed exa
 - **🏗️ Professional Component Management**: Object-oriented collections with search and validation
 - **⚡ High Performance**: Optimized for large schematics with intelligent caching
 - **🔍 Real KiCAD Library Integration**: Access to actual KiCAD symbol libraries and validation
+- **📐 Component Bounding Boxes**: Precise component boundary calculation and visualization
+- **🛣️ Manhattan Routing**: Intelligent wire routing with obstacle avoidance
 - **🤖 AI Agent Ready**: MCP server for seamless integration with AI development tools
 - **📚 Hierarchical Design**: Complete support for multi-sheet schematic projects
 
@@ -117,6 +119,59 @@ if pin_position:
 
 # Error handling - returns None for invalid components/pins
 invalid_wire = sch.add_wire_between_pins("R999", "1", "R1", "1")  # Returns None
+```
+
+### Component Bounding Box Visualization (NEW in v0.3.1)
+
+```python
+from kicad_sch_api.core.component_bounds import get_component_bounding_box
+
+# Get component bounding box (body only)
+resistor = sch.components.get("R1")
+bbox = get_component_bounding_box(resistor, include_properties=False)
+print(f"R1 body size: {bbox.width:.2f}×{bbox.height:.2f}mm")
+
+# Get bounding box including properties (reference, value, etc.)
+bbox_with_props = get_component_bounding_box(resistor, include_properties=True)
+print(f"R1 with labels: {bbox_with_props.width:.2f}×{bbox_with_props.height:.2f}mm")
+
+# Draw bounding box as rectangle graphics (for visualization/debugging)
+rect_uuid = sch.draw_bounding_box(bbox)
+print(f"Drew bounding box rectangle: {rect_uuid}")
+
+# Draw bounding boxes for all components
+bbox_uuids = sch.draw_component_bounding_boxes(
+    include_properties=False  # True to include reference/value labels
+)
+print(f"Drew {len(bbox_uuids)} component bounding boxes")
+
+# Expand bounding box for clearance analysis
+expanded_bbox = bbox.expand(2.54)  # Expand by 2.54mm (0.1 inch) 
+clearance_rect = sch.draw_bounding_box(expanded_bbox)
+```
+
+### Manhattan Routing with Obstacle Avoidance (NEW in v0.3.1)
+
+```python
+# Automatic Manhattan routing between component pins
+wire_segments = sch.auto_route_pins(
+    "R1", "2",           # From component R1, pin 2
+    "R2", "1",           # To component R2, pin 1  
+    routing_mode="manhattan",  # Manhattan (L-shaped) routing
+    avoid_components=True      # Avoid component bounding boxes
+)
+
+# Direct routing (straight line)
+direct_wire = sch.auto_route_pins("C1", "1", "C2", "2", routing_mode="direct")
+
+# Manual obstacle avoidance using bounding boxes
+bbox_r1 = get_component_bounding_box(sch.components.get("R1"))
+bbox_r2 = get_component_bounding_box(sch.components.get("R2"))
+
+# Check if routing path intersects with component
+def path_clear(start, end, obstacles):
+    # Custom collision detection logic
+    return not any(bbox.intersects_line(start, end) for bbox in obstacles)
 ```
 
 ### Component Search and Management

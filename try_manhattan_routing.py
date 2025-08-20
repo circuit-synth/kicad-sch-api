@@ -63,14 +63,23 @@ def main():
     
     # Add bounding box visualization
     print(f"\n📦 Adding bounding box visualization...")
+    
+    # Draw actual bounding box rectangles
+    bbox_uuids = sch.draw_component_bounding_boxes(
+        include_properties=False,
+        stroke_width=0.254,
+        stroke_color="red"
+    )
+    print(f"   Drew {len(bbox_uuids)} red bounding box rectangles")
+    
+    # Also add corner text markers for reference
     from kicad_sch_api.core.component_bounds import get_component_bounding_box
     
     for comp in [r1, r_obs, r2, r3, r4]:
         bbox = get_component_bounding_box(comp, include_properties=False)
         
-        # Add corner markers to show component bounds
-        sch.add_text(f"{comp.reference}_TL", Point(bbox.min_x, bbox.max_y), size=0.5)
-        sch.add_text(f"{comp.reference}_BR", Point(bbox.max_x, bbox.min_y), size=0.5)
+        # Add small corner markers
+        sch.add_text(f"{comp.reference[:2]}", Point(bbox.min_x-1, bbox.max_y+1), size=0.5)
         print(f"   {comp.reference}: {bbox.width:.1f}×{bbox.height:.1f}mm")
     
     # Save and open

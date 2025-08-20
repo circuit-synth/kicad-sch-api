@@ -125,6 +125,15 @@ class ExactFormatter:
         self.rules["justify"] = FormatRule(inline=True)
         self.rules["hide"] = FormatRule(inline=True)
 
+        # Graphical elements
+        self.rules["rectangle"] = FormatRule(inline=False)
+        self.rules["polyline"] = FormatRule(inline=False)
+        self.rules["graphics"] = FormatRule(inline=False)
+        self.rules["start"] = FormatRule(inline=True)
+        self.rules["end"] = FormatRule(inline=True)
+        self.rules["fill"] = FormatRule(inline=False)
+        self.rules["color"] = FormatRule(inline=True)
+
         # Sheet instances and metadata
         self.rules["sheet_instances"] = FormatRule(inline=False)
         self.rules["symbol_instances"] = FormatRule(inline=False)
@@ -252,7 +261,7 @@ class ExactFormatter:
             return self._format_property(lst, indent_level)
         elif tag == "pin":
             return self._format_pin(lst, indent_level)
-        elif tag in ("symbol", "wire", "junction", "label", "hierarchical_label"):
+        elif tag in ("symbol", "wire", "junction", "label", "hierarchical_label", "polyline", "rectangle"):
             return self._format_component_like(lst, indent_level, rule)
         else:
             return self._format_generic_multiline(lst, indent_level, rule)
@@ -416,7 +425,7 @@ class ExactFormatter:
         has_components = any(
             isinstance(item, list)
             and len(item) > 0
-            and str(item[0]) in ["symbol", "wire", "junction", "text", "sheet"]
+            and str(item[0]) in ["symbol", "wire", "junction", "text", "sheet", "polyline", "rectangle", "graphics"]
             for item in lst[1:]
         )
 

@@ -304,6 +304,10 @@ class SExpressionParser:
         for text_box in schematic_data.get("text_boxes", []):
             sexp_data.append(self._text_box_to_sexp(text_box))
 
+        # Add graphics (rectangles, etc.)
+        for graphic in schematic_data.get("graphics", []):
+            sexp_data.append(self._graphic_to_sexp(graphic))
+
         # Add sheet_instances (required by KiCAD)
         sheet_instances = schematic_data.get("sheet_instances", [])
         if sheet_instances:
@@ -1200,6 +1204,89 @@ class SExpressionParser:
             ]
             sexp.append(sheet_sexp)
         return sexp
+
+    def _graphic_to_sexp(self, graphic_data: Dict[str, Any]) -> List[Any]:
+        """Convert graphics (rectangles, etc.) to S-expression."""
+        # For now, we only support rectangles - this is the main graphics element we create
+        sexp = [sexpdata.Symbol("rectangle")]
+        
+        # Add start position
+        start = graphic_data.get("start", {})
+        start_x = start.get("x", 0)
+        start_y = start.get("y", 0)
+        
+        # Format coordinates properly (avoid unnecessary .0 for integers)
+        if isinstance(start_x, float) and start_x.is_integer():
+            start_x = int(start_x)
+        if isinstance(start_y, float) and start_y.is_integer():
+            start_y = int(start_y)
+        
+        sexp.append([sexpdata.Symbol("start"), start_x, start_y])
+        
+        # Add end position
+        end = graphic_data.get("end", {})
+        end_x = end.get("x", 0)
+        end_y = end.get("y", 0)
+        
+        # Format coordinates properly (avoid unnecessary .0 for integers)
+        if isinstance(end_x, float) and end_x.is_integer():
+            end_x = int(end_x)
+        if isinstance(end_y, float) and end_y.is_integer():
+            end_y = int(end_y)
+        
+        sexp.append([sexpdata.Symbol("end"), end_x, end_y])
+        
+        # Add stroke information (KiCAD format: width and type only, no color)
+        stroke = graphic_data.get("stroke", {})
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        
+        # Stroke width - default to 0 to match KiCAD behavior
+        stroke_width = stroke.get("width", 0)
+        if isinstance(stroke_width, float) and stroke_width == 0.0:
+            stroke_width = 0
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        
+        # Stroke type
+        stroke_type = stroke.get("type", "default")
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        
+        sexp.append(stroke_sexp)
+        
+        # Add fill information
+        fill = graphic_data.get("fill", {"type": "none"})
+        fill_type = fill.get("type", "none")
+        fill_sexp = [sexpdata.Symbol("fill"), [sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)]]
+        sexp.append(fill_sexp)
+        
+        # Add UUID (no quotes around UUID in KiCAD format)
+        if "uuid" in graphic_data:
+            uuid_str = graphic_data["uuid"]
+            # Remove quotes and convert to Symbol to match KiCAD format
+            uuid_clean = uuid_str.replace('"', '')
+            sexp.append([sexpdata.Symbol("uuid"), sexpdata.Symbol(uuid_clean)])
+        
+        return sexp
+
+    def _color_to_rgba(self, color_name: str) -> List[float]:
+        """Convert color name to RGBA values for KiCAD compatibility."""
+        # Basic color mapping for common colors
+        color_map = {
+            "red": [1.0, 0.0, 0.0, 1.0],
+            "blue": [0.0, 0.0, 1.0, 1.0], 
+            "green": [0.0, 1.0, 0.0, 1.0],
+            "yellow": [1.0, 1.0, 0.0, 1.0],
+            "magenta": [1.0, 0.0, 1.0, 1.0],
+            "cyan": [0.0, 1.0, 1.0, 1.0],
+            "black": [0.0, 0.0, 0.0, 1.0],
+            "white": [1.0, 1.0, 1.0, 1.0],
+            "gray": [0.5, 0.5, 0.5, 1.0],
+            "grey": [0.5, 0.5, 0.5, 1.0],
+            "orange": [1.0, 0.5, 0.0, 1.0],
+            "purple": [0.5, 0.0, 0.5, 1.0],
+        }
+        
+        # Return RGBA values, default to black if color not found
+        return color_map.get(color_name.lower(), [0.0, 0.0, 0.0, 1.0])
 
     def get_validation_issues(self) -> List[ValidationIssue]:
         """Get list of validation issues from last parse operation."""
