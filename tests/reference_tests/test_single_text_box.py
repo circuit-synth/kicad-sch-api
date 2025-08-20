@@ -3,9 +3,10 @@
 
 import kicad_sch_api as ksa
 
+
 def main():
     sch = ksa.create_schematic("Single Text Box")
-    
+
     # Add text box matching the reference
     sch.add_text_box(
         text="Text box goes here",
@@ -19,14 +20,16 @@ def main():
         fill_type="none",
         justify_horizontal="left",
         justify_vertical="top",
-        exclude_from_sim=False
+        exclude_from_sim=False,
     )
-    
+
     sch.save("test_single_text_box.kicad_sch")
     print("✅ Created single text box")
-    
+
     import subprocess
+
     subprocess.run(["open", "test_single_text_box.kicad_sch"])
+
 
 if __name__ == "__main__":
     main()

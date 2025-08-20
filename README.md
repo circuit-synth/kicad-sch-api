@@ -56,6 +56,12 @@ capacitor = sch.components.add(
     footprint="Capacitor_SMD:C_0603_1608Metric"
 )
 
+# Add wires for connectivity
+sch.wires.add(start=(100, 110), end=(150, 110))
+
+# Add labels for nets
+sch.add_label("VCC", position=(125, 110))
+
 # Save with exact format preservation
 sch.save("my_circuit.kicad_sch")
 ```
@@ -110,6 +116,53 @@ validation_result = sch.components.validate_component(
 )
 ```
 
+### Component and Element Removal
+
+```python
+# Remove components by reference
+removed = sch.components.remove("R1")  # Returns True if removed
+
+# Remove wires, labels, and other elements
+sch.remove_wire(wire_uuid)
+sch.remove_label(label_uuid)
+sch.remove_hierarchical_label(label_uuid)
+
+# Remove from collections
+sch.wires.remove(wire_uuid)
+sch.junctions.remove(junction_uuid)
+
+# lib_symbols are automatically cleaned up when last component of type is removed
+```
+
+### Configuration and Customization
+
+```python
+import kicad_sch_api as ksa
+
+# Access global configuration
+config = ksa.config
+
+# Customize property positioning
+config.properties.reference_y = -2.0  # Move reference labels higher
+config.properties.value_y = 2.0       # Move value labels lower
+
+# Customize tolerances and precision
+config.tolerance.position_tolerance = 0.05  # Tighter position matching
+config.tolerance.wire_segment_min = 0.005   # Different wire segment threshold
+
+# Customize defaults
+config.defaults.project_name = "my_company_project"
+config.defaults.stroke_width = 0.1
+
+# Grid and spacing customization
+config.grid.unit_spacing = 10.0       # Tighter multi-unit IC spacing
+config.grid.component_spacing = 5.0   # Closer component placement
+
+# Sheet settings for hierarchical designs
+config.sheet.name_offset_y = -1.0     # Different sheet label position
+config.sheet.file_offset_y = 1.0      # Different file label position
+```
+
 ### KiCAD Integration
 
 ```python
@@ -156,17 +209,29 @@ kicad-sch-api/
 ## 🧪 Testing & Quality
 
 ```bash
-# Run all tests
+# Run all tests (29 tests covering all functionality)
 uv run pytest tests/ -v
 
-# Format preservation tests (critical)
+# Format preservation tests (critical - exact KiCAD output matching)
 uv run pytest tests/reference_tests/ -v
+
+# Component removal tests (comprehensive removal functionality)
+uv run pytest tests/test_*_removal.py -v
 
 # Code quality checks
 uv run black kicad_sch_api/ tests/
 uv run mypy kicad_sch_api/
 uv run flake8 kicad_sch_api/ tests/
 ```
+
+### Test Categories
+
+- **Format Preservation**: Byte-for-byte compatibility with KiCAD native files
+- **Component Management**: Creation, modification, and removal of components
+- **Element Operations**: Wires, labels, junctions, hierarchical sheets
+- **Configuration**: Customizable settings and behavior
+- **Performance**: Large schematic handling and optimization
+- **Integration**: Real KiCAD library compatibility
 
 ## 🆚 Why This Library?
 

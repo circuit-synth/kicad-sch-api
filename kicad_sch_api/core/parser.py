@@ -253,7 +253,9 @@ class SExpressionParser:
         if schematic_data.get("generator"):
             sexp_data.append([sexpdata.Symbol("generator"), schematic_data["generator"]])
         if schematic_data.get("generator_version"):
-            sexp_data.append([sexpdata.Symbol("generator_version"), schematic_data["generator_version"]])
+            sexp_data.append(
+                [sexpdata.Symbol("generator_version"), schematic_data["generator_version"]]
+            )
         if schematic_data.get("uuid"):
             sexp_data.append([sexpdata.Symbol("uuid"), schematic_data["uuid"]])
         if schematic_data.get("paper"):
@@ -261,7 +263,9 @@ class SExpressionParser:
 
         # Add title block only if it has non-default content
         title_block = schematic_data.get("title_block")
-        if title_block and any(title_block.get(key) for key in ["title", "company", "revision", "date", "comments"]):
+        if title_block and any(
+            title_block.get(key) for key in ["title", "company", "revision", "date", "comments"]
+        ):
             sexp_data.append(self._title_block_to_sexp(title_block))
 
         # Add lib_symbols (always include for KiCAD compatibility)
@@ -305,9 +309,13 @@ class SExpressionParser:
         if sheet_instances:
             sexp_data.append(self._sheet_instances_to_sexp(sheet_instances))
 
-        # Add symbol_instances (required by KiCAD)
+        # Add symbol_instances (only if non-empty or for blank schematics)
         symbol_instances = schematic_data.get("symbol_instances", [])
-        if symbol_instances or schematic_data.get("components"):
+        # Always include for blank schematics (no UUID, no embedded_fonts)
+        is_blank_schematic = (
+            not schematic_data.get("uuid") and schematic_data.get("embedded_fonts") is None
+        )
+        if symbol_instances or is_blank_schematic:
             sexp_data.append([sexpdata.Symbol("symbol_instances")])
 
         # Add embedded_fonts (required by KiCAD)
@@ -422,18 +430,18 @@ class SExpressionParser:
     def _title_block_to_sexp(self, title_block: Dict[str, Any]) -> List[Any]:
         """Convert title block to S-expression."""
         sexp = [sexpdata.Symbol("title_block")]
-        
+
         # Add standard fields
         for key in ["title", "date", "rev", "company"]:
             if key in title_block and title_block[key]:
                 sexp.append([sexpdata.Symbol(key), title_block[key]])
-        
+
         # Add comments with special formatting
         comments = title_block.get("comments", {})
         if isinstance(comments, dict):
             for comment_num, comment_text in comments.items():
                 sexp.append([sexpdata.Symbol("comment"), comment_num, comment_text])
-        
+
         return sexp
 
     def _symbol_to_sexp(self, symbol_data: Dict[str, Any], schematic_uuid: str = None) -> List[Any]:
@@ -460,7 +468,9 @@ class SExpressionParser:
         # Add simulation and board settings (required by KiCAD)
         sexp.append([sexpdata.Symbol("exclude_from_sim"), "no"])
         sexp.append([sexpdata.Symbol("in_bom"), "yes" if symbol_data.get("in_bom", True) else "no"])
-        sexp.append([sexpdata.Symbol("on_board"), "yes" if symbol_data.get("on_board", True) else "no"])
+        sexp.append(
+            [sexpdata.Symbol("on_board"), "yes" if symbol_data.get("on_board", True) else "no"]
+        )
         sexp.append([sexpdata.Symbol("dnp"), "no"])
         sexp.append([sexpdata.Symbol("fields_autoplaced"), "yes"])
 
@@ -470,7 +480,7 @@ class SExpressionParser:
         # Add properties with proper positioning and effects
         lib_id = symbol_data.get("lib_id", "")
         is_power_symbol = "power:" in lib_id
-        
+
         if symbol_data.get("reference"):
             # Power symbol references should be hidden by default
             ref_hide = is_power_symbol
@@ -478,9 +488,9 @@ class SExpressionParser:
                 "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide
             )
             sexp.append(ref_prop)
-            
+
         if symbol_data.get("value"):
-            # Power symbol values need different positioning 
+            # Power symbol values need different positioning
             if is_power_symbol:
                 val_prop = self._create_power_symbol_value_property(
                     symbol_data["value"], pos, lib_id
@@ -490,7 +500,7 @@ class SExpressionParser:
                     "Value", symbol_data["value"], pos, 1, "left"
                 )
             sexp.append(val_prop)
-            
+
         footprint = symbol_data.get("footprint")
         if footprint is not None:  # Include empty strings but not None
             fp_prop = self._create_property_with_positioning(
@@ -505,7 +515,7 @@ class SExpressionParser:
             )
             sexp.append(prop)
 
-        # Add pin UUID assignments (required by KiCAD)  
+        # Add pin UUID assignments (required by KiCAD)
         for pin in symbol_data.get("pins", []):
             pin_uuid = str(uuid.uuid4())
             # Ensure pin number is a string for proper quoting
@@ -513,54 +523,82 @@ class SExpressionParser:
             sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
 
         # Add instances section (required by KiCAD)
-        project_name = "simple_circuit"  # TODO: Get from schematic context
+        from .config import config
+
+        project_name = getattr(self, "project_name", config.defaults.project_name)
         root_uuid = schematic_uuid or symbol_data.get("root_uuid", str(uuid.uuid4()))
-        logger.debug(f"🔧 Using UUID {root_uuid} for component {symbol_data.get('reference', 'unknown')}")
-        logger.debug(f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}")
-        sexp.append([
-            sexpdata.Symbol("instances"),
-            [sexpdata.Symbol("project"), project_name,
-             [sexpdata.Symbol("path"), f"/{root_uuid}",
-              [sexpdata.Symbol("reference"), symbol_data.get("reference", "U?")],
-              [sexpdata.Symbol("unit"), symbol_data.get("unit", 1)]]]
-        ])
+        logger.debug(
+            f"🔧 Using UUID {root_uuid} for component {symbol_data.get('reference', 'unknown')}"
+        )
+        logger.debug(
+            f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}"
+        )
+        sexp.append(
+            [
+                sexpdata.Symbol("instances"),
+                [
+                    sexpdata.Symbol("project"),
+                    project_name,
+                    [
+                        sexpdata.Symbol("path"),
+                        f"/{root_uuid}",
+                        [sexpdata.Symbol("reference"), symbol_data.get("reference", "U?")],
+                        [sexpdata.Symbol("unit"), symbol_data.get("unit", 1)],
+                    ],
+                ],
+            ]
+        )
 
         return sexp
 
-    def _create_property_with_positioning(self, prop_name: str, prop_value: str, 
-                                        component_pos: Point, offset_index: int, 
-                                        justify: str = "left", hide: bool = False) -> List[Any]:
+    def _create_property_with_positioning(
+        self,
+        prop_name: str,
+        prop_value: str,
+        component_pos: Point,
+        offset_index: int,
+        justify: str = "left",
+        hide: bool = False,
+    ) -> List[Any]:
         """Create a property with proper positioning and effects like KiCAD."""
-        # Calculate property position relative to component
-        # Based on KiCAD's positioning: Reference above component, Value below
-        prop_x = component_pos.x + 2.54  # Standard offset to the right
-        
-        if prop_name == "Reference":
-            prop_y = component_pos.y - 1.27  # Reference above component
-        elif prop_name == "Value":
-            prop_y = component_pos.y + 1.27  # Value below component  
-        else:
-            prop_y = component_pos.y + (1.27 * (offset_index + 1))  # Other properties below
-        
-        prop_sexp = [
-            sexpdata.Symbol("property"), 
-            prop_name, 
-            prop_value,
-            [sexpdata.Symbol("at"), 
-             round(prop_x, 4) if prop_x != int(prop_x) else int(prop_x),
-             round(prop_y, 4) if prop_y != int(prop_y) else int(prop_y), 
-             0],
-            [sexpdata.Symbol("effects"),
-             [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-             [sexpdata.Symbol("justify"), sexpdata.Symbol(justify)]]
+        from .config import config
+
+        # Calculate property position using configuration
+        prop_x, prop_y, rotation = config.get_property_position(
+            prop_name, (component_pos.x, component_pos.y), offset_index
+        )
+
+        # Build effects section based on hide status
+        effects = [
+            sexpdata.Symbol("effects"),
+            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
         ]
-        
+
+        # Only add justify for visible properties or Reference/Value
+        if not hide or prop_name in ["Reference", "Value"]:
+            effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify)])
+
         if hide:
-            prop_sexp[4].append([sexpdata.Symbol("hide"), sexpdata.Symbol("yes")])
-            
+            effects.append([sexpdata.Symbol("hide"), sexpdata.Symbol("yes")])
+
+        prop_sexp = [
+            sexpdata.Symbol("property"),
+            prop_name,
+            prop_value,
+            [
+                sexpdata.Symbol("at"),
+                round(prop_x, 4) if prop_x != int(prop_x) else int(prop_x),
+                round(prop_y, 4) if prop_y != int(prop_y) else int(prop_y),
+                rotation,
+            ],
+            effects,
+        ]
+
         return prop_sexp
 
-    def _create_power_symbol_value_property(self, value: str, component_pos: Point, lib_id: str) -> List[Any]:
+    def _create_power_symbol_value_property(
+        self, value: str, component_pos: Point, lib_id: str
+    ) -> List[Any]:
         """Create Value property for power symbols with correct positioning."""
         # Power symbols have different value positioning based on type
         if "GND" in lib_id:
@@ -568,32 +606,36 @@ class SExpressionParser:
             prop_x = component_pos.x
             prop_y = component_pos.y + 5.08  # Below GND symbol
         elif "+3.3V" in lib_id or "VDD" in lib_id:
-            # Positive voltage values go below the symbol  
+            # Positive voltage values go below the symbol
             prop_x = component_pos.x
             prop_y = component_pos.y - 5.08  # Above symbol (negative offset)
         else:
             # Default power symbol positioning
             prop_x = component_pos.x
             prop_y = component_pos.y + 3.556
-        
+
         prop_sexp = [
-            sexpdata.Symbol("property"), 
-            "Value", 
+            sexpdata.Symbol("property"),
+            "Value",
             value,
-            [sexpdata.Symbol("at"), 
-             round(prop_x, 4) if prop_x != int(prop_x) else int(prop_x),
-             round(prop_y, 4) if prop_y != int(prop_y) else int(prop_y), 
-             0],
-            [sexpdata.Symbol("effects"),
-             [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]]]
+            [
+                sexpdata.Symbol("at"),
+                round(prop_x, 4) if prop_x != int(prop_x) else int(prop_x),
+                round(prop_y, 4) if prop_y != int(prop_y) else int(prop_y),
+                0,
+            ],
+            [
+                sexpdata.Symbol("effects"),
+                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+            ],
         ]
-        
+
         return prop_sexp
 
     def _wire_to_sexp(self, wire_data: Dict[str, Any]) -> List[Any]:
         """Convert wire to S-expression."""
         sexp = [sexpdata.Symbol("wire")]
-        
+
         # Add points (pts section)
         points = wire_data.get("points", [])
         if len(points) >= 2:
@@ -606,39 +648,39 @@ class SExpressionParser:
                 else:
                     # Assume it's a Point object
                     x, y = point.x, point.y
-                
+
                 # Format coordinates properly (avoid unnecessary .0 for integers)
                 if isinstance(x, float) and x.is_integer():
                     x = int(x)
                 if isinstance(y, float) and y.is_integer():
                     y = int(y)
-                    
+
                 pts_sexp.append([sexpdata.Symbol("xy"), x, y])
             sexp.append(pts_sexp)
-        
+
         # Add stroke information
         stroke_width = wire_data.get("stroke_width", 0)
         stroke_type = wire_data.get("stroke_type", "default")
         stroke_sexp = [sexpdata.Symbol("stroke")]
-        
+
         # Format stroke width (use int for 0, preserve float for others)
         if isinstance(stroke_width, float) and stroke_width == 0.0:
             stroke_width = 0
-        
+
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
         sexp.append(stroke_sexp)
-        
+
         # Add UUID
         if "uuid" in wire_data:
             sexp.append([sexpdata.Symbol("uuid"), wire_data["uuid"]])
-        
+
         return sexp
 
     def _junction_to_sexp(self, junction_data: Dict[str, Any]) -> List[Any]:
         """Convert junction to S-expression."""
         sexp = [sexpdata.Symbol("junction")]
-        
+
         # Add position
         pos = junction_data["position"]
         if isinstance(pos, dict):
@@ -648,77 +690,79 @@ class SExpressionParser:
         else:
             # Assume it's a Point object
             x, y = pos.x, pos.y
-        
+
         # Format coordinates properly
         if isinstance(x, float) and x.is_integer():
             x = int(x)
         if isinstance(y, float) and y.is_integer():
             y = int(y)
-        
+
         sexp.append([sexpdata.Symbol("at"), x, y])
-        
+
         # Add diameter
         diameter = junction_data.get("diameter", 0)
         sexp.append([sexpdata.Symbol("diameter"), diameter])
-        
+
         # Add color (RGBA)
         color = junction_data.get("color", (0, 0, 0, 0))
         if isinstance(color, (list, tuple)) and len(color) >= 4:
             sexp.append([sexpdata.Symbol("color"), color[0], color[1], color[2], color[3]])
         else:
             sexp.append([sexpdata.Symbol("color"), 0, 0, 0, 0])
-        
+
         # Add UUID
         if "uuid" in junction_data:
             sexp.append([sexpdata.Symbol("uuid"), junction_data["uuid"]])
-        
+
         return sexp
 
     def _label_to_sexp(self, label_data: Dict[str, Any]) -> List[Any]:
         """Convert local label to S-expression."""
         sexp = [sexpdata.Symbol("label"), label_data["text"]]
-        
+
         # Add position
         pos = label_data["position"]
         x, y = pos["x"], pos["y"]
         rotation = label_data.get("rotation", 0)
-        
+
         # Format coordinates properly
         if isinstance(x, float) and x.is_integer():
             x = int(x)
         if isinstance(y, float) and y.is_integer():
             y = int(y)
-            
+
         sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-        
+
         # Add effects (font properties)
         size = label_data.get("size", 1.27)
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
         effects.append(font)
-        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")])
+        effects.append(
+            [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")]
+        )
         sexp.append(effects)
-        
+
         # Add UUID
         if "uuid" in label_data:
             sexp.append([sexpdata.Symbol("uuid"), label_data["uuid"]])
-        
+
         return sexp
 
     def _hierarchical_label_to_sexp(self, hlabel_data: Dict[str, Any]) -> List[Any]:
         """Convert hierarchical label to S-expression."""
         sexp = [sexpdata.Symbol("hierarchical_label"), hlabel_data["text"]]
-        
+
         # Add shape
         shape = hlabel_data.get("shape", "input")
         sexp.append([sexpdata.Symbol("shape"), sexpdata.Symbol(shape)])
-        
+
         # Add position
         pos = hlabel_data["position"]
         x, y = pos["x"], pos["y"]
         rotation = hlabel_data.get("rotation", 0)
         sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-        
+
         # Add effects (font properties)
         size = hlabel_data.get("size", 1.27)
         effects = [sexpdata.Symbol("effects")]
@@ -726,17 +770,17 @@ class SExpressionParser:
         effects.append(font)
         effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol("left")])
         sexp.append(effects)
-        
+
         # Add UUID
         if "uuid" in hlabel_data:
             sexp.append([sexpdata.Symbol("uuid"), hlabel_data["uuid"]])
-        
+
         return sexp
 
     def _sheet_to_sexp(self, sheet_data: Dict[str, Any], schematic_uuid: str) -> List[Any]:
         """Convert hierarchical sheet to S-expression."""
         sexp = [sexpdata.Symbol("sheet")]
-        
+
         # Add position
         pos = sheet_data["position"]
         x, y = pos["x"], pos["y"]
@@ -745,24 +789,44 @@ class SExpressionParser:
         if isinstance(y, float) and y.is_integer():
             y = int(y)
         sexp.append([sexpdata.Symbol("at"), x, y])
-        
+
         # Add size
         size = sheet_data["size"]
         w, h = size["width"], size["height"]
         sexp.append([sexpdata.Symbol("size"), w, h])
-        
+
         # Add basic properties
-        sexp.append([sexpdata.Symbol("exclude_from_sim"), 
-                    sexpdata.Symbol("yes" if sheet_data.get("exclude_from_sim", False) else "no")])
-        sexp.append([sexpdata.Symbol("in_bom"), 
-                    sexpdata.Symbol("yes" if sheet_data.get("in_bom", True) else "no")])
-        sexp.append([sexpdata.Symbol("on_board"), 
-                    sexpdata.Symbol("yes" if sheet_data.get("on_board", True) else "no")])
-        sexp.append([sexpdata.Symbol("dnp"), 
-                    sexpdata.Symbol("yes" if sheet_data.get("dnp", False) else "no")])
-        sexp.append([sexpdata.Symbol("fields_autoplaced"), 
-                    sexpdata.Symbol("yes" if sheet_data.get("fields_autoplaced", True) else "no")])
-        
+        sexp.append(
+            [
+                sexpdata.Symbol("exclude_from_sim"),
+                sexpdata.Symbol("yes" if sheet_data.get("exclude_from_sim", False) else "no"),
+            ]
+        )
+        sexp.append(
+            [
+                sexpdata.Symbol("in_bom"),
+                sexpdata.Symbol("yes" if sheet_data.get("in_bom", True) else "no"),
+            ]
+        )
+        sexp.append(
+            [
+                sexpdata.Symbol("on_board"),
+                sexpdata.Symbol("yes" if sheet_data.get("on_board", True) else "no"),
+            ]
+        )
+        sexp.append(
+            [
+                sexpdata.Symbol("dnp"),
+                sexpdata.Symbol("yes" if sheet_data.get("dnp", False) else "no"),
+            ]
+        )
+        sexp.append(
+            [
+                sexpdata.Symbol("fields_autoplaced"),
+                sexpdata.Symbol("yes" if sheet_data.get("fields_autoplaced", True) else "no"),
+            ]
+        )
+
         # Add stroke
         stroke_width = sheet_data.get("stroke_width", 0.1524)
         stroke_type = sheet_data.get("stroke_type", "solid")
@@ -770,42 +834,58 @@ class SExpressionParser:
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
         sexp.append(stroke_sexp)
-        
+
         # Add fill
         fill_color = sheet_data.get("fill_color", (0, 0, 0, 0.0))
         fill_sexp = [sexpdata.Symbol("fill")]
-        fill_sexp.append([sexpdata.Symbol("color"), fill_color[0], fill_color[1], fill_color[2], fill_color[3]])
+        fill_sexp.append(
+            [sexpdata.Symbol("color"), fill_color[0], fill_color[1], fill_color[2], fill_color[3]]
+        )
         sexp.append(fill_sexp)
-        
+
         # Add UUID
         if "uuid" in sheet_data:
             sexp.append([sexpdata.Symbol("uuid"), sheet_data["uuid"]])
-        
+
         # Add sheet properties (name and filename)
         name = sheet_data.get("name", "Sheet")
         filename = sheet_data.get("filename", "sheet.kicad_sch")
-        
+
         # Sheetname property
+        from .config import config
+
         name_prop = [sexpdata.Symbol("property"), "Sheetname", name]
-        name_prop.append([sexpdata.Symbol("at"), x, y - 0.7116, 0])  # Above sheet
-        name_prop.append([sexpdata.Symbol("effects"),
-                         [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                         [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")]])
+        name_prop.append(
+            [sexpdata.Symbol("at"), x, round(y + config.sheet.name_offset_y, 4), 0]
+        )  # Above sheet
+        name_prop.append(
+            [
+                sexpdata.Symbol("effects"),
+                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")],
+            ]
+        )
         sexp.append(name_prop)
-        
-        # Sheetfile property  
+
+        # Sheetfile property
         file_prop = [sexpdata.Symbol("property"), "Sheetfile", filename]
-        file_prop.append([sexpdata.Symbol("at"), x, y + h + 0.5754, 0])  # Below sheet
-        file_prop.append([sexpdata.Symbol("effects"),
-                         [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                         [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("top")]])
+        file_prop.append(
+            [sexpdata.Symbol("at"), x, round(y + h + config.sheet.file_offset_y, 4), 0]
+        )  # Below sheet
+        file_prop.append(
+            [
+                sexpdata.Symbol("effects"),
+                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("top")],
+            ]
+        )
         sexp.append(file_prop)
-        
+
         # Add sheet pins if any
         for pin in sheet_data.get("pins", []):
             pin_sexp = self._sheet_pin_to_sexp(pin)
             sexp.append(pin_sexp)
-        
+
         # Add instances
         if schematic_uuid:
             instances_sexp = [sexpdata.Symbol("instances")]
@@ -817,23 +897,27 @@ class SExpressionParser:
             project_sexp.append(path_sexp)
             instances_sexp.append(project_sexp)
             sexp.append(instances_sexp)
-        
+
         return sexp
 
     def _sheet_pin_to_sexp(self, pin_data: Dict[str, Any]) -> List[Any]:
         """Convert sheet pin to S-expression."""
-        pin_sexp = [sexpdata.Symbol("pin"), pin_data["name"], sexpdata.Symbol(pin_data.get("pin_type", "input"))]
-        
+        pin_sexp = [
+            sexpdata.Symbol("pin"),
+            pin_data["name"],
+            sexpdata.Symbol(pin_data.get("pin_type", "input")),
+        ]
+
         # Add position
         pos = pin_data["position"]
         x, y = pos["x"], pos["y"]
         rotation = pin_data.get("rotation", 0)
         pin_sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-        
+
         # Add UUID
         if "uuid" in pin_data:
             pin_sexp.append([sexpdata.Symbol("uuid"), pin_data["uuid"]])
-        
+
         # Add effects
         size = pin_data.get("size", 1.27)
         effects = [sexpdata.Symbol("effects")]
@@ -842,75 +926,77 @@ class SExpressionParser:
         justify = pin_data.get("justify", "right")
         effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify)])
         pin_sexp.append(effects)
-        
+
         return pin_sexp
 
     def _text_to_sexp(self, text_data: Dict[str, Any]) -> List[Any]:
         """Convert text element to S-expression."""
         sexp = [sexpdata.Symbol("text"), text_data["text"]]
-        
+
         # Add exclude_from_sim
         exclude_sim = text_data.get("exclude_from_sim", False)
-        sexp.append([sexpdata.Symbol("exclude_from_sim"), 
-                    sexpdata.Symbol("yes" if exclude_sim else "no")])
-        
+        sexp.append(
+            [sexpdata.Symbol("exclude_from_sim"), sexpdata.Symbol("yes" if exclude_sim else "no")]
+        )
+
         # Add position
         pos = text_data["position"]
         x, y = pos["x"], pos["y"]
         rotation = text_data.get("rotation", 0)
-        
+
         # Format coordinates properly
         if isinstance(x, float) and x.is_integer():
             x = int(x)
         if isinstance(y, float) and y.is_integer():
             y = int(y)
-            
+
         sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-        
+
         # Add effects (font properties)
         size = text_data.get("size", 1.27)
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
         effects.append(font)
         sexp.append(effects)
-        
+
         # Add UUID
         if "uuid" in text_data:
             sexp.append([sexpdata.Symbol("uuid"), text_data["uuid"]])
-        
+
         return sexp
 
     def _text_box_to_sexp(self, text_box_data: Dict[str, Any]) -> List[Any]:
         """Convert text box element to S-expression."""
         sexp = [sexpdata.Symbol("text_box"), text_box_data["text"]]
-        
+
         # Add exclude_from_sim
         exclude_sim = text_box_data.get("exclude_from_sim", False)
-        sexp.append([sexpdata.Symbol("exclude_from_sim"), 
-                    sexpdata.Symbol("yes" if exclude_sim else "no")])
-        
+        sexp.append(
+            [sexpdata.Symbol("exclude_from_sim"), sexpdata.Symbol("yes" if exclude_sim else "no")]
+        )
+
         # Add position
         pos = text_box_data["position"]
         x, y = pos["x"], pos["y"]
         rotation = text_box_data.get("rotation", 0)
-        
+
         # Format coordinates properly
         if isinstance(x, float) and x.is_integer():
             x = int(x)
         if isinstance(y, float) and y.is_integer():
             y = int(y)
-            
+
         sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-        
+
         # Add size
         size = text_box_data["size"]
         w, h = size["width"], size["height"]
         sexp.append([sexpdata.Symbol("size"), w, h])
-        
+
         # Add margins
         margins = text_box_data.get("margins", (0.9525, 0.9525, 0.9525, 0.9525))
         sexp.append([sexpdata.Symbol("margins"), margins[0], margins[1], margins[2], margins[3]])
-        
+
         # Add stroke
         stroke_width = text_box_data.get("stroke_width", 0)
         stroke_type = text_box_data.get("stroke_type", "solid")
@@ -918,34 +1004,36 @@ class SExpressionParser:
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
         sexp.append(stroke_sexp)
-        
+
         # Add fill
         fill_type = text_box_data.get("fill_type", "none")
         fill_sexp = [sexpdata.Symbol("fill")]
         fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
         sexp.append(fill_sexp)
-        
+
         # Add effects (font properties and justification)
         font_size = text_box_data.get("font_size", 1.27)
         justify_h = text_box_data.get("justify_horizontal", "left")
         justify_v = text_box_data.get("justify_vertical", "top")
-        
+
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), font_size, font_size]]
         effects.append(font)
-        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify_h), sexpdata.Symbol(justify_v)])
+        effects.append(
+            [sexpdata.Symbol("justify"), sexpdata.Symbol(justify_h), sexpdata.Symbol(justify_v)]
+        )
         sexp.append(effects)
-        
+
         # Add UUID
         if "uuid" in text_box_data:
             sexp.append([sexpdata.Symbol("uuid"), text_box_data["uuid"]])
-        
+
         return sexp
 
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:
         """Convert lib_symbols to S-expression."""
         sexp = [sexpdata.Symbol("lib_symbols")]
-        
+
         # Add each symbol definition
         for symbol_name, symbol_def in lib_symbols.items():
             if isinstance(symbol_def, list):
@@ -955,58 +1043,124 @@ class SExpressionParser:
                 # Dictionary format - convert to S-expression
                 symbol_sexp = self._create_basic_symbol_definition(symbol_name)
                 sexp.append(symbol_sexp)
-        
+
         return sexp
-    
+
     def _create_basic_symbol_definition(self, lib_id: str) -> List[Any]:
         """Create a basic symbol definition for KiCAD compatibility."""
         symbol_sexp = [sexpdata.Symbol("symbol"), lib_id]
-        
+
         # Add basic symbol properties
-        symbol_sexp.extend([
-            [sexpdata.Symbol("pin_numbers"), [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")]],
-            [sexpdata.Symbol("pin_names"), [sexpdata.Symbol("offset"), 0]],
-            [sexpdata.Symbol("exclude_from_sim"), sexpdata.Symbol("no")],
-            [sexpdata.Symbol("in_bom"), sexpdata.Symbol("yes")],
-            [sexpdata.Symbol("on_board"), sexpdata.Symbol("yes")]
-        ])
-        
+        symbol_sexp.extend(
+            [
+                [sexpdata.Symbol("pin_numbers"), [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")]],
+                [sexpdata.Symbol("pin_names"), [sexpdata.Symbol("offset"), 0]],
+                [sexpdata.Symbol("exclude_from_sim"), sexpdata.Symbol("no")],
+                [sexpdata.Symbol("in_bom"), sexpdata.Symbol("yes")],
+                [sexpdata.Symbol("on_board"), sexpdata.Symbol("yes")],
+            ]
+        )
+
         # Add basic properties for the symbol
         if "R" in lib_id:  # Resistor
-            symbol_sexp.extend([
-                [sexpdata.Symbol("property"), "Reference", "R",
-                 [sexpdata.Symbol("at"), 2.032, 0, 90],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]]]],
-                [sexpdata.Symbol("property"), "Value", "R", 
-                 [sexpdata.Symbol("at"), 0, 0, 90],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]]]],
-                [sexpdata.Symbol("property"), "Footprint", "",
-                 [sexpdata.Symbol("at"), -1.778, 0, 90],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]], [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")]]],
-                [sexpdata.Symbol("property"), "Datasheet", "~",
-                 [sexpdata.Symbol("at"), 0, 0, 0],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]], [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")]]]
-            ])
-            
+            symbol_sexp.extend(
+                [
+                    [
+                        sexpdata.Symbol("property"),
+                        "Reference",
+                        "R",
+                        [sexpdata.Symbol("at"), 2.032, 0, 90],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                        ],
+                    ],
+                    [
+                        sexpdata.Symbol("property"),
+                        "Value",
+                        "R",
+                        [sexpdata.Symbol("at"), 0, 0, 90],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                        ],
+                    ],
+                    [
+                        sexpdata.Symbol("property"),
+                        "Footprint",
+                        "",
+                        [sexpdata.Symbol("at"), -1.778, 0, 90],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
+                        ],
+                    ],
+                    [
+                        sexpdata.Symbol("property"),
+                        "Datasheet",
+                        "~",
+                        [sexpdata.Symbol("at"), 0, 0, 0],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
+                        ],
+                    ],
+                ]
+            )
+
         elif "C" in lib_id:  # Capacitor
-            symbol_sexp.extend([
-                [sexpdata.Symbol("property"), "Reference", "C",
-                 [sexpdata.Symbol("at"), 0.635, 2.54, 0],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]]]],
-                [sexpdata.Symbol("property"), "Value", "C",
-                 [sexpdata.Symbol("at"), 0.635, -2.54, 0],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]]]],
-                [sexpdata.Symbol("property"), "Footprint", "",
-                 [sexpdata.Symbol("at"), 0, -1.27, 0],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]], [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")]]],
-                [sexpdata.Symbol("property"), "Datasheet", "~",
-                 [sexpdata.Symbol("at"), 0, 0, 0],
-                 [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]], [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")]]]
-            ])
-        
+            symbol_sexp.extend(
+                [
+                    [
+                        sexpdata.Symbol("property"),
+                        "Reference",
+                        "C",
+                        [sexpdata.Symbol("at"), 0.635, 2.54, 0],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                        ],
+                    ],
+                    [
+                        sexpdata.Symbol("property"),
+                        "Value",
+                        "C",
+                        [sexpdata.Symbol("at"), 0.635, -2.54, 0],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                        ],
+                    ],
+                    [
+                        sexpdata.Symbol("property"),
+                        "Footprint",
+                        "",
+                        [sexpdata.Symbol("at"), 0, -1.27, 0],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
+                        ],
+                    ],
+                    [
+                        sexpdata.Symbol("property"),
+                        "Datasheet",
+                        "~",
+                        [sexpdata.Symbol("at"), 0, 0, 0],
+                        [
+                            sexpdata.Symbol("effects"),
+                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
+                        ],
+                    ],
+                ]
+            )
+
         # Add basic graphics and pins (minimal for now)
         symbol_sexp.append([sexpdata.Symbol("embedded_fonts"), sexpdata.Symbol("no")])
-        
+
         return symbol_sexp
 
     def _parse_sheet_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
@@ -1017,7 +1171,11 @@ class SExpressionParser:
                 sheet_data = {"path": "/", "page": "1"}
                 for element in sheet_item[1:]:  # Skip element header
                     if isinstance(element, list) and len(element) >= 2:
-                        key = str(element[0]) if isinstance(element[0], sexpdata.Symbol) else str(element[0])
+                        key = (
+                            str(element[0])
+                            if isinstance(element[0], sexpdata.Symbol)
+                            else str(element[0])
+                        )
                         if key == "path":
                             sheet_data["path"] = element[1]
                         elif key == "page":
@@ -1036,8 +1194,9 @@ class SExpressionParser:
         for sheet in sheet_instances:
             # Create: (path "/" (page "1"))
             sheet_sexp = [
-                sexpdata.Symbol("path"), sheet.get("path", "/"),
-                [sexpdata.Symbol("page"), str(sheet.get("page", "1"))]
+                sexpdata.Symbol("path"),
+                sheet.get("path", "/"),
+                [sexpdata.Symbol("page"), str(sheet.get("page", "1"))],
             ]
             sexp.append(sheet_sexp)
         return sexp

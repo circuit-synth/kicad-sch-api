@@ -5,45 +5,43 @@ KiCAD Schematic API - Command Line Interface
 Provides helpful commands for testing and usage of the library.
 """
 
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from pathlib import Path
 
 
 def test_installation() -> bool:
     """Test that the library is working correctly."""
     print("🧪 Testing KiCAD Schematic API Library...")
-    
+
     try:
         # Test basic import
         import kicad_sch_api
-        version = getattr(kicad_sch_api, '__version__', 'unknown')
+
+        version = getattr(kicad_sch_api, "__version__", "unknown")
         print(f"✅ Library imports successfully: v{version}")
-        
+
         # Test core functionality
         import kicad_sch_api as ksa
+
         sch = ksa.create_schematic("test")
         print("✅ Can create schematic")
-        
+
         # Test component addition
-        sch.components.add(
-            lib_id="Device:R",
-            reference="R1", 
-            value="10k",
-            position=(100, 100)
-        )
+        sch.components.add(lib_id="Device:R", reference="R1", value="10k", position=(100, 100))
         print("✅ Can add components")
-        
+
         # Test library access
         from kicad_sch_api.library.cache import get_symbol_cache
+
         cache = get_symbol_cache()
         stats = cache.get_performance_stats()
         print(f"✅ Symbol cache available: {stats['total_symbols_cached']} symbols")
-        
+
         print("🎉 All tests passed!")
         return True
-        
+
     except Exception as e:
         print(f"❌ Test failed: {e}")
         return False
@@ -53,52 +51,58 @@ def show_status() -> bool:
     """Show current installation status."""
     print("📊 KiCAD Schematic API Library Status")
     print("=" * 40)
-    
+
     # Check installation
     try:
         import kicad_sch_api
-        version = getattr(kicad_sch_api, '__version__', 'unknown')
+
+        version = getattr(kicad_sch_api, "__version__", "unknown")
         print(f"✅ Library installed: v{version}")
     except ImportError:
         print("❌ Library not installed")
         return False
-    
+
     # Check KiCAD libraries
     try:
         from kicad_sch_api.library.cache import get_symbol_cache
+
         cache = get_symbol_cache()
         stats = cache.get_performance_stats()
-        print(f"✅ KiCAD libraries: {len(cache._lib_stats)} libraries, {stats['total_symbols_cached']} symbols")
+        print(
+            f"✅ KiCAD libraries: {len(cache._lib_stats)} libraries, {stats['total_symbols_cached']} symbols"
+        )
     except Exception as e:
         print(f"⚠️  KiCAD library access: {e}")
-    
+
     return True
 
 
 def create_demo() -> bool:
     """Create a demo schematic to test functionality."""
     print("🎨 Creating demo schematic...")
-    
+
     try:
         import kicad_sch_api as ksa
-        
+
         # Create demo schematic
         sch = ksa.create_schematic("Demo_Circuit")
-        
+
         # Add components
-        resistor = sch.components.add('Device:R', reference='R1', value='10k', position=(100, 100))
-        capacitor = sch.components.add('Device:C', reference='C1', value='100nF', position=(150, 100))
-        led = sch.components.add('Device:LED', reference='D1', value='LED', position=(200, 100))
-        
+        resistor = sch.components.add("Device:R", reference="R1", value="10k", position=(100, 100))
+        capacitor = sch.components.add(
+            "Device:C", reference="C1", value="100nF", position=(150, 100)
+        )
+        led = sch.components.add("Device:LED", reference="D1", value="LED", position=(200, 100))
+
         # Save schematic
         sch.save("demo_circuit.kicad_sch")
-        
+
         print("✅ Demo schematic created: demo_circuit.kicad_sch")
         print("📁 Contains: resistor, capacitor, and LED")
         print("🔗 Try opening in KiCAD: kicad demo_circuit.kicad_sch")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Demo creation failed: {e}")
         return False
@@ -107,9 +111,10 @@ def create_demo() -> bool:
 def init_cache() -> bool:
     """Initialize the component discovery cache."""
     print("🔄 Initializing component discovery cache...")
-    
+
     try:
         from kicad_sch_api.discovery.search_index import ensure_index_built
+
         component_count = ensure_index_built()
         print(f"✅ Component cache initialized: {component_count} components indexed")
         return True
@@ -121,11 +126,10 @@ def init_cache() -> bool:
 def check_kicad() -> bool:
     """Check KiCAD installation and library access."""
     print("🔍 Checking KiCAD installation...")
-    
+
     try:
         # Check if KiCAD command is available
-        result = subprocess.run(['kicad', '--version'], 
-                              capture_output=True, timeout=10)
+        result = subprocess.run(["kicad", "--version"], capture_output=True, timeout=10)
         if result.returncode == 0:
             version_output = result.stdout.decode().strip()
             print(f"✅ KiCAD found: {version_output}")
@@ -134,16 +138,17 @@ def check_kicad() -> bool:
     except (subprocess.TimeoutExpired, FileNotFoundError):
         print("❌ KiCAD command not found in PATH")
         print("   Please ensure KiCAD is installed and accessible")
-    
+
     # Check library directories
     try:
         from kicad_sch_api.library.cache import get_symbol_cache
+
         cache = get_symbol_cache()
-        
+
         print("📚 KiCAD Library Status:")
         for lib_name, lib_stats in cache._lib_stats.items():
             print(f"   • {lib_name}: {lib_stats.symbol_count} symbols")
-        
+
         return True
     except Exception as e:
         print(f"❌ Library access failed: {e}")
@@ -176,25 +181,25 @@ Examples:
   kicad-sch-api --test                  # Test library installation
   kicad-sch-api --demo                  # Create demo schematic
   kicad-sch-api --status                # Show library status
-        """
+        """,
     )
-    
+
     # Main options
-    parser.add_argument('--test', action='store_true',
-                       help='Test that the library is working')
-    parser.add_argument('--status', action='store_true',
-                       help='Show library installation status')
-    parser.add_argument('--demo', action='store_true',
-                       help='Create a demo schematic')
-    parser.add_argument('--init-cache', action='store_true',
-                       help='Initialize component discovery cache')
-    parser.add_argument('--check-kicad', action='store_true',
-                       help='Check KiCAD installation and libraries')
-    parser.add_argument('--mcp-info', action='store_true',
-                       help='Show MCP server integration information')
-    
+    parser.add_argument("--test", action="store_true", help="Test that the library is working")
+    parser.add_argument("--status", action="store_true", help="Show library installation status")
+    parser.add_argument("--demo", action="store_true", help="Create a demo schematic")
+    parser.add_argument(
+        "--init-cache", action="store_true", help="Initialize component discovery cache"
+    )
+    parser.add_argument(
+        "--check-kicad", action="store_true", help="Check KiCAD installation and libraries"
+    )
+    parser.add_argument(
+        "--mcp-info", action="store_true", help="Show MCP server integration information"
+    )
+
     args = parser.parse_args()
-    
+
     # If no arguments provided, show help
     if not any(vars(args).values()):
         print("🚀 KiCAD Schematic API - Command Line Interface")
@@ -213,28 +218,28 @@ Examples:
         print("🆘 For all options:")
         print("  kicad-sch-api --help")
         return
-    
+
     # Execute requested actions
     success = True
-    
+
     if args.test:
         success &= test_installation()
-    
+
     if args.status:
         success &= show_status()
-    
+
     if args.demo:
         success &= create_demo()
-    
+
     if args.init_cache:
         success &= init_cache()
-    
+
     if args.check_kicad:
         success &= check_kicad()
-    
+
     if args.mcp_info:
         show_mcp_info()
-    
+
     sys.exit(0 if success else 1)
 
 

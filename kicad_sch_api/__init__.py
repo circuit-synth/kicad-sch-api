@@ -42,11 +42,12 @@ Advanced Usage:
         print(f"Found {len(issues)} validation issues")
 """
 
-__version__ = "0.0.2"
+__version__ = "0.3.0"
 __author__ = "Circuit-Synth"
 __email__ = "info@circuit-synth.com"
 
 from .core.components import Component, ComponentCollection
+from .core.config import KiCADConfig, config
 
 # Core imports for public API
 from .core.schematic import Schematic
@@ -54,7 +55,7 @@ from .library.cache import SymbolLibraryCache, get_symbol_cache
 from .utils.validation import ValidationError, ValidationIssue
 
 # Version info
-VERSION_INFO = (0, 0, 2)
+VERSION_INFO = (0, 3, 0)
 
 # Public API
 __all__ = [
@@ -64,6 +65,9 @@ __all__ = [
     "ComponentCollection",
     "SymbolLibraryCache",
     "get_symbol_cache",
+    # Configuration
+    "KiCADConfig",
+    "config",
     # Exceptions
     "ValidationError",
     "ValidationIssue",
