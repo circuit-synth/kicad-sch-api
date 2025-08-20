@@ -1,0 +1,507 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "f7e56daa-71da-49d2-9966-5eec84703100")
+	(paper "A4")
+	(title_block
+		(title "Manhattan Routing Demo")
+	)
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 25.4 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "35418c55-ad22-4ea6-8967-72548d3531ab")
+		(property "Reference" "R1"
+			(at 27.94 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 27.94 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "a9a36223-2574-4f09-982d-0737b28c7bde")
+		)
+		(pin "2"
+			(uuid "e3fa012c-46ce-4bc4-9478-801a85d3568a")
+		)
+		(instances
+			(project "Manhattan Routing Demo"
+				(path "/f7e56daa-71da-49d2-9966-5eec84703100"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 50.8 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0b26e789-388c-44ee-b363-decc4706a6a2")
+		(property "Reference" "ROBS"
+			(at 53.34 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100"
+			(at 53.34 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "2e24ebad-99ff-4171-beb0-cdbbde9bb0e0")
+		)
+		(pin "2"
+			(uuid "8e321f6e-8765-4aaa-a102-a20cb4df5dfb")
+		)
+		(instances
+			(project "Manhattan Routing Demo"
+				(path "/f7e56daa-71da-49d2-9966-5eec84703100"
+					(reference "ROBS")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 76.2 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "466ae29a-aa3c-4239-8643-6c7d0b3e76a7")
+		(property "Reference" "R2"
+			(at 78.74 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k"
+			(at 78.74 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "4a0b6509-43a6-47bd-a7a0-a40c6d74a1df")
+		)
+		(pin "2"
+			(uuid "e6ac305c-d2f3-4ff7-a6a2-02fe21dcb3f1")
+		)
+		(instances
+			(project "Manhattan Routing Demo"
+				(path "/f7e56daa-71da-49d2-9966-5eec84703100"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 25.4 25.4 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bed25110-edf9-4e76-8f21-12bf87a889d2")
+		(property "Reference" "R3"
+			(at 27.94 24.1299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3k"
+			(at 27.94 26.6699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "a226c14f-9dd3-42a1-8dc7-03f8e1e36734")
+		)
+		(pin "2"
+			(uuid "a5d0f549-19a1-4583-9498-b07ac84a1a95")
+		)
+		(instances
+			(project "Manhattan Routing Demo"
+				(path "/f7e56daa-71da-49d2-9966-5eec84703100"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 76.2 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "55b53777-c132-4472-adf8-7cd704d7b8fa")
+		(property "Reference" "R4"
+			(at 78.74 74.9299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "4k"
+			(at 78.74 77.4699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "6b806b19-2adc-4d91-8ad1-7996d62c7076")
+		)
+		(pin "2"
+			(uuid "62a39b5f-0378-4790-91f2-3bcfbbf384f3")
+		)
+		(instances
+			(project "Manhattan Routing Demo"
+				(path "/f7e56daa-71da-49d2-9966-5eec84703100"
+					(reference "R4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 25.4 46.99) (xy 25.4 16.891)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c3b99a66-6261-46d0-9681-25e60ed37baf")
+	)
+	(wire
+		(pts
+			(xy 25.4 16.891) (xy 76.2 16.891)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6eb3a98b-9a0e-4192-acff-65ab8108e89a")
+	)
+	(wire
+		(pts
+			(xy 76.2 16.891) (xy 76.2 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e3cf32dc-22a7-44c4-b4e9-d16b5d8acb0f")
+	)
+	(wire
+		(pts
+			(xy 25.4 54.61) (xy 25.4 29.21)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "61e24392-f431-4529-88e8-8a55c8929195")
+	)
+	(wire
+		(pts
+			(xy 76.2 46.99) (xy 76.2 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dad2c4d1-eafb-4577-a05d-30cbe24922ab")
+	)
+	(text R1_TL
+		(exclude_from_sim no)
+		(at 23.241 56.769 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "b435f8ac-549c-4eee-bd0d-1a44c524ac0b")
+	)
+	(text R1_BR
+		(exclude_from_sim no)
+		(at 27.559 44.831 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "b76029ae-5ed5-4d83-b6c1-9da8bed6c78a")
+	)
+	(text ROBS_TL
+		(exclude_from_sim no)
+		(at 48.641 56.769 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "c98d023a-190a-47d5-b1d9-04a0802c7860")
+	)
+	(text ROBS_BR
+		(exclude_from_sim no)
+		(at 52.959 44.831 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "a35ff19a-11c8-4811-8360-692ce91d681e")
+	)
+	(text R2_TL
+		(exclude_from_sim no)
+		(at 74.041 56.769 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "73b7528b-5c6f-4253-b222-107839d66ec8")
+	)
+	(text R2_BR
+		(exclude_from_sim no)
+		(at 78.359 44.831 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "62e6ce7d-71ed-4852-8d8c-9ce54a84651a")
+	)
+	(text R3_TL
+		(exclude_from_sim no)
+		(at 23.241 31.369 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "e6a2e562-1a2c-4a53-ad91-28b948931b5e")
+	)
+	(text R3_BR
+		(exclude_from_sim no)
+		(at 27.559 19.431 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "a99b4823-d9cb-4f42-8b18-6b951d762fa7")
+	)
+	(text R4_TL
+		(exclude_from_sim no)
+		(at 74.041 82.169 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "534cd79a-1739-47cd-aa0e-600ca2f8d112")
+	)
+	(text R4_BR
+		(exclude_from_sim no)
+		(at 78.359 70.231 0.0000)
+		(effects
+			(font
+				(size 0.5 0.5)
+			)
+		)
+		(uuid "3d5f264c-e9e6-4727-b52f-f2fb877d4b81")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

@@ -1,0 +1,344 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "7f3cb87d-49ba-4939-8c7d-0e77330f0bac")
+	(paper "A4")
+	(title_block
+		(title "Clearance_5.08")
+	)
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 12.7 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "a25d51eb-5515-4b92-b5f8-99c6f213c0f9")
+		(property "Reference" "START"
+			(at 15.24 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 15.24 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "2dc58a5c-12fe-4143-9e1e-e9e057f123db")
+		)
+		(pin "2"
+			(uuid "e9be35ff-e2d1-4ef1-a2df-438eae5922f4")
+		)
+		(instances
+			(project "Clearance_5.08"
+				(path "/7f3cb87d-49ba-4939-8c7d-0e77330f0bac"
+					(reference "START")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 38.1 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9f0edc7e-e11d-4593-943c-5cc00e684450")
+		(property "Reference" "OBS1"
+			(at 40.64 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 40.64 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "c9c881d8-0c24-4814-98fa-85fad9bc38de")
+		)
+		(pin "2"
+			(uuid "dde38837-dc9e-4ff7-af1a-dcfadbceb351")
+		)
+		(instances
+			(project "Clearance_5.08"
+				(path "/7f3cb87d-49ba-4939-8c7d-0e77330f0bac"
+					(reference "OBS1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 63.5 38.1 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f60c8826-2972-4025-85a9-6e24af012657")
+		(property "Reference" "OBS2"
+			(at 66.04 36.8299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 66.04 39.3699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "77b67e7a-0e07-4628-9316-5a5a55892c96")
+		)
+		(pin "2"
+			(uuid "f46cc517-90ca-4942-abcf-732fcea6ef03")
+		)
+		(instances
+			(project "Clearance_5.08"
+				(path "/7f3cb87d-49ba-4939-8c7d-0e77330f0bac"
+					(reference "OBS2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 88.9 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "eb2a7059-bbd8-44b6-a25f-79ec728d132b")
+		(property "Reference" "END"
+			(at 91.44 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 91.44 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "f9874063-bba3-4d73-a872-9c195291b07b")
+		)
+		(pin "2"
+			(uuid "63e891ff-e8a5-4eff-8ac4-460088c8ea18")
+		)
+		(instances
+			(project "Clearance_5.08"
+				(path "/7f3cb87d-49ba-4939-8c7d-0e77330f0bac"
+					(reference "END")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 12.7 46.99) (xy 12.7 61.849)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "74db9276-16e6-4d3f-9d1b-dfe6a1725461")
+	)
+	(wire
+		(pts
+			(xy 12.7 61.849) (xy 88.9 61.849)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1076140d-7a71-4c7f-a820-b49f4db807d7")
+	)
+	(wire
+		(pts
+			(xy 88.9 61.849) (xy 88.9 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8bd6e72d-8db3-4708-9ac3-39026fea61a6")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

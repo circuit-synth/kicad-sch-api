@@ -1,0 +1,371 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "be282550-e1f3-4499-ab90-f9591733b4a3")
+	(paper "A4")
+	(title_block
+		(title "Simple Auto Route")
+	)
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 25.4 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "8283cc44-aee9-459b-ac28-46f735b2f80c")
+		(property "Reference" "R1"
+			(at 27.94 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 27.94 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "d71043e4-cf6b-42d7-9203-75366b393816")
+		)
+		(pin "2"
+			(uuid "0e40ac7b-db0b-4052-b2fb-ffdf8d397958")
+		)
+		(instances
+			(project "Simple Auto Route"
+				(path "/be282550-e1f3-4499-ab90-f9591733b4a3"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 50.8 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ca535e0b-0955-444a-84c4-c2bab36974e9")
+		(property "Reference" "R2"
+			(at 53.34 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k"
+			(at 53.34 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "a1a18aa6-adf6-49d7-8c44-286c7a2bd920")
+		)
+		(pin "2"
+			(uuid "a1fd05fe-c429-420b-b98a-858821e31c13")
+		)
+		(instances
+			(project "Simple Auto Route"
+				(path "/be282550-e1f3-4499-ab90-f9591733b4a3"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 76.2 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0986a001-a186-4b46-95b1-147420e521d0")
+		(property "Reference" "R3"
+			(at 78.74 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3k"
+			(at 78.74 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "bec27c96-db4f-461f-aa0f-240f1dca735d")
+		)
+		(pin "2"
+			(uuid "a151f8d1-e419-48f8-95dd-fd65d8c41f6e")
+		)
+		(instances
+			(project "Simple Auto Route"
+				(path "/be282550-e1f3-4499-ab90-f9591733b4a3"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 25.4 46.99) (xy 25.4 59.309)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "46f1d24b-38bc-44e6-b05e-84004c62931d")
+	)
+	(wire
+		(pts
+			(xy 25.4 59.309) (xy 76.2 59.309)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d85f6e97-e96f-426f-ab37-cdbdf42e33db")
+	)
+	(wire
+		(pts
+			(xy 76.2 59.309) (xy 76.2 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a8185e7c-1125-4b79-bd66-26ccfdaa0f39")
+	)
+	(wire
+		(pts
+			(xy 25.4 54.61) (xy 50.8 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ee72d99b-e329-4a43-9d30-e1ee6ceb2dd9")
+	)
+	(text R1_TL
+		(exclude_from_sim no)
+		(at 23.241 56.769 0.0000)
+		(effects
+			(font
+				(size 0.6 0.6)
+			)
+		)
+		(uuid "892cb048-ea2d-49dc-a75c-01fee936fb79")
+	)
+	(text R1_BR
+		(exclude_from_sim no)
+		(at 27.559 44.831 0.0000)
+		(effects
+			(font
+				(size 0.6 0.6)
+			)
+		)
+		(uuid "e42d62b6-5716-4318-8945-e54ab19a6fc7")
+	)
+	(text R2_TL
+		(exclude_from_sim no)
+		(at 48.641 56.769 0.0000)
+		(effects
+			(font
+				(size 0.6 0.6)
+			)
+		)
+		(uuid "959f77cb-e016-4418-a22d-d182d2ad4f6c")
+	)
+	(text R2_BR
+		(exclude_from_sim no)
+		(at 52.959 44.831 0.0000)
+		(effects
+			(font
+				(size 0.6 0.6)
+			)
+		)
+		(uuid "734a4570-a539-40b0-8461-652956abe9bd")
+	)
+	(text R3_TL
+		(exclude_from_sim no)
+		(at 74.041 56.769 0.0000)
+		(effects
+			(font
+				(size 0.6 0.6)
+			)
+		)
+		(uuid "c1f91501-31e8-4f67-81ff-fe13007ae42c")
+	)
+	(text R3_BR
+		(exclude_from_sim no)
+		(at 78.359 44.831 0.0000)
+		(effects
+			(font
+				(size 0.6 0.6)
+			)
+		)
+		(uuid "df1684dc-9ac5-4f3b-8bca-8cfe466c996d")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

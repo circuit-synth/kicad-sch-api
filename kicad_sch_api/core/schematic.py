@@ -712,10 +712,17 @@ class Schematic:
         return get_component_pin_position(component, pin_number)
 
     # Wire routing and connectivity methods
-    def auto_route_pins(self, comp1_ref: str, pin1_num: str, comp2_ref: str, pin2_num: str) -> Optional[str]:
+    def auto_route_pins(
+        self, 
+        comp1_ref: str, 
+        pin1_num: str, 
+        comp2_ref: str, 
+        pin2_num: str, 
+        routing_mode: str = "direct",
+        clearance: float = 2.54
+    ) -> Optional[str]:
         """
-        Auto route between two pins with direct connection.
-        Ok to draw through other components.
+        Auto route between two pins with configurable routing strategies.
         
         All positions are snapped to KiCAD's 1.27mm grid for exact electrical connections.
         
@@ -724,6 +731,10 @@ class Schematic:
             pin1_num: First component pin number (e.g., '1')
             comp2_ref: Second component reference (e.g., 'R2') 
             pin2_num: Second component pin number (e.g., '2')
+            routing_mode: Routing strategy:
+                - "direct": Direct connection through components (default)
+                - "manhattan": Manhattan routing with obstacle avoidance
+            clearance: Clearance from obstacles in mm (for manhattan mode)
             
         Returns:
             UUID of created wire, or None if routing failed
@@ -741,8 +752,27 @@ class Schematic:
         pin1_pos = snap_to_kicad_grid(pin1_pos)
         pin2_pos = snap_to_kicad_grid(pin2_pos)
         
-        # Simple direct routing - just connect the pins
-        return self.add_wire(pin1_pos, pin2_pos)
+        # Choose routing strategy
+        if routing_mode.lower() == "manhattan":
+            # Manhattan routing with obstacle avoidance
+            from .simple_manhattan import auto_route_with_manhattan
+            
+            # Get component objects
+            comp1 = self.components.get(comp1_ref)
+            comp2 = self.components.get(comp2_ref)
+            
+            if not comp1 or not comp2:
+                logger.warning(f"Component not found: {comp1_ref} or {comp2_ref}")
+                return None
+            
+            return auto_route_with_manhattan(
+                self, comp1, pin1_num, comp2, pin2_num,
+                avoid_components=None,  # Avoid all other components
+                clearance=clearance
+            )
+        else:
+            # Default direct routing - just connect the pins
+            return self.add_wire(pin1_pos, pin2_pos)
     
     def are_pins_connected(self, comp1_ref: str, pin1_num: str, comp2_ref: str, pin2_num: str) -> bool:
         """

@@ -1,0 +1,421 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "fd6c3a6a-8f93-4794-ba93-daa10341d4bf")
+	(paper "A4")
+	(title_block
+		(title "Simple BBox Test")
+	)
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 25.4 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "844e6887-d5e2-4354-90df-41e2c30e3bba")
+		(property "Reference" "R1"
+			(at 27.94 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 27.94 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "c09aecdc-17d2-4adb-8e79-137990e60694")
+		)
+		(pin "2"
+			(uuid "c411ae64-9995-4f70-8217-9c41fdbd8d7b")
+		)
+		(instances
+			(project "Simple BBox Test"
+				(path "/fd6c3a6a-8f93-4794-ba93-daa10341d4bf"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 76.2 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "420c305e-c3df-4934-8f80-2e1db6d72b3d")
+		(property "Reference" "R2"
+			(at 78.74 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k"
+			(at 78.74 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "061eaacb-f4f6-4d8c-b9d5-7a6359588b88")
+		)
+		(pin "2"
+			(uuid "b6c57643-56c9-4b1f-8940-8a7db64edb24")
+		)
+		(instances
+			(project "Simple BBox Test"
+				(path "/fd6c3a6a-8f93-4794-ba93-daa10341d4bf"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 50.8 25.4 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "82c49b1f-7987-44de-bc24-8616db93b8c2")
+		(property "Reference" "R3"
+			(at 53.34 24.1299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3k"
+			(at 53.34 26.6699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "a2900426-03e5-4bdc-93c4-53d9b06e17be")
+		)
+		(pin "2"
+			(uuid "59d44ff6-c801-40a9-9a8e-02e130bee4b8")
+		)
+		(instances
+			(project "Simple BBox Test"
+				(path "/fd6c3a6a-8f93-4794-ba93-daa10341d4bf"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(text R1_bbox_TL
+		(exclude_from_sim no)
+		(at 23.241 56.769 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "4032a402-9a30-4e3b-9e30-edd548a482ec")
+	)
+	(text R1_bbox_TR
+		(exclude_from_sim no)
+		(at 27.559 56.769 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "e6ffb58d-ca90-467c-bad7-7b08c7bc0efc")
+	)
+	(text R1_bbox_BL
+		(exclude_from_sim no)
+		(at 23.241 44.831 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "1a128b1a-88cd-405a-b7e8-aeca56b3ae77")
+	)
+	(text R1_bbox_BR
+		(exclude_from_sim no)
+		(at 27.559 44.831 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "3b35e8d1-8e35-47bc-9973-69f0b7d213eb")
+	)
+	(text "R1_bbox: 4.3x11.9mm"
+		(exclude_from_sim no)
+		(at 23.241 58.769 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "8eb74a14-19ed-47ba-a149-530d45201ca3")
+	)
+	(text R2_bbox_TL
+		(exclude_from_sim no)
+		(at 74.041 56.769 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "08016575-0f9a-459a-aac6-721b5c9c0f4c")
+	)
+	(text R2_bbox_TR
+		(exclude_from_sim no)
+		(at 78.359 56.769 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "3b10e4bd-4d3e-4c60-8787-201612dcc11b")
+	)
+	(text R2_bbox_BL
+		(exclude_from_sim no)
+		(at 74.041 44.831 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "edfb192f-f2d5-4c39-95ed-7f1c8f831b0c")
+	)
+	(text R2_bbox_BR
+		(exclude_from_sim no)
+		(at 78.359 44.831 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "da180446-3076-480a-bd34-7ef7ae6cc93c")
+	)
+	(text "R2_bbox: 4.3x11.9mm"
+		(exclude_from_sim no)
+		(at 74.041 58.769 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "3086c5b4-b2bb-4046-8697-e2f0a6f814eb")
+	)
+	(text R3_bbox_TL
+		(exclude_from_sim no)
+		(at 48.641 31.369 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "632fbcda-3793-46b2-9367-118b9f3612d7")
+	)
+	(text R3_bbox_TR
+		(exclude_from_sim no)
+		(at 52.959 31.369 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "8635f5a5-b0b8-4982-ba8d-6acfb28ccf55")
+	)
+	(text R3_bbox_BL
+		(exclude_from_sim no)
+		(at 48.641 19.431 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "c1a9aa7b-c271-4bc7-88cd-e83d60dbecda")
+	)
+	(text R3_bbox_BR
+		(exclude_from_sim no)
+		(at 52.959 19.431 0.0000)
+		(effects
+			(font
+				(size 0.8 0.8)
+			)
+		)
+		(uuid "10e1a583-85f5-4a38-ad50-6306b89a24c8")
+	)
+	(text "R3_bbox: 4.3x11.9mm"
+		(exclude_from_sim no)
+		(at 48.641 33.369 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "1967d4cc-4ee7-4086-9fa9-400ad0b02fa2")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

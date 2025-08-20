@@ -1,0 +1,533 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "66dd8da0-744e-4e65-9cec-d1d159def978")
+	(paper "A4")
+	(title_block
+		(title "Direct vs Manhattan Routing")
+	)
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 20.32 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9e4345ac-669d-4165-ac27-7ca5e440d328")
+		(property "Reference" "R1"
+			(at 22.86 58.4199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 22.86 60.9599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "5ab56393-0d8b-4dc3-ba8b-fea464040024")
+		)
+		(pin "2"
+			(uuid "99626d4a-3845-4865-9159-4541ac354ecd")
+		)
+		(instances
+			(project "Direct vs Manhattan Routing"
+				(path "/66dd8da0-744e-4e65-9cec-d1d159def978"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 35.56 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bf33c230-3021-4024-8e09-82050a9d7ff8")
+		(property "Reference" "R2"
+			(at 38.1 58.4199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100"
+			(at 38.1 60.9599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "515cbeaf-e803-465a-9711-d441adaaccf1")
+		)
+		(pin "2"
+			(uuid "dda15222-1f87-4269-ae38-affdc626393b")
+		)
+		(instances
+			(project "Direct vs Manhattan Routing"
+				(path "/66dd8da0-744e-4e65-9cec-d1d159def978"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 49.53 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "319ebe9e-113e-4b59-b59a-611e6d01d161")
+		(property "Reference" "R3"
+			(at 52.07 58.4199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k"
+			(at 52.07 60.9599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "0294f67a-9702-4367-9023-85cd328a892b")
+		)
+		(pin "2"
+			(uuid "f44813ea-874c-4305-b8d8-4cbe84f39cb5")
+		)
+		(instances
+			(project "Direct vs Manhattan Routing"
+				(path "/66dd8da0-744e-4e65-9cec-d1d159def978"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 69.85 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2dc41d1a-bac1-4cd4-aeb7-2af10aead9b8")
+		(property "Reference" "R4"
+			(at 72.39 58.4199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 72.39 60.9599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "a67d7432-f213-4636-ae65-2a2ce30dc0c5")
+		)
+		(pin "2"
+			(uuid "74869d4c-10f9-4179-8c9c-bb54e4634645")
+		)
+		(instances
+			(project "Direct vs Manhattan Routing"
+				(path "/66dd8da0-744e-4e65-9cec-d1d159def978"
+					(reference "R4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 85.09 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "51f98f0e-1d8e-40fd-8e7e-b3a53ebd839c")
+		(property "Reference" "R5"
+			(at 87.63 58.4199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100"
+			(at 87.63 60.9599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "c66b2491-1ea8-4bfa-8a97-cf5a273d2db8")
+		)
+		(pin "2"
+			(uuid "ed7b8a3f-69b2-467a-bcd7-f19bc520b366")
+		)
+		(instances
+			(project "Direct vs Manhattan Routing"
+				(path "/66dd8da0-744e-4e65-9cec-d1d159def978"
+					(reference "R5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 100.33 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e95fb429-4801-4c1a-9d01-5d0c0a5ea420")
+		(property "Reference" "R6"
+			(at 102.87 58.4199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k"
+			(at 102.87 60.9599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "1ccd48f9-135a-4817-8388-cba8690c28a1")
+		)
+		(pin "2"
+			(uuid "30c87bbc-5678-48ef-9650-8a7a850a16c4")
+		)
+		(instances
+			(project "Direct vs Manhattan Routing"
+				(path "/66dd8da0-744e-4e65-9cec-d1d159def978"
+					(reference "R6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 85.09 39.37 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ab9d7f0f-91bd-4a3f-b480-713b5978c683")
+		(property "Reference" "R7"
+			(at 87.63 38.0999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3k"
+			(at 87.63 40.6399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "b534938e-bfc3-4ba7-a3dc-cc269fdb5c0c")
+		)
+		(pin "2"
+			(uuid "b1cf37d5-3b55-45c6-ba26-12f1cc52e260")
+		)
+		(instances
+			(project "Direct vs Manhattan Routing"
+				(path "/66dd8da0-744e-4e65-9cec-d1d159def978"
+					(reference "R7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 20.32 55.88) (xy 49.53 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "18142ef1-f300-4f3e-a5c9-3bc833120208")
+	)
+	(wire
+		(pts
+			(xy 69.85 55.88) (xy 69.85 68.199)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b2011837-e820-46b8-b5c8-ae70e39fef93")
+	)
+	(wire
+		(pts
+			(xy 69.85 68.199) (xy 100.33 68.199)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9dd90d74-3b9d-4a87-9f6d-97dac1155646")
+	)
+	(wire
+		(pts
+			(xy 100.33 68.199) (xy 100.33 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c42e1d2a-4715-4f1d-9c03-c5767f6295c5")
+	)
+	(wire
+		(pts
+			(xy 85.09 63.5) (xy 85.09 43.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cb0d8413-88a3-4d5b-9eb8-810d9b92bdc1")
+	)
+	(text "DIRECT ROUTING"
+		(exclude_from_sim no)
+		(at 35 70 0.0000)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "4129c021-1f94-4b03-830b-cf94f870307e")
+	)
+	(text "(goes through obstacles)"
+		(exclude_from_sim no)
+		(at 35 67 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b851f4f3-730c-43c9-ae24-3ab7194ac6d7")
+	)
+	(text "MANHATTAN ROUTING"
+		(exclude_from_sim no)
+		(at 85 70 0.0000)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "cf86a013-3b04-4d0c-a81c-614dad5d51bf")
+	)
+	(text "(avoids obstacles)"
+		(exclude_from_sim no)
+		(at 85 67 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "78995de6-4fc2-42f0-902c-d05424aa743a")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
