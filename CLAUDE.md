@@ -34,22 +34,23 @@ uv pip install -e ".[dev]"
 
 ### Testing Commands
 ```bash
-# Run all tests with coverage
+# Run all tests (29 comprehensive tests)
 uv run pytest tests/ -v
 
-# Run specific test file
-uv run pytest tests/test_component_management.py -v
+# Run format preservation tests (critical for exact KiCAD compatibility)
+uv run pytest tests/reference_tests/test_against_references.py -v
 
-# Run specific test method
-uv run pytest tests/test_component_management.py::TestComponentManagement::test_component_creation_and_access -v
+# Run component removal tests (comprehensive removal functionality)
+uv run pytest tests/test_*_removal.py -v
 
-# Run format preservation tests (critical for this project)
-uv run pytest tests/test_format_preservation.py -v
-uv run pytest tests/test_exact_file_diff.py -v
+# Run specific test categories
+uv run pytest tests/reference_tests/ -v     # Reference format matching
+uv run pytest tests/test_component_removal.py -v  # Component removal
+uv run pytest tests/test_element_removal.py -v    # Element removal
 
-# Run tests with markers
+# Run tests with markers (if configured)
 uv run pytest -m "format" -v          # Format preservation tests
-uv run pytest -m "integration" -v     # Integration tests
+uv run pytest -m "integration" -v     # Integration tests  
 uv run pytest -m "unit" -v           # Unit tests
 ```
 
@@ -87,11 +88,24 @@ resistor = sch.components.add('Device:R', reference='R1', value='10k', position=
 resistor.footprint = 'Resistor_SMD:R_0603_1608Metric'
 resistor.set_property('MPN', 'RC0603FR-0710KL')
 
+# Add wires and labels
+sch.wires.add(start=(100, 110), end=(150, 110))
+sch.add_label("VCC", position=(125, 110))
+
 # Bulk operations
 sch.components.bulk_update(
     criteria={'lib_id': 'Device:R'},
     updates={'properties': {'Tolerance': '1%'}}
 )
+
+# Remove components and elements
+sch.components.remove('R1')  # Remove by reference
+sch.remove_wire(wire_uuid)   # Remove by UUID
+sch.remove_label(label_uuid) # Remove by UUID
+
+# Configuration customization
+ksa.config.properties.reference_y = -2.0  # Adjust label positioning
+ksa.config.tolerance.position_tolerance = 0.05  # Tighter matching
 
 # Save with exact format preservation
 sch.save()

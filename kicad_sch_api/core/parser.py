@@ -516,7 +516,8 @@ class SExpressionParser:
             sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
 
         # Add instances section (required by KiCAD)
-        project_name = getattr(self, 'project_name', "simple_circuit")
+        from .config import config
+        project_name = getattr(self, 'project_name', config.defaults.project_name)
         root_uuid = schematic_uuid or symbol_data.get("root_uuid", str(uuid.uuid4()))
         logger.debug(f"🔧 Using UUID {root_uuid} for component {symbol_data.get('reference', 'unknown')}")
         logger.debug(f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}")
@@ -534,66 +535,12 @@ class SExpressionParser:
                                         component_pos: Point, offset_index: int, 
                                         justify: str = "left", hide: bool = False) -> List[Any]:
         """Create a property with proper positioning and effects like KiCAD."""
-        # Use exact reference positions for test cases
-        if (abs(component_pos.x - 93.98) < 0.01 and abs(component_pos.y - 81.28) < 0.01):
-            # Single resistor test - use exact reference coordinates
-            if prop_name == "Reference":
-                prop_x, prop_y = 96.52, 80.0099
-            elif prop_name == "Value":
-                prop_x, prop_y = 96.52, 82.5499
-            elif prop_name == "Footprint":
-                prop_x, prop_y = 92.202, 81.28
-                rotation = 90  # Footprint has rotation
-            elif prop_name in ["Datasheet", "Description"]:
-                prop_x, prop_y = component_pos.x, component_pos.y  # Component center
-            else:
-                # Other properties - use default positioning
-                prop_x = component_pos.x + 2.54
-                prop_y = component_pos.y + (1.27 * (offset_index + 1))
-        elif (abs(component_pos.x - 103.2456) < 0.01 and abs(component_pos.y - 68.7446) < 0.01):
-            # Two resistors test R1 - use exact reference coordinates
-            if prop_name == "Reference":
-                prop_x, prop_y = 105.7856, 67.4745
-            elif prop_name == "Value":
-                prop_x, prop_y = 105.7856, 70.0145
-            elif prop_name == "Footprint":
-                prop_x, prop_y = 101.4676, 68.7446
-                rotation = 90  # Footprint has rotation
-            elif prop_name in ["Datasheet", "Description"]:
-                prop_x, prop_y = component_pos.x, component_pos.y  # Component center
-            else:
-                # Other properties - use default positioning
-                prop_x = component_pos.x + 2.54
-                prop_y = component_pos.y + (1.27 * (offset_index + 1))
-        elif (abs(component_pos.x - 118.11) < 0.01 and abs(component_pos.y - 68.58) < 0.01):
-            # Two resistors test R2 - use exact reference coordinates
-            if prop_name == "Reference":
-                prop_x, prop_y = 120.65, 67.3099
-            elif prop_name == "Value":
-                prop_x, prop_y = 120.65, 69.8499
-            elif prop_name == "Footprint":
-                prop_x, prop_y = 116.332, 68.58
-                rotation = 90  # Footprint has rotation
-            elif prop_name in ["Datasheet", "Description"]:
-                prop_x, prop_y = component_pos.x, component_pos.y  # Component center
-            else:
-                # Other properties - use default positioning
-                prop_x = component_pos.x + 2.54
-                prop_y = component_pos.y + (1.27 * (offset_index + 1))
-        else:
-            # Default positioning for other components
-            prop_x = component_pos.x + 2.54  # Standard offset to the right
-            
-            if prop_name == "Reference":
-                prop_y = component_pos.y - 1.27  # Reference above component
-            elif prop_name == "Value":
-                prop_y = component_pos.y + 1.27  # Value below component  
-            else:
-                prop_y = component_pos.y + (1.27 * (offset_index + 1))  # Other properties below
+        from .config import config
         
-        # Determine rotation for this property (default is 0, set above for Footprint in specific cases)
-        if 'rotation' not in locals():
-            rotation = 0
+        # Calculate property position using configuration
+        prop_x, prop_y, rotation = config.get_property_position(
+            prop_name, (component_pos.x, component_pos.y), offset_index
+        )
         
         # Build effects section based on hide status
         effects = [sexpdata.Symbol("effects"), [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]]]
@@ -844,8 +791,9 @@ class SExpressionParser:
         filename = sheet_data.get("filename", "sheet.kicad_sch")
         
         # Sheetname property
+        from .config import config
         name_prop = [sexpdata.Symbol("property"), "Sheetname", name]
-        name_prop.append([sexpdata.Symbol("at"), x, round(y - 0.7116, 4), 0])  # Above sheet
+        name_prop.append([sexpdata.Symbol("at"), x, round(y + config.sheet.name_offset_y, 4), 0])  # Above sheet
         name_prop.append([sexpdata.Symbol("effects"),
                          [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
                          [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")]])
@@ -853,7 +801,7 @@ class SExpressionParser:
         
         # Sheetfile property  
         file_prop = [sexpdata.Symbol("property"), "Sheetfile", filename]
-        file_prop.append([sexpdata.Symbol("at"), x, round(y + h + 0.5846, 4), 0])  # Below sheet
+        file_prop.append([sexpdata.Symbol("at"), x, round(y + h + config.sheet.file_offset_y, 4), 0])  # Below sheet
         file_prop.append([sexpdata.Symbol("effects"),
                          [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
                          [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("top")]])

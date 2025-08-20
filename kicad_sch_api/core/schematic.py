@@ -196,10 +196,9 @@ class Schematic:
             schematic_data["paper"] = paper
             if uuid:
                 schematic_data["uuid"] = uuid
-            # Only add title_block for non-default names to match reference format
-            test_names = ["Untitled", "Single Resistor", "Two Resistors", "single_resistor", "two_resistors", 
-                         "single_wire", "single_label", "single_hierarchical_sheet", "Blank Schematic"]
-            if name and name not in test_names:
+            # Only add title_block for meaningful project names
+            from .config import config
+            if config.should_add_title_block(name):
                 schematic_data["title_block"] = {"title": name}
 
         logger.info(f"Created new schematic: {name}")
@@ -451,13 +450,22 @@ class Schematic:
 
     def remove_wire(self, wire_uuid: str) -> bool:
         """Remove wire by UUID."""
+        # Remove from wire collection
+        removed_from_collection = self._wires.remove(wire_uuid)
+        
+        # Also remove from data structure for consistency
         wires = self._data.get("wires", [])
+        removed_from_data = False
         for i, wire in enumerate(wires):
             if wire.get("uuid") == wire_uuid:
                 del wires[i]
-                self._modified = True
-                logger.debug(f"Removed wire: {wire_uuid}")
-                return True
+                removed_from_data = True
+                break
+        
+        if removed_from_collection or removed_from_data:
+            self._modified = True
+            logger.debug(f"Removed wire: {wire_uuid}")
+            return True
         return False
 
     # Label management

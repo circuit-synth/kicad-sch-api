@@ -91,8 +91,9 @@ class ICManager:
     def _place_default_units(self):
         """Place default units for common IC types."""
         # For 74xx logic ICs, typically have units 1-4 (logic) + unit 5 (power)
-        unit_spacing = 12.7  # Tight vertical spacing (0.5 inch in mm)
-        power_offset = (25.4, 0)  # Power unit offset (1 inch right)
+        from .config import config
+        unit_spacing = config.grid.unit_spacing  # Tight vertical spacing (0.5 inch in mm)
+        power_offset = config.grid.power_offset  # Power unit offset (1 inch right)
         
         # Place logic units (1-4) vertically in a tight column
         for unit in range(1, 5):

@@ -52,6 +52,7 @@ from .core.components import Component, ComponentCollection
 from .core.schematic import Schematic
 from .library.cache import SymbolLibraryCache, get_symbol_cache
 from .utils.validation import ValidationError, ValidationIssue
+from .core.config import KiCADConfig, config
 
 # Version info
 VERSION_INFO = (0, 0, 2)
@@ -64,6 +65,9 @@ __all__ = [
     "ComponentCollection",
     "SymbolLibraryCache",
     "get_symbol_cache",
+    # Configuration
+    "KiCADConfig",
+    "config",
     # Exceptions
     "ValidationError",
     "ValidationIssue",

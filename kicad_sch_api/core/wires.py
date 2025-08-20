@@ -148,17 +148,20 @@ class WireCollection:
         logger.debug(f"Removed wire: {uuid}")
         return True
 
-    def get_by_point(self, point: Union[Point, Tuple[float, float]], tolerance: float = 0.1) -> List[Wire]:
+    def get_by_point(self, point: Union[Point, Tuple[float, float]], tolerance: float = None) -> List[Wire]:
         """
         Find wires that pass through or near a point.
 
         Args:
             point: Point to search near
-            tolerance: Distance tolerance
+            tolerance: Distance tolerance (uses config default if None)
 
         Returns:
             List of wires near the point
         """
+        if tolerance is None:
+            from .config import config
+            tolerance = config.tolerance.position_tolerance
         if isinstance(point, tuple):
             point = Point(point[0], point[1])
 
@@ -184,7 +187,8 @@ class WireCollection:
         seg_vec = Point(seg_end.x - seg_start.x, seg_end.y - seg_start.y)
         seg_length = seg_start.distance_to(seg_end)
         
-        if seg_length < 0.001:  # Very short segment
+        from .config import config
+        if seg_length < config.tolerance.wire_segment_min:  # Very short segment
             return seg_start.distance_to(point) <= tolerance
         
         # Vector from seg_start to point
