@@ -9,7 +9,7 @@ import logging
 import uuid as uuid_module
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from .types import Point, Junction
+from .types import Junction, Point
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +35,10 @@ class JunctionCollection:
         self._junctions: List[Junction] = junctions or []
         self._uuid_index: Dict[str, int] = {}
         self._modified = False
-        
+
         # Build UUID index
         self._rebuild_index()
-        
+
         logger.debug(f"JunctionCollection initialized with {len(self._junctions)} junctions")
 
     def _rebuild_index(self):
@@ -64,7 +64,7 @@ class JunctionCollection:
         position: Union[Point, Tuple[float, float]],
         diameter: float = 0,
         color: Tuple[int, int, int, int] = (0, 0, 0, 0),
-        uuid: Optional[str] = None
+        uuid: Optional[str] = None,
     ) -> str:
         """
         Add a junction to the collection.
@@ -92,12 +92,7 @@ class JunctionCollection:
             position = Point(position[0], position[1])
 
         # Create junction
-        junction = Junction(
-            uuid=uuid,
-            position=position,
-            diameter=diameter,
-            color=color
-        )
+        junction = Junction(uuid=uuid, position=position, diameter=diameter, color=color)
 
         # Add to collection
         self._junctions.append(junction)
@@ -128,7 +123,9 @@ class JunctionCollection:
         logger.debug(f"Removed junction: {uuid}")
         return True
 
-    def get_at_position(self, position: Union[Point, Tuple[float, float]], tolerance: float = 0.01) -> Optional[Junction]:
+    def get_at_position(
+        self, position: Union[Point, Tuple[float, float]], tolerance: float = 0.01
+    ) -> Optional[Junction]:
         """
         Find junction at or near a specific position.
 
@@ -145,10 +142,12 @@ class JunctionCollection:
         for junction in self._junctions:
             if junction.position.distance_to(position) <= tolerance:
                 return junction
-        
+
         return None
 
-    def get_by_point(self, point: Union[Point, Tuple[float, float]], tolerance: float = 0.01) -> List[Junction]:
+    def get_by_point(
+        self, point: Union[Point, Tuple[float, float]], tolerance: float = 0.01
+    ) -> List[Junction]:
         """
         Find all junctions near a point.
 
@@ -172,21 +171,17 @@ class JunctionCollection:
     def get_statistics(self) -> Dict[str, Any]:
         """Get junction collection statistics."""
         if not self._junctions:
-            return {
-                "total_junctions": 0,
-                "avg_diameter": 0,
-                "positions": []
-            }
-        
+            return {"total_junctions": 0, "avg_diameter": 0, "positions": []}
+
         avg_diameter = sum(j.diameter for j in self._junctions) / len(self._junctions)
         positions = [(j.position.x, j.position.y) for j in self._junctions]
-        
+
         return {
             "total_junctions": len(self._junctions),
             "avg_diameter": avg_diameter,
             "positions": positions,
             "unique_diameters": len(set(j.diameter for j in self._junctions)),
-            "unique_colors": len(set(j.color for j in self._junctions))
+            "unique_colors": len(set(j.color for j in self._junctions)),
         }
 
     def clear(self):

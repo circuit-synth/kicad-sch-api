@@ -41,7 +41,7 @@ class SymbolDefinition:
 
     # Raw KiCAD data for exact format preservation
     raw_kicad_data: Any = None
-    
+
     # Symbol inheritance
     extends: Optional[str] = None  # Parent symbol name if this symbol extends another
 
@@ -263,7 +263,7 @@ class SymbolLibraryCache:
             Symbol definition if found, None otherwise
         """
         logger.debug(f"🔧 CACHE: Requesting symbol: {lib_id}")
-        
+
         # Check cache first
         if lib_id in self._symbols:
             self._cache_hits += 1
@@ -357,7 +357,7 @@ class SymbolLibraryCache:
     def _load_symbol(self, lib_id: str) -> Optional[SymbolDefinition]:
         """Load a single symbol from its library."""
         logger.debug(f"🔧 LOAD: Loading symbol {lib_id}")
-        
+
         if ":" not in lib_id:
             logger.warning(f"🔧 LOAD: Invalid lib_id format: {lib_id}")
             return None
@@ -423,29 +423,29 @@ class SymbolLibraryCache:
         try:
             # Extract symbol name from lib_id
             library_name, symbol_name = lib_id.split(":", 1)
-            
-            with open(library_path, 'r', encoding='utf-8') as f:
+
+            with open(library_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Parse the S-expression with symbol preservation
             parsed = sexpdata.loads(content, true=None, false=None, nil=None)
             logger.debug(f"🔧 PARSE: Parsed library file with {len(parsed)} top-level items")
-            
+
             # Find the symbol we're looking for
             symbol_data = self._find_symbol_in_parsed_data(parsed, symbol_name)
             if not symbol_data:
                 logger.debug(f"🔧 PARSE: Symbol {symbol_name} not found in {library_path}")
                 return None
-            
+
             logger.debug(f"🔧 PARSE: Found symbol {symbol_name} in library")
 
             # Extract the library name and symbol name for resolution
             library_name, symbol_name = lib_id.split(":", 1)
-            
+
             # Check if this symbol extends another symbol
             extends_symbol = self._check_extends_directive(symbol_data)
             logger.debug(f"🔧 CACHE: Symbol {lib_id} extends: {extends_symbol}")
-            
+
             # If this symbol extends another, we need to resolve it
             if extends_symbol:
                 resolved_symbol_data = self._resolve_extends_relationship(
@@ -455,7 +455,7 @@ class SymbolLibraryCache:
                     symbol_data = resolved_symbol_data
                     extends_symbol = None  # Clear extends after resolution
                     logger.debug(f"🔧 CACHE: Resolved extends for {lib_id}")
-            
+
             # Extract symbol information
             result = {
                 "raw_data": symbol_data,  # Store the raw parsed data
@@ -464,26 +464,26 @@ class SymbolLibraryCache:
                 "keywords": "",
                 "datasheet": "~",
                 "pins": [],
-                "extends": extends_symbol  # Should be None after resolution
+                "extends": extends_symbol,  # Should be None after resolution
             }
 
             # Extract properties from the symbol
             for item in symbol_data[1:]:
                 if isinstance(item, list) and len(item) > 0:
-                    if item[0] == sexpdata.Symbol('property'):
+                    if item[0] == sexpdata.Symbol("property"):
                         prop_name = item[1]
                         prop_value = item[2]
-                        
+
                         logger.debug(f"🔧 Processing property: {prop_name} = {prop_value}")
-                        if prop_name == sexpdata.Symbol('Reference'):
+                        if prop_name == sexpdata.Symbol("Reference"):
                             result["reference_prefix"] = str(prop_value)
                             logger.debug(f"🔧 Set reference_prefix: {str(prop_value)}")
-                        elif prop_name == sexpdata.Symbol('Description'):
+                        elif prop_name == sexpdata.Symbol("Description"):
                             result["Description"] = str(prop_value)  # Keep original case
                             logger.debug(f"🔧 Set Description: {str(prop_value)}")
-                        elif prop_name == sexpdata.Symbol('ki_keywords'):
+                        elif prop_name == sexpdata.Symbol("ki_keywords"):
                             result["keywords"] = str(prop_value)
-                        elif prop_name == sexpdata.Symbol('Datasheet'):
+                        elif prop_name == sexpdata.Symbol("Datasheet"):
                             result["Datasheet"] = str(prop_value)  # Keep original case
                             logger.debug(f"🔧 Set Datasheet: {str(prop_value)}")
 
@@ -500,7 +500,7 @@ class SymbolLibraryCache:
     def _find_symbol_in_parsed_data(self, parsed_data: List, symbol_name: str) -> Optional[List]:
         """Find a specific symbol in parsed KiCAD library data."""
         logger.debug(f"🔧 FIND: Looking for symbol '{symbol_name}' in parsed data")
-        
+
         if not isinstance(parsed_data, list):
             logger.debug(f"🔧 FIND: Parsed data is not a list: {type(parsed_data)}")
             return None
@@ -509,61 +509,66 @@ class SymbolLibraryCache:
         available_symbols = []
         for item in parsed_data:
             if isinstance(item, list) and len(item) >= 2:
-                if item[0] == sexpdata.Symbol('symbol'):
+                if item[0] == sexpdata.Symbol("symbol"):
                     available_symbols.append(str(item[1]).strip('"'))
-        
-        logger.debug(f"🔧 FIND: Available symbols in library: {available_symbols[:10]}...")  # Show first 10
+
+        logger.debug(
+            f"🔧 FIND: Available symbols in library: {available_symbols[:10]}..."
+        )  # Show first 10
 
         # Search through the parsed data for the symbol
         for item in parsed_data:
             if isinstance(item, list) and len(item) >= 2:
-                if (item[0] == sexpdata.Symbol('symbol') and 
-                    len(item) > 1 and 
-                    str(item[1]).strip('"') == symbol_name):
+                if (
+                    item[0] == sexpdata.Symbol("symbol")
+                    and len(item) > 1
+                    and str(item[1]).strip('"') == symbol_name
+                ):
                     logger.debug(f"🔧 FIND: Found symbol '{symbol_name}'")
                     return item
-        
-        logger.debug(f"🔧 FIND: Symbol '{symbol_name}' not found in library")                
+
+        logger.debug(f"🔧 FIND: Symbol '{symbol_name}' not found in library")
         return None
 
     def _check_extends_directive(self, symbol_data: List) -> Optional[str]:
         """Check if symbol has extends directive and return parent symbol name."""
         if not isinstance(symbol_data, list):
             return None
-            
+
         for item in symbol_data[1:]:
             if isinstance(item, list) and len(item) >= 2:
-                if item[0] == sexpdata.Symbol('extends'):
+                if item[0] == sexpdata.Symbol("extends"):
                     parent_name = str(item[1]).strip('"')
                     logger.debug(f"Found extends directive: {parent_name}")
                     return parent_name
         return None
 
-    def _resolve_extends_relationship(self, child_symbol_data: List, parent_name: str, 
-                                    library_path: Path, library_name: str) -> Optional[List]:
+    def _resolve_extends_relationship(
+        self, child_symbol_data: List, parent_name: str, library_path: Path, library_name: str
+    ) -> Optional[List]:
         """Resolve extends relationship by merging parent symbol into child."""
         logger.debug(f"🔧 RESOLVE: Resolving extends {parent_name} for child symbol")
-        
+
         try:
             # Load the parent symbol from the same library
-            with open(library_path, 'r', encoding='utf-8') as f:
+            with open(library_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             parsed = sexpdata.loads(content, true=None, false=None, nil=None)
             parent_symbol_data = self._find_symbol_in_parsed_data(parsed, parent_name)
-            
+
             if not parent_symbol_data:
                 logger.warning(f"🔧 RESOLVE: Parent symbol {parent_name} not found in library")
                 return None
-            
+
             logger.debug(f"🔧 RESOLVE: Found parent symbol {parent_name}")
-            
+
             # Merge parent into child (adapt from circuit-synth logic)
             merged_symbol = self._merge_parent_into_child(child_symbol_data, parent_symbol_data)
             logger.debug(f"🔧 RESOLVE: Merged parent into child symbol")
-            
+
             return merged_symbol
-            
+
         except Exception as e:
             logger.error(f"🔧 RESOLVE: Error resolving extends: {e}")
             return None
@@ -571,27 +576,30 @@ class SymbolLibraryCache:
     def _merge_parent_into_child(self, child_data: List, parent_data: List) -> List:
         """Merge parent symbol graphics and pins into child symbol."""
         import copy
-        
+
         # Get child and parent symbol names for unit renaming
         child_name = str(child_data[1]).strip('"') if len(child_data) > 1 else "Child"
         parent_name = str(parent_data[1]).strip('"') if len(parent_data) > 1 else "Parent"
-        
+
         logger.debug(f"🔧 MERGE: Merging {parent_name} into {child_name}")
-        
+
         # Start with child symbol structure
         merged = copy.deepcopy(child_data)
-        
+
         # Remove the extends directive from child
-        merged = [item for item in merged if not (
-            isinstance(item, list) and len(item) >= 2 and 
-            item[0] == sexpdata.Symbol('extends')
-        )]
-        
+        merged = [
+            item
+            for item in merged
+            if not (
+                isinstance(item, list) and len(item) >= 2 and item[0] == sexpdata.Symbol("extends")
+            )
+        ]
+
         # Copy all graphics and unit definitions from parent
         for item in parent_data[1:]:
             if isinstance(item, list) and len(item) > 0:
                 # Copy symbol unit definitions (contain graphics and pins)
-                if item[0] == sexpdata.Symbol('symbol'):
+                if item[0] == sexpdata.Symbol("symbol"):
                     # Rename unit from parent name to child name
                     unit_item = copy.deepcopy(item)
                     if len(unit_item) > 1:
@@ -602,36 +610,36 @@ class SymbolLibraryCache:
                         logger.debug(f"🔧 MERGE: Renamed unit {old_unit_name} -> {new_unit_name}")
                     merged.append(unit_item)
                 # Copy other non-property elements (child properties override parent)
-                elif item[0] not in [sexpdata.Symbol('property')]:
+                elif item[0] not in [sexpdata.Symbol("property")]:
                     merged.append(copy.deepcopy(item))
-        
+
         logger.debug(f"🔧 MERGE: Merged symbol has {len(merged)} elements")
         return merged
 
     def _extract_pins_from_symbol(self, symbol_data: List) -> List[SchematicPin]:
         """Extract pins from symbol data."""
         pins = []
-        
+
         # Look for symbol sub-definitions like "R_1_1" that contain pins
         for item in symbol_data[1:]:
             if isinstance(item, list) and len(item) > 0:
-                if item[0] == sexpdata.Symbol('symbol'):
+                if item[0] == sexpdata.Symbol("symbol"):
                     # This is a symbol unit definition, look for pins
                     pins.extend(self._extract_pins_from_unit(item))
-                    
+
         return pins
 
     def _extract_pins_from_unit(self, unit_data: List) -> List[SchematicPin]:
         """Extract pins from a symbol unit definition."""
         pins = []
-        
+
         for item in unit_data[1:]:
             if isinstance(item, list) and len(item) > 0:
-                if item[0] == sexpdata.Symbol('pin'):
+                if item[0] == sexpdata.Symbol("pin"):
                     pin = self._parse_pin_definition(item)
                     if pin:
                         pins.append(pin)
-                        
+
         return pins
 
     def _parse_pin_definition(self, pin_data: List) -> Optional[SchematicPin]:
@@ -640,27 +648,27 @@ class SymbolLibraryCache:
             # pin_data format: (pin passive line (at 0 3.81 270) (length 1.27) ...)
             pin_type_str = str(pin_data[1]) if len(pin_data) > 1 else "passive"
             pin_shape_str = str(pin_data[2]) if len(pin_data) > 2 else "line"
-            
+
             position = Point(0, 0)
             length = 2.54
             rotation = 0
             name = "~"
             number = "1"
-            
+
             # Parse pin attributes
             for item in pin_data[3:]:
                 if isinstance(item, list) and len(item) > 0:
-                    if item[0] == sexpdata.Symbol('at'):
+                    if item[0] == sexpdata.Symbol("at"):
                         # (at x y rotation)
                         if len(item) >= 3:
                             position = Point(float(item[1]), float(item[2]))
                             if len(item) >= 4:
                                 rotation = float(item[3])
-                    elif item[0] == sexpdata.Symbol('length'):
+                    elif item[0] == sexpdata.Symbol("length"):
                         length = float(item[1])
-                    elif item[0] == sexpdata.Symbol('name'):
+                    elif item[0] == sexpdata.Symbol("name"):
                         name = str(item[1]).strip('"')
-                    elif item[0] == sexpdata.Symbol('number'):
+                    elif item[0] == sexpdata.Symbol("number"):
                         number = str(item[1]).strip('"')
 
             # Map pin type

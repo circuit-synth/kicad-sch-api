@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kicad-sch-api"
-version = "0.2.0"
+version = "0.3.0"
 description = "Professional KiCAD schematic manipulation library with exact format preservation"
 readme = "README.md"
 license = "MIT"
@@ -130,7 +130,7 @@ ensure_newline_before_comments = true
 src_paths = ["kicad_sch_api", "tests"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

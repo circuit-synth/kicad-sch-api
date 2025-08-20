@@ -275,6 +275,29 @@ async def create_schematic(name: str):
 ### Related MCP Servers
 - **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: Reference implementation using standard MCP SDK
 
+## Version Management & Release Guidelines
+
+### Version Increment Rules
+- **DEFAULT**: Always use patch/subminor version increments (0.0.1) unless explicitly instructed otherwise
+- **Patch increments (0.2.0 → 0.2.1)**: Bug fixes, small improvements, additional tests
+- **Minor increments (0.2.0 → 0.3.0)**: New features, API additions, significant improvements
+- **Major increments (0.2.0 → 1.0.0)**: Breaking changes, major API redesigns
+
+### Release Process Rules
+- **NEVER commit or push without explicit user instructions**
+- **NEVER publish to PyPI without specific user authorization**
+- **ALWAYS ask before version increments** - default to patch/subminor (0.0.1)
+- **ALWAYS verify version intention** before building packages
+
+### Example Version Decision Process:
+```
+User: "Add component removal feature"
+Claude: "This adds new functionality. Should I increment:
+- Patch version (0.2.0 → 0.2.1) for incremental improvement?  
+- Minor version (0.2.0 → 0.3.0) for significant new feature?
+Default: patch version unless specified otherwise."
+```
+
 ## Related Projects
 
 - **circuit-synth**: Parent project and source of transferred logic

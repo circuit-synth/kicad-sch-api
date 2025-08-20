@@ -48,7 +48,9 @@ class ExactFormatter:
         """Initialize formatting rules that match KiCAD's output exactly."""
 
         # Root element - custom formatting for specific test cases
-        self.rules["kicad_sch"] = FormatRule(inline=False, indent_level=0, custom_handler=self._format_kicad_sch)
+        self.rules["kicad_sch"] = FormatRule(
+            inline=False, indent_level=0, custom_handler=self._format_kicad_sch
+        )
         self.rules["version"] = FormatRule(inline=True)
         self.rules["generator"] = FormatRule(inline=True, quote_indices={1})
         self.rules["generator_version"] = FormatRule(inline=True, quote_indices={1})
@@ -83,10 +85,16 @@ class ExactFormatter:
             inline=False, quote_indices={1, 2}, custom_handler=self._format_property
         )
 
-        # Pins and connections  
-        self.rules["pin"] = FormatRule(inline=False, quote_indices=set(), custom_handler=self._format_pin)
-        self.rules["number"] = FormatRule(inline=False, quote_indices={1})  # Pin numbers should be quoted
-        self.rules["name"] = FormatRule(inline=False, quote_indices={1})    # Pin names should be quoted
+        # Pins and connections
+        self.rules["pin"] = FormatRule(
+            inline=False, quote_indices=set(), custom_handler=self._format_pin
+        )
+        self.rules["number"] = FormatRule(
+            inline=False, quote_indices={1}
+        )  # Pin numbers should be quoted
+        self.rules["name"] = FormatRule(
+            inline=False, quote_indices={1}
+        )  # Pin names should be quoted
         self.rules["instances"] = FormatRule(inline=False)
         self.rules["project"] = FormatRule(inline=False, quote_indices={1})
         self.rules["path"] = FormatRule(inline=False, quote_indices={1})
@@ -135,8 +143,8 @@ class ExactFormatter:
         """
         result = self._format_element(data, 0)
         # Ensure file ends with newline
-        if not result.endswith('\n'):
-            result += '\n'
+        if not result.endswith("\n"):
+            result += "\n"
         return result
 
     def format_preserving_write(self, new_data: Any, original_content: str) -> str:
@@ -179,20 +187,20 @@ class ExactFormatter:
         # Handle special case for zero values in color alpha
         if abs(value) < 1e-10:  # Essentially zero
             return "0.0000"
-        
+
         # For other values, use minimal precision (remove trailing zeros)
         if value == int(value):
             return str(int(value))
-        
+
         # Round to reasonable precision and remove trailing zeros
         rounded = round(value, 6)  # Use 6 decimal places for precision
         if rounded == int(rounded):
             return str(int(rounded))
-        
+
         # Format and remove trailing zeros, but don't remove the decimal point for values like 0.254
-        formatted = f"{rounded:.6f}".rstrip('0')
-        if formatted.endswith('.'):
-            formatted += '0'  # Keep at least one decimal place
+        formatted = f"{rounded:.6f}".rstrip("0")
+        if formatted.endswith("."):
+            formatted += "0"  # Keep at least one decimal place
         return formatted
 
     def _format_list(self, lst: List[Any], indent_level: int) -> str:
@@ -276,21 +284,35 @@ class ExactFormatter:
         """Format pin elements with context-aware quoting."""
         if len(lst) < 2:
             return self._format_inline(lst, FormatRule())
-            
+
         indent = "\t" * indent_level
         next_indent = "\t" * (indent_level + 1)
-        
+
         # Check if this is a lib_symbols pin (passive/line) or sheet pin ("NET1" input)
-        if len(lst) >= 3 and isinstance(lst[2], sexpdata.Symbol) and str(lst[1]) in ['passive', 'power_in', 'power_out', 'input', 'output', 'bidirectional', 'tri_state', 'unspecified']:
+        if (
+            len(lst) >= 3
+            and isinstance(lst[2], sexpdata.Symbol)
+            and str(lst[1])
+            in [
+                "passive",
+                "power_in",
+                "power_out",
+                "input",
+                "output",
+                "bidirectional",
+                "tri_state",
+                "unspecified",
+            ]
+        ):
             # lib_symbols context: (pin passive line ...)
             result = f"({lst[0]} {lst[1]} {lst[2]}"
             start_index = 3
-            
+
             # Add remaining elements on separate lines with proper indentation
             for element in lst[start_index:]:
                 if isinstance(element, list):
                     result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
-            
+
             result += f"\n{indent})"
             return result
         else:
@@ -299,7 +321,7 @@ class ExactFormatter:
             pin_name = str(lst[1])
             result = f'({lst[0]} "{pin_name}"'
             start_index = 2
-            
+
             # Add remaining elements (type and others)
             for i, element in enumerate(lst[start_index:], start_index):
                 if isinstance(element, list):
@@ -310,7 +332,7 @@ class ExactFormatter:
                         result += f" {element}"  # Pin type as bare symbol
                     else:
                         result += f" {self._format_element(element, 0)}"
-            
+
             result += f"\n{indent})"
             return result
 
@@ -387,26 +409,26 @@ class ExactFormatter:
     def _format_kicad_sch(self, lst: List[Any], indent_level: int) -> str:
         """
         Custom formatter for kicad_sch root element to handle blank schematic format.
-        
+
         Detects blank schematics and formats them exactly like KiCAD reference files.
         """
         # Check if this is a blank schematic (no components, no UUID, minimal elements)
         has_components = any(
-            isinstance(item, list) and len(item) > 0 and 
-            str(item[0]) in ["symbol", "wire", "junction", "text", "sheet"]
+            isinstance(item, list)
+            and len(item) > 0
+            and str(item[0]) in ["symbol", "wire", "junction", "text", "sheet"]
             for item in lst[1:]
         )
-        
+
         has_uuid = any(
-            isinstance(item, list) and len(item) >= 2 and str(item[0]) == "uuid"
-            for item in lst[1:]
+            isinstance(item, list) and len(item) >= 2 and str(item[0]) == "uuid" for item in lst[1:]
         )
-        
+
         # If no components and no UUID, format as blank schematic
         if not has_components and not has_uuid:
             header_parts = [str(lst[0])]  # kicad_sch
             body_parts = []
-            
+
             for item in lst[1:]:
                 if isinstance(item, list) and len(item) >= 1:
                     tag = str(item[0])
@@ -417,7 +439,7 @@ class ExactFormatter:
                             header_parts.append(f"({tag} {item[1]})")
                     else:
                         body_parts.append(item)
-            
+
             # Build single-line header + body format
             result = f"({' '.join(header_parts)}"
             for item in body_parts:
@@ -427,7 +449,7 @@ class ExactFormatter:
                     result += f"\n  {self._format_element(item, 1)}"
             result += "\n)\n"
             return result
-        
+
         # For normal schematics, use standard multiline formatting
         return self._format_multiline(lst, indent_level, FormatRule())
 
@@ -435,16 +457,16 @@ class ExactFormatter:
         """Format pts elements with inline xy coordinates on indented line."""
         if len(lst) < 2:
             return self._format_inline(lst, FormatRule())
-            
+
         indent = "\t" * indent_level
         next_indent = "\t" * (indent_level + 1)
-        
+
         # Format as:
         # (pts
         #     (xy x1 y1) (xy x2 y2)
         # )
         result = f"({lst[0]}"
-        
+
         # Add xy elements on same indented line
         if len(lst) > 1:
             xy_elements = []
@@ -453,10 +475,10 @@ class ExactFormatter:
                     xy_elements.append(self._format_element(element, 0))
                 else:
                     xy_elements.append(self._format_element(element, 0))
-            
+
             if xy_elements:
                 result += f"\n{next_indent}{' '.join(xy_elements)}"
-        
+
         result += f"\n{indent})"
         return result
 
