@@ -126,48 +126,23 @@ net_info = netlist.analyze_net("VCC")
 
 ## 🤖 AI Agent Integration
 
-This library serves as the foundational layer for AI agent integration through dedicated MCP (Model Context Protocol) servers.
-
-### MCP Server Integration
-
-```bash
-# Install the dedicated MCP server (separate package)
-pip install mcp-kicad-sch-api
-
-# Configure for Claude Code
-code mcp install mcp-kicad-sch-api
-```
-
-### Library Design for MCP Compatibility
-
-This library is specifically designed to provide:
-- **Stable API**: Consistent interface for MCP servers to build upon
-- **Format Preservation**: Guaranteed exact KiCAD output for reliable automation
-- **Professional Validation**: Component and library validation for quality assurance
-- **Performance**: Optimized for AI agent workloads with caching and bulk operations
-
-### Usage with AI Agents
-
-```
-# Natural language commands to your AI agent:
-"Create a voltage divider with two 10kΩ resistors"
-"Add an ESP32 microcontroller with USB connector" 
-"Generate a hierarchical schematic with power supply subcircuit"
-```
-
-**Related MCP Servers:**
-- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: Full-featured MCP server built on this library
+This library serves as the foundation for AI agent integration. For Claude Code or other AI agents, use the **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)** MCP server (included as a submodule in `submodules/mcp-kicad-sch-api/`).
 
 ## 🏗️ Architecture
 
 ### Library Structure
 
 ```
-kicad_sch_api/
-├── core/              # Core schematic manipulation
-├── library/           # KiCAD library integration
-├── integration/       # KiCAD CLI and tool integration
-└── utils/            # Validation and utilities
+kicad-sch-api/
+├── kicad_sch_api/           # Core Python library
+│   ├── core/                # Core schematic manipulation
+│   ├── library/             # KiCAD library integration
+│   ├── discovery/           # Component search and indexing
+│   └── utils/              # Validation and utilities
+├── submodules/              # Related projects as submodules
+│   └── mcp-kicad-sch-api/  # MCP server for AI agents
+├── tests/                   # Comprehensive test suite
+└── examples/               # Usage examples and tutorials
 ```
 
 ### Design Principles
@@ -257,7 +232,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🔗 Related Projects
 
-- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: MCP server for AI agents built on this library
+- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: MCP server for AI agents built on this library (included as submodule)
 - **[circuit-synth](https://github.com/circuit-synth/circuit-synth)**: High-level circuit design automation using this library
 - **[Claude Code](https://claude.ai/code)**: AI development environment with MCP support
 - **[KiCAD](https://kicad.org/)**: Open source electronics design automation suite
