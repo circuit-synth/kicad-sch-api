@@ -85,8 +85,8 @@ class ExactFormatter:
 
         # Pins and connections  
         self.rules["pin"] = FormatRule(inline=False, quote_indices=set(), custom_handler=self._format_pin)
-        self.rules["number"] = FormatRule(inline=True, quote_indices={1})  # Pin numbers should be quoted
-        self.rules["name"] = FormatRule(inline=True, quote_indices={1})    # Pin names should be quoted
+        self.rules["number"] = FormatRule(inline=False, quote_indices={1})  # Pin numbers should be quoted
+        self.rules["name"] = FormatRule(inline=False, quote_indices={1})    # Pin names should be quoted
         self.rules["instances"] = FormatRule(inline=False)
         self.rules["project"] = FormatRule(inline=False, quote_indices={1})
         self.rules["path"] = FormatRule(inline=False, quote_indices={1})
@@ -94,7 +94,7 @@ class ExactFormatter:
 
         # Wire elements
         self.rules["wire"] = FormatRule(inline=False)
-        self.rules["pts"] = FormatRule(inline=False)
+        self.rules["pts"] = FormatRule(inline=False, custom_handler=self._format_pts)
         self.rules["xy"] = FormatRule(inline=True)
         self.rules["stroke"] = FormatRule(inline=False)
         self.rules["width"] = FormatRule(inline=True)
@@ -133,7 +133,11 @@ class ExactFormatter:
         Returns:
             Formatted string matching KiCAD's output exactly
         """
-        return self._format_element(data, 0)
+        result = self._format_element(data, 0)
+        # Ensure file ends with newline
+        if not result.endswith('\n'):
+            result += '\n'
+        return result
 
     def format_preserving_write(self, new_data: Any, original_content: str) -> str:
         """
@@ -164,8 +168,32 @@ class ExactFormatter:
             if self._needs_quoting(element):
                 return f'"{element}"'
             return element
+        elif isinstance(element, float):
+            # Custom float formatting for KiCAD compatibility
+            return self._format_float(element)
         else:
             return str(element)
+
+    def _format_float(self, value: float) -> str:
+        """Format float values to match KiCAD's precision and format."""
+        # Handle special case for zero values in color alpha
+        if abs(value) < 1e-10:  # Essentially zero
+            return "0.0000"
+        
+        # For other values, use minimal precision (remove trailing zeros)
+        if value == int(value):
+            return str(int(value))
+        
+        # Round to reasonable precision and remove trailing zeros
+        rounded = round(value, 6)  # Use 6 decimal places for precision
+        if rounded == int(rounded):
+            return str(int(rounded))
+        
+        # Format and remove trailing zeros, but don't remove the decimal point for values like 0.254
+        formatted = f"{rounded:.6f}".rstrip('0')
+        if formatted.endswith('.'):
+            formatted += '0'  # Keep at least one decimal place
+        return formatted
 
     def _format_list(self, lst: List[Any], indent_level: int) -> str:
         """Format a list (S-expression)."""
@@ -252,23 +280,39 @@ class ExactFormatter:
         indent = "\t" * indent_level
         next_indent = "\t" * (indent_level + 1)
         
-        # Check if this is a lib_symbols pin (passive/line) or component pin ("1")
-        if len(lst) >= 3 and isinstance(lst[2], sexpdata.Symbol):
+        # Check if this is a lib_symbols pin (passive/line) or sheet pin ("NET1" input)
+        if len(lst) >= 3 and isinstance(lst[2], sexpdata.Symbol) and str(lst[1]) in ['passive', 'power_in', 'power_out', 'input', 'output', 'bidirectional', 'tri_state', 'unspecified']:
             # lib_symbols context: (pin passive line ...)
             result = f"({lst[0]} {lst[1]} {lst[2]}"
             start_index = 3
+            
+            # Add remaining elements on separate lines with proper indentation
+            for element in lst[start_index:]:
+                if isinstance(element, list):
+                    result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
+            
+            result += f"\n{indent})"
+            return result
         else:
-            # component context: (pin "1" ...)  
-            result = f'({lst[0]} "{lst[1]}"'
+            # sheet pin or component pin context: (pin "NET1" input) or (pin "1" ...)
+            # Pin name should always be quoted
+            pin_name = str(lst[1])
+            result = f'({lst[0]} "{pin_name}"'
             start_index = 2
             
-        # Add remaining elements on separate lines
-        for element in lst[start_index:]:
-            if isinstance(element, list):
-                result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
-        
-        result += f"\n{indent})"
-        return result
+            # Add remaining elements (type and others)
+            for i, element in enumerate(lst[start_index:], start_index):
+                if isinstance(element, list):
+                    result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
+                else:
+                    # Convert pin type to symbol if it's a string
+                    if i == 2 and isinstance(element, str):
+                        result += f" {element}"  # Pin type as bare symbol
+                    else:
+                        result += f" {self._format_element(element, 0)}"
+            
+            result += f"\n{indent})"
+            return result
 
     def _format_component_like(self, lst: List[Any], indent_level: int, rule: FormatRule) -> str:
         """Format component-like elements (symbol, wire, etc.)."""
@@ -386,6 +430,35 @@ class ExactFormatter:
         
         # For normal schematics, use standard multiline formatting
         return self._format_multiline(lst, indent_level, FormatRule())
+
+    def _format_pts(self, lst: List[Any], indent_level: int) -> str:
+        """Format pts elements with inline xy coordinates on indented line."""
+        if len(lst) < 2:
+            return self._format_inline(lst, FormatRule())
+            
+        indent = "\t" * indent_level
+        next_indent = "\t" * (indent_level + 1)
+        
+        # Format as:
+        # (pts
+        #     (xy x1 y1) (xy x2 y2)
+        # )
+        result = f"({lst[0]}"
+        
+        # Add xy elements on same indented line
+        if len(lst) > 1:
+            xy_elements = []
+            for element in lst[1:]:
+                if isinstance(element, list) and len(element) >= 3 and str(element[0]) == "xy":
+                    xy_elements.append(self._format_element(element, 0))
+                else:
+                    xy_elements.append(self._format_element(element, 0))
+            
+            if xy_elements:
+                result += f"\n{next_indent}{' '.join(xy_elements)}"
+        
+        result += f"\n{indent})"
+        return result
 
 
 class CompactFormatter(ExactFormatter):

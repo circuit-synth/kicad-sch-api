@@ -292,6 +292,7 @@ class ComponentCollection:
         position: Optional[Union[Point, Tuple[float, float]]] = None,
         footprint: Optional[str] = None,
         unit: int = 1,
+        component_uuid: Optional[str] = None,
         **properties,
     ) -> Component:
         """
@@ -304,6 +305,7 @@ class ComponentCollection:
             position: Component position (auto-placed if None)
             footprint: Component footprint
             unit: Unit number for multi-unit components (1-based)
+            component_uuid: Specific UUID for component (auto-generated if None)
             **properties: Additional component properties
 
         Returns:
@@ -337,7 +339,7 @@ class ComponentCollection:
 
         # Create component data
         component_data = SchematicSymbol(
-            uuid=str(uuid.uuid4()),
+            uuid=component_uuid if component_uuid else str(uuid.uuid4()),
             lib_id=lib_id,
             position=position,
             reference=reference,

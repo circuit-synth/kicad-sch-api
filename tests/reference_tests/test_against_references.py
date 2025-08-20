@@ -294,20 +294,125 @@ class TestAgainstReferences:
     
     # TODO: Add more test methods for other test scripts as they're implemented
     
-    @pytest.mark.skip(reason="Wire API not yet implemented")
     def test_single_wire(self):
         """Test single wire generation against reference."""
-        pass
+        script_path = self.test_dir / "test_single_wire.py"
+        reference_name = self.test_to_reference[script_path.name]
+        
+        if not reference_name:
+            pytest.skip(f"No reference project for {script_path.name}")
+        
+        reference_path = self.reference_dir / reference_name / f"{reference_name}.kicad_sch"
+        
+        # Run the test script
+        success, output, generated_path = self._run_test_script(script_path)
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Compare with reference
+        is_identical, diff = self._compare_schematics(generated_path, reference_path)
+        
+        if not is_identical:
+            # Try semantic comparison
+            with open(generated_path, 'r') as f:
+                gen_normalized = self._normalize_for_comparison(f.read())
+            with open(reference_path, 'r') as f:
+                ref_normalized = self._normalize_for_comparison(f.read())
+            
+            if gen_normalized == ref_normalized:
+                print(f"✅ {script_path.name}: Semantically equivalent (UUIDs differ)")
+            else:
+                print(f"❌ {script_path.name}: Files differ")
+                print("Diff output:")
+                print(diff[:2000])
+                pytest.fail("Generated schematic differs from reference")
+        else:
+            print(f"✅ {script_path.name}: Exact match with reference")
+        
+        # Clean up
+        if generated_path and generated_path.exists():
+            generated_path.unlink()
     
-    @pytest.mark.skip(reason="Label API not yet implemented")
     def test_single_label(self):
         """Test single label generation against reference."""
-        pass
+        script_path = self.test_dir / "test_single_label.py"
+        reference_name = self.test_to_reference[script_path.name]
+        
+        if not reference_name:
+            pytest.skip(f"No reference project for {script_path.name}")
+        
+        reference_path = self.reference_dir / reference_name / f"{reference_name}.kicad_sch"
+        
+        # Run the test script
+        success, output, generated_path = self._run_test_script(script_path)
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Compare with reference
+        is_identical, diff = self._compare_schematics(generated_path, reference_path)
+        
+        if not is_identical:
+            # Try semantic comparison
+            with open(generated_path, 'r') as f:
+                gen_normalized = self._normalize_for_comparison(f.read())
+            with open(reference_path, 'r') as f:
+                ref_normalized = self._normalize_for_comparison(f.read())
+            
+            if gen_normalized == ref_normalized:
+                print(f"✅ {script_path.name}: Semantically equivalent (UUIDs differ)")
+            else:
+                print(f"❌ {script_path.name}: Files differ")
+                print("Diff output:")
+                print(diff[:2000])
+                pytest.fail("Generated schematic differs from reference")
+        else:
+            print(f"✅ {script_path.name}: Exact match with reference")
+        
+        # Clean up
+        if generated_path and generated_path.exists():
+            generated_path.unlink()
     
-    @pytest.mark.skip(reason="Hierarchical sheet API not yet implemented")
     def test_single_hierarchical_sheet(self):
         """Test hierarchical sheet generation against reference."""
-        pass
+        script_path = self.test_dir / "test_single_hierarchical_sheet.py"
+        reference_name = self.test_to_reference[script_path.name]
+        
+        if not reference_name:
+            pytest.skip(f"No reference project for {script_path.name}")
+        
+        reference_path = self.reference_dir / reference_name / f"{reference_name}.kicad_sch"
+        
+        # Run the test script
+        success, output, generated_path = self._run_test_script(script_path)
+        
+        assert success, f"Test script failed: {output}"
+        assert generated_path and generated_path.exists(), "No output file generated"
+        
+        # Compare with reference
+        is_identical, diff = self._compare_schematics(generated_path, reference_path)
+        
+        if not is_identical:
+            # Try semantic comparison
+            with open(generated_path, 'r') as f:
+                gen_normalized = self._normalize_for_comparison(f.read())
+            with open(reference_path, 'r') as f:
+                ref_normalized = self._normalize_for_comparison(f.read())
+            
+            if gen_normalized == ref_normalized:
+                print(f"✅ {script_path.name}: Semantically equivalent (UUIDs differ)")
+            else:
+                print(f"❌ {script_path.name}: Files differ")
+                print("Diff output:")
+                print(diff[:2000])
+                pytest.fail("Generated schematic differs from reference")
+        else:
+            print(f"✅ {script_path.name}: Exact match with reference")
+        
+        # Clean up
+        if generated_path and generated_path.exists():
+            generated_path.unlink()
 
 
 if __name__ == "__main__":
