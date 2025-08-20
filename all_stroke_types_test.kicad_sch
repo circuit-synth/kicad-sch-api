@@ -1,0 +1,568 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "1ae68e42-5e6f-4761-a754-5f18440262a5")
+	(paper "A4")
+	(title_block
+		(title "All Stroke Types Test")
+	)
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 49.53 49.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "863efddb-6127-43cd-b5ef-e47e3e232499")
+		(property "Reference" "R1"
+			(at 52.07 48.2599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 52.07 50.7999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "40ba65be-80ee-44d8-b01c-c877ab30aced")
+		)
+		(pin "2"
+			(uuid "ac8acd63-e27c-443f-9027-cd49e90339e9")
+		)
+		(instances
+			(project "All Stroke Types Test"
+				(path "/1ae68e42-5e6f-4761-a754-5f18440262a5"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 80.01 49.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b78e7b79-6053-4f79-8195-63d7fee94bbd")
+		(property "Reference" "R2"
+			(at 82.55 48.2599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k"
+			(at 82.55 50.7999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "672a9b2d-d7f5-4cf8-a6c6-0a02e6154e17")
+		)
+		(pin "2"
+			(uuid "e5900afa-0e37-4551-91ab-fbd8b2f1d7c9")
+		)
+		(instances
+			(project "All Stroke Types Test"
+				(path "/1ae68e42-5e6f-4761-a754-5f18440262a5"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 110.49 49.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "36adc283-763b-4b33-8857-22b0c276eb19")
+		(property "Reference" "R3"
+			(at 113.03 48.2599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3k"
+			(at 113.03 50.7999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "486303d8-96b7-427a-aa7a-06fcb374c586")
+		)
+		(pin "2"
+			(uuid "c787c8eb-8a7d-4e37-98d3-fe0977de6f7a")
+		)
+		(instances
+			(project "All Stroke Types Test"
+				(path "/1ae68e42-5e6f-4761-a754-5f18440262a5"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 139.7 49.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0a16c84c-ec32-487d-96f6-f5c3b3023f79")
+		(property "Reference" "R4"
+			(at 142.24 48.2599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "4k"
+			(at 142.24 50.7999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "744337e3-9df0-493f-983b-33743c575aa7")
+		)
+		(pin "2"
+			(uuid "f4c8fd27-10e6-458e-9174-9bd1920d7132")
+		)
+		(instances
+			(project "All Stroke Types Test"
+				(path "/1ae68e42-5e6f-4761-a754-5f18440262a5"
+					(reference "R4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 170.18 49.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d0b2761c-f9c5-436a-8969-16181a03c513")
+		(property "Reference" "R5"
+			(at 172.72 48.2599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "5k"
+			(at 172.72 50.7999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "18598a03-fc45-46d4-95ef-872e2a33d46d")
+		)
+		(pin "2"
+			(uuid "e04dbd46-cc7e-4199-8af1-bafdedb98c7c")
+		)
+		(instances
+			(project "All Stroke Types Test"
+				(path "/1ae68e42-5e6f-4761-a754-5f18440262a5"
+					(reference "R5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 199.39 49.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b58f770c-3287-4d6f-882b-b48a74c8925e")
+		(property "Reference" "R6"
+			(at 201.93 48.2599 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "6k"
+			(at 201.93 50.7999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "444cfb67-6901-4bde-9bc8-c21a3de268d3")
+		)
+		(pin "2"
+			(uuid "c0a2aa0a-3eeb-4f76-b488-8fdfd5c4f874")
+		)
+		(instances
+			(project "All Stroke Types Test"
+				(path "/1ae68e42-5e6f-4761-a754-5f18440262a5"
+					(reference "R6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(text "KiCAD Stroke Types"
+		(exclude_from_sim no)
+		(at 20 90 0.0000)
+		(effects
+			(font
+				(size 2 2)
+			)
+		)
+		(uuid "896315da-a9e8-4e5c-91d5-98958f213b72")
+	)
+	(text "default      - black"
+		(exclude_from_sim no)
+		(at 20 85 0.0000)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "48bbe2f8-1323-4ba3-8909-b2abba1b76de")
+	)
+	(text "solid        - red"
+		(exclude_from_sim no)
+		(at 20 82 0.0000)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "d522126a-32a7-40af-8f23-bb1becf816dd")
+	)
+	(text "dash         - blue"
+		(exclude_from_sim no)
+		(at 20 79 0.0000)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "a9b68eca-5065-493c-a74a-be3934be1cbd")
+	)
+	(text "dot          - green"
+		(exclude_from_sim no)
+		(at 20 76 0.0000)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "a4066dab-b42e-424a-bc79-e289c3f34801")
+	)
+	(text "dash_dot     - magenta"
+		(exclude_from_sim no)
+		(at 20 73 0.0000)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "cb15992c-ae5a-4aa1-b8ce-d9ce54d75ed9")
+	)
+	(text "dash_dot_dot - cyan"
+		(exclude_from_sim no)
+		(at 20 70 0.0000)
+		(effects
+			(font
+				(size 1.2 1.2)
+			)
+		)
+		(uuid "8d4b614a-c551-45c6-9ebf-f2c201fd57e3")
+	)
+	(text "All rectangles are 0.8mm width"
+		(exclude_from_sim no)
+		(at 20 25 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d91c3752-fe01-401d-aea5-b85b5cfc335a")
+	)
+	(text "These are the only valid KiCAD stroke types"
+		(exclude_from_sim no)
+		(at 20 22 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ea117bfb-bd5b-41d7-967a-5e8a80a6ce79")
+	)
+	(rectangle
+		(start 47.371 43.561)
+		(end 51.689 55.499)
+		(stroke
+			(width 0.8)
+			(type default)
+			(color 0 0 0 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "79641295-dacb-4a87-a79d-6f295006f1ad")
+	)
+	(rectangle
+		(start 77.851 43.561)
+		(end 82.169 55.499)
+		(stroke
+			(width 0.8)
+			(type solid)
+			(color 255 0 0 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "06bce738-6c07-457c-85f0-aa0acd62e7d4")
+	)
+	(rectangle
+		(start 108.331 43.561)
+		(end 112.649 55.499)
+		(stroke
+			(width 0.8)
+			(type dash)
+			(color 0 0 255 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "963b3b8d-d8a3-4bd9-8aaa-e438ecc10c08")
+	)
+	(rectangle
+		(start 137.541 43.561)
+		(end 141.859 55.499)
+		(stroke
+			(width 0.8)
+			(type dot)
+			(color 0 255 0 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "fcd909ad-4bee-4ae0-b97e-e457f7d5f25d")
+	)
+	(rectangle
+		(start 168.021 43.561)
+		(end 172.339 55.499)
+		(stroke
+			(width 0.8)
+			(type dash_dot)
+			(color 255 0 255 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "e016c00e-28a4-46ac-9896-2d03a5239b10")
+	)
+	(rectangle
+		(start 197.231 43.561)
+		(end 201.549 55.499)
+		(stroke
+			(width 0.8)
+			(type dash_dot_dot)
+			(color 0 255 255 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "5dca8e04-c314-432d-8f88-0fea8c6d5f2c")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

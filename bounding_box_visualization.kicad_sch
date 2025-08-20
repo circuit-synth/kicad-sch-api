@@ -1,0 +1,621 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "387fbf5b-9df2-4c24-add2-a885e02165b0")
+	(paper "A4")
+	(title_block
+		(title "Bounding Box Visualization")
+	)
+	(lib_symbols
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "R res resistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "R_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(rectangle
+					(start -1.016 -2.54)
+					(end 1.016 2.54)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "R_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 25.4 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "8e777d70-36d3-4b21-a19d-87ab71b12bef")
+		(property "Reference" "R1"
+			(at 27.94 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1k"
+			(at 27.94 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "e6271cbe-e87c-477b-a0dd-19a5197aac2e")
+		)
+		(pin "2"
+			(uuid "80ecb628-e6d2-4d71-94bd-fe6887d48433")
+		)
+		(instances
+			(project "Bounding Box Visualization"
+				(path "/387fbf5b-9df2-4c24-add2-a885e02165b0"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 50.8 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0c919b86-eb08-42d2-910c-f3bbabe4afb2")
+		(property "Reference" "R2"
+			(at 53.34 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2k"
+			(at 53.34 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "ee518106-d58b-43e5-bb4e-e6ce6e429b18")
+		)
+		(pin "2"
+			(uuid "827416ef-5f9d-42df-87b9-68b71878f218")
+		)
+		(instances
+			(project "Bounding Box Visualization"
+				(path "/387fbf5b-9df2-4c24-add2-a885e02165b0"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 76.2 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7817d650-f7e0-45f1-9641-dc8c57e7bff2")
+		(property "Reference" "R3"
+			(at 78.74 49.5299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3k"
+			(at 78.74 52.0699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "28f5d8da-ab95-413f-96f8-685ca26a969d")
+		)
+		(pin "2"
+			(uuid "66711ba3-07dd-485f-85a0-517fd2f0ba34")
+		)
+		(instances
+			(project "Bounding Box Visualization"
+				(path "/387fbf5b-9df2-4c24-add2-a885e02165b0"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 25.4 25.4 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f968d696-8669-4e22-9298-494ebc00c41d")
+		(property "Reference" "R4"
+			(at 27.94 24.1299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "4k"
+			(at 27.94 26.6699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "be4db2de-286a-4bba-a79a-88400208f0f8")
+		)
+		(pin "2"
+			(uuid "162c1c52-2e98-4caf-b27c-9d651e1300ce")
+		)
+		(instances
+			(project "Bounding Box Visualization"
+				(path "/387fbf5b-9df2-4c24-add2-a885e02165b0"
+					(reference "R4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 76.2 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d3991275-65ce-43fd-9ae6-ab23bcf50f58")
+		(property "Reference" "R5"
+			(at 78.74 74.9299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "5k"
+			(at 78.74 77.4699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "1"
+			(uuid "0294ff7c-463f-4eeb-baad-cb95e98e8c0c")
+		)
+		(pin "2"
+			(uuid "9dd8c628-e648-4099-b293-58407d90845b")
+		)
+		(instances
+			(project "Bounding Box Visualization"
+				(path "/387fbf5b-9df2-4c24-add2-a885e02165b0"
+					(reference "R5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 25.4 46.99) (xy 50.8 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bfa56d07-a35e-4213-a4ec-abcd7ee43523")
+	)
+	(wire
+		(pts
+			(xy 50.8 46.99) (xy 50.8 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aabfa6e1-25bb-466c-8003-ca3673977932")
+	)
+	(wire
+		(pts
+			(xy 50.8 46.99) (xy 76.2 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2756be23-d9cb-4cfc-b9fd-48c64c30049e")
+	)
+	(wire
+		(pts
+			(xy 76.2 46.99) (xy 76.2 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "af02142c-982c-4235-9836-bceab5f622de")
+	)
+	(wire
+		(pts
+			(xy 25.4 29.21) (xy 76.2 29.21)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cf578758-2a1d-4c53-ad00-62f3b36acc50")
+	)
+	(wire
+		(pts
+			(xy 76.2 29.21) (xy 76.2 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "87d0fccc-9350-450c-92af-8f0653f3aa0b")
+	)
+	(text LEGEND:
+		(exclude_from_sim no)
+		(at 15 90 0.0000)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "7fed0dbe-8cfd-479b-bd43-e22057453e9a")
+	)
+	(text "Red = Component bounds"
+		(exclude_from_sim no)
+		(at 15 87 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "750179d6-7c22-4f1b-a78e-2961ddef6d31")
+	)
+	(text "Blue = With properties"
+		(exclude_from_sim no)
+		(at 15 84 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b48df515-ea85-4db0-9cd7-a2efcf79eb70")
+	)
+	(text "Green = Custom expanded"
+		(exclude_from_sim no)
+		(at 15 81 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "85b6e124-3562-4b63-96f3-0fb1259dcd87")
+	)
+	(text "Wires = Manhattan routing"
+		(exclude_from_sim no)
+		(at 15 78 0.0000)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "17968b23-434a-4acd-ab67-e7a8a27c982f")
+	)
+	(rectangle
+		(start 23.241 44.831)
+		(end 27.559 56.769)
+		(stroke
+			(width 0.254)
+			(type default)
+			(color 1 0.0000 0.0000 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "f6682dc1-6148-47a8-a078-43a879b71e0e")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 48.641 44.831)
+		(end 52.959 56.769)
+		(stroke
+			(width 0.254)
+			(type default)
+			(color 1 0.0000 0.0000 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "38c618d8-a583-4f18-961a-23e2b9c2eb8a")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 74.041 44.831)
+		(end 78.359 56.769)
+		(stroke
+			(width 0.254)
+			(type default)
+			(color 1 0.0000 0.0000 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "d1cfab6a-ccd3-43d4-9e4a-7ad34fd50952")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 23.241 19.431)
+		(end 27.559 31.369)
+		(stroke
+			(width 0.254)
+			(type default)
+			(color 1 0.0000 0.0000 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "bb431f2d-b971-4fd9-bc21-3ee716f5e23e")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 74.041 70.231)
+		(end 78.359 82.169)
+		(stroke
+			(width 0.254)
+			(type default)
+			(color 1 0.0000 0.0000 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "e2c90ece-7409-480e-9622-1b23c045fcb9")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 20.4 37.291)
+		(end 30.4 69.309)
+		(stroke
+			(width 0.1524)
+			(type default)
+			(color 0.0000 0.0000 1 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "80d29b4b-59e4-41e4-89c0-2ce20f66c456")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 45.8 37.291)
+		(end 55.8 69.309)
+		(stroke
+			(width 0.1524)
+			(type default)
+			(color 0.0000 0.0000 1 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "1915e09f-5fac-4aba-b9cd-e96e2e3bc01d")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 71.2 37.291)
+		(end 81.2 69.309)
+		(stroke
+			(width 0.1524)
+			(type default)
+			(color 0.0000 0.0000 1 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "bd021260-98bb-4c73-aea4-4e3a21f2c48d")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 20.4 11.891)
+		(end 30.4 43.909)
+		(stroke
+			(width 0.1524)
+			(type default)
+			(color 0.0000 0.0000 1 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "a0325d27-5722-4944-83c4-9e0f52e751f3")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 71.2 62.691)
+		(end 81.2 94.709)
+		(stroke
+			(width 0.1524)
+			(type default)
+			(color 0.0000 0.0000 1 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "bac97671-6367-4bc4-b20f-fbbbf0a9cc79")
+		(exclude_from_sim no)
+	)
+	(rectangle
+		(start 71.501 42.291)
+		(end 80.899 59.309)
+		(stroke
+			(width 0.508)
+			(type default)
+			(color 0.0000 1 0.0000 1)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "ed84697e-2ed4-4004-ae6b-0c2cbdcd8db7")
+		(exclude_from_sim no)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

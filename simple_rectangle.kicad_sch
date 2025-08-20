@@ -1,0 +1,29 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "27dfc2fc-00da-4852-b337-637c1ea8aa75")
+	(paper "A4")
+	(title_block
+		(title "Simple Rectangle Test")
+	)
+	(lib_symbols)
+	(rectangle
+		(start 100 50)
+		(end 130 80)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "3dace024-5fbc-4954-b7b2-847ba30d15d3")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

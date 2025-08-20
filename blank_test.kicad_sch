@@ -1,0 +1,29 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "87f956e9-381e-420d-98c2-254ffb51ddc8")
+	(paper "A4")
+	(title_block
+		(title "Blank Test")
+	)
+	(lib_symbols)
+	(rectangle
+		(start 102.87 53.34)
+		(end 134.62 81.28)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(fill
+			(type none)
+		)
+		(uuid 4107de82-c95d-49bc-b241-07df88719078)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

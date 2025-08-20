@@ -1236,7 +1236,7 @@ class SExpressionParser:
         
         sexp.append([sexpdata.Symbol("end"), end_x, end_y])
         
-        # Add stroke information (KiCAD format: width and type only, no color)
+        # Add stroke information (KiCAD format: width, type, and optionally color)
         stroke = graphic_data.get("stroke", {})
         stroke_sexp = [sexpdata.Symbol("stroke")]
         
@@ -1246,9 +1246,41 @@ class SExpressionParser:
             stroke_width = 0
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         
-        # Stroke type
+        # Stroke type - normalize to KiCAD format and validate
         stroke_type = stroke.get("type", "default")
-        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        
+        # KiCAD only supports these exact stroke types
+        valid_kicad_types = {"solid", "dash", "dash_dot", "dash_dot_dot", "dot", "default"}
+        
+        # Map common variations to KiCAD format
+        stroke_type_map = {
+            "dashdot": "dash_dot",
+            "dash-dot": "dash_dot", 
+            "dashdotdot": "dash_dot_dot",
+            "dash-dot-dot": "dash_dot_dot",
+            "solid": "solid",
+            "dash": "dash",
+            "dot": "dot",
+            "default": "default"
+        }
+        
+        # Normalize and validate
+        normalized_stroke_type = stroke_type_map.get(stroke_type.lower(), stroke_type)
+        if normalized_stroke_type not in valid_kicad_types:
+            normalized_stroke_type = "default"  # Fallback to default for invalid types
+            
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(normalized_stroke_type)])
+        
+        # Stroke color (if specified) - KiCAD format uses RGB 0-255 values plus alpha
+        stroke_color = stroke.get("color")
+        if stroke_color:
+            if isinstance(stroke_color, str):
+                # Convert string color names to RGB 0-255 values
+                color_rgb = self._color_to_rgb255(stroke_color)
+                stroke_sexp.append([sexpdata.Symbol("color")] + color_rgb + [1])  # Add alpha=1
+            elif isinstance(stroke_color, (list, tuple)) and len(stroke_color) >= 3:
+                # Use provided RGB values directly 
+                stroke_sexp.append([sexpdata.Symbol("color")] + list(stroke_color))
         
         sexp.append(stroke_sexp)
         
@@ -1268,8 +1300,8 @@ class SExpressionParser:
         return sexp
 
     def _color_to_rgba(self, color_name: str) -> List[float]:
-        """Convert color name to RGBA values for KiCAD compatibility."""
-        # Basic color mapping for common colors
+        """Convert color name to RGBA values (0.0-1.0) for KiCAD compatibility."""
+        # Basic color mapping for common colors (0.0-1.0 range)
         color_map = {
             "red": [1.0, 0.0, 0.0, 1.0],
             "blue": [0.0, 0.0, 1.0, 1.0], 
@@ -1287,6 +1319,27 @@ class SExpressionParser:
         
         # Return RGBA values, default to black if color not found
         return color_map.get(color_name.lower(), [0.0, 0.0, 0.0, 1.0])
+
+    def _color_to_rgb255(self, color_name: str) -> List[int]:
+        """Convert color name to RGB values (0-255) for KiCAD rectangle graphics."""
+        # Basic color mapping for common colors (0-255 range)
+        color_map = {
+            "red": [255, 0, 0],
+            "blue": [0, 0, 255], 
+            "green": [0, 255, 0],
+            "yellow": [255, 255, 0],
+            "magenta": [255, 0, 255],
+            "cyan": [0, 255, 255],
+            "black": [0, 0, 0],
+            "white": [255, 255, 255],
+            "gray": [128, 128, 128],
+            "grey": [128, 128, 128],
+            "orange": [255, 128, 0],
+            "purple": [128, 0, 128],
+        }
+        
+        # Return RGB values, default to black if color not found
+        return color_map.get(color_name.lower(), [0, 0, 0])
 
     def get_validation_issues(self) -> List[ValidationIssue]:
         """Get list of validation issues from last parse operation."""

@@ -1167,7 +1167,8 @@ class Schematic:
         self, 
         bbox: 'BoundingBox', 
         stroke_width: float = 0,
-        stroke_color: str = "default",
+        stroke_color: str = None,
+        stroke_type: str = "default",
         exclude_from_sim: bool = False
     ) -> str:
         """
@@ -1175,8 +1176,9 @@ class Schematic:
         
         Args:
             bbox: BoundingBox to draw
-            stroke_width: Line width for the rectangle
-            stroke_color: Color name for the rectangle (red, blue, green, etc.)
+            stroke_width: Line width for the rectangle (0 = thin, 1 = 1mm, etc.)
+            stroke_color: Color name ('red', 'blue', 'green', etc.) or None for default
+            stroke_type: Stroke type - KiCAD supports: 'default', 'solid', 'dash', 'dot', 'dash_dot', 'dash_dot_dot'
             exclude_from_sim: Exclude from simulation
             
         Returns:
@@ -1188,14 +1190,20 @@ class Schematic:
         rect_uuid = str(uuid.uuid4())
         
         # Create rectangle data structure in KiCAD dictionary format
+        stroke_data = {
+            "width": stroke_width,
+            "type": stroke_type
+        }
+        
+        # Add color if specified
+        if stroke_color:
+            stroke_data["color"] = stroke_color
+        
         rectangle_data = {
             "uuid": rect_uuid,
             "start": {"x": bbox.min_x, "y": bbox.min_y},
             "end": {"x": bbox.max_x, "y": bbox.max_y},
-            "stroke": {
-                "width": stroke_width,
-                "type": "default"
-            },
+            "stroke": stroke_data,
             "fill": {"type": "none"}
         }
         
@@ -1213,7 +1221,8 @@ class Schematic:
         self, 
         include_properties: bool = False,
         stroke_width: float = 0.254,
-        stroke_color: str = "red"
+        stroke_color: str = "red",
+        stroke_type: str = "default"
     ) -> List[str]:
         """
         Draw bounding boxes for all components in the schematic.
@@ -1222,9 +1231,10 @@ class Schematic:
             include_properties: Include space for Reference/Value labels
             stroke_width: Line width for rectangles
             stroke_color: Color for rectangles
+            stroke_type: Stroke type for rectangles
             
         Returns:
-            List of UUIDs for created polyline elements
+            List of UUIDs for created rectangle elements
         """
         from .component_bounds import get_component_bounding_box
         
@@ -1232,7 +1242,7 @@ class Schematic:
         
         for component in self._components:
             bbox = get_component_bounding_box(component, include_properties)
-            rect_uuid = self.draw_bounding_box(bbox, stroke_width, stroke_color)
+            rect_uuid = self.draw_bounding_box(bbox, stroke_width, stroke_color, stroke_type)
             uuids.append(rect_uuid)
             
         logger.info(f"Drew {len(uuids)} component bounding boxes")
