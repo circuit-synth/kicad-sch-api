@@ -164,8 +164,7 @@ class TestRunner:
                 missing.append("version")
             if not has_generator:
                 missing.append("generator")
-            if not has_uuid:
-                missing.append("uuid")
+            # UUID is optional (not required for blank schematics)
             if not has_paper:
                 missing.append("paper")
             

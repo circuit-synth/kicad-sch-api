@@ -307,7 +307,10 @@ class SExpressionParser:
 
         # Add symbol_instances (required by KiCAD)
         symbol_instances = schematic_data.get("symbol_instances", [])
-        if symbol_instances or schematic_data.get("components"):
+        # Always include for blank schematics (no UUID, no embedded_fonts)
+        is_blank_schematic = (not schematic_data.get("uuid") and 
+                             schematic_data.get("embedded_fonts") is None)
+        if symbol_instances or schematic_data.get("components") or is_blank_schematic:
             sexp_data.append([sexpdata.Symbol("symbol_instances")])
 
         # Add embedded_fonts (required by KiCAD)
