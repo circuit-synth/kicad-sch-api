@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-01-20
+
+### Added
+- **Professional PyPI Release**: First official release to Python Package Index
+- **Enhanced Bounding Box Visualization**: 
+  - Colored rectangle support with all KiCAD stroke types
+  - Support for solid, dash, dot, dash_dot, dash_dot_dot line styles
+  - Component bounding box visualization with color customization
+- **Improved Manhattan Routing**:
+  - Enhanced obstacle avoidance algorithms
+  - Perfect KiCAD grid alignment (1.27mm grid)
+  - Multiple routing strategies and clearance options
+- **Code Quality Improvements**:
+  - Formatted with black for consistent style
+  - Import sorting with isort
+  - Enhanced type checking coverage
+- **Comprehensive Testing**:
+  - 71 passing tests with 6 intentionally skipped
+  - Enhanced test coverage for new features
+  - Format preservation validation
+
+### Enhanced
+- **Exact Format Preservation**: Improved KiCAD format compatibility
+- **Parser & Formatter**: Enhanced S-expression handling
+- **Performance**: Optimized for professional use cases
+
+### Technical
+- **Dependencies**: Updated build system and packaging
+- **Documentation**: Enhanced API documentation
+- **CI/CD**: Professional package validation and testing
+
 ## [0.3.1] - 2025-01-20
 
 ### Added
