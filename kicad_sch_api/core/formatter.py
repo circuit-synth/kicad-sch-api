@@ -261,7 +261,15 @@ class ExactFormatter:
             return self._format_property(lst, indent_level)
         elif tag == "pin":
             return self._format_pin(lst, indent_level)
-        elif tag in ("symbol", "wire", "junction", "label", "hierarchical_label", "polyline", "rectangle"):
+        elif tag in (
+            "symbol",
+            "wire",
+            "junction",
+            "label",
+            "hierarchical_label",
+            "polyline",
+            "rectangle",
+        ):
             return self._format_component_like(lst, indent_level, rule)
         else:
             return self._format_generic_multiline(lst, indent_level, rule)
@@ -425,7 +433,8 @@ class ExactFormatter:
         has_components = any(
             isinstance(item, list)
             and len(item) > 0
-            and str(item[0]) in ["symbol", "wire", "junction", "text", "sheet", "polyline", "rectangle", "graphics"]
+            and str(item[0])
+            in ["symbol", "wire", "junction", "text", "sheet", "polyline", "rectangle", "graphics"]
             for item in lst[1:]
         )
 

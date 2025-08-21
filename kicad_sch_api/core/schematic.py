@@ -713,83 +713,90 @@ class Schematic:
 
     # Wire routing and connectivity methods
     def auto_route_pins(
-        self, 
-        comp1_ref: str, 
-        pin1_num: str, 
-        comp2_ref: str, 
-        pin2_num: str, 
+        self,
+        comp1_ref: str,
+        pin1_num: str,
+        comp2_ref: str,
+        pin2_num: str,
         routing_mode: str = "direct",
-        clearance: float = 2.54
+        clearance: float = 2.54,
     ) -> Optional[str]:
         """
         Auto route between two pins with configurable routing strategies.
-        
+
         All positions are snapped to KiCAD's 1.27mm grid for exact electrical connections.
-        
-        Args:
-            comp1_ref: First component reference (e.g., 'R1')
-            pin1_num: First component pin number (e.g., '1')
-            comp2_ref: Second component reference (e.g., 'R2') 
-            pin2_num: Second component pin number (e.g., '2')
-            routing_mode: Routing strategy:
-                - "direct": Direct connection through components (default)
-                - "manhattan": Manhattan routing with obstacle avoidance
-            clearance: Clearance from obstacles in mm (for manhattan mode)
-            
-        Returns:
-            UUID of created wire, or None if routing failed
-        """
-        from .wire_routing import route_pins_direct, snap_to_kicad_grid
-        
-        # Get pin positions
-        pin1_pos = self.get_component_pin_position(comp1_ref, pin1_num)
-        pin2_pos = self.get_component_pin_position(comp2_ref, pin2_num)
-        
-        if not pin1_pos or not pin2_pos:
-            return None
-        
-        # Ensure positions are grid-snapped
-        pin1_pos = snap_to_kicad_grid(pin1_pos)
-        pin2_pos = snap_to_kicad_grid(pin2_pos)
-        
-        # Choose routing strategy
-        if routing_mode.lower() == "manhattan":
-            # Manhattan routing with obstacle avoidance
-            from .simple_manhattan import auto_route_with_manhattan
-            
-            # Get component objects
-            comp1 = self.components.get(comp1_ref)
-            comp2 = self.components.get(comp2_ref)
-            
-            if not comp1 or not comp2:
-                logger.warning(f"Component not found: {comp1_ref} or {comp2_ref}")
-                return None
-            
-            return auto_route_with_manhattan(
-                self, comp1, pin1_num, comp2, pin2_num,
-                avoid_components=None,  # Avoid all other components
-                clearance=clearance
-            )
-        else:
-            # Default direct routing - just connect the pins
-            return self.add_wire(pin1_pos, pin2_pos)
-    
-    def are_pins_connected(self, comp1_ref: str, pin1_num: str, comp2_ref: str, pin2_num: str) -> bool:
-        """
-        Detect when two pins are connected via wire routing.
-        
+
         Args:
             comp1_ref: First component reference (e.g., 'R1')
             pin1_num: First component pin number (e.g., '1')
             comp2_ref: Second component reference (e.g., 'R2')
             pin2_num: Second component pin number (e.g., '2')
-            
+            routing_mode: Routing strategy:
+                - "direct": Direct connection through components (default)
+                - "manhattan": Manhattan routing with obstacle avoidance
+            clearance: Clearance from obstacles in mm (for manhattan mode)
+
+        Returns:
+            UUID of created wire, or None if routing failed
+        """
+        from .wire_routing import route_pins_direct, snap_to_kicad_grid
+
+        # Get pin positions
+        pin1_pos = self.get_component_pin_position(comp1_ref, pin1_num)
+        pin2_pos = self.get_component_pin_position(comp2_ref, pin2_num)
+
+        if not pin1_pos or not pin2_pos:
+            return None
+
+        # Ensure positions are grid-snapped
+        pin1_pos = snap_to_kicad_grid(pin1_pos)
+        pin2_pos = snap_to_kicad_grid(pin2_pos)
+
+        # Choose routing strategy
+        if routing_mode.lower() == "manhattan":
+            # Manhattan routing with obstacle avoidance
+            from .simple_manhattan import auto_route_with_manhattan
+
+            # Get component objects
+            comp1 = self.components.get(comp1_ref)
+            comp2 = self.components.get(comp2_ref)
+
+            if not comp1 or not comp2:
+                logger.warning(f"Component not found: {comp1_ref} or {comp2_ref}")
+                return None
+
+            return auto_route_with_manhattan(
+                self,
+                comp1,
+                pin1_num,
+                comp2,
+                pin2_num,
+                avoid_components=None,  # Avoid all other components
+                clearance=clearance,
+            )
+        else:
+            # Default direct routing - just connect the pins
+            return self.add_wire(pin1_pos, pin2_pos)
+
+    def are_pins_connected(
+        self, comp1_ref: str, pin1_num: str, comp2_ref: str, pin2_num: str
+    ) -> bool:
+        """
+        Detect when two pins are connected via wire routing.
+
+        Args:
+            comp1_ref: First component reference (e.g., 'R1')
+            pin1_num: First component pin number (e.g., '1')
+            comp2_ref: Second component reference (e.g., 'R2')
+            pin2_num: Second component pin number (e.g., '2')
+
         Returns:
             True if pins are connected via wires, False otherwise
         """
         from .wire_routing import are_pins_connected
+
         return are_pins_connected(self, comp1_ref, pin1_num, comp2_ref, pin2_num)
-    
+
     # Legacy method names for compatibility
     def connect_pins_with_wire(
         self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
@@ -1164,87 +1171,84 @@ class Schematic:
         logger.debug(f"Set title block: {title} rev {rev}")
 
     def draw_bounding_box(
-        self, 
-        bbox: 'BoundingBox', 
+        self,
+        bbox: "BoundingBox",
         stroke_width: float = 0,
         stroke_color: str = None,
         stroke_type: str = "default",
-        exclude_from_sim: bool = False
+        exclude_from_sim: bool = False,
     ) -> str:
         """
         Draw a component bounding box as a visual rectangle using KiCAD rectangle graphics.
-        
+
         Args:
             bbox: BoundingBox to draw
             stroke_width: Line width for the rectangle (0 = thin, 1 = 1mm, etc.)
             stroke_color: Color name ('red', 'blue', 'green', etc.) or None for default
             stroke_type: Stroke type - KiCAD supports: 'default', 'solid', 'dash', 'dot', 'dash_dot', 'dash_dot_dot'
             exclude_from_sim: Exclude from simulation
-            
+
         Returns:
             UUID of created rectangle element
         """
         # Import BoundingBox type
         from .component_bounds import BoundingBox
-        
+
         rect_uuid = str(uuid.uuid4())
-        
+
         # Create rectangle data structure in KiCAD dictionary format
-        stroke_data = {
-            "width": stroke_width,
-            "type": stroke_type
-        }
-        
+        stroke_data = {"width": stroke_width, "type": stroke_type}
+
         # Add color if specified
         if stroke_color:
             stroke_data["color"] = stroke_color
-        
+
         rectangle_data = {
             "uuid": rect_uuid,
             "start": {"x": bbox.min_x, "y": bbox.min_y},
             "end": {"x": bbox.max_x, "y": bbox.max_y},
             "stroke": stroke_data,
-            "fill": {"type": "none"}
+            "fill": {"type": "none"},
         }
-        
+
         # Add to schematic data
         if "graphics" not in self._data:
             self._data["graphics"] = []
-        
+
         self._data["graphics"].append(rectangle_data)
         self._modified = True
-        
+
         logger.debug(f"Drew bounding box rectangle: {bbox}")
         return rect_uuid
 
     def draw_component_bounding_boxes(
-        self, 
+        self,
         include_properties: bool = False,
         stroke_width: float = 0.254,
         stroke_color: str = "red",
-        stroke_type: str = "default"
+        stroke_type: str = "default",
     ) -> List[str]:
         """
         Draw bounding boxes for all components in the schematic.
-        
+
         Args:
             include_properties: Include space for Reference/Value labels
             stroke_width: Line width for rectangles
             stroke_color: Color for rectangles
             stroke_type: Stroke type for rectangles
-            
+
         Returns:
             List of UUIDs for created rectangle elements
         """
         from .component_bounds import get_component_bounding_box
-        
+
         uuids = []
-        
+
         for component in self._components:
             bbox = get_component_bounding_box(component, include_properties)
             rect_uuid = self.draw_bounding_box(bbox, stroke_width, stroke_color, stroke_type)
             uuids.append(rect_uuid)
-            
+
         logger.info(f"Drew {len(uuids)} component bounding boxes")
         return uuids
 

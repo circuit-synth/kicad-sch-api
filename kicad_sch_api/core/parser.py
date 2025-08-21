@@ -1209,68 +1209,68 @@ class SExpressionParser:
         """Convert graphics (rectangles, etc.) to S-expression."""
         # For now, we only support rectangles - this is the main graphics element we create
         sexp = [sexpdata.Symbol("rectangle")]
-        
+
         # Add start position
         start = graphic_data.get("start", {})
         start_x = start.get("x", 0)
         start_y = start.get("y", 0)
-        
+
         # Format coordinates properly (avoid unnecessary .0 for integers)
         if isinstance(start_x, float) and start_x.is_integer():
             start_x = int(start_x)
         if isinstance(start_y, float) and start_y.is_integer():
             start_y = int(start_y)
-        
+
         sexp.append([sexpdata.Symbol("start"), start_x, start_y])
-        
+
         # Add end position
         end = graphic_data.get("end", {})
         end_x = end.get("x", 0)
         end_y = end.get("y", 0)
-        
+
         # Format coordinates properly (avoid unnecessary .0 for integers)
         if isinstance(end_x, float) and end_x.is_integer():
             end_x = int(end_x)
         if isinstance(end_y, float) and end_y.is_integer():
             end_y = int(end_y)
-        
+
         sexp.append([sexpdata.Symbol("end"), end_x, end_y])
-        
+
         # Add stroke information (KiCAD format: width, type, and optionally color)
         stroke = graphic_data.get("stroke", {})
         stroke_sexp = [sexpdata.Symbol("stroke")]
-        
+
         # Stroke width - default to 0 to match KiCAD behavior
         stroke_width = stroke.get("width", 0)
         if isinstance(stroke_width, float) and stroke_width == 0.0:
             stroke_width = 0
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
-        
+
         # Stroke type - normalize to KiCAD format and validate
         stroke_type = stroke.get("type", "default")
-        
+
         # KiCAD only supports these exact stroke types
         valid_kicad_types = {"solid", "dash", "dash_dot", "dash_dot_dot", "dot", "default"}
-        
+
         # Map common variations to KiCAD format
         stroke_type_map = {
             "dashdot": "dash_dot",
-            "dash-dot": "dash_dot", 
+            "dash-dot": "dash_dot",
             "dashdotdot": "dash_dot_dot",
             "dash-dot-dot": "dash_dot_dot",
             "solid": "solid",
             "dash": "dash",
             "dot": "dot",
-            "default": "default"
+            "default": "default",
         }
-        
+
         # Normalize and validate
         normalized_stroke_type = stroke_type_map.get(stroke_type.lower(), stroke_type)
         if normalized_stroke_type not in valid_kicad_types:
             normalized_stroke_type = "default"  # Fallback to default for invalid types
-            
+
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(normalized_stroke_type)])
-        
+
         # Stroke color (if specified) - KiCAD format uses RGB 0-255 values plus alpha
         stroke_color = stroke.get("color")
         if stroke_color:
@@ -1279,24 +1279,24 @@ class SExpressionParser:
                 color_rgb = self._color_to_rgb255(stroke_color)
                 stroke_sexp.append([sexpdata.Symbol("color")] + color_rgb + [1])  # Add alpha=1
             elif isinstance(stroke_color, (list, tuple)) and len(stroke_color) >= 3:
-                # Use provided RGB values directly 
+                # Use provided RGB values directly
                 stroke_sexp.append([sexpdata.Symbol("color")] + list(stroke_color))
-        
+
         sexp.append(stroke_sexp)
-        
+
         # Add fill information
         fill = graphic_data.get("fill", {"type": "none"})
         fill_type = fill.get("type", "none")
         fill_sexp = [sexpdata.Symbol("fill"), [sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)]]
         sexp.append(fill_sexp)
-        
+
         # Add UUID (no quotes around UUID in KiCAD format)
         if "uuid" in graphic_data:
             uuid_str = graphic_data["uuid"]
             # Remove quotes and convert to Symbol to match KiCAD format
-            uuid_clean = uuid_str.replace('"', '')
+            uuid_clean = uuid_str.replace('"', "")
             sexp.append([sexpdata.Symbol("uuid"), sexpdata.Symbol(uuid_clean)])
-        
+
         return sexp
 
     def _color_to_rgba(self, color_name: str) -> List[float]:
@@ -1304,7 +1304,7 @@ class SExpressionParser:
         # Basic color mapping for common colors (0.0-1.0 range)
         color_map = {
             "red": [1.0, 0.0, 0.0, 1.0],
-            "blue": [0.0, 0.0, 1.0, 1.0], 
+            "blue": [0.0, 0.0, 1.0, 1.0],
             "green": [0.0, 1.0, 0.0, 1.0],
             "yellow": [1.0, 1.0, 0.0, 1.0],
             "magenta": [1.0, 0.0, 1.0, 1.0],
@@ -1316,7 +1316,7 @@ class SExpressionParser:
             "orange": [1.0, 0.5, 0.0, 1.0],
             "purple": [0.5, 0.0, 0.5, 1.0],
         }
-        
+
         # Return RGBA values, default to black if color not found
         return color_map.get(color_name.lower(), [0.0, 0.0, 0.0, 1.0])
 
@@ -1325,7 +1325,7 @@ class SExpressionParser:
         # Basic color mapping for common colors (0-255 range)
         color_map = {
             "red": [255, 0, 0],
-            "blue": [0, 0, 255], 
+            "blue": [0, 0, 255],
             "green": [0, 255, 0],
             "yellow": [255, 255, 0],
             "magenta": [255, 0, 255],
@@ -1337,7 +1337,7 @@ class SExpressionParser:
             "orange": [255, 128, 0],
             "purple": [128, 0, 128],
         }
-        
+
         # Return RGB values, default to black if color not found
         return color_map.get(color_name.lower(), [0, 0, 0])
 
