@@ -815,6 +815,59 @@ class Schematic:
         logger.debug(f"Added text box: '{text}' at {position} size {size}")
         return text_box.uuid
 
+    def add_rectangle(
+        self,
+        start: Union[Point, Tuple[float, float]],
+        end: Union[Point, Tuple[float, float]],
+        stroke_width: float = 0.0,
+        stroke_type: str = "default",
+        fill_type: str = "none"
+    ) -> str:
+        """
+        Add a graphical rectangle element.
+
+        Args:
+            start: Rectangle start point (top-left)
+            end: Rectangle end point (bottom-right)
+            stroke_width: Border line width
+            stroke_type: Border line type (default, solid, dash, dot, etc.)
+            fill_type: Fill type (none, solid, etc.)
+
+        Returns:
+            UUID of created rectangle element
+        """
+        if isinstance(start, tuple):
+            start = Point(start[0], start[1])
+        if isinstance(end, tuple):
+            end = Point(end[0], end[1])
+
+        from .types import SchematicRectangle
+
+        rectangle = SchematicRectangle(
+            uuid=str(uuid.uuid4()),
+            start=start,
+            end=end,
+            stroke_width=stroke_width,
+            stroke_type=stroke_type,
+            fill_type=fill_type
+        )
+
+        if "rectangles" not in self._data:
+            self._data["rectangles"] = []
+
+        self._data["rectangles"].append({
+            "uuid": rectangle.uuid,
+            "start": {"x": rectangle.start.x, "y": rectangle.start.y},
+            "end": {"x": rectangle.end.x, "y": rectangle.end.y},
+            "stroke_width": rectangle.stroke_width,
+            "stroke_type": rectangle.stroke_type,
+            "fill_type": rectangle.fill_type
+        })
+        self._modified = True
+
+        logger.debug(f"Added rectangle: {start} to {end}")
+        return rectangle.uuid
+
     def set_title_block(
         self,
         title: str = "",

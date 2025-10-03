@@ -187,6 +187,7 @@ class SExpressionParser:
             "wires": [],
             "junctions": [],
             "labels": [],
+            "rectangles": [],
             "nets": [],
             "lib_symbols": {},
             "sheet_instances": [],
@@ -232,6 +233,10 @@ class SExpressionParser:
                 label = self._parse_label(item)
                 if label:
                     schematic_data["labels"].append(label)
+            elif element_type == "rectangle":
+                rectangle = self._parse_rectangle(item)
+                if rectangle:
+                    schematic_data["rectangles"].append(rectangle)
             elif element_type == "lib_symbols":
                 schematic_data["lib_symbols"] = self._parse_lib_symbols(item)
             elif element_type == "sheet_instances":
@@ -299,6 +304,10 @@ class SExpressionParser:
         # Add text boxes
         for text_box in schematic_data.get("text_boxes", []):
             sexp_data.append(self._text_box_to_sexp(text_box))
+
+        # Add rectangles
+        for rectangle in schematic_data.get("rectangles", []):
+            sexp_data.append(self._rectangle_to_sexp(rectangle))
 
         # Add sheet_instances (required by KiCAD)
         sheet_instances = schematic_data.get("sheet_instances", [])
@@ -412,6 +421,37 @@ class SExpressionParser:
         """Parse a label definition."""
         # Implementation for label parsing
         return {}
+
+    def _parse_rectangle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a rectangle graphical element."""
+        rectangle = {}
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0])
+
+            if elem_type == "start" and len(elem) >= 3:
+                rectangle["start"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "end" and len(elem) >= 3:
+                rectangle["end"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "stroke":
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list):
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width" and len(stroke_elem) >= 2:
+                            rectangle["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type" and len(stroke_elem) >= 2:
+                            rectangle["stroke_type"] = str(stroke_elem[1])
+            elif elem_type == "fill":
+                for fill_elem in elem[1:]:
+                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
+                        rectangle["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+            elif elem_type == "uuid" and len(elem) >= 2:
+                rectangle["uuid"] = str(elem[1])
+
+        return rectangle if rectangle else None
 
     def _parse_lib_symbols(self, item: List[Any]) -> Dict[str, Any]:
         """Parse lib_symbols section."""
@@ -939,7 +979,41 @@ class SExpressionParser:
         # Add UUID
         if "uuid" in text_box_data:
             sexp.append([sexpdata.Symbol("uuid"), text_box_data["uuid"]])
-        
+
+        return sexp
+
+    def _rectangle_to_sexp(self, rectangle_data: Dict[str, Any]) -> List[Any]:
+        """Convert rectangle element to S-expression."""
+        sexp = [sexpdata.Symbol("rectangle")]
+
+        # Add start point
+        start = rectangle_data["start"]
+        start_x, start_y = start["x"], start["y"]
+        sexp.append([sexpdata.Symbol("start"), start_x, start_y])
+
+        # Add end point
+        end = rectangle_data["end"]
+        end_x, end_y = end["x"], end["y"]
+        sexp.append([sexpdata.Symbol("end"), end_x, end_y])
+
+        # Add stroke
+        stroke_width = rectangle_data.get("stroke_width", 0)
+        stroke_type = rectangle_data.get("stroke_type", "default")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+
+        # Add fill
+        fill_type = rectangle_data.get("fill_type", "none")
+        fill_sexp = [sexpdata.Symbol("fill")]
+        fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
+        sexp.append(fill_sexp)
+
+        # Add UUID
+        if "uuid" in rectangle_data:
+            sexp.append([sexpdata.Symbol("uuid"), rectangle_data["uuid"]])
+
         return sexp
 
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:

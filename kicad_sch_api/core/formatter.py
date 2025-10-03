@@ -104,6 +104,12 @@ class ExactFormatter:
         self.rules["junction"] = FormatRule(inline=False)
         self.rules["diameter"] = FormatRule(inline=True)
 
+        # Graphical elements
+        self.rules["rectangle"] = FormatRule(inline=False)
+        self.rules["start"] = FormatRule(inline=True)
+        self.rules["end"] = FormatRule(inline=True)
+        self.rules["fill"] = FormatRule(inline=False)
+
         # Labels
         self.rules["label"] = FormatRule(inline=False, quote_indices={1})
         self.rules["global_label"] = FormatRule(inline=False, quote_indices={1})
