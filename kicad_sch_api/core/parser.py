@@ -513,14 +513,29 @@ class SExpressionParser:
             sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
 
         # Add instances section (required by KiCAD)
-        project_name = "simple_circuit"  # TODO: Get from schematic context
-        root_uuid = schematic_uuid or symbol_data.get("root_uuid", str(uuid.uuid4()))
-        logger.debug(f"🔧 Using UUID {root_uuid} for component {symbol_data.get('reference', 'unknown')}")
+        # Get project name from component properties if available, otherwise use default
+        project_name = symbol_data.get("properties", {}).get("project_name", "simple_circuit")
+
+        # CRITICAL FIX: Use the FULL hierarchy_path from properties if available
+        # For hierarchical schematics, this contains the complete path: /root_uuid/sheet_symbol_uuid/...
+        # This ensures KiCad can properly annotate components in sub-sheets
+        hierarchy_path = symbol_data.get("properties", {}).get("hierarchy_path")
+        if hierarchy_path:
+            # Use the full hierarchical path (includes root + all sheet symbols)
+            instance_path = hierarchy_path
+            logger.debug(f"🔧 Using FULL hierarchy_path: {instance_path} for component {symbol_data.get('reference', 'unknown')}")
+        else:
+            # Fallback: use root_uuid or schematic_uuid for flat designs
+            root_uuid = symbol_data.get("properties", {}).get("root_uuid") or schematic_uuid or str(uuid.uuid4())
+            instance_path = f"/{root_uuid}"
+            logger.debug(f"🔧 Using root UUID path: {instance_path} for component {symbol_data.get('reference', 'unknown')}")
+
         logger.debug(f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}")
+        logger.debug(f"🔧 Using project name: '{project_name}' from properties")
         sexp.append([
             sexpdata.Symbol("instances"),
             [sexpdata.Symbol("project"), project_name,
-             [sexpdata.Symbol("path"), f"/{root_uuid}",
+             [sexpdata.Symbol("path"), instance_path,
               [sexpdata.Symbol("reference"), symbol_data.get("reference", "U?")],
               [sexpdata.Symbol("unit"), symbol_data.get("unit", 1)]]]
         ])
@@ -724,7 +739,10 @@ class SExpressionParser:
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
         effects.append(font)
-        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol("left")])
+
+        # Use justification from data if provided, otherwise default to "left"
+        justify = hlabel_data.get("justify", "left")
+        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify)])
         sexp.append(effects)
         
         # Add UUID
