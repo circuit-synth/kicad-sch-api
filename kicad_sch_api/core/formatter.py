@@ -317,14 +317,18 @@ class ExactFormatter:
             and isinstance(lst[2], sexpdata.Symbol)
             and str(lst[1])
             in [
-                "passive",
-                "power_in",
-                "power_out",
                 "input",
                 "output",
                 "bidirectional",
                 "tri_state",
+                "passive",
                 "unspecified",
+                "power_in",
+                "power_out",
+                "open_collector",
+                "open_emitter",
+                "no_connect",
+                "free",
             ]
         ):
             # lib_symbols context: (pin passive line ...)
