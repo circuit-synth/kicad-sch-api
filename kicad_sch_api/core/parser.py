@@ -420,19 +420,123 @@ class SExpressionParser:
 
     def _parse_wire(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a wire definition."""
-        # Implementation for wire parsing
-        # This would parse pts, stroke, uuid elements
-        return {}
+        wire_data = {
+            "points": [],
+            "stroke_width": 0.0,
+            "stroke_type": "default",
+            "uuid": None,
+            "wire_type": "wire"  # Default to wire (vs bus)
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "pts":
+                # Parse points: (pts (xy x1 y1) (xy x2 y2) ...)
+                for pt in elem[1:]:
+                    if isinstance(pt, list) and len(pt) >= 3:
+                        if str(pt[0]) == "xy":
+                            x, y = float(pt[1]), float(pt[2])
+                            wire_data["points"].append({"x": x, "y": y})
+
+            elif elem_type == "stroke":
+                # Parse stroke: (stroke (width 0) (type default))
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list) and len(stroke_elem) >= 2:
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width":
+                            wire_data["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type":
+                            wire_data["stroke_type"] = str(stroke_elem[1])
+
+            elif elem_type == "uuid":
+                wire_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        # Only return wire if it has at least 2 points
+        if len(wire_data["points"]) >= 2:
+            return wire_data
+        else:
+            logger.warning(f"Wire has insufficient points: {len(wire_data['points'])}")
+            return None
 
     def _parse_junction(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a junction definition."""
-        # Implementation for junction parsing
-        return {}
+        junction_data = {
+            "position": {"x": 0, "y": 0},
+            "diameter": 0,
+            "color": (0, 0, 0, 0),
+            "uuid": None
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "at":
+                # Parse position: (at x y)
+                if len(elem) >= 3:
+                    junction_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+
+            elif elem_type == "diameter":
+                # Parse diameter: (diameter value)
+                if len(elem) >= 2:
+                    junction_data["diameter"] = float(elem[1])
+
+            elif elem_type == "color":
+                # Parse color: (color r g b a)
+                if len(elem) >= 5:
+                    junction_data["color"] = (int(elem[1]), int(elem[2]), int(elem[3]), int(elem[4]))
+
+            elif elem_type == "uuid":
+                junction_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return junction_data
 
     def _parse_label(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a label definition."""
-        # Implementation for label parsing
-        return {}
+        # Label format: (label "text" (at x y rotation) (effects ...) (uuid ...))
+        if len(item) < 2:
+            return None
+
+        label_data = {
+            "text": str(item[1]),  # Label text is second element
+            "position": {"x": 0, "y": 0},
+            "rotation": 0,
+            "size": 1.27,
+            "uuid": None
+        }
+
+        for elem in item[2:]:  # Skip label keyword and text
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "at":
+                # Parse position: (at x y rotation)
+                if len(elem) >= 3:
+                    label_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+                if len(elem) >= 4:
+                    label_data["rotation"] = float(elem[3])
+
+            elif elem_type == "effects":
+                # Parse effects for font size: (effects (font (size x y)) ...)
+                for effect_elem in elem[1:]:
+                    if isinstance(effect_elem, list) and str(effect_elem[0]) == "font":
+                        for font_elem in effect_elem[1:]:
+                            if isinstance(font_elem, list) and str(font_elem[0]) == "size":
+                                if len(font_elem) >= 2:
+                                    label_data["size"] = float(font_elem[1])
+
+            elif elem_type == "uuid":
+                label_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return label_data
 
     def _parse_rectangle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a rectangle graphical element."""
