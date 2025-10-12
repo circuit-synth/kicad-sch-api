@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kicad-sch-api"
-version = "0.1.1"
-description = "Professional KiCAD schematic manipulation library with exact format preservation and AI agent integration"
+version = "0.2.1"
+description = "Professional KiCAD schematic manipulation library with exact format preservation"
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -94,7 +94,6 @@ markers = [
     "performance: Performance and benchmarking tests",
     "format: Format preservation tests",
     "validation: Validation and error handling tests",
-    "mcp: MCP server integration tests",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
@@ -131,7 +130,7 @@ ensure_newline_before_comments = true
 src_paths = ["kicad_sch_api", "tests"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -179,5 +178,4 @@ exclude_lines = [
 dev = [
     "build>=1.3.0",
     "pytest-cov>=6.2.1",
-    "twine>=6.1.0",
 ]

@@ -34,22 +34,23 @@ uv pip install -e ".[dev]"
 
 ### Testing Commands
 ```bash
-# Run all tests with coverage
+# Run all tests (29 comprehensive tests)
 uv run pytest tests/ -v
 
-# Run specific test file
-uv run pytest tests/test_component_management.py -v
+# Run format preservation tests (critical for exact KiCAD compatibility)
+uv run pytest tests/reference_tests/test_against_references.py -v
 
-# Run specific test method
-uv run pytest tests/test_component_management.py::TestComponentManagement::test_component_creation_and_access -v
+# Run component removal tests (comprehensive removal functionality)
+uv run pytest tests/test_*_removal.py -v
 
-# Run format preservation tests (critical for this project)
-uv run pytest tests/test_format_preservation.py -v
-uv run pytest tests/test_exact_file_diff.py -v
+# Run specific test categories
+uv run pytest tests/reference_tests/ -v     # Reference format matching
+uv run pytest tests/test_component_removal.py -v  # Component removal
+uv run pytest tests/test_element_removal.py -v    # Element removal
 
-# Run tests with markers
+# Run tests with markers (if configured)
 uv run pytest -m "format" -v          # Format preservation tests
-uv run pytest -m "integration" -v     # Integration tests
+uv run pytest -m "integration" -v     # Integration tests  
 uv run pytest -m "unit" -v           # Unit tests
 ```
 
@@ -87,11 +88,24 @@ resistor = sch.components.add('Device:R', reference='R1', value='10k', position=
 resistor.footprint = 'Resistor_SMD:R_0603_1608Metric'
 resistor.set_property('MPN', 'RC0603FR-0710KL')
 
+# Add wires and labels
+sch.wires.add(start=(100, 110), end=(150, 110))
+sch.add_label("VCC", position=(125, 110))
+
 # Bulk operations
 sch.components.bulk_update(
     criteria={'lib_id': 'Device:R'},
     updates={'properties': {'Tolerance': '1%'}}
 )
+
+# Remove components and elements
+sch.components.remove('R1')  # Remove by reference
+sch.remove_wire(wire_uuid)   # Remove by UUID
+sch.remove_label(label_uuid) # Remove by UUID
+
+# Configuration customization
+ksa.config.properties.reference_y = -2.0  # Adjust label positioning
+ksa.config.tolerance.position_tolerance = 0.05  # Tighter matching
 
 # Save with exact format preservation
 sch.save()
@@ -131,6 +145,22 @@ uv run pytest -m "performance" -v # Large schematic performance
 uv run pytest -m "validation" -v  # Error handling and validation
 ```
 
+### New Feature Testing Pattern
+**Standard workflow for implementing new features with exact KiCAD compatibility:**
+
+1. **Test Planning**: Identify what needs testing and describe the test case
+2. **Manual Reference Creation**: Create blank KiCAD schematic, manually add required elements
+3. **Reference Analysis**: Read the manually created schematic to understand exact KiCAD format
+4. **Python Implementation**: Write Python logic to generate the same output
+5. **Exact Format Validation**: Ensure Python output matches manual KiCAD output byte-perfectly
+
+**Interactive Testing Steps:**
+1. Claude creates blank schematic and opens it in KiCAD
+2. User manually edits schematic with required test elements
+3. Claude analyzes the edited schematic as reference format
+4. Claude creates unit test that generates identical output
+5. Test validates both functionality and exact KiCAD format compliance
+
 ### Debugging Pattern
 **Standard workflow for implementing new features:**
 
@@ -144,8 +174,9 @@ uv run pytest -m "validation" -v  # Error handling and validation
 1. **Exact Format Preservation**: Core differentiator for KiCAD compatibility
 2. **Performance First**: Symbol caching, indexed lookups, bulk operations
 3. **Professional Quality**: Comprehensive validation, error collection
-4. **Foundation First**: Build robust Python library before MCP/AI integration
+4. **Foundation First**: Stable Python library that serves as foundation for MCP servers
 5. **Enhanced UX**: Modern object-oriented API with pythonic interface
+6. **MCP Compatibility**: Maintain stable API for external MCP servers to build upon
 
 ## Core Architecture Patterns
 
@@ -234,9 +265,57 @@ The `.memory_bank/` directory contains:
 
 This ensures continuity of development decisions and maintains institutional knowledge across all AI development sessions.
 
+## MCP Server Compatibility
+
+This library is designed as a stable foundation for MCP servers. Key compatibility requirements:
+
+### API Stability
+- **Public API**: All documented APIs are considered stable and maintained for backward compatibility
+- **Version Compatibility**: MCP servers should specify minimum required version (e.g., `kicad-sch-api>=0.2.0`)
+- **Error Handling**: Consistent exception handling for MCP servers to wrap and translate errors
+
+### MCP Server Integration Pattern
+```python
+# Standard pattern for MCP servers
+import kicad_sch_api as ksa
+
+@mcp_tool
+async def create_schematic(name: str):
+    try:
+        sch = ksa.create_schematic(name)
+        return success_response(f"Created schematic: {name}")
+    except Exception as e:
+        return error_response(f"Error creating schematic: {e}")
+```
+
+### Related MCP Servers
+- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)**: Reference implementation using standard MCP SDK
+
+## Version Management & Release Guidelines
+
+### Version Increment Rules
+- **DEFAULT**: Always use patch/subminor version increments (0.0.1) unless explicitly instructed otherwise
+- **Patch increments (0.2.0 → 0.2.1)**: Bug fixes, small improvements, additional tests
+- **Minor increments (0.2.0 → 0.3.0)**: New features, API additions, significant improvements
+- **Major increments (0.2.0 → 1.0.0)**: Breaking changes, major API redesigns
+
+### Release Process Rules
+- **NEVER commit or push without explicit user instructions**
+- **NEVER publish to PyPI without specific user authorization**
+- **ALWAYS ask before version increments** - default to patch/subminor (0.0.1)
+- **ALWAYS verify version intention** before building packages
+
+### Example Version Decision Process:
+```
+User: "Add component removal feature"
+Claude: "This adds new functionality. Should I increment:
+- Patch version (0.2.0 → 0.2.1) for incremental improvement?  
+- Minor version (0.2.0 → 0.3.0) for significant new feature?
+Default: patch version unless specified otherwise."
+```
+
 ## Related Projects
 
-- **circuit-synth**: Parent project and source of transferred logic
 - **circuit-synth**: Parent project and source of transferred logic
 
 ---

@@ -11,8 +11,8 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..library.cache import SymbolDefinition, get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
-from .types import Point, SchematicPin, SchematicSymbol
 from .ic_manager import ICManager
+from .types import Point, SchematicPin, SchematicSymbol
 
 logger = logging.getLogger(__name__)
 
@@ -292,6 +292,7 @@ class ComponentCollection:
         position: Optional[Union[Point, Tuple[float, float]]] = None,
         footprint: Optional[str] = None,
         unit: int = 1,
+        component_uuid: Optional[str] = None,
         **properties,
     ) -> Component:
         """
@@ -304,6 +305,7 @@ class ComponentCollection:
             position: Component position (auto-placed if None)
             footprint: Component footprint
             unit: Unit number for multi-unit components (1-based)
+            component_uuid: Specific UUID for component (auto-generated if None)
             **properties: Additional component properties
 
         Returns:
@@ -335,9 +337,19 @@ class ComponentCollection:
         elif isinstance(position, tuple):
             position = Point(position[0], position[1])
 
+        # Always snap component position to KiCAD grid (1.27mm = 50mil)
+        from .geometry import snap_to_grid
+
+        snapped_pos = snap_to_grid((position.x, position.y), grid_size=1.27)
+        position = Point(snapped_pos[0], snapped_pos[1])
+
+        logger.debug(
+            f"Component {reference} position snapped to grid: ({position.x:.3f}, {position.y:.3f})"
+        )
+
         # Create component data
         component_data = SchematicSymbol(
-            uuid=str(uuid.uuid4()),
+            uuid=component_uuid if component_uuid else str(uuid.uuid4()),
             lib_id=lib_id,
             position=position,
             reference=reference,
@@ -404,12 +416,10 @@ class ComponentCollection:
 
         # Create IC manager for this multi-unit component
         ic_manager = ICManager(lib_id, reference_prefix, position, self)
-        
+
         # Generate all unit components
         unit_components = ic_manager.generate_components(
-            value=value,
-            footprint=footprint,
-            properties=properties
+            value=value, footprint=footprint, properties=properties
         )
 
         # Add all units to the collection
@@ -418,8 +428,10 @@ class ComponentCollection:
             self._add_to_indexes(component)
 
         self._modified = True
-        logger.info(f"Added multi-unit IC: {reference_prefix} ({lib_id}) with {len(unit_components)} units")
-        
+        logger.info(
+            f"Added multi-unit IC: {reference_prefix} ({lib_id}) with {len(unit_components)} units"
+        )
+
         return ic_manager
 
     def remove(self, reference: str) -> bool:
@@ -536,11 +548,11 @@ class ComponentCollection:
         for component in matching:
             # Update basic properties and handle special cases
             for key, value in updates.items():
-                if key == 'properties' and isinstance(value, dict):
+                if key == "properties" and isinstance(value, dict):
                     # Handle properties dictionary specially
                     for prop_name, prop_value in value.items():
                         component.set_property(prop_name, str(prop_value))
-                elif hasattr(component, key) and key not in ['properties']:
+                elif hasattr(component, key) and key not in ["properties"]:
                     setattr(component, key, value)
                 else:
                     # Add as custom property

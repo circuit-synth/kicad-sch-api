@@ -190,7 +190,7 @@ class Wire:
         self.wire_type = (
             WireType(self.wire_type) if isinstance(self.wire_type, str) else self.wire_type
         )
-        
+
         # Ensure we have at least 2 points
         if len(self.points) < 2:
             raise ValueError("Wire must have at least 2 points")
@@ -259,7 +259,7 @@ class LabelType(Enum):
 
 class HierarchicalLabelShape(Enum):
     """Hierarchical label shapes/directions."""
-    
+
     INPUT = "input"
     OUTPUT = "output"
     BIDIRECTIONAL = "bidirectional"
@@ -287,7 +287,7 @@ class Label:
         self.label_type = (
             LabelType(self.label_type) if isinstance(self.label_type, str) else self.label_type
         )
-        
+
         if self.shape:
             self.shape = (
                 HierarchicalLabelShape(self.shape) if isinstance(self.shape, str) else self.shape
@@ -320,7 +320,12 @@ class TextBox:
     text: str
     rotation: float = 0.0
     font_size: float = 1.27
-    margins: Tuple[float, float, float, float] = (0.9525, 0.9525, 0.9525, 0.9525)  # top, right, bottom, left
+    margins: Tuple[float, float, float, float] = (
+        0.9525,
+        0.9525,
+        0.9525,
+        0.9525,
+    )  # top, right, bottom, left
     stroke_width: float = 0.0
     stroke_type: str = "solid"
     fill_type: str = "none"
@@ -331,6 +336,40 @@ class TextBox:
     def __post_init__(self):
         if not self.uuid:
             self.uuid = str(uuid4())
+
+
+@dataclass
+class SchematicRectangle:
+    """Graphical rectangle element in schematic."""
+
+    uuid: str
+    start: Point
+    end: Point
+    stroke_width: float = 0.0
+    stroke_type: str = "default"
+    fill_type: str = "none"
+
+    def __post_init__(self):
+        if not self.uuid:
+            self.uuid = str(uuid4())
+
+    @property
+    def width(self) -> float:
+        """Rectangle width."""
+        return abs(self.end.x - self.start.x)
+
+    @property
+    def height(self) -> float:
+        """Rectangle height."""
+        return abs(self.end.y - self.start.y)
+
+    @property
+    def center(self) -> Point:
+        """Rectangle center point."""
+        return Point(
+            (self.start.x + self.end.x) / 2,
+            (self.start.y + self.end.y) / 2
+        )
 
 
 @dataclass
@@ -429,6 +468,7 @@ class Schematic:
     labels: List[Label] = field(default_factory=list)
     nets: List[Net] = field(default_factory=list)
     sheets: List[Sheet] = field(default_factory=list)
+    rectangles: List[SchematicRectangle] = field(default_factory=list)
     lib_symbols: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):

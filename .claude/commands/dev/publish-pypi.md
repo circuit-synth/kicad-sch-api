@@ -275,17 +275,57 @@ export PYPI_API_TOKEN=your_production_token
 /publish-pypi --force
 ```
 
-## Required Environment Variables
+## Authentication Methods
 
-### For Test PyPI
+### Method 1: Environment Variables (Recommended for CI)
+
+#### For Test PyPI
 ```bash
 export TEST_PYPI_API_TOKEN=pypi-your_test_token_here
 ```
 
-### For Production PyPI
+#### For Production PyPI
 ```bash
 export PYPI_API_TOKEN=pypi-your_production_token_here
 ```
+
+### Method 2: .pypirc File (Recommended for Local Development)
+
+Create `~/.pypirc` with your API tokens:
+
+```ini
+[distutils]
+index-servers =
+    pypi
+    testpypi
+
+[pypi]
+repository = https://upload.pypi.org/legacy/
+username = __token__
+password = pypi-your_production_token_here
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = pypi-your_test_token_here
+```
+
+**Using .pypirc:**
+```bash
+# Publish to Test PyPI using .pypirc
+twine upload --repository testpypi dist/*
+
+# Publish to Production PyPI using .pypirc  
+twine upload --repository pypi dist/*
+
+# Or use the default (production PyPI)
+twine upload dist/*
+```
+
+**Security Notes:**
+- Set proper file permissions: `chmod 600 ~/.pypirc`
+- Never commit `.pypirc` to version control
+- Environment variables take precedence over `.pypirc`
 
 ## Post-Publication Checklist
 

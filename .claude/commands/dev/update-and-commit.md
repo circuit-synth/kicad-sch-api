@@ -10,11 +10,22 @@ Comprehensive workflow for documenting progress, updating documentation, and com
 
 ## Process
 
-### 1. Update Documentation (Only if Needed)
-- IF new user-facing features: Update README.md briefly
+### 1. Update Documentation (REQUIRED for Features)
+**IMPORTANT: Always update documentation BEFORE committing new features**
+- IF new user-facing features: Update README.md with examples
+- IF new API methods: Add to Advanced Features section in README.md
+- IF version increment needed: Update CHANGELOG.md with new version entry
 - IF new MCP tools: Update tool documentation
-- IF new API methods: Update examples in README
-- NO documentation changes for internal fixes or refactoring
+- ALWAYS document new public methods with code examples
+- NO documentation changes needed for internal fixes or refactoring
+
+```bash
+# Documentation update checklist for new features:
+# 1. Add examples to README.md "Basic Usage" or "Advanced Features" sections
+# 2. Create CHANGELOG.md entry with version bump (patch/minor/major)
+# 3. Update any relevant example files in examples/
+# 4. Ensure CLAUDE.md reflects new functionality if developer-relevant
+```
 
 ### 2. Format Code Before Committing
 **IMPORTANT: Always format code before committing**
@@ -50,8 +61,8 @@ uv run python -c "import kicad_sch_api; print('✅ Import successful')" || echo 
 # Check status and review changes
 git status
 
-# Add specific files (be selective)
-git add kicad_sch_api/ tests/ README.md pyproject.toml
+# Add specific files (be selective) - ALWAYS include documentation if updated
+git add kicad_sch_api/ tests/ README.md CHANGELOG.md pyproject.toml
 
 # Remove unwanted files if any
 git rm unwanted-file.py 2>/dev/null || true
@@ -79,8 +90,8 @@ git add kicad_sch_api/
 # Tests - include if relevant
 git add tests/
 
-# Documentation - include if updated
-git add README.md CLAUDE.md
+# Documentation - ALWAYS include if updated (REQUIRED for features)
+git add README.md CHANGELOG.md CLAUDE.md
 
 # Configuration - include if changed
 git add pyproject.toml pytest.ini
@@ -150,7 +161,8 @@ uv run python setup.py check --strict --metadata || echo "⚠️ Package metadat
 - `kicad_sch_api/` - Core library code
 - `tests/` - Test files (when relevant)
 - `pyproject.toml` - Package configuration
-- `README.md` - User documentation
+- `README.md` - User documentation (REQUIRED for new features)
+- `CHANGELOG.md` - Version history (REQUIRED for new features)
 
 ### Include When Relevant
 - `mcp-server/` - MCP server changes

@@ -36,10 +36,10 @@ class WireCollection:
         self._wires: List[Wire] = wires or []
         self._uuid_index: Dict[str, int] = {}
         self._modified = False
-        
+
         # Build UUID index
         self._rebuild_index()
-        
+
         logger.debug(f"WireCollection initialized with {len(self._wires)} wires")
 
     def _rebuild_index(self):
@@ -67,7 +67,7 @@ class WireCollection:
         points: Optional[List[Union[Point, Tuple[float, float]]]] = None,
         wire_type: WireType = WireType.WIRE,
         stroke_width: float = 0.0,
-        uuid: Optional[str] = None
+        uuid: Optional[str] = None,
     ) -> str:
         """
         Add a wire to the collection.
@@ -112,12 +112,7 @@ class WireCollection:
             raise ValueError("Must provide either start/end points or points list")
 
         # Create wire
-        wire = Wire(
-            uuid=uuid,
-            points=wire_points,
-            wire_type=wire_type,
-            stroke_width=stroke_width
-        )
+        wire = Wire(uuid=uuid, points=wire_points, wire_type=wire_type, stroke_width=stroke_width)
 
         # Add to collection
         self._wires.append(wire)
@@ -148,17 +143,23 @@ class WireCollection:
         logger.debug(f"Removed wire: {uuid}")
         return True
 
-    def get_by_point(self, point: Union[Point, Tuple[float, float]], tolerance: float = 0.1) -> List[Wire]:
+    def get_by_point(
+        self, point: Union[Point, Tuple[float, float]], tolerance: float = None
+    ) -> List[Wire]:
         """
         Find wires that pass through or near a point.
 
         Args:
             point: Point to search near
-            tolerance: Distance tolerance
+            tolerance: Distance tolerance (uses config default if None)
 
         Returns:
             List of wires near the point
         """
+        if tolerance is None:
+            from .config import config
+
+            tolerance = config.tolerance.position_tolerance
         if isinstance(point, tuple):
             point = Point(point[0], point[1])
 
@@ -178,33 +179,36 @@ class WireCollection:
 
         return matching_wires
 
-    def _point_on_segment(self, point: Point, seg_start: Point, seg_end: Point, tolerance: float) -> bool:
+    def _point_on_segment(
+        self, point: Point, seg_start: Point, seg_end: Point, tolerance: float
+    ) -> bool:
         """Check if point lies on line segment within tolerance."""
         # Vector from seg_start to seg_end
         seg_vec = Point(seg_end.x - seg_start.x, seg_end.y - seg_start.y)
         seg_length = seg_start.distance_to(seg_end)
-        
-        if seg_length < 0.001:  # Very short segment
+
+        from .config import config
+
+        if seg_length < config.tolerance.wire_segment_min:  # Very short segment
             return seg_start.distance_to(point) <= tolerance
-        
+
         # Vector from seg_start to point
         point_vec = Point(point.x - seg_start.x, point.y - seg_start.y)
-        
+
         # Project point onto segment
-        dot_product = (point_vec.x * seg_vec.x + point_vec.y * seg_vec.y)
+        dot_product = point_vec.x * seg_vec.x + point_vec.y * seg_vec.y
         projection = dot_product / (seg_length * seg_length)
-        
+
         # Check if projection is within segment bounds
         if projection < 0 or projection > 1:
             return False
-        
+
         # Calculate distance from point to line
         proj_point = Point(
-            seg_start.x + projection * seg_vec.x,
-            seg_start.y + projection * seg_vec.y
+            seg_start.x + projection * seg_vec.x, seg_start.y + projection * seg_vec.y
         )
         distance = point.distance_to(proj_point)
-        
+
         return distance <= tolerance
 
     def get_horizontal_wires(self) -> List[Wire]:
@@ -220,7 +224,7 @@ class WireCollection:
         total_length = sum(wire.length for wire in self._wires)
         simple_wires = sum(1 for wire in self._wires if wire.is_simple())
         multi_point_wires = len(self._wires) - simple_wires
-        
+
         return {
             "total_wires": len(self._wires),
             "simple_wires": simple_wires,
@@ -228,7 +232,7 @@ class WireCollection:
             "total_length": total_length,
             "avg_length": total_length / len(self._wires) if self._wires else 0,
             "horizontal_wires": len(self.get_horizontal_wires()),
-            "vertical_wires": len(self.get_vertical_wires())
+            "vertical_wires": len(self.get_vertical_wires()),
         }
 
     def clear(self):
