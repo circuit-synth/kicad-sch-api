@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2025-10-11
+
+### Fixed
+- **Pin Electrical Type Formatting**: Added missing pin electrical types to prevent incorrect quoting
+  - Added support for `no_connect`, `open_collector`, `open_emitter`, and `free` pin types
+  - Prevents these types from being incorrectly quoted in S-expression output
+  - Fixes KiCAD schematic opening error: "Expecting 'input, output, ... no_connect'"
+  - All pin types now correctly formatted as unquoted symbols per KiCAD specification
+
 ## [0.2.1] - 2025-01-20
 
 ### Added
