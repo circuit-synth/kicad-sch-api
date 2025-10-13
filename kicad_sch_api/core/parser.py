@@ -197,6 +197,7 @@ class SExpressionParser:
             "circles": [],
             "beziers": [],
             "rectangles": [],
+            "images": [],
             "nets": [],
             "lib_symbols": {},
             "sheet_instances": [],
@@ -282,6 +283,10 @@ class SExpressionParser:
                 rectangle = self._parse_rectangle(item)
                 if rectangle:
                     schematic_data["rectangles"].append(rectangle)
+            elif element_type == "image":
+                image = self._parse_image(item)
+                if image:
+                    schematic_data["images"].append(image)
             elif element_type == "lib_symbols":
                 schematic_data["lib_symbols"] = self._parse_lib_symbols(item)
             elif element_type == "sheet_instances":
@@ -356,6 +361,10 @@ class SExpressionParser:
             sexp_data.append(self._rectangle_to_sexp(rectangle))
         for graphic in schematic_data.get("graphics", []):
             sexp_data.append(self._graphic_to_sexp(graphic))
+
+        # Images
+        for image in schematic_data.get("images", []):
+            sexp_data.append(self._image_to_sexp(image))
 
         # Circles
         for circle in schematic_data.get("circles", []):
@@ -1107,6 +1116,37 @@ class SExpressionParser:
                 rectangle["uuid"] = str(elem[1])
 
         return rectangle if rectangle else None
+
+    def _parse_image(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse an image element."""
+        # Format: (image (at x y) (uuid "...") (data "base64..."))
+        image = {
+            "position": {"x": 0, "y": 0},
+            "data": "",
+            "scale": 1.0,
+            "uuid": None
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "at" and len(elem) >= 3:
+                image["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "scale" and len(elem) >= 2:
+                image["scale"] = float(elem[1])
+            elif elem_type == "data" and len(elem) >= 2:
+                # The data can be spread across multiple string elements
+                data_parts = []
+                for data_elem in elem[1:]:
+                    data_parts.append(str(data_elem).strip('"'))
+                image["data"] = "".join(data_parts)
+            elif elem_type == "uuid" and len(elem) >= 2:
+                image["uuid"] = str(elem[1]).strip('"')
+
+        return image if image.get("uuid") and image.get("data") else None
 
     def _parse_lib_symbols(self, item: List[Any]) -> Dict[str, Any]:
         """Parse lib_symbols section."""
@@ -1930,6 +1970,38 @@ class SExpressionParser:
         # Add UUID
         if "uuid" in rectangle_data:
             sexp.append([sexpdata.Symbol("uuid"), rectangle_data["uuid"]])
+
+        return sexp
+
+    def _image_to_sexp(self, image_data: Dict[str, Any]) -> List[Any]:
+        """Convert image element to S-expression."""
+        sexp = [sexpdata.Symbol("image")]
+
+        # Add position
+        position = image_data.get("position", {"x": 0, "y": 0})
+        pos_x, pos_y = position["x"], position["y"]
+        sexp.append([sexpdata.Symbol("at"), pos_x, pos_y])
+
+        # Add UUID
+        if "uuid" in image_data:
+            sexp.append([sexpdata.Symbol("uuid"), image_data["uuid"]])
+
+        # Add scale if not default
+        scale = image_data.get("scale", 1.0)
+        if scale != 1.0:
+            sexp.append([sexpdata.Symbol("scale"), scale])
+
+        # Add image data
+        # KiCad splits base64 data into multiple lines for readability
+        # Each line is roughly 76 characters (standard base64 line length)
+        data = image_data.get("data", "")
+        if data:
+            data_sexp = [sexpdata.Symbol("data")]
+            # Split the data into 76-character chunks
+            chunk_size = 76
+            for i in range(0, len(data), chunk_size):
+                data_sexp.append(data[i:i+chunk_size])
+            sexp.append(data_sexp)
 
         return sexp
 

@@ -1138,6 +1138,55 @@ class Schematic:
         logger.debug(f"Added text box: '{text}' at {position} size {size}")
         return text_box.uuid
 
+    def add_image(
+        self,
+        position: Union[Point, Tuple[float, float]],
+        data: str,
+        scale: float = 1.0,
+        uuid: Optional[str] = None,
+    ) -> str:
+        """
+        Add an image element.
+
+        Args:
+            position: Image position
+            data: Base64-encoded image data
+            scale: Image scale factor (default 1.0)
+            uuid: Optional UUID (auto-generated if None)
+
+        Returns:
+            UUID of created image element
+        """
+        if isinstance(position, tuple):
+            position = Point(position[0], position[1])
+
+        from .types import Image
+
+        import uuid as uuid_module
+
+        image = Image(
+            uuid=uuid if uuid else str(uuid_module.uuid4()),
+            position=position,
+            data=data,
+            scale=scale,
+        )
+
+        if "images" not in self._data:
+            self._data["images"] = []
+
+        self._data["images"].append(
+            {
+                "uuid": image.uuid,
+                "position": {"x": image.position.x, "y": image.position.y},
+                "data": image.data,
+                "scale": image.scale,
+            }
+        )
+        self._modified = True
+
+        logger.debug(f"Added image at {position} with {len(data)} bytes of data")
+        return image.uuid
+
     def add_rectangle(
         self,
         start: Union[Point, Tuple[float, float]],
