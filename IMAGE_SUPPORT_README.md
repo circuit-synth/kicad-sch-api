@@ -58,28 +58,21 @@ for img in images:
 
 ## Testing
 
-Run the included test script with your circuit image:
+Run the pytest test suite to verify image support:
 
 ```bash
-# Using your circuit image
-uv run python test_image_support.py /path/to/your/circuit_image.png
+# Run image support tests
+uv run pytest tests/test_image_support.py -v
 
-# Using the test image
-uv run python test_image_support.py test_circuit.png
+# Run all tests
+uv run pytest -v
 ```
 
-### Test Output
-
-The test will:
-1. Load your image and encode it
-2. Create a new schematic
-3. Add the image at position (100, 100)
-4. Add a resistor for reference
-5. Save the schematic
-6. Load it back and verify the image
-7. Create `test_image_output.kicad_sch`
-
-You can open `test_image_output.kicad_sch` in KiCad to see the embedded image!
+The test suite includes:
+- Adding images with different positions and scales
+- Save/load roundtrip verification
+- Multiple images in a single schematic
+- Data integrity validation
 
 ## How It Works
 
@@ -188,9 +181,8 @@ sch.save()
 
 ## Files
 
-- `test_image_support.py` - Comprehensive test script
-- `create_minimal_test_image.py` - Creates a minimal test PNG
-- `test_image_output.kicad_sch` - Example output (created by test)
+- `tests/test_image_support.py` - Comprehensive pytest test suite
+- `IMAGE_SUPPORT_README.md` - This documentation
 
 ## Implementation Details
 
