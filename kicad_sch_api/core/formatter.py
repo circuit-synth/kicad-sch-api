@@ -189,7 +189,8 @@ class ExactFormatter:
         elif isinstance(element, str):
             # Quote strings that need quoting
             if self._needs_quoting(element):
-                return f'"{element}"'
+                escaped = self._escape_string(element)
+                return f'"{escaped}"'
             return element
         elif isinstance(element, float):
             # Custom float formatting for KiCAD compatibility

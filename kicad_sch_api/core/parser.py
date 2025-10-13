@@ -187,6 +187,15 @@ class SExpressionParser:
             "wires": [],
             "junctions": [],
             "labels": [],
+            "hierarchical_labels": [],
+            "no_connects": [],
+            "texts": [],
+            "text_boxes": [],
+            "sheets": [],
+            "polylines": [],
+            "arcs": [],
+            "circles": [],
+            "beziers": [],
             "rectangles": [],
             "nets": [],
             "lib_symbols": {},
@@ -233,6 +242,42 @@ class SExpressionParser:
                 label = self._parse_label(item)
                 if label:
                     schematic_data["labels"].append(label)
+            elif element_type == "hierarchical_label":
+                hlabel = self._parse_hierarchical_label(item)
+                if hlabel:
+                    schematic_data["hierarchical_labels"].append(hlabel)
+            elif element_type == "no_connect":
+                no_connect = self._parse_no_connect(item)
+                if no_connect:
+                    schematic_data["no_connects"].append(no_connect)
+            elif element_type == "text":
+                text = self._parse_text(item)
+                if text:
+                    schematic_data["texts"].append(text)
+            elif element_type == "text_box":
+                text_box = self._parse_text_box(item)
+                if text_box:
+                    schematic_data["text_boxes"].append(text_box)
+            elif element_type == "sheet":
+                sheet = self._parse_sheet(item)
+                if sheet:
+                    schematic_data["sheets"].append(sheet)
+            elif element_type == "polyline":
+                polyline = self._parse_polyline(item)
+                if polyline:
+                    schematic_data["polylines"].append(polyline)
+            elif element_type == "arc":
+                arc = self._parse_arc(item)
+                if arc:
+                    schematic_data["arcs"].append(arc)
+            elif element_type == "circle":
+                circle = self._parse_circle(item)
+                if circle:
+                    schematic_data["circles"].append(circle)
+            elif element_type == "bezier":
+                bezier = self._parse_bezier(item)
+                if bezier:
+                    schematic_data["beziers"].append(bezier)
             elif element_type == "rectangle":
                 rectangle = self._parse_rectangle(item)
                 if rectangle:
@@ -297,25 +342,44 @@ class SExpressionParser:
         for hlabel in schematic_data.get("hierarchical_labels", []):
             sexp_data.append(self._hierarchical_label_to_sexp(hlabel))
 
-        # Add hierarchical sheets
-        for sheet in schematic_data.get("sheets", []):
-            sexp_data.append(self._sheet_to_sexp(sheet, schematic_data.get("uuid")))
+        # Add no_connects
+        for no_connect in schematic_data.get("no_connects", []):
+            sexp_data.append(self._no_connect_to_sexp(no_connect))
 
-        # Add text elements
-        for text in schematic_data.get("texts", []):
-            sexp_data.append(self._text_to_sexp(text))
+        # Add graphical elements (in KiCad element order)
+        # Beziers
+        for bezier in schematic_data.get("beziers", []):
+            sexp_data.append(self._bezier_to_sexp(bezier))
 
-        # Add text boxes
-        for text_box in schematic_data.get("text_boxes", []):
-            sexp_data.append(self._text_box_to_sexp(text_box))
-
-        # Add graphics (rectangles from schematic.draw_bounding_box)
+        # Rectangles (both from API and graphics)
+        for rectangle in schematic_data.get("rectangles", []):
+            sexp_data.append(self._rectangle_to_sexp(rectangle))
         for graphic in schematic_data.get("graphics", []):
             sexp_data.append(self._graphic_to_sexp(graphic))
 
-        # Add rectangles (rectangles from add_rectangle API)
-        for rectangle in schematic_data.get("rectangles", []):
-            sexp_data.append(self._rectangle_to_sexp(rectangle))
+        # Circles
+        for circle in schematic_data.get("circles", []):
+            sexp_data.append(self._circle_to_sexp(circle))
+
+        # Arcs
+        for arc in schematic_data.get("arcs", []):
+            sexp_data.append(self._arc_to_sexp(arc))
+
+        # Polylines
+        for polyline in schematic_data.get("polylines", []):
+            sexp_data.append(self._polyline_to_sexp(polyline))
+
+        # Text elements
+        for text in schematic_data.get("texts", []):
+            sexp_data.append(self._text_to_sexp(text))
+
+        # Text boxes
+        for text_box in schematic_data.get("text_boxes", []):
+            sexp_data.append(self._text_box_to_sexp(text_box))
+
+        # Hierarchical sheets
+        for sheet in schematic_data.get("sheets", []):
+            sexp_data.append(self._sheet_to_sexp(sheet, schematic_data.get("uuid")))
 
         # Add sheet_instances (required by KiCAD)
         sheet_instances = schematic_data.get("sheet_instances", [])
@@ -537,6 +601,481 @@ class SExpressionParser:
                 label_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
 
         return label_data
+
+    def _parse_hierarchical_label(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a hierarchical label definition."""
+        # Format: (hierarchical_label "text" (shape input) (at x y rotation) (effects ...) (uuid ...))
+        if len(item) < 2:
+            return None
+
+        hlabel_data = {
+            "text": str(item[1]),  # Hierarchical label text is second element
+            "shape": "input",  # input/output/bidirectional/tri_state/passive
+            "position": {"x": 0, "y": 0},
+            "rotation": 0,
+            "size": 1.27,
+            "justify": "left",
+            "uuid": None
+        }
+
+        for elem in item[2:]:  # Skip hierarchical_label keyword and text
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "shape":
+                # Parse shape: (shape input)
+                if len(elem) >= 2:
+                    hlabel_data["shape"] = str(elem[1])
+
+            elif elem_type == "at":
+                # Parse position: (at x y rotation)
+                if len(elem) >= 3:
+                    hlabel_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+                if len(elem) >= 4:
+                    hlabel_data["rotation"] = float(elem[3])
+
+            elif elem_type == "effects":
+                # Parse effects for font size and justification: (effects (font (size x y)) (justify left))
+                for effect_elem in elem[1:]:
+                    if isinstance(effect_elem, list):
+                        effect_type = str(effect_elem[0]) if isinstance(effect_elem[0], sexpdata.Symbol) else None
+
+                        if effect_type == "font":
+                            # Parse font size
+                            for font_elem in effect_elem[1:]:
+                                if isinstance(font_elem, list) and str(font_elem[0]) == "size":
+                                    if len(font_elem) >= 2:
+                                        hlabel_data["size"] = float(font_elem[1])
+
+                        elif effect_type == "justify":
+                            # Parse justification (e.g., "left", "right")
+                            if len(effect_elem) >= 2:
+                                hlabel_data["justify"] = str(effect_elem[1])
+
+            elif elem_type == "uuid":
+                hlabel_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return hlabel_data
+
+    def _parse_no_connect(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a no_connect symbol."""
+        # Format: (no_connect (at x y) (uuid ...))
+        no_connect_data = {
+            "position": {"x": 0, "y": 0},
+            "uuid": None
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "at":
+                if len(elem) >= 3:
+                    no_connect_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "uuid":
+                no_connect_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return no_connect_data
+
+    def _parse_text(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a text element."""
+        # Format: (text "text" (exclude_from_sim no) (at x y rotation) (effects ...) (uuid ...))
+        if len(item) < 2:
+            return None
+
+        text_data = {
+            "text": str(item[1]),
+            "exclude_from_sim": False,
+            "position": {"x": 0, "y": 0},
+            "rotation": 0,
+            "size": 1.27,
+            "uuid": None
+        }
+
+        for elem in item[2:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "exclude_from_sim":
+                if len(elem) >= 2:
+                    text_data["exclude_from_sim"] = str(elem[1]) == "yes"
+            elif elem_type == "at":
+                if len(elem) >= 3:
+                    text_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+                if len(elem) >= 4:
+                    text_data["rotation"] = float(elem[3])
+            elif elem_type == "effects":
+                for effect_elem in elem[1:]:
+                    if isinstance(effect_elem, list) and str(effect_elem[0]) == "font":
+                        for font_elem in effect_elem[1:]:
+                            if isinstance(font_elem, list) and str(font_elem[0]) == "size":
+                                if len(font_elem) >= 2:
+                                    text_data["size"] = float(font_elem[1])
+            elif elem_type == "uuid":
+                text_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return text_data
+
+    def _parse_text_box(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a text_box element."""
+        # Format: (text_box "text" (exclude_from_sim no) (at x y rotation) (size w h) (margins ...) (stroke ...) (fill ...) (effects ...) (uuid ...))
+        if len(item) < 2:
+            return None
+
+        text_box_data = {
+            "text": str(item[1]),
+            "exclude_from_sim": False,
+            "position": {"x": 0, "y": 0},
+            "rotation": 0,
+            "size": {"width": 0, "height": 0},
+            "margins": (0.9525, 0.9525, 0.9525, 0.9525),
+            "stroke_width": 0,
+            "stroke_type": "solid",
+            "fill_type": "none",
+            "font_size": 1.27,
+            "justify_horizontal": "left",
+            "justify_vertical": "top",
+            "uuid": None
+        }
+
+        for elem in item[2:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "exclude_from_sim":
+                if len(elem) >= 2:
+                    text_box_data["exclude_from_sim"] = str(elem[1]) == "yes"
+            elif elem_type == "at":
+                if len(elem) >= 3:
+                    text_box_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+                if len(elem) >= 4:
+                    text_box_data["rotation"] = float(elem[3])
+            elif elem_type == "size":
+                if len(elem) >= 3:
+                    text_box_data["size"] = {"width": float(elem[1]), "height": float(elem[2])}
+            elif elem_type == "margins":
+                if len(elem) >= 5:
+                    text_box_data["margins"] = (float(elem[1]), float(elem[2]), float(elem[3]), float(elem[4]))
+            elif elem_type == "stroke":
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list):
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width" and len(stroke_elem) >= 2:
+                            text_box_data["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type" and len(stroke_elem) >= 2:
+                            text_box_data["stroke_type"] = str(stroke_elem[1])
+            elif elem_type == "fill":
+                for fill_elem in elem[1:]:
+                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
+                        text_box_data["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+            elif elem_type == "effects":
+                for effect_elem in elem[1:]:
+                    if isinstance(effect_elem, list):
+                        effect_type = str(effect_elem[0])
+                        if effect_type == "font":
+                            for font_elem in effect_elem[1:]:
+                                if isinstance(font_elem, list) and str(font_elem[0]) == "size":
+                                    if len(font_elem) >= 2:
+                                        text_box_data["font_size"] = float(font_elem[1])
+                        elif effect_type == "justify":
+                            if len(effect_elem) >= 2:
+                                text_box_data["justify_horizontal"] = str(effect_elem[1])
+                            if len(effect_elem) >= 3:
+                                text_box_data["justify_vertical"] = str(effect_elem[2])
+            elif elem_type == "uuid":
+                text_box_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return text_box_data
+
+    def _parse_sheet(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a hierarchical sheet."""
+        # Complex format with position, size, properties, pins, instances
+        sheet_data = {
+            "position": {"x": 0, "y": 0},
+            "size": {"width": 0, "height": 0},
+            "exclude_from_sim": False,
+            "in_bom": True,
+            "on_board": True,
+            "dnp": False,
+            "fields_autoplaced": True,
+            "stroke_width": 0.1524,
+            "stroke_type": "solid",
+            "fill_color": (0, 0, 0, 0.0),
+            "uuid": None,
+            "name": "Sheet",
+            "filename": "sheet.kicad_sch",
+            "pins": [],
+            "project_name": "",
+            "page_number": "2"
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "at":
+                if len(elem) >= 3:
+                    sheet_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "size":
+                if len(elem) >= 3:
+                    sheet_data["size"] = {"width": float(elem[1]), "height": float(elem[2])}
+            elif elem_type == "exclude_from_sim":
+                sheet_data["exclude_from_sim"] = str(elem[1]) == "yes" if len(elem) > 1 else False
+            elif elem_type == "in_bom":
+                sheet_data["in_bom"] = str(elem[1]) == "yes" if len(elem) > 1 else True
+            elif elem_type == "on_board":
+                sheet_data["on_board"] = str(elem[1]) == "yes" if len(elem) > 1 else True
+            elif elem_type == "dnp":
+                sheet_data["dnp"] = str(elem[1]) == "yes" if len(elem) > 1 else False
+            elif elem_type == "fields_autoplaced":
+                sheet_data["fields_autoplaced"] = str(elem[1]) == "yes" if len(elem) > 1 else True
+            elif elem_type == "stroke":
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list):
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width" and len(stroke_elem) >= 2:
+                            sheet_data["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type" and len(stroke_elem) >= 2:
+                            sheet_data["stroke_type"] = str(stroke_elem[1])
+            elif elem_type == "fill":
+                for fill_elem in elem[1:]:
+                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "color":
+                        if len(fill_elem) >= 5:
+                            sheet_data["fill_color"] = (int(fill_elem[1]), int(fill_elem[2]), int(fill_elem[3]), float(fill_elem[4]))
+            elif elem_type == "uuid":
+                sheet_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+            elif elem_type == "property":
+                if len(elem) >= 3:
+                    prop_name = str(elem[1])
+                    prop_value = str(elem[2])
+                    if prop_name == "Sheetname":
+                        sheet_data["name"] = prop_value
+                    elif prop_name == "Sheetfile":
+                        sheet_data["filename"] = prop_value
+            elif elem_type == "pin":
+                # Parse sheet pin - reuse existing _parse_sheet_pin helper
+                pin_data = self._parse_sheet_pin_for_read(elem)
+                if pin_data:
+                    sheet_data["pins"].append(pin_data)
+            elif elem_type == "instances":
+                # Parse instances for project name and page number
+                for inst_elem in elem[1:]:
+                    if isinstance(inst_elem, list) and str(inst_elem[0]) == "project":
+                        if len(inst_elem) >= 2:
+                            sheet_data["project_name"] = str(inst_elem[1])
+                        for path_elem in inst_elem[2:]:
+                            if isinstance(path_elem, list) and str(path_elem[0]) == "path":
+                                for page_elem in path_elem[1:]:
+                                    if isinstance(page_elem, list) and str(page_elem[0]) == "page":
+                                        sheet_data["page_number"] = str(page_elem[1]) if len(page_elem) > 1 else "2"
+
+        return sheet_data
+
+    def _parse_sheet_pin_for_read(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a sheet pin (for reading during sheet parsing)."""
+        # Format: (pin "name" type (at x y rotation) (uuid ...) (effects ...))
+        if len(item) < 3:
+            return None
+
+        pin_data = {
+            "name": str(item[1]),
+            "pin_type": str(item[2]) if len(item) > 2 else "input",
+            "position": {"x": 0, "y": 0},
+            "rotation": 0,
+            "size": 1.27,
+            "justify": "right",
+            "uuid": None
+        }
+
+        for elem in item[3:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "at":
+                if len(elem) >= 3:
+                    pin_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
+                if len(elem) >= 4:
+                    pin_data["rotation"] = float(elem[3])
+            elif elem_type == "uuid":
+                pin_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+            elif elem_type == "effects":
+                for effect_elem in elem[1:]:
+                    if isinstance(effect_elem, list):
+                        effect_type = str(effect_elem[0])
+                        if effect_type == "font":
+                            for font_elem in effect_elem[1:]:
+                                if isinstance(font_elem, list) and str(font_elem[0]) == "size":
+                                    if len(font_elem) >= 2:
+                                        pin_data["size"] = float(font_elem[1])
+                        elif effect_type == "justify":
+                            if len(effect_elem) >= 2:
+                                pin_data["justify"] = str(effect_elem[1])
+
+        return pin_data
+
+    def _parse_polyline(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a polyline graphical element."""
+        # Format: (polyline (pts (xy x1 y1) (xy x2 y2) ...) (stroke ...) (uuid ...))
+        polyline_data = {
+            "points": [],
+            "stroke_width": 0,
+            "stroke_type": "default",
+            "uuid": None
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "pts":
+                for pt in elem[1:]:
+                    if isinstance(pt, list) and len(pt) >= 3 and str(pt[0]) == "xy":
+                        polyline_data["points"].append({"x": float(pt[1]), "y": float(pt[2])})
+            elif elem_type == "stroke":
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list):
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width" and len(stroke_elem) >= 2:
+                            polyline_data["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type" and len(stroke_elem) >= 2:
+                            polyline_data["stroke_type"] = str(stroke_elem[1])
+            elif elem_type == "uuid":
+                polyline_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return polyline_data if polyline_data["points"] else None
+
+    def _parse_arc(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse an arc graphical element."""
+        # Format: (arc (start x y) (mid x y) (end x y) (stroke ...) (fill ...) (uuid ...))
+        arc_data = {
+            "start": {"x": 0, "y": 0},
+            "mid": {"x": 0, "y": 0},
+            "end": {"x": 0, "y": 0},
+            "stroke_width": 0,
+            "stroke_type": "default",
+            "fill_type": "none",
+            "uuid": None
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "start" and len(elem) >= 3:
+                arc_data["start"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "mid" and len(elem) >= 3:
+                arc_data["mid"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "end" and len(elem) >= 3:
+                arc_data["end"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "stroke":
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list):
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width" and len(stroke_elem) >= 2:
+                            arc_data["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type" and len(stroke_elem) >= 2:
+                            arc_data["stroke_type"] = str(stroke_elem[1])
+            elif elem_type == "fill":
+                for fill_elem in elem[1:]:
+                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
+                        arc_data["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+            elif elem_type == "uuid":
+                arc_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return arc_data
+
+    def _parse_circle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a circle graphical element."""
+        # Format: (circle (center x y) (radius r) (stroke ...) (fill ...) (uuid ...))
+        circle_data = {
+            "center": {"x": 0, "y": 0},
+            "radius": 0,
+            "stroke_width": 0,
+            "stroke_type": "default",
+            "fill_type": "none",
+            "uuid": None
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "center" and len(elem) >= 3:
+                circle_data["center"] = {"x": float(elem[1]), "y": float(elem[2])}
+            elif elem_type == "radius" and len(elem) >= 2:
+                circle_data["radius"] = float(elem[1])
+            elif elem_type == "stroke":
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list):
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width" and len(stroke_elem) >= 2:
+                            circle_data["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type" and len(stroke_elem) >= 2:
+                            circle_data["stroke_type"] = str(stroke_elem[1])
+            elif elem_type == "fill":
+                for fill_elem in elem[1:]:
+                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
+                        circle_data["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+            elif elem_type == "uuid":
+                circle_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return circle_data
+
+    def _parse_bezier(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """Parse a bezier curve graphical element."""
+        # Format: (bezier (pts (xy x1 y1) (xy x2 y2) ...) (stroke ...) (fill ...) (uuid ...))
+        bezier_data = {
+            "points": [],
+            "stroke_width": 0,
+            "stroke_type": "default",
+            "fill_type": "none",
+            "uuid": None
+        }
+
+        for elem in item[1:]:
+            if not isinstance(elem, list):
+                continue
+
+            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
+
+            if elem_type == "pts":
+                for pt in elem[1:]:
+                    if isinstance(pt, list) and len(pt) >= 3 and str(pt[0]) == "xy":
+                        bezier_data["points"].append({"x": float(pt[1]), "y": float(pt[2])})
+            elif elem_type == "stroke":
+                for stroke_elem in elem[1:]:
+                    if isinstance(stroke_elem, list):
+                        stroke_type = str(stroke_elem[0])
+                        if stroke_type == "width" and len(stroke_elem) >= 2:
+                            bezier_data["stroke_width"] = float(stroke_elem[1])
+                        elif stroke_type == "type" and len(stroke_elem) >= 2:
+                            bezier_data["stroke_type"] = str(stroke_elem[1])
+            elif elem_type == "fill":
+                for fill_elem in elem[1:]:
+                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
+                        bezier_data["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+            elif elem_type == "uuid":
+                bezier_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
+
+        return bezier_data if bezier_data["points"] else None
 
     def _parse_rectangle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a rectangle graphical element."""
@@ -939,6 +1478,171 @@ class SExpressionParser:
         # Add UUID
         if "uuid" in hlabel_data:
             sexp.append([sexpdata.Symbol("uuid"), hlabel_data["uuid"]])
+
+        return sexp
+
+    def _no_connect_to_sexp(self, no_connect_data: Dict[str, Any]) -> List[Any]:
+        """Convert no_connect to S-expression."""
+        sexp = [sexpdata.Symbol("no_connect")]
+
+        # Add position
+        pos = no_connect_data["position"]
+        x, y = pos["x"], pos["y"]
+
+        # Format coordinates properly
+        if isinstance(x, float) and x.is_integer():
+            x = int(x)
+        if isinstance(y, float) and y.is_integer():
+            y = int(y)
+
+        sexp.append([sexpdata.Symbol("at"), x, y])
+
+        # Add UUID
+        if "uuid" in no_connect_data:
+            sexp.append([sexpdata.Symbol("uuid"), no_connect_data["uuid"]])
+
+        return sexp
+
+    def _polyline_to_sexp(self, polyline_data: Dict[str, Any]) -> List[Any]:
+        """Convert polyline to S-expression."""
+        sexp = [sexpdata.Symbol("polyline")]
+
+        # Add points
+        points = polyline_data.get("points", [])
+        if points:
+            pts_sexp = [sexpdata.Symbol("pts")]
+            for point in points:
+                x, y = point["x"], point["y"]
+                # Format coordinates properly
+                if isinstance(x, float) and x.is_integer():
+                    x = int(x)
+                if isinstance(y, float) and y.is_integer():
+                    y = int(y)
+                pts_sexp.append([sexpdata.Symbol("xy"), x, y])
+            sexp.append(pts_sexp)
+
+        # Add stroke
+        stroke_width = polyline_data.get("stroke_width", 0)
+        stroke_type = polyline_data.get("stroke_type", "default")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+
+        # Add UUID
+        if "uuid" in polyline_data:
+            sexp.append([sexpdata.Symbol("uuid"), polyline_data["uuid"]])
+
+        return sexp
+
+    def _arc_to_sexp(self, arc_data: Dict[str, Any]) -> List[Any]:
+        """Convert arc to S-expression."""
+        sexp = [sexpdata.Symbol("arc")]
+
+        # Add start, mid, end points
+        for point_name in ["start", "mid", "end"]:
+            point = arc_data.get(point_name, {"x": 0, "y": 0})
+            x, y = point["x"], point["y"]
+            # Format coordinates properly
+            if isinstance(x, float) and x.is_integer():
+                x = int(x)
+            if isinstance(y, float) and y.is_integer():
+                y = int(y)
+            sexp.append([sexpdata.Symbol(point_name), x, y])
+
+        # Add stroke
+        stroke_width = arc_data.get("stroke_width", 0)
+        stroke_type = arc_data.get("stroke_type", "default")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+
+        # Add fill
+        fill_type = arc_data.get("fill_type", "none")
+        fill_sexp = [sexpdata.Symbol("fill")]
+        fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
+        sexp.append(fill_sexp)
+
+        # Add UUID
+        if "uuid" in arc_data:
+            sexp.append([sexpdata.Symbol("uuid"), arc_data["uuid"]])
+
+        return sexp
+
+    def _circle_to_sexp(self, circle_data: Dict[str, Any]) -> List[Any]:
+        """Convert circle to S-expression."""
+        sexp = [sexpdata.Symbol("circle")]
+
+        # Add center
+        center = circle_data.get("center", {"x": 0, "y": 0})
+        x, y = center["x"], center["y"]
+        # Format coordinates properly
+        if isinstance(x, float) and x.is_integer():
+            x = int(x)
+        if isinstance(y, float) and y.is_integer():
+            y = int(y)
+        sexp.append([sexpdata.Symbol("center"), x, y])
+
+        # Add radius
+        radius = circle_data.get("radius", 0)
+        sexp.append([sexpdata.Symbol("radius"), radius])
+
+        # Add stroke
+        stroke_width = circle_data.get("stroke_width", 0)
+        stroke_type = circle_data.get("stroke_type", "default")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+
+        # Add fill
+        fill_type = circle_data.get("fill_type", "none")
+        fill_sexp = [sexpdata.Symbol("fill")]
+        fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
+        sexp.append(fill_sexp)
+
+        # Add UUID
+        if "uuid" in circle_data:
+            sexp.append([sexpdata.Symbol("uuid"), circle_data["uuid"]])
+
+        return sexp
+
+    def _bezier_to_sexp(self, bezier_data: Dict[str, Any]) -> List[Any]:
+        """Convert bezier curve to S-expression."""
+        sexp = [sexpdata.Symbol("bezier")]
+
+        # Add points
+        points = bezier_data.get("points", [])
+        if points:
+            pts_sexp = [sexpdata.Symbol("pts")]
+            for point in points:
+                x, y = point["x"], point["y"]
+                # Format coordinates properly
+                if isinstance(x, float) and x.is_integer():
+                    x = int(x)
+                if isinstance(y, float) and y.is_integer():
+                    y = int(y)
+                pts_sexp.append([sexpdata.Symbol("xy"), x, y])
+            sexp.append(pts_sexp)
+
+        # Add stroke
+        stroke_width = bezier_data.get("stroke_width", 0)
+        stroke_type = bezier_data.get("stroke_type", "default")
+        stroke_sexp = [sexpdata.Symbol("stroke")]
+        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
+        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        sexp.append(stroke_sexp)
+
+        # Add fill
+        fill_type = bezier_data.get("fill_type", "none")
+        fill_sexp = [sexpdata.Symbol("fill")]
+        fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
+        sexp.append(fill_sexp)
+
+        # Add UUID
+        if "uuid" in bezier_data:
+            sexp.append([sexpdata.Symbol("uuid"), bezier_data["uuid"]])
 
         return sexp
 
