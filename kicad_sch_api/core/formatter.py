@@ -146,6 +146,9 @@ class ExactFormatter:
         self.rules["embedded_fonts"] = FormatRule(inline=True)
         self.rules["page"] = FormatRule(inline=True, quote_indices={1})
 
+        # Image element
+        self.rules["image"] = FormatRule(inline=False, custom_handler=self._format_image)
+
     def format(self, data: Any) -> str:
         """
         Format S-expression data with exact KiCAD formatting.
@@ -507,6 +510,34 @@ class ExactFormatter:
 
             if xy_elements:
                 result += f"\n{next_indent}{' '.join(xy_elements)}"
+
+        result += f"\n{indent})"
+        return result
+
+    def _format_image(self, lst: List[Any], indent_level: int) -> str:
+        """Format image elements with base64 data split across lines."""
+        indent = "\t" * indent_level
+        next_indent = "\t" * (indent_level + 1)
+
+        result = f"({lst[0]}"
+
+        # Process each element
+        for element in lst[1:]:
+            if isinstance(element, list):
+                tag = str(element[0]) if element else ""
+                if tag == "data":
+                    # Special handling for data element
+                    # First chunk on same line as (data, rest on subsequent lines
+                    if len(element) > 1:
+                        result += f'\n{next_indent}({element[0]} "{element[1]}"'
+                        for chunk in element[2:]:
+                            result += f'\n{next_indent}\t"{chunk}"'
+                        result += f"\n{next_indent})"
+                    else:
+                        result += f"\n{next_indent}({element[0]})"
+                else:
+                    # Regular element formatting
+                    result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
 
         result += f"\n{indent})"
         return result
