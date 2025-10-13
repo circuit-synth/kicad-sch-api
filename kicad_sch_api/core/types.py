@@ -373,6 +373,20 @@ class SchematicRectangle:
 
 
 @dataclass
+class Image:
+    """Image element in schematic."""
+
+    uuid: str
+    position: Point
+    data: str  # Base64-encoded image data
+    scale: float = 1.0
+
+    def __post_init__(self):
+        if not self.uuid:
+            self.uuid = str(uuid4())
+
+
+@dataclass
 class Net:
     """Electrical net connecting components."""
 
