@@ -1641,9 +1641,7 @@ class Schematic:
                     break
 
         # Fix string/symbol conversion issues in pin definitions
-        print(f"🔧 DEBUG: Before fix - checking for pin definitions...")
         self._fix_symbol_strings_recursively(modified_data)
-        print(f"🔧 DEBUG: After fix - symbol strings fixed")
 
         return modified_data
 
@@ -1656,15 +1654,10 @@ class Schematic:
                 if isinstance(item, list):
                     # Check for pin definitions that need fixing
                     if len(item) >= 3 and item[0] == sexpdata.Symbol("pin"):
-                        print(
-                            f"🔧 DEBUG: Found pin definition: {item[:3]} - types: {[type(x) for x in item[:3]]}"
-                        )
                         # Fix pin type and shape - ensure they are symbols not strings
                         if isinstance(item[1], str):
-                            print(f"🔧 DEBUG: Converting pin type '{item[1]}' to symbol")
                             item[1] = sexpdata.Symbol(item[1])  # pin type: "passive" -> passive
                         if len(item) >= 3 and isinstance(item[2], str):
-                            print(f"🔧 DEBUG: Converting pin shape '{item[2]}' to symbol")
                             item[2] = sexpdata.Symbol(item[2])  # pin shape: "line" -> line
 
                     # Recursively process nested lists
