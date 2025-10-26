@@ -5,8 +5,9 @@ This module contains specialized parsers for different schematic element types,
 extracted from the monolithic parser.py for better maintainability.
 """
 
-# Element parsers will be imported here as they are created
-# from .graphics_parser import GraphicsParser
+from .graphics_parser import GraphicsParser
+
+# Additional element parsers will be imported here as they are created
 # from .wire_parser import WireParser
 # from .label_parser import LabelParser
 # from .text_parser import TextParser
@@ -16,5 +17,6 @@ extracted from the monolithic parser.py for better maintainability.
 # from .metadata_parser import MetadataParser
 
 __all__ = [
+    "GraphicsParser",
     # Will be populated as parsers are added
 ]
