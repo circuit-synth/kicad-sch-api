@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Optional
 
 import sexpdata
 
+from ...core.config import config
+
 from ..base import BaseElementParser
 
 logger = logging.getLogger(__name__)
@@ -29,7 +31,7 @@ class WireParser(BaseElementParser):
         wire_data = {
             "points": [],
             "stroke_width": 0.0,
-            "stroke_type": "default",
+            "stroke_type": config.defaults.stroke_type,
             "uuid": None,
             "wire_type": "wire",  # Default to wire (vs bus)
         }
@@ -157,8 +159,8 @@ class WireParser(BaseElementParser):
             sexp.append(pts_sexp)
 
         # Add stroke information
-        stroke_width = wire_data.get("stroke_width", 0)
-        stroke_type = wire_data.get("stroke_type", "default")
+        stroke_width = wire_data.get("stroke_width", config.defaults.stroke_width)
+        stroke_type = wire_data.get("stroke_type", config.defaults.stroke_type)
         stroke_sexp = [sexpdata.Symbol("stroke")]
 
         # Format stroke width (use int for 0, preserve float for others)

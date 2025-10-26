@@ -313,10 +313,10 @@ class Schematic:
     def create(
         cls,
         name: str = "Untitled",
-        version: str = "20250114",
-        generator: str = "eeschema",
-        generator_version: str = "9.0",
-        paper: str = "A4",
+        version: str = None,
+        generator: str = None,
+        generator_version: str = None,
+        paper: str = None,
         uuid: str = None,
     ) -> "Schematic":
         """
@@ -324,15 +324,23 @@ class Schematic:
 
         Args:
             name: Schematic name
-            version: KiCAD version (default: "20250114")
-            generator: Generator name (default: "eeschema")
-            generator_version: Generator version (default: "9.0")
-            paper: Paper size (default: "A4")
+            version: KiCAD version (default from config)
+            generator: Generator name (default from config)
+            generator_version: Generator version (default from config)
+            paper: Paper size (default from config)
             uuid: Specific UUID (auto-generated if None)
 
         Returns:
             New empty Schematic object
         """
+        # Apply config defaults for None values
+        from .config import config
+
+        version = version or config.file_format.version_default
+        generator = generator or config.file_format.generator_default
+        generator_version = generator_version or config.file_format.generator_version_default
+        paper = paper or config.paper.default
+
         # Special handling for blank schematic test case to match reference exactly
         if name == "Blank Schematic":
             schematic_data = {

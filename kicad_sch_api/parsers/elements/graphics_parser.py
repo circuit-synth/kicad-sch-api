@@ -15,6 +15,8 @@ from typing import Any, Dict, List, Optional
 
 import sexpdata
 
+from ...core.config import config
+
 from ..base import BaseElementParser
 
 logger = logging.getLogger(__name__)
@@ -30,7 +32,7 @@ class GraphicsParser(BaseElementParser):
     def _parse_polyline(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a polyline graphical element."""
         # Format: (polyline (pts (xy x1 y1) (xy x2 y2) ...) (stroke ...) (uuid ...))
-        polyline_data = {"points": [], "stroke_width": 0, "stroke_type": "default", "uuid": None}
+        polyline_data = {"points": [], "stroke_width": config.defaults.stroke_width, "stroke_type": config.defaults.stroke_type, "uuid": None}
 
         for elem in item[1:]:
             if not isinstance(elem, list):
@@ -63,9 +65,9 @@ class GraphicsParser(BaseElementParser):
             "start": {"x": 0, "y": 0},
             "mid": {"x": 0, "y": 0},
             "end": {"x": 0, "y": 0},
-            "stroke_width": 0,
-            "stroke_type": "default",
-            "fill_type": "none",
+            "stroke_width": config.defaults.stroke_width,
+            "stroke_type": config.defaults.stroke_type,
+            "fill_type": config.defaults.fill_type,
             "uuid": None,
         }
 
@@ -105,9 +107,9 @@ class GraphicsParser(BaseElementParser):
         circle_data = {
             "center": {"x": 0, "y": 0},
             "radius": 0,
-            "stroke_width": 0,
-            "stroke_type": "default",
-            "fill_type": "none",
+            "stroke_width": config.defaults.stroke_width,
+            "stroke_type": config.defaults.stroke_type,
+            "fill_type": config.defaults.fill_type,
             "uuid": None,
         }
 
@@ -146,9 +148,9 @@ class GraphicsParser(BaseElementParser):
         # Format: (bezier (pts (xy x1 y1) (xy x2 y2) ...) (stroke ...) (fill ...) (uuid ...))
         bezier_data = {
             "points": [],
-            "stroke_width": 0,
-            "stroke_type": "default",
-            "fill_type": "none",
+            "stroke_width": config.defaults.stroke_width,
+            "stroke_type": config.defaults.stroke_type,
+            "fill_type": config.defaults.fill_type,
             "uuid": None,
         }
 
@@ -262,8 +264,8 @@ class GraphicsParser(BaseElementParser):
             sexp.append(pts_sexp)
 
         # Add stroke
-        stroke_width = polyline_data.get("stroke_width", 0)
-        stroke_type = polyline_data.get("stroke_type", "default")
+        stroke_width = polyline_data.get("stroke_width", config.defaults.stroke_width)
+        stroke_type = polyline_data.get("stroke_type", config.defaults.stroke_type)
         stroke_sexp = [sexpdata.Symbol("stroke")]
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
@@ -292,15 +294,15 @@ class GraphicsParser(BaseElementParser):
             sexp.append([sexpdata.Symbol(point_name), x, y])
 
         # Add stroke
-        stroke_width = arc_data.get("stroke_width", 0)
-        stroke_type = arc_data.get("stroke_type", "default")
+        stroke_width = arc_data.get("stroke_width", config.defaults.stroke_width)
+        stroke_type = arc_data.get("stroke_type", config.defaults.stroke_type)
         stroke_sexp = [sexpdata.Symbol("stroke")]
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
         sexp.append(stroke_sexp)
 
         # Add fill
-        fill_type = arc_data.get("fill_type", "none")
+        fill_type = arc_data.get("fill_type", config.defaults.fill_type)
         fill_sexp = [sexpdata.Symbol("fill")]
         fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
         sexp.append(fill_sexp)
@@ -331,15 +333,15 @@ class GraphicsParser(BaseElementParser):
         sexp.append([sexpdata.Symbol("radius"), radius])
 
         # Add stroke
-        stroke_width = circle_data.get("stroke_width", 0)
-        stroke_type = circle_data.get("stroke_type", "default")
+        stroke_width = circle_data.get("stroke_width", config.defaults.stroke_width)
+        stroke_type = circle_data.get("stroke_type", config.defaults.stroke_type)
         stroke_sexp = [sexpdata.Symbol("stroke")]
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
         sexp.append(stroke_sexp)
 
         # Add fill
-        fill_type = circle_data.get("fill_type", "none")
+        fill_type = circle_data.get("fill_type", config.defaults.fill_type)
         fill_sexp = [sexpdata.Symbol("fill")]
         fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
         sexp.append(fill_sexp)
@@ -370,15 +372,15 @@ class GraphicsParser(BaseElementParser):
             sexp.append(pts_sexp)
 
         # Add stroke
-        stroke_width = bezier_data.get("stroke_width", 0)
-        stroke_type = bezier_data.get("stroke_type", "default")
+        stroke_width = bezier_data.get("stroke_width", config.defaults.stroke_width)
+        stroke_type = bezier_data.get("stroke_type", config.defaults.stroke_type)
         stroke_sexp = [sexpdata.Symbol("stroke")]
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
         sexp.append(stroke_sexp)
 
         # Add fill
-        fill_type = bezier_data.get("fill_type", "none")
+        fill_type = bezier_data.get("fill_type", config.defaults.fill_type)
         fill_sexp = [sexpdata.Symbol("fill")]
         fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
         sexp.append(fill_sexp)
@@ -405,8 +407,8 @@ class GraphicsParser(BaseElementParser):
         sexp.append([sexpdata.Symbol("end"), end_x, end_y])
 
         # Add stroke
-        stroke_width = rectangle_data.get("stroke_width", 0)
-        stroke_type = rectangle_data.get("stroke_type", "default")
+        stroke_width = rectangle_data.get("stroke_width", config.defaults.stroke_width)
+        stroke_type = rectangle_data.get("stroke_type", config.defaults.stroke_type)
         stroke_sexp = [sexpdata.Symbol("stroke")]
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
@@ -417,7 +419,7 @@ class GraphicsParser(BaseElementParser):
         sexp.append(stroke_sexp)
 
         # Add fill
-        fill_type = rectangle_data.get("fill_type", "none")
+        fill_type = rectangle_data.get("fill_type", config.defaults.fill_type)
         fill_sexp = [sexpdata.Symbol("fill")]
         fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
         # Add fill color if present

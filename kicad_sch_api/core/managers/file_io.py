@@ -8,6 +8,7 @@ while maintaining exact format preservation.
 import logging
 import time
 from pathlib import Path
+from ..config import config
 from typing import Any, Dict, Optional, Union
 
 from ...utils.validation import ValidationError
@@ -219,9 +220,9 @@ class FileIOManager:
         return {
             "kicad_sch": {
                 "version": 20230819,
-                "generator": "kicad-sch-api",
+                "generator": config.file_format.generator_default,
                 "uuid": None,  # Will be set by calling code
-                "paper": "A4",
+                "paper": config.paper.default,
                 "lib_symbols": {},
                 "symbol": [],
                 "wire": [],
