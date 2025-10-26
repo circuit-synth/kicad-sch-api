@@ -384,6 +384,11 @@ def get_component_bounding_box(
 
     # Transform to world coordinates
     # TODO: Handle component rotation in the future
+    # NOTE: Currently assumes 0° rotation. For rotated components, bounding box
+    # would need to be recalculated after applying rotation matrix. This is a
+    # known limitation but doesn't affect most use cases since components are
+    # typically placed without rotation, and routing avoids components regardless.
+    # Priority: LOW - Would improve accuracy for rotated component placement validation
     world_bbox = BoundingBox(
         component.position.x + symbol_bbox.min_x,
         component.position.y + symbol_bbox.min_y,

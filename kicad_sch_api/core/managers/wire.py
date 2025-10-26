@@ -305,7 +305,13 @@ class WireManager:
                 return True
 
         # TODO: Implement more sophisticated connectivity analysis
-        # This would involve following wire networks through junctions
+        # NOTE: Current implementation only checks for direct wire connections between pins.
+        # A full implementation would:
+        # 1. Follow wire networks through junctions (connection points)
+        # 2. Trace through labels (global/hierarchical net connections)
+        # 3. Build a complete net connectivity graph
+        # This is a known limitation - use ValidationManager for full electrical rule checking.
+        # Priority: MEDIUM - Would enable better automated wiring validation
         return False
 
     def connect_pins_with_wire(

@@ -163,6 +163,10 @@ class SchematicSymbol:
         if not pin:
             return None
         # TODO: Apply rotation and symbol position transformation
+        # NOTE: Currently assumes 0° rotation. For rotated components, pin positions
+        # would need to be transformed using rotation matrix before adding to component position.
+        # This affects pin-to-pin wiring accuracy for rotated components.
+        # Priority: MEDIUM - Would improve wiring accuracy for rotated components
         return Point(self.position.x + pin.position.x, self.position.y + pin.position.y)
 
 
