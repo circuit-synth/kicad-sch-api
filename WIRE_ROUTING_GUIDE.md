@@ -1,11 +1,15 @@
-# Wire Routing Algorithms Guide
+# Wire Routing Algorithms Reference
 
 ## Overview
 
-The kicad-sch-api provides two complementary wire routing algorithms for different use cases:
+**Important**: Wire routing is NOT a primary focus of kicad-sch-api. This library is designed for schematic manipulation and format preservation.
+
+The kicad-sch-api includes two wire routing algorithm implementations that are available for downstream projects:
 
 1. **Simple Manhattan** - Fast, simple L-shaped routing
 2. **Manhattan A\* Routing** - Advanced pathfinding with obstacle avoidance
+
+These algorithms are provided as **optional utilities** for other repositories and tools that may depend on this library. The primary focus remains schematic manipulation, component management, and exact format preservation.
 
 ## Algorithm Comparison
 
@@ -338,3 +342,20 @@ To improve coverage, add tests for:
 - Complex obstacle configurations
 - Clearance validation
 - Grid conversion accuracy
+
+## Important Note
+
+While wire routing algorithms are available in this library, **routing is not a primary design goal**. The main purpose of kicad-sch-api is:
+
+✅ **Primary Focus**:
+- Manipulating KiCAD schematic files programmatically
+- Adding/removing/modifying components
+- Managing component properties and references
+- Exact format preservation with KiCAD
+
+❌ **Not Primary Focus**:
+- Wire routing and pathfinding
+- Complex layout optimization
+- Electrical validation
+
+**Recommendation**: Other repositories should handle wire routing and advanced layout algorithms. This library provides the foundational schematic manipulation capabilities that those tools can build upon.
