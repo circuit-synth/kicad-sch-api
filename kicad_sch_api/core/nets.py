@@ -9,6 +9,7 @@ import logging
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
+from .collections import BaseCollection
 from .types import Net
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,11 @@ class NetElement:
 
     # Core properties with validation
     @property
+    def uuid(self) -> str:
+        """Net UUID (uses name as unique identifier)."""
+        return self._data.name
+
+    @property
     def name(self) -> str:
         """Net name."""
         return self._data.name
@@ -47,7 +53,9 @@ class NetElement:
             raise ValidationError("Net name cannot be empty")
         old_name = self._data.name
         self._data.name = value.strip()
+        # Update name index and rebuild base UUID index since UUID changed
         self._collection._update_name_index(old_name, self)
+        self._collection._rebuild_index()
         self._collection._mark_modified()
 
     @property
@@ -117,11 +125,15 @@ class NetElement:
         return f"<Net '{self.name}' ({len(self.components)} connections)>"
 
 
-class NetCollection:
+class NetCollection(BaseCollection[NetElement]):
     """
     Collection class for efficient net management.
 
+    Inherits from BaseCollection for standard operations and adds net-specific
+    functionality including name-based indexing.
+
     Provides fast lookup, filtering, and bulk operations for schematic nets.
+    Note: Nets use name as the unique identifier (exposed as .uuid for protocol compatibility).
     """
 
     def __init__(self, nets: List[Net] = None):
@@ -131,16 +143,16 @@ class NetCollection:
         Args:
             nets: Initial list of net data
         """
-        self._nets: List[NetElement] = []
+        # Initialize base collection
+        super().__init__([], collection_name="nets")
+
+        # Additional net-specific index (for convenience, duplicates base UUID index)
         self._name_index: Dict[str, NetElement] = {}
-        self._modified = False
 
         # Add initial nets
         if nets:
             for net_data in nets:
                 self._add_to_indexes(NetElement(net_data, self))
-
-        logger.debug(f"NetCollection initialized with {len(self._nets)} nets")
 
     def add(
         self,
@@ -190,9 +202,11 @@ class NetCollection:
         logger.debug(f"Added net: {net_element}")
         return net_element
 
-    def get(self, name: str) -> Optional[NetElement]:
-        """Get net by name."""
-        return self._name_index.get(name)
+    def get_by_name(self, name: str) -> Optional[NetElement]:
+        """Get net by name (convenience method, equivalent to get(name))."""
+        return self.get(name)
+
+    # get() method inherited from BaseCollection (uses name as UUID)
 
     def remove(self, name: str) -> bool:
         """
@@ -204,13 +218,16 @@ class NetCollection:
         Returns:
             True if net was removed, False if not found
         """
-        net_element = self._name_index.get(name)
+        net_element = self.get(name)
         if not net_element:
             return False
 
-        # Remove from indexes
-        self._remove_from_indexes(net_element)
-        self._mark_modified()
+        # Remove from name index
+        if net_element.name in self._name_index:
+            del self._name_index[net_element.name]
+
+        # Remove using base class method
+        super().remove(name)
 
         logger.debug(f"Removed net: {net_element}")
         return True
@@ -227,7 +244,7 @@ class NetCollection:
             List of matching net elements
         """
         matches = []
-        for net_element in self._nets:
+        for net_element in self._items:
             for comp_ref, comp_pin in net_element.components:
                 if comp_ref == reference and (pin is None or comp_pin == pin):
                     matches.append(net_element)
@@ -236,7 +253,7 @@ class NetCollection:
 
     def filter(self, predicate: Callable[[NetElement], bool]) -> List[NetElement]:
         """
-        Filter nets by predicate function.
+        Filter nets by predicate function (delegates to base class find).
 
         Args:
             predicate: Function that returns True for nets to include
@@ -244,7 +261,7 @@ class NetCollection:
         Returns:
             List of nets matching predicate
         """
-        return [net for net in self._nets if predicate(net)]
+        return self.find(predicate)
 
     def bulk_update(self, criteria: Callable[[NetElement], bool], updates: Dict[str, Any]):
         """
@@ -255,7 +272,7 @@ class NetCollection:
             updates: Dictionary of property updates
         """
         updated_count = 0
-        for net_element in self._nets:
+        for net_element in self._items:
             if criteria(net_element):
                 for prop, value in updates.items():
                     if hasattr(net_element, prop):
@@ -268,19 +285,13 @@ class NetCollection:
 
     def clear(self):
         """Remove all nets from collection."""
-        self._nets.clear()
         self._name_index.clear()
-        self._mark_modified()
+        super().clear()
 
     def _add_to_indexes(self, net_element: NetElement):
-        """Add net to internal indexes."""
-        self._nets.append(net_element)
+        """Add net to internal indexes (base + name index)."""
+        self._add_item(net_element)
         self._name_index[net_element.name] = net_element
-
-    def _remove_from_indexes(self, net_element: NetElement):
-        """Remove net from internal indexes."""
-        self._nets.remove(net_element)
-        del self._name_index[net_element.name]
 
     def _update_name_index(self, old_name: str, net_element: NetElement):
         """Update name index when net name changes."""
@@ -288,23 +299,7 @@ class NetCollection:
             del self._name_index[old_name]
         self._name_index[net_element.name] = net_element
 
-    def _mark_modified(self):
-        """Mark collection as modified."""
-        self._modified = True
-
-    # Collection interface methods
-    def __len__(self) -> int:
-        """Return number of nets."""
-        return len(self._nets)
-
-    def __iter__(self) -> Iterator[NetElement]:
-        """Iterate over nets."""
-        return iter(self._nets)
-
-    def __getitem__(self, index: int) -> NetElement:
-        """Get net by index."""
-        return self._nets[index]
-
+    # Collection interface methods - __len__, __iter__, __getitem__ inherited from BaseCollection
     def __bool__(self) -> bool:
         """Return True if collection has nets."""
-        return len(self._nets) > 0
+        return len(self._items) > 0
