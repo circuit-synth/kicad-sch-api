@@ -387,6 +387,18 @@ class Image:
 
 
 @dataclass
+class NoConnect:
+    """No-connect symbol in schematic."""
+
+    uuid: str
+    position: Point
+
+    def __post_init__(self):
+        if not self.uuid:
+            self.uuid = str(uuid4())
+
+
+@dataclass
 class Net:
     """Electrical net connecting components."""
 

@@ -19,6 +19,7 @@ from ..utils.validation import SchematicValidator, ValidationError, ValidationIs
 from .components import ComponentCollection
 from .formatter import ExactFormatter
 from .junctions import JunctionCollection
+from .labels import LabelCollection
 from .managers import (
     FileIOManager,
     FormatSyncManager,
@@ -29,13 +30,17 @@ from .managers import (
     ValidationManager,
     WireManager,
 )
+from .nets import NetCollection
+from .no_connects import NoConnectCollection
 from .parser import SExpressionParser
+from .texts import TextCollection
 from .types import (
     HierarchicalLabelShape,
     Junction,
     Label,
     LabelType,
     Net,
+    NoConnect,
     Point,
     SchematicSymbol,
     Sheet,
@@ -148,6 +153,97 @@ class Schematic:
                 junctions.append(junction)
         self._junctions = JunctionCollection(junctions)
 
+        # Initialize text collection
+        text_data = self._data.get("texts", [])
+        texts = []
+        for text_dict in text_data:
+            if isinstance(text_dict, dict):
+                # Convert dict to Text object
+                position = text_dict.get("position", {"x": 0, "y": 0})
+                if isinstance(position, dict):
+                    pos = Point(position["x"], position["y"])
+                elif isinstance(position, (list, tuple)):
+                    pos = Point(position[0], position[1])
+                else:
+                    pos = position
+
+                text = Text(
+                    uuid=text_dict.get("uuid", str(uuid.uuid4())),
+                    position=pos,
+                    text=text_dict.get("text", ""),
+                    rotation=text_dict.get("rotation", 0.0),
+                    size=text_dict.get("size", 1.27),
+                    exclude_from_sim=text_dict.get("exclude_from_sim", False),
+                )
+                texts.append(text)
+        self._texts = TextCollection(texts)
+
+        # Initialize label collection
+        label_data = self._data.get("labels", [])
+        labels = []
+        for label_dict in label_data:
+            if isinstance(label_dict, dict):
+                # Convert dict to Label object
+                position = label_dict.get("position", {"x": 0, "y": 0})
+                if isinstance(position, dict):
+                    pos = Point(position["x"], position["y"])
+                elif isinstance(position, (list, tuple)):
+                    pos = Point(position[0], position[1])
+                else:
+                    pos = position
+
+                label = Label(
+                    uuid=label_dict.get("uuid", str(uuid.uuid4())),
+                    position=pos,
+                    text=label_dict.get("text", ""),
+                    label_type=LabelType(label_dict.get("label_type", "local")),
+                    rotation=label_dict.get("rotation", 0.0),
+                    size=label_dict.get("size", 1.27),
+                    shape=HierarchicalLabelShape(label_dict.get("shape")) if label_dict.get("shape") else None,
+                )
+                labels.append(label)
+        self._labels = LabelCollection(labels)
+
+        # Initialize hierarchical labels collection (filter from labels)
+        hierarchical_labels = [label for label in labels if label.label_type == LabelType.HIERARCHICAL]
+        self._hierarchical_labels = LabelCollection(hierarchical_labels)
+
+        # Initialize no-connect collection
+        no_connect_data = self._data.get("no_connects", [])
+        no_connects = []
+        for no_connect_dict in no_connect_data:
+            if isinstance(no_connect_dict, dict):
+                # Convert dict to NoConnect object
+                position = no_connect_dict.get("position", {"x": 0, "y": 0})
+                if isinstance(position, dict):
+                    pos = Point(position["x"], position["y"])
+                elif isinstance(position, (list, tuple)):
+                    pos = Point(position[0], position[1])
+                else:
+                    pos = position
+
+                no_connect = NoConnect(
+                    uuid=no_connect_dict.get("uuid", str(uuid.uuid4())),
+                    position=pos,
+                )
+                no_connects.append(no_connect)
+        self._no_connects = NoConnectCollection(no_connects)
+
+        # Initialize net collection
+        net_data = self._data.get("nets", [])
+        nets = []
+        for net_dict in net_data:
+            if isinstance(net_dict, dict):
+                # Convert dict to Net object
+                net = Net(
+                    name=net_dict.get("name", ""),
+                    components=net_dict.get("components", []),
+                    wires=net_dict.get("wires", []),
+                    labels=net_dict.get("labels", []),
+                )
+                nets.append(net)
+        self._nets = NetCollection(nets)
+
         # Initialize specialized managers
         self._file_io_manager = FileIOManager()
         self._format_sync_manager = FormatSyncManager(self._data)
@@ -169,8 +265,10 @@ class Schematic:
         self._total_operation_time = 0.0
 
         logger.debug(
-            f"Schematic initialized with managers: {len(self._components)} components, "
-            f"{len(self._wires)} wires, and {len(self._junctions)} junctions"
+            f"Schematic initialized with {len(self._components)} components, {len(self._wires)} wires, "
+            f"{len(self._junctions)} junctions, {len(self._texts)} texts, {len(self._labels)} labels, "
+            f"{len(self._hierarchical_labels)} hierarchical labels, {len(self._no_connects)} no-connects, "
+            f"and {len(self._nets)} nets with managers initialized"
         )
 
     @classmethod
@@ -304,7 +402,43 @@ class Schematic:
     @property
     def modified(self) -> bool:
         """Whether schematic has been modified since last save."""
-        return self._modified or self._components._modified or self._format_sync_manager.is_dirty()
+        return (
+            self._modified
+            or self._components._modified
+            or self._wires._modified
+            or self._junctions._modified
+            or self._texts._modified
+            or self._labels._modified
+            or self._hierarchical_labels._modified
+            or self._no_connects._modified
+            or self._nets._modified
+            or self._format_sync_manager.is_dirty()
+        )
+
+    @property
+    def texts(self) -> TextCollection:
+        """Collection of all text elements in the schematic."""
+        return self._texts
+
+    @property
+    def labels(self) -> LabelCollection:
+        """Collection of all label elements in the schematic."""
+        return self._labels
+
+    @property
+    def hierarchical_labels(self) -> LabelCollection:
+        """Collection of all hierarchical label elements in the schematic."""
+        return self._hierarchical_labels
+
+    @property
+    def no_connects(self) -> NoConnectCollection:
+        """Collection of all no-connect elements in the schematic."""
+        return self._no_connects
+
+    @property
+    def nets(self) -> NetCollection:
+        """Collection of all electrical nets in the schematic."""
+        return self._nets
 
     # Pin positioning methods (delegated to WireManager)
     def get_component_pin_position(self, reference: str, pin_number: str) -> Optional[Point]:
