@@ -52,6 +52,7 @@ from .types import (
     point_from_dict_or_tuple,
 )
 from .wires import WireCollection
+from .factories import ElementFactory
 
 logger = logging.getLogger(__name__)
 
@@ -108,90 +109,22 @@ class Schematic:
 
         # Initialize wire collection
         wire_data = self._data.get("wires", [])
-        wires = []
-        for wire_dict in wire_data:
-            if isinstance(wire_dict, dict):
-                # Convert dict to Wire object
-                points = []
-                for point_data in wire_dict.get("points", []):
-                    if isinstance(point_data, dict):
-                        points.append(Point(point_data["x"], point_data["y"]))
-                    elif isinstance(point_data, (list, tuple)):
-                        points.append(Point(point_data[0], point_data[1]))
-                    else:
-                        points.append(point_data)
-
-                wire = Wire(
-                    uuid=wire_dict.get("uuid", str(uuid.uuid4())),
-                    points=points,
-                    wire_type=WireType(wire_dict.get("wire_type", "wire")),
-                    stroke_width=wire_dict.get("stroke_width", 0.0),
-                    stroke_type=wire_dict.get("stroke_type", "default"),
-                )
-                wires.append(wire)
+        wires = ElementFactory.create_wires_from_list(wire_data)
         self._wires = WireCollection(wires)
 
         # Initialize junction collection
         junction_data = self._data.get("junctions", [])
-        junctions = []
-        for junction_dict in junction_data:
-            if isinstance(junction_dict, dict):
-                # Convert dict to Junction object
-                position = junction_dict.get("position", {"x": 0, "y": 0})
-                pos = point_from_dict_or_tuple(position)
-
-                junction = Junction(
-                    uuid=junction_dict.get("uuid", str(uuid.uuid4())),
-                    position=pos,
-                    diameter=junction_dict.get("diameter", 0),
-                    color=junction_dict.get("color", (0, 0, 0, 0)),
-                )
-                junctions.append(junction)
+        junctions = ElementFactory.create_junctions_from_list(junction_data)
         self._junctions = JunctionCollection(junctions)
 
         # Initialize text collection
         text_data = self._data.get("texts", [])
-        texts = []
-        for text_dict in text_data:
-            if isinstance(text_dict, dict):
-                # Convert dict to Text object
-                position = text_dict.get("position", {"x": 0, "y": 0})
-                pos = point_from_dict_or_tuple(position)
-
-                text = Text(
-                    uuid=text_dict.get("uuid", str(uuid.uuid4())),
-                    position=pos,
-                    text=text_dict.get("text", ""),
-                    rotation=text_dict.get("rotation", 0.0),
-                    size=text_dict.get("size", 1.27),
-                    exclude_from_sim=text_dict.get("exclude_from_sim", False),
-                )
-                texts.append(text)
+        texts = ElementFactory.create_texts_from_list(text_data)
         self._texts = TextCollection(texts)
 
         # Initialize label collection
         label_data = self._data.get("labels", [])
-        labels = []
-        for label_dict in label_data:
-            if isinstance(label_dict, dict):
-                # Convert dict to Label object
-                position = label_dict.get("position", {"x": 0, "y": 0})
-                pos = point_from_dict_or_tuple(position)
-
-                label = Label(
-                    uuid=label_dict.get("uuid", str(uuid.uuid4())),
-                    position=pos,
-                    text=label_dict.get("text", ""),
-                    label_type=LabelType(label_dict.get("label_type", "local")),
-                    rotation=label_dict.get("rotation", 0.0),
-                    size=label_dict.get("size", 1.27),
-                    shape=(
-                        HierarchicalLabelShape(label_dict.get("shape"))
-                        if label_dict.get("shape")
-                        else None
-                    ),
-                )
-                labels.append(label)
+        labels = ElementFactory.create_labels_from_list(label_data)
         self._labels = LabelCollection(labels)
 
         # Initialize hierarchical labels collection (from both labels array and hierarchical_labels array)
@@ -201,58 +134,18 @@ class Schematic:
 
         # Also load from hierarchical_labels data if present
         hierarchical_label_data = self._data.get("hierarchical_labels", [])
-        for hlabel_dict in hierarchical_label_data:
-            if isinstance(hlabel_dict, dict):
-                # Convert dict to Label object
-                position = hlabel_dict.get("position", {"x": 0, "y": 0})
-                pos = point_from_dict_or_tuple(position)
-
-                hlabel = Label(
-                    uuid=hlabel_dict.get("uuid", str(uuid.uuid4())),
-                    position=pos,
-                    text=hlabel_dict.get("text", ""),
-                    label_type=LabelType.HIERARCHICAL,
-                    rotation=hlabel_dict.get("rotation", 0.0),
-                    size=hlabel_dict.get("size", 1.27),
-                    shape=(
-                        HierarchicalLabelShape(hlabel_dict.get("shape"))
-                        if hlabel_dict.get("shape")
-                        else None
-                    ),
-                )
-                hierarchical_labels.append(hlabel)
+        hierarchical_labels.extend(ElementFactory.create_labels_from_list(hierarchical_label_data))
 
         self._hierarchical_labels = LabelCollection(hierarchical_labels)
 
         # Initialize no-connect collection
         no_connect_data = self._data.get("no_connects", [])
-        no_connects = []
-        for no_connect_dict in no_connect_data:
-            if isinstance(no_connect_dict, dict):
-                # Convert dict to NoConnect object
-                position = no_connect_dict.get("position", {"x": 0, "y": 0})
-                pos = point_from_dict_or_tuple(position)
-
-                no_connect = NoConnect(
-                    uuid=no_connect_dict.get("uuid", str(uuid.uuid4())),
-                    position=pos,
-                )
-                no_connects.append(no_connect)
+        no_connects = ElementFactory.create_no_connects_from_list(no_connect_data)
         self._no_connects = NoConnectCollection(no_connects)
 
         # Initialize net collection
         net_data = self._data.get("nets", [])
-        nets = []
-        for net_dict in net_data:
-            if isinstance(net_dict, dict):
-                # Convert dict to Net object
-                net = Net(
-                    name=net_dict.get("name", ""),
-                    components=net_dict.get("components", []),
-                    wires=net_dict.get("wires", []),
-                    labels=net_dict.get("labels", []),
-                )
-                nets.append(net)
+        nets = ElementFactory.create_nets_from_list(net_data)
         self._nets = NetCollection(nets)
 
         # Initialize specialized managers
