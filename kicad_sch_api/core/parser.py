@@ -13,6 +13,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import sexpdata
 
 from ..parsers.elements.graphics_parser import GraphicsParser
+from ..parsers.elements.label_parser import LabelParser
+from ..parsers.elements.library_parser import LibraryParser
+from ..parsers.elements.metadata_parser import MetadataParser
+from ..parsers.elements.sheet_parser import SheetParser
+from ..parsers.elements.symbol_parser import SymbolParser
+from ..parsers.elements.text_parser import TextParser
 from ..parsers.elements.wire_parser import WireParser
 from ..parsers.utils import color_to_rgb255, color_to_rgba
 from ..utils.validation import ValidationError, ValidationIssue
@@ -45,6 +51,12 @@ class SExpressionParser:
         self._validation_issues = []
         self._graphics_parser = GraphicsParser()
         self._wire_parser = WireParser()
+        self._label_parser = LabelParser()
+        self._text_parser = TextParser()
+        self._sheet_parser = SheetParser()
+        self._library_parser = LibraryParser()
+        self._symbol_parser = SymbolParser()
+        self._metadata_parser = MetadataParser()
         logger.info(f"S-expression parser initialized (format preservation: {preserve_format})")
 
     def parse_file(self, filepath: Union[str, Path]) -> Dict[str, Any]:
@@ -417,85 +429,13 @@ class SExpressionParser:
 
     def _parse_title_block(self, item: List[Any]) -> Dict[str, Any]:
         """Parse title block information."""
-        title_block = {}
-        for sub_item in item[1:]:
-            if isinstance(sub_item, list) and len(sub_item) >= 2:
-                key = str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
-                if key:
-                    title_block[key] = sub_item[1] if len(sub_item) > 1 else None
-        return title_block
-
+        return self._metadata_parser._parse_title_block(item)
     def _parse_symbol(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a symbol (component) definition."""
-        try:
-            symbol_data = {
-                "lib_id": None,
-                "position": Point(0, 0),
-                "rotation": 0,
-                "uuid": None,
-                "reference": None,
-                "value": None,
-                "footprint": None,
-                "properties": {},
-                "pins": [],
-                "in_bom": True,
-                "on_board": True,
-            }
-
-            for sub_item in item[1:]:
-                if not isinstance(sub_item, list) or len(sub_item) == 0:
-                    continue
-
-                element_type = (
-                    str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
-                )
-
-                if element_type == "lib_id":
-                    symbol_data["lib_id"] = sub_item[1] if len(sub_item) > 1 else None
-                elif element_type == "at":
-                    if len(sub_item) >= 3:
-                        symbol_data["position"] = Point(float(sub_item[1]), float(sub_item[2]))
-                        if len(sub_item) > 3:
-                            symbol_data["rotation"] = float(sub_item[3])
-                elif element_type == "uuid":
-                    symbol_data["uuid"] = sub_item[1] if len(sub_item) > 1 else None
-                elif element_type == "property":
-                    prop_data = self._parse_property(sub_item)
-                    if prop_data:
-                        prop_name = prop_data.get("name")
-                        if prop_name == "Reference":
-                            symbol_data["reference"] = prop_data.get("value")
-                        elif prop_name == "Value":
-                            symbol_data["value"] = prop_data.get("value")
-                        elif prop_name == "Footprint":
-                            symbol_data["footprint"] = prop_data.get("value")
-                        else:
-                            # Unescape quotes in property values when loading
-                            prop_value = prop_data.get("value")
-                            if prop_value:
-                                prop_value = str(prop_value).replace('\\"', '"')
-                            symbol_data["properties"][prop_name] = prop_value
-                elif element_type == "in_bom":
-                    symbol_data["in_bom"] = sub_item[1] == "yes" if len(sub_item) > 1 else True
-                elif element_type == "on_board":
-                    symbol_data["on_board"] = sub_item[1] == "yes" if len(sub_item) > 1 else True
-
-            return symbol_data
-
-        except Exception as e:
-            logger.warning(f"Error parsing symbol: {e}")
-            return None
-
+        return self._symbol_parser._parse_symbol(item)
     def _parse_property(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a property definition."""
-        if len(item) < 3:
-            return None
-
-        return {
-            "name": item[1] if len(item) > 1 else None,
-            "value": item[2] if len(item) > 2 else None,
-        }
-
+        return self._symbol_parser._parse_property(item)
     def _parse_wire(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a wire definition."""
         return self._wire_parser._parse_wire(item)
@@ -504,367 +444,25 @@ class SExpressionParser:
         return self._wire_parser._parse_junction(item)
     def _parse_label(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a label definition."""
-        # Label format: (label "text" (at x y rotation) (effects ...) (uuid ...))
-        if len(item) < 2:
-            return None
-
-        label_data = {
-            "text": str(item[1]),  # Label text is second element
-            "position": {"x": 0, "y": 0},
-            "rotation": 0,
-            "size": 1.27,
-            "uuid": None,
-        }
-
-        for elem in item[2:]:  # Skip label keyword and text
-            if not isinstance(elem, list):
-                continue
-
-            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
-
-            if elem_type == "at":
-                # Parse position: (at x y rotation)
-                if len(elem) >= 3:
-                    label_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
-                if len(elem) >= 4:
-                    label_data["rotation"] = float(elem[3])
-
-            elif elem_type == "effects":
-                # Parse effects for font size: (effects (font (size x y)) ...)
-                for effect_elem in elem[1:]:
-                    if isinstance(effect_elem, list) and str(effect_elem[0]) == "font":
-                        for font_elem in effect_elem[1:]:
-                            if isinstance(font_elem, list) and str(font_elem[0]) == "size":
-                                if len(font_elem) >= 2:
-                                    label_data["size"] = float(font_elem[1])
-
-            elif elem_type == "uuid":
-                label_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
-
-        return label_data
-
+        return self._label_parser._parse_label(item)
     def _parse_hierarchical_label(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a hierarchical label definition."""
-        # Format: (hierarchical_label "text" (shape input) (at x y rotation) (effects ...) (uuid ...))
-        if len(item) < 2:
-            return None
-
-        hlabel_data = {
-            "text": str(item[1]),  # Hierarchical label text is second element
-            "shape": "input",  # input/output/bidirectional/tri_state/passive
-            "position": {"x": 0, "y": 0},
-            "rotation": 0,
-            "size": 1.27,
-            "justify": "left",
-            "uuid": None,
-        }
-
-        for elem in item[2:]:  # Skip hierarchical_label keyword and text
-            if not isinstance(elem, list):
-                continue
-
-            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
-
-            if elem_type == "shape":
-                # Parse shape: (shape input)
-                if len(elem) >= 2:
-                    hlabel_data["shape"] = str(elem[1])
-
-            elif elem_type == "at":
-                # Parse position: (at x y rotation)
-                if len(elem) >= 3:
-                    hlabel_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
-                if len(elem) >= 4:
-                    hlabel_data["rotation"] = float(elem[3])
-
-            elif elem_type == "effects":
-                # Parse effects for font size and justification: (effects (font (size x y)) (justify left))
-                for effect_elem in elem[1:]:
-                    if isinstance(effect_elem, list):
-                        effect_type = (
-                            str(effect_elem[0])
-                            if isinstance(effect_elem[0], sexpdata.Symbol)
-                            else None
-                        )
-
-                        if effect_type == "font":
-                            # Parse font size
-                            for font_elem in effect_elem[1:]:
-                                if isinstance(font_elem, list) and str(font_elem[0]) == "size":
-                                    if len(font_elem) >= 2:
-                                        hlabel_data["size"] = float(font_elem[1])
-
-                        elif effect_type == "justify":
-                            # Parse justification (e.g., "left", "right")
-                            if len(effect_elem) >= 2:
-                                hlabel_data["justify"] = str(effect_elem[1])
-
-            elif elem_type == "uuid":
-                hlabel_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
-
-        return hlabel_data
-
+        return self._label_parser._parse_hierarchical_label(item)
     def _parse_no_connect(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a no_connect symbol."""
         return self._wire_parser._parse_no_connect(item)
     def _parse_text(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a text element."""
-        # Format: (text "text" (exclude_from_sim no) (at x y rotation) (effects ...) (uuid ...))
-        if len(item) < 2:
-            return None
-
-        text_data = {
-            "text": str(item[1]),
-            "exclude_from_sim": False,
-            "position": {"x": 0, "y": 0},
-            "rotation": 0,
-            "size": 1.27,
-            "uuid": None,
-        }
-
-        for elem in item[2:]:
-            if not isinstance(elem, list):
-                continue
-
-            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
-
-            if elem_type == "exclude_from_sim":
-                if len(elem) >= 2:
-                    text_data["exclude_from_sim"] = str(elem[1]) == "yes"
-            elif elem_type == "at":
-                if len(elem) >= 3:
-                    text_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
-                if len(elem) >= 4:
-                    text_data["rotation"] = float(elem[3])
-            elif elem_type == "effects":
-                for effect_elem in elem[1:]:
-                    if isinstance(effect_elem, list) and str(effect_elem[0]) == "font":
-                        for font_elem in effect_elem[1:]:
-                            if isinstance(font_elem, list) and str(font_elem[0]) == "size":
-                                if len(font_elem) >= 2:
-                                    text_data["size"] = float(font_elem[1])
-            elif elem_type == "uuid":
-                text_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
-
-        return text_data
-
+        return self._text_parser._parse_text(item)
     def _parse_text_box(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a text_box element."""
-        # Format: (text_box "text" (exclude_from_sim no) (at x y rotation) (size w h) (margins ...) (stroke ...) (fill ...) (effects ...) (uuid ...))
-        if len(item) < 2:
-            return None
-
-        text_box_data = {
-            "text": str(item[1]),
-            "exclude_from_sim": False,
-            "position": {"x": 0, "y": 0},
-            "rotation": 0,
-            "size": {"width": 0, "height": 0},
-            "margins": (0.9525, 0.9525, 0.9525, 0.9525),
-            "stroke_width": 0,
-            "stroke_type": "solid",
-            "fill_type": "none",
-            "font_size": 1.27,
-            "justify_horizontal": "left",
-            "justify_vertical": "top",
-            "uuid": None,
-        }
-
-        for elem in item[2:]:
-            if not isinstance(elem, list):
-                continue
-
-            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
-
-            if elem_type == "exclude_from_sim":
-                if len(elem) >= 2:
-                    text_box_data["exclude_from_sim"] = str(elem[1]) == "yes"
-            elif elem_type == "at":
-                if len(elem) >= 3:
-                    text_box_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
-                if len(elem) >= 4:
-                    text_box_data["rotation"] = float(elem[3])
-            elif elem_type == "size":
-                if len(elem) >= 3:
-                    text_box_data["size"] = {"width": float(elem[1]), "height": float(elem[2])}
-            elif elem_type == "margins":
-                if len(elem) >= 5:
-                    text_box_data["margins"] = (
-                        float(elem[1]),
-                        float(elem[2]),
-                        float(elem[3]),
-                        float(elem[4]),
-                    )
-            elif elem_type == "stroke":
-                for stroke_elem in elem[1:]:
-                    if isinstance(stroke_elem, list):
-                        stroke_type = str(stroke_elem[0])
-                        if stroke_type == "width" and len(stroke_elem) >= 2:
-                            text_box_data["stroke_width"] = float(stroke_elem[1])
-                        elif stroke_type == "type" and len(stroke_elem) >= 2:
-                            text_box_data["stroke_type"] = str(stroke_elem[1])
-            elif elem_type == "fill":
-                for fill_elem in elem[1:]:
-                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
-                        text_box_data["fill_type"] = (
-                            str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
-                        )
-            elif elem_type == "effects":
-                for effect_elem in elem[1:]:
-                    if isinstance(effect_elem, list):
-                        effect_type = str(effect_elem[0])
-                        if effect_type == "font":
-                            for font_elem in effect_elem[1:]:
-                                if isinstance(font_elem, list) and str(font_elem[0]) == "size":
-                                    if len(font_elem) >= 2:
-                                        text_box_data["font_size"] = float(font_elem[1])
-                        elif effect_type == "justify":
-                            if len(effect_elem) >= 2:
-                                text_box_data["justify_horizontal"] = str(effect_elem[1])
-                            if len(effect_elem) >= 3:
-                                text_box_data["justify_vertical"] = str(effect_elem[2])
-            elif elem_type == "uuid":
-                text_box_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
-
-        return text_box_data
-
+        return self._text_parser._parse_text_box(item)
     def _parse_sheet(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a hierarchical sheet."""
-        # Complex format with position, size, properties, pins, instances
-        sheet_data = {
-            "position": {"x": 0, "y": 0},
-            "size": {"width": 0, "height": 0},
-            "exclude_from_sim": False,
-            "in_bom": True,
-            "on_board": True,
-            "dnp": False,
-            "fields_autoplaced": True,
-            "stroke_width": 0.1524,
-            "stroke_type": "solid",
-            "fill_color": (0, 0, 0, 0.0),
-            "uuid": None,
-            "name": "Sheet",
-            "filename": "sheet.kicad_sch",
-            "pins": [],
-            "project_name": "",
-            "page_number": "2",
-        }
-
-        for elem in item[1:]:
-            if not isinstance(elem, list):
-                continue
-
-            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
-
-            if elem_type == "at":
-                if len(elem) >= 3:
-                    sheet_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
-            elif elem_type == "size":
-                if len(elem) >= 3:
-                    sheet_data["size"] = {"width": float(elem[1]), "height": float(elem[2])}
-            elif elem_type == "exclude_from_sim":
-                sheet_data["exclude_from_sim"] = str(elem[1]) == "yes" if len(elem) > 1 else False
-            elif elem_type == "in_bom":
-                sheet_data["in_bom"] = str(elem[1]) == "yes" if len(elem) > 1 else True
-            elif elem_type == "on_board":
-                sheet_data["on_board"] = str(elem[1]) == "yes" if len(elem) > 1 else True
-            elif elem_type == "dnp":
-                sheet_data["dnp"] = str(elem[1]) == "yes" if len(elem) > 1 else False
-            elif elem_type == "fields_autoplaced":
-                sheet_data["fields_autoplaced"] = str(elem[1]) == "yes" if len(elem) > 1 else True
-            elif elem_type == "stroke":
-                for stroke_elem in elem[1:]:
-                    if isinstance(stroke_elem, list):
-                        stroke_type = str(stroke_elem[0])
-                        if stroke_type == "width" and len(stroke_elem) >= 2:
-                            sheet_data["stroke_width"] = float(stroke_elem[1])
-                        elif stroke_type == "type" and len(stroke_elem) >= 2:
-                            sheet_data["stroke_type"] = str(stroke_elem[1])
-            elif elem_type == "fill":
-                for fill_elem in elem[1:]:
-                    if isinstance(fill_elem, list) and str(fill_elem[0]) == "color":
-                        if len(fill_elem) >= 5:
-                            sheet_data["fill_color"] = (
-                                int(fill_elem[1]),
-                                int(fill_elem[2]),
-                                int(fill_elem[3]),
-                                float(fill_elem[4]),
-                            )
-            elif elem_type == "uuid":
-                sheet_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
-            elif elem_type == "property":
-                if len(elem) >= 3:
-                    prop_name = str(elem[1])
-                    prop_value = str(elem[2])
-                    if prop_name == "Sheetname":
-                        sheet_data["name"] = prop_value
-                    elif prop_name == "Sheetfile":
-                        sheet_data["filename"] = prop_value
-            elif elem_type == "pin":
-                # Parse sheet pin - reuse existing _parse_sheet_pin helper
-                pin_data = self._parse_sheet_pin_for_read(elem)
-                if pin_data:
-                    sheet_data["pins"].append(pin_data)
-            elif elem_type == "instances":
-                # Parse instances for project name and page number
-                for inst_elem in elem[1:]:
-                    if isinstance(inst_elem, list) and str(inst_elem[0]) == "project":
-                        if len(inst_elem) >= 2:
-                            sheet_data["project_name"] = str(inst_elem[1])
-                        for path_elem in inst_elem[2:]:
-                            if isinstance(path_elem, list) and str(path_elem[0]) == "path":
-                                for page_elem in path_elem[1:]:
-                                    if isinstance(page_elem, list) and str(page_elem[0]) == "page":
-                                        sheet_data["page_number"] = (
-                                            str(page_elem[1]) if len(page_elem) > 1 else "2"
-                                        )
-
-        return sheet_data
-
+        return self._sheet_parser._parse_sheet(item)
     def _parse_sheet_pin_for_read(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a sheet pin (for reading during sheet parsing)."""
-        # Format: (pin "name" type (at x y rotation) (uuid ...) (effects ...))
-        if len(item) < 3:
-            return None
-
-        pin_data = {
-            "name": str(item[1]),
-            "pin_type": str(item[2]) if len(item) > 2 else "input",
-            "position": {"x": 0, "y": 0},
-            "rotation": 0,
-            "size": 1.27,
-            "justify": "right",
-            "uuid": None,
-        }
-
-        for elem in item[3:]:
-            if not isinstance(elem, list):
-                continue
-
-            elem_type = str(elem[0]) if isinstance(elem[0], sexpdata.Symbol) else None
-
-            if elem_type == "at":
-                if len(elem) >= 3:
-                    pin_data["position"] = {"x": float(elem[1]), "y": float(elem[2])}
-                if len(elem) >= 4:
-                    pin_data["rotation"] = float(elem[3])
-            elif elem_type == "uuid":
-                pin_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
-            elif elem_type == "effects":
-                for effect_elem in elem[1:]:
-                    if isinstance(effect_elem, list):
-                        effect_type = str(effect_elem[0])
-                        if effect_type == "font":
-                            for font_elem in effect_elem[1:]:
-                                if isinstance(font_elem, list) and str(font_elem[0]) == "size":
-                                    if len(font_elem) >= 2:
-                                        pin_data["size"] = float(font_elem[1])
-                        elif effect_type == "justify":
-                            if len(effect_elem) >= 2:
-                                pin_data["justify"] = str(effect_elem[1])
-
-        return pin_data
-
+        return self._sheet_parser._parse_sheet_pin_for_read(item)
     def _parse_polyline(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a polyline graphical element."""
         return self._graphics_parser._parse_polyline(item)
@@ -885,158 +483,13 @@ class SExpressionParser:
         return self._graphics_parser._parse_image(item)
     def _parse_lib_symbols(self, item: List[Any]) -> Dict[str, Any]:
         """Parse lib_symbols section."""
-        # Implementation for lib_symbols parsing
-        return {}
-
-    # Conversion methods from internal format to S-expression
+        return self._library_parser._parse_lib_symbols(item)
     def _title_block_to_sexp(self, title_block: Dict[str, Any]) -> List[Any]:
         """Convert title block to S-expression."""
-        sexp = [sexpdata.Symbol("title_block")]
-
-        # Add standard fields
-        for key in ["title", "date", "rev", "company"]:
-            if key in title_block and title_block[key]:
-                sexp.append([sexpdata.Symbol(key), title_block[key]])
-
-        # Add comments with special formatting
-        comments = title_block.get("comments", {})
-        if isinstance(comments, dict):
-            for comment_num, comment_text in comments.items():
-                sexp.append([sexpdata.Symbol("comment"), comment_num, comment_text])
-
-        return sexp
-
+        return self._metadata_parser._title_block_to_sexp(title_block)
     def _symbol_to_sexp(self, symbol_data: Dict[str, Any], schematic_uuid: str = None) -> List[Any]:
         """Convert symbol to S-expression."""
-        sexp = [sexpdata.Symbol("symbol")]
-
-        if symbol_data.get("lib_id"):
-            sexp.append([sexpdata.Symbol("lib_id"), symbol_data["lib_id"]])
-
-        # Add position and rotation (preserve original format)
-        pos = symbol_data.get("position", Point(0, 0))
-        rotation = symbol_data.get("rotation", 0)
-        # Format numbers as integers if they are whole numbers
-        x = int(pos.x) if pos.x == int(pos.x) else pos.x
-        y = int(pos.y) if pos.y == int(pos.y) else pos.y
-        r = int(rotation) if rotation == int(rotation) else rotation
-        # Always include rotation for format consistency with KiCAD
-        sexp.append([sexpdata.Symbol("at"), x, y, r])
-
-        # Add unit (required by KiCAD)
-        unit = symbol_data.get("unit", 1)
-        sexp.append([sexpdata.Symbol("unit"), unit])
-
-        # Add simulation and board settings (required by KiCAD)
-        sexp.append([sexpdata.Symbol("exclude_from_sim"), "no"])
-        sexp.append([sexpdata.Symbol("in_bom"), "yes" if symbol_data.get("in_bom", True) else "no"])
-        sexp.append(
-            [sexpdata.Symbol("on_board"), "yes" if symbol_data.get("on_board", True) else "no"]
-        )
-        sexp.append([sexpdata.Symbol("dnp"), "no"])
-        sexp.append([sexpdata.Symbol("fields_autoplaced"), "yes"])
-
-        if symbol_data.get("uuid"):
-            sexp.append([sexpdata.Symbol("uuid"), symbol_data["uuid"]])
-
-        # Add properties with proper positioning and effects
-        lib_id = symbol_data.get("lib_id", "")
-        is_power_symbol = "power:" in lib_id
-
-        if symbol_data.get("reference"):
-            # Power symbol references should be hidden by default
-            ref_hide = is_power_symbol
-            ref_prop = self._create_property_with_positioning(
-                "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide
-            )
-            sexp.append(ref_prop)
-
-        if symbol_data.get("value"):
-            # Power symbol values need different positioning
-            if is_power_symbol:
-                val_prop = self._create_power_symbol_value_property(
-                    symbol_data["value"], pos, lib_id
-                )
-            else:
-                val_prop = self._create_property_with_positioning(
-                    "Value", symbol_data["value"], pos, 1, "left"
-                )
-            sexp.append(val_prop)
-
-        footprint = symbol_data.get("footprint")
-        if footprint is not None:  # Include empty strings but not None
-            fp_prop = self._create_property_with_positioning(
-                "Footprint", footprint, pos, 2, "left", hide=True
-            )
-            sexp.append(fp_prop)
-
-        for prop_name, prop_value in symbol_data.get("properties", {}).items():
-            escaped_value = str(prop_value).replace('"', '\\"')
-            prop = self._create_property_with_positioning(
-                prop_name, escaped_value, pos, 3, "left", hide=True
-            )
-            sexp.append(prop)
-
-        # Add pin UUID assignments (required by KiCAD)
-        for pin in symbol_data.get("pins", []):
-            pin_uuid = str(uuid.uuid4())
-            # Ensure pin number is a string for proper quoting
-            pin_number = str(pin.number)
-            sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
-
-        # Add instances section (required by KiCAD)
-        from .config import config
-
-        # Get project name from config or properties
-        project_name = symbol_data.get("properties", {}).get("project_name")
-        if not project_name:
-            project_name = getattr(self, "project_name", config.defaults.project_name)
-
-        # CRITICAL FIX: Use the FULL hierarchy_path from properties if available
-        # For hierarchical schematics, this contains the complete path: /root_uuid/sheet_symbol_uuid/...
-        # This ensures KiCad can properly annotate components in sub-sheets
-        hierarchy_path = symbol_data.get("properties", {}).get("hierarchy_path")
-        if hierarchy_path:
-            # Use the full hierarchical path (includes root + all sheet symbols)
-            instance_path = hierarchy_path
-            logger.debug(
-                f"🔧 Using FULL hierarchy_path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
-            )
-        else:
-            # Fallback: use root_uuid or schematic_uuid for flat designs
-            root_uuid = (
-                symbol_data.get("properties", {}).get("root_uuid")
-                or schematic_uuid
-                or str(uuid.uuid4())
-            )
-            instance_path = f"/{root_uuid}"
-            logger.debug(
-                f"🔧 Using root UUID path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
-            )
-
-        logger.debug(
-            f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}"
-        )
-        logger.debug(f"🔧 Using project name: '{project_name}'")
-
-        sexp.append(
-            [
-                sexpdata.Symbol("instances"),
-                [
-                    sexpdata.Symbol("project"),
-                    project_name,
-                    [
-                        sexpdata.Symbol("path"),
-                        instance_path,
-                        [sexpdata.Symbol("reference"), symbol_data.get("reference", "U?")],
-                        [sexpdata.Symbol("unit"), symbol_data.get("unit", 1)],
-                    ],
-                ],
-            ]
-        )
-
-        return sexp
-
+        return self._symbol_parser._symbol_to_sexp(symbol_data, schematic_uuid)
     def _create_property_with_positioning(
         self,
         prop_name: str,
@@ -1126,68 +579,10 @@ class SExpressionParser:
         return self._wire_parser._junction_to_sexp(junction_data)
     def _label_to_sexp(self, label_data: Dict[str, Any]) -> List[Any]:
         """Convert local label to S-expression."""
-        sexp = [sexpdata.Symbol("label"), label_data["text"]]
-
-        # Add position
-        pos = label_data["position"]
-        x, y = pos["x"], pos["y"]
-        rotation = label_data.get("rotation", 0)
-
-        # Format coordinates properly
-        if isinstance(x, float) and x.is_integer():
-            x = int(x)
-        if isinstance(y, float) and y.is_integer():
-            y = int(y)
-
-        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-
-        # Add effects (font properties)
-        size = label_data.get("size", 1.27)
-        effects = [sexpdata.Symbol("effects")]
-        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
-        effects.append(font)
-        effects.append(
-            [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")]
-        )
-        sexp.append(effects)
-
-        # Add UUID
-        if "uuid" in label_data:
-            sexp.append([sexpdata.Symbol("uuid"), label_data["uuid"]])
-
-        return sexp
-
+        return self._label_parser._label_to_sexp(label_data)
     def _hierarchical_label_to_sexp(self, hlabel_data: Dict[str, Any]) -> List[Any]:
         """Convert hierarchical label to S-expression."""
-        sexp = [sexpdata.Symbol("hierarchical_label"), hlabel_data["text"]]
-
-        # Add shape
-        shape = hlabel_data.get("shape", "input")
-        sexp.append([sexpdata.Symbol("shape"), sexpdata.Symbol(shape)])
-
-        # Add position
-        pos = hlabel_data["position"]
-        x, y = pos["x"], pos["y"]
-        rotation = hlabel_data.get("rotation", 0)
-        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-
-        # Add effects (font properties)
-        size = hlabel_data.get("size", 1.27)
-        effects = [sexpdata.Symbol("effects")]
-        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
-        effects.append(font)
-
-        # Use justification from data if provided, otherwise default to "left"
-        justify = hlabel_data.get("justify", "left")
-        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify)])
-        sexp.append(effects)
-
-        # Add UUID
-        if "uuid" in hlabel_data:
-            sexp.append([sexpdata.Symbol("uuid"), hlabel_data["uuid"]])
-
-        return sexp
-
+        return self._label_parser._hierarchical_label_to_sexp(hlabel_data)
     def _no_connect_to_sexp(self, no_connect_data: Dict[str, Any]) -> List[Any]:
         """Convert no_connect to S-expression."""
         return self._wire_parser._no_connect_to_sexp(no_connect_data)
@@ -1205,257 +600,16 @@ class SExpressionParser:
         return self._graphics_parser._bezier_to_sexp(bezier_data)
     def _sheet_to_sexp(self, sheet_data: Dict[str, Any], schematic_uuid: str) -> List[Any]:
         """Convert hierarchical sheet to S-expression."""
-        sexp = [sexpdata.Symbol("sheet")]
-
-        # Add position
-        pos = sheet_data["position"]
-        x, y = pos["x"], pos["y"]
-        if isinstance(x, float) and x.is_integer():
-            x = int(x)
-        if isinstance(y, float) and y.is_integer():
-            y = int(y)
-        sexp.append([sexpdata.Symbol("at"), x, y])
-
-        # Add size
-        size = sheet_data["size"]
-        w, h = size["width"], size["height"]
-        sexp.append([sexpdata.Symbol("size"), w, h])
-
-        # Add basic properties
-        sexp.append(
-            [
-                sexpdata.Symbol("exclude_from_sim"),
-                sexpdata.Symbol("yes" if sheet_data.get("exclude_from_sim", False) else "no"),
-            ]
-        )
-        sexp.append(
-            [
-                sexpdata.Symbol("in_bom"),
-                sexpdata.Symbol("yes" if sheet_data.get("in_bom", True) else "no"),
-            ]
-        )
-        sexp.append(
-            [
-                sexpdata.Symbol("on_board"),
-                sexpdata.Symbol("yes" if sheet_data.get("on_board", True) else "no"),
-            ]
-        )
-        sexp.append(
-            [
-                sexpdata.Symbol("dnp"),
-                sexpdata.Symbol("yes" if sheet_data.get("dnp", False) else "no"),
-            ]
-        )
-        sexp.append(
-            [
-                sexpdata.Symbol("fields_autoplaced"),
-                sexpdata.Symbol("yes" if sheet_data.get("fields_autoplaced", True) else "no"),
-            ]
-        )
-
-        # Add stroke
-        stroke_width = sheet_data.get("stroke_width", 0.1524)
-        stroke_type = sheet_data.get("stroke_type", "solid")
-        stroke_sexp = [sexpdata.Symbol("stroke")]
-        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
-        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
-        sexp.append(stroke_sexp)
-
-        # Add fill
-        fill_color = sheet_data.get("fill_color", (0, 0, 0, 0.0))
-        fill_sexp = [sexpdata.Symbol("fill")]
-        fill_sexp.append(
-            [sexpdata.Symbol("color"), fill_color[0], fill_color[1], fill_color[2], fill_color[3]]
-        )
-        sexp.append(fill_sexp)
-
-        # Add UUID
-        if "uuid" in sheet_data:
-            sexp.append([sexpdata.Symbol("uuid"), sheet_data["uuid"]])
-
-        # Add sheet properties (name and filename)
-        name = sheet_data.get("name", "Sheet")
-        filename = sheet_data.get("filename", "sheet.kicad_sch")
-
-        # Sheetname property
-        from .config import config
-
-        name_prop = [sexpdata.Symbol("property"), "Sheetname", name]
-        name_prop.append(
-            [sexpdata.Symbol("at"), x, round(y + config.sheet.name_offset_y, 4), 0]
-        )  # Above sheet
-        name_prop.append(
-            [
-                sexpdata.Symbol("effects"),
-                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")],
-            ]
-        )
-        sexp.append(name_prop)
-
-        # Sheetfile property
-        file_prop = [sexpdata.Symbol("property"), "Sheetfile", filename]
-        file_prop.append(
-            [sexpdata.Symbol("at"), x, round(y + h + config.sheet.file_offset_y, 4), 0]
-        )  # Below sheet
-        file_prop.append(
-            [
-                sexpdata.Symbol("effects"),
-                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("top")],
-            ]
-        )
-        sexp.append(file_prop)
-
-        # Add sheet pins if any
-        for pin in sheet_data.get("pins", []):
-            pin_sexp = self._sheet_pin_to_sexp(pin)
-            sexp.append(pin_sexp)
-
-        # Add instances
-        if schematic_uuid:
-            instances_sexp = [sexpdata.Symbol("instances")]
-            project_name = sheet_data.get("project_name", "")
-            page_number = sheet_data.get("page_number", "2")
-            project_sexp = [sexpdata.Symbol("project"), project_name]
-            path_sexp = [sexpdata.Symbol("path"), f"/{schematic_uuid}"]
-            path_sexp.append([sexpdata.Symbol("page"), page_number])
-            project_sexp.append(path_sexp)
-            instances_sexp.append(project_sexp)
-            sexp.append(instances_sexp)
-
-        return sexp
-
+        return self._sheet_parser._sheet_to_sexp(sheet_data, schematic_uuid)
     def _sheet_pin_to_sexp(self, pin_data: Dict[str, Any]) -> List[Any]:
         """Convert sheet pin to S-expression."""
-        pin_sexp = [
-            sexpdata.Symbol("pin"),
-            pin_data["name"],
-            sexpdata.Symbol(pin_data.get("pin_type", "input")),
-        ]
-
-        # Add position
-        pos = pin_data["position"]
-        x, y = pos["x"], pos["y"]
-        rotation = pin_data.get("rotation", 0)
-        pin_sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-
-        # Add UUID
-        if "uuid" in pin_data:
-            pin_sexp.append([sexpdata.Symbol("uuid"), pin_data["uuid"]])
-
-        # Add effects
-        size = pin_data.get("size", 1.27)
-        effects = [sexpdata.Symbol("effects")]
-        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
-        effects.append(font)
-        justify = pin_data.get("justify", "right")
-        effects.append([sexpdata.Symbol("justify"), sexpdata.Symbol(justify)])
-        pin_sexp.append(effects)
-
-        return pin_sexp
-
+        return self._sheet_parser._sheet_pin_to_sexp(pin_data)
     def _text_to_sexp(self, text_data: Dict[str, Any]) -> List[Any]:
         """Convert text element to S-expression."""
-        sexp = [sexpdata.Symbol("text"), text_data["text"]]
-
-        # Add exclude_from_sim
-        exclude_sim = text_data.get("exclude_from_sim", False)
-        sexp.append(
-            [sexpdata.Symbol("exclude_from_sim"), sexpdata.Symbol("yes" if exclude_sim else "no")]
-        )
-
-        # Add position
-        pos = text_data["position"]
-        x, y = pos["x"], pos["y"]
-        rotation = text_data.get("rotation", 0)
-
-        # Format coordinates properly
-        if isinstance(x, float) and x.is_integer():
-            x = int(x)
-        if isinstance(y, float) and y.is_integer():
-            y = int(y)
-
-        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-
-        # Add effects (font properties)
-        size = text_data.get("size", 1.27)
-        effects = [sexpdata.Symbol("effects")]
-        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
-        effects.append(font)
-        sexp.append(effects)
-
-        # Add UUID
-        if "uuid" in text_data:
-            sexp.append([sexpdata.Symbol("uuid"), text_data["uuid"]])
-
-        return sexp
-
+        return self._text_parser._text_to_sexp(text_data)
     def _text_box_to_sexp(self, text_box_data: Dict[str, Any]) -> List[Any]:
         """Convert text box element to S-expression."""
-        sexp = [sexpdata.Symbol("text_box"), text_box_data["text"]]
-
-        # Add exclude_from_sim
-        exclude_sim = text_box_data.get("exclude_from_sim", False)
-        sexp.append(
-            [sexpdata.Symbol("exclude_from_sim"), sexpdata.Symbol("yes" if exclude_sim else "no")]
-        )
-
-        # Add position
-        pos = text_box_data["position"]
-        x, y = pos["x"], pos["y"]
-        rotation = text_box_data.get("rotation", 0)
-
-        # Format coordinates properly
-        if isinstance(x, float) and x.is_integer():
-            x = int(x)
-        if isinstance(y, float) and y.is_integer():
-            y = int(y)
-
-        sexp.append([sexpdata.Symbol("at"), x, y, rotation])
-
-        # Add size
-        size = text_box_data["size"]
-        w, h = size["width"], size["height"]
-        sexp.append([sexpdata.Symbol("size"), w, h])
-
-        # Add margins
-        margins = text_box_data.get("margins", (0.9525, 0.9525, 0.9525, 0.9525))
-        sexp.append([sexpdata.Symbol("margins"), margins[0], margins[1], margins[2], margins[3]])
-
-        # Add stroke
-        stroke_width = text_box_data.get("stroke_width", 0)
-        stroke_type = text_box_data.get("stroke_type", "solid")
-        stroke_sexp = [sexpdata.Symbol("stroke")]
-        stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
-        stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
-        sexp.append(stroke_sexp)
-
-        # Add fill
-        fill_type = text_box_data.get("fill_type", "none")
-        fill_sexp = [sexpdata.Symbol("fill")]
-        fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
-        sexp.append(fill_sexp)
-
-        # Add effects (font properties and justification)
-        font_size = text_box_data.get("font_size", 1.27)
-        justify_h = text_box_data.get("justify_horizontal", "left")
-        justify_v = text_box_data.get("justify_vertical", "top")
-
-        effects = [sexpdata.Symbol("effects")]
-        font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), font_size, font_size]]
-        effects.append(font)
-        effects.append(
-            [sexpdata.Symbol("justify"), sexpdata.Symbol(justify_h), sexpdata.Symbol(justify_v)]
-        )
-        sexp.append(effects)
-
-        # Add UUID
-        if "uuid" in text_box_data:
-            sexp.append([sexpdata.Symbol("uuid"), text_box_data["uuid"]])
-
-        return sexp
-
+        return self._text_parser._text_box_to_sexp(text_box_data)
     def _rectangle_to_sexp(self, rectangle_data: Dict[str, Any]) -> List[Any]:
         """Convert rectangle element to S-expression."""
         return self._graphics_parser._rectangle_to_sexp(rectangle_data)
@@ -1464,175 +618,19 @@ class SExpressionParser:
         return self._graphics_parser._image_to_sexp(image_data)
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:
         """Convert lib_symbols to S-expression."""
-        sexp = [sexpdata.Symbol("lib_symbols")]
-
-        # Add each symbol definition
-        for symbol_name, symbol_def in lib_symbols.items():
-            if isinstance(symbol_def, list):
-                # Raw S-expression data from parsed library file - use directly
-                sexp.append(symbol_def)
-            elif isinstance(symbol_def, dict):
-                # Dictionary format - convert to S-expression
-                symbol_sexp = self._create_basic_symbol_definition(symbol_name)
-                sexp.append(symbol_sexp)
-
-        return sexp
-
+        return self._library_parser._lib_symbols_to_sexp(lib_symbols)
     def _create_basic_symbol_definition(self, lib_id: str) -> List[Any]:
         """Create a basic symbol definition for KiCAD compatibility."""
-        symbol_sexp = [sexpdata.Symbol("symbol"), lib_id]
-
-        # Add basic symbol properties
-        symbol_sexp.extend(
-            [
-                [sexpdata.Symbol("pin_numbers"), [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")]],
-                [sexpdata.Symbol("pin_names"), [sexpdata.Symbol("offset"), 0]],
-                [sexpdata.Symbol("exclude_from_sim"), sexpdata.Symbol("no")],
-                [sexpdata.Symbol("in_bom"), sexpdata.Symbol("yes")],
-                [sexpdata.Symbol("on_board"), sexpdata.Symbol("yes")],
-            ]
-        )
-
-        # Add basic properties for the symbol
-        if "R" in lib_id:  # Resistor
-            symbol_sexp.extend(
-                [
-                    [
-                        sexpdata.Symbol("property"),
-                        "Reference",
-                        "R",
-                        [sexpdata.Symbol("at"), 2.032, 0, 90],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                        ],
-                    ],
-                    [
-                        sexpdata.Symbol("property"),
-                        "Value",
-                        "R",
-                        [sexpdata.Symbol("at"), 0, 0, 90],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                        ],
-                    ],
-                    [
-                        sexpdata.Symbol("property"),
-                        "Footprint",
-                        "",
-                        [sexpdata.Symbol("at"), -1.778, 0, 90],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
-                        ],
-                    ],
-                    [
-                        sexpdata.Symbol("property"),
-                        "Datasheet",
-                        "~",
-                        [sexpdata.Symbol("at"), 0, 0, 0],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
-                        ],
-                    ],
-                ]
-            )
-
-        elif "C" in lib_id:  # Capacitor
-            symbol_sexp.extend(
-                [
-                    [
-                        sexpdata.Symbol("property"),
-                        "Reference",
-                        "C",
-                        [sexpdata.Symbol("at"), 0.635, 2.54, 0],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                        ],
-                    ],
-                    [
-                        sexpdata.Symbol("property"),
-                        "Value",
-                        "C",
-                        [sexpdata.Symbol("at"), 0.635, -2.54, 0],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                        ],
-                    ],
-                    [
-                        sexpdata.Symbol("property"),
-                        "Footprint",
-                        "",
-                        [sexpdata.Symbol("at"), 0, -1.27, 0],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
-                        ],
-                    ],
-                    [
-                        sexpdata.Symbol("property"),
-                        "Datasheet",
-                        "~",
-                        [sexpdata.Symbol("at"), 0, 0, 0],
-                        [
-                            sexpdata.Symbol("effects"),
-                            [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
-                            [sexpdata.Symbol("hide"), sexpdata.Symbol("yes")],
-                        ],
-                    ],
-                ]
-            )
-
-        # Add basic graphics and pins (minimal for now)
-        symbol_sexp.append([sexpdata.Symbol("embedded_fonts"), sexpdata.Symbol("no")])
-
-        return symbol_sexp
-
+        return self._library_parser._create_basic_symbol_definition(lib_id)
     def _parse_sheet_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
         """Parse sheet_instances section."""
-        sheet_instances = []
-        for sheet_item in item[1:]:  # Skip 'sheet_instances' header
-            if isinstance(sheet_item, list) and len(sheet_item) > 0:
-                sheet_data = {"path": "/", "page": "1"}
-                for element in sheet_item[1:]:  # Skip element header
-                    if isinstance(element, list) and len(element) >= 2:
-                        key = (
-                            str(element[0])
-                            if isinstance(element[0], sexpdata.Symbol)
-                            else str(element[0])
-                        )
-                        if key == "path":
-                            sheet_data["path"] = element[1]
-                        elif key == "page":
-                            sheet_data["page"] = element[1]
-                sheet_instances.append(sheet_data)
-        return sheet_instances
-
+        return self._sheet_parser._parse_sheet_instances(item)
     def _parse_symbol_instances(self, item: List[Any]) -> List[Any]:
         """Parse symbol_instances section."""
-        # For now, just return the raw structure minus the header
-        return item[1:] if len(item) > 1 else []
-
+        return self._metadata_parser._parse_symbol_instances(item)
     def _sheet_instances_to_sexp(self, sheet_instances: List[Dict[str, Any]]) -> List[Any]:
         """Convert sheet_instances to S-expression."""
-        sexp = [sexpdata.Symbol("sheet_instances")]
-        for sheet in sheet_instances:
-            # Create: (path "/" (page "1"))
-            sheet_sexp = [
-                sexpdata.Symbol("path"),
-                sheet.get("path", "/"),
-                [sexpdata.Symbol("page"), str(sheet.get("page", "1"))],
-            ]
-            sexp.append(sheet_sexp)
-        return sexp
-
+        return self._sheet_parser._sheet_instances_to_sexp(sheet_instances)
     def _graphic_to_sexp(self, graphic_data: Dict[str, Any]) -> List[Any]:
         """Convert graphics (rectangles, etc.) to S-expression."""
         return self._graphics_parser._graphic_to_sexp(graphic_data)
