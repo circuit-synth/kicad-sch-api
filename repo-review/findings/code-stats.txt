@@ -1,5 +1,0 @@
-📊 Code Statistics:
-  Total Python files: 57
-  Total lines: 19744
-  Code lines (no blanks/comments): 14944
-  Average lines per file: 346.4
