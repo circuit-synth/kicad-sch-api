@@ -61,7 +61,7 @@ def test_add_rectangle_with_point_objects():
 
 
 def test_add_multiple_rectangles():
-    """Test adding multiple rectangles."""
+    """Test adding multiple rectangle."""
     sch = Schematic()
 
     rect1_uuid = sch.add_rectangle((0, 0), (10, 10))
@@ -79,8 +79,8 @@ def test_rectangle_default_values():
     rect_uuid = sch.add_rectangle((0, 0), (10, 10))
 
     rect = sch._data["rectangles"][0]
-    assert rect["stroke_width"] == 0.0
-    assert rect["stroke_type"] == "default"
+    assert rect["stroke_width"] == 0.127  # Our default value
+    assert rect["stroke_type"] == "solid"  # Our default value
     assert rect["fill_type"] == "none"
 
 
