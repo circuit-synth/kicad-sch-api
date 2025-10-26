@@ -59,7 +59,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/circuit-synth/kicad-sch-api"
-Documentation = "https://circuit-synth.github.io/kicad-sch-api/"
+Documentation = "https://kicad-sch-api.readthedocs.io/"
 Repository = "https://github.com/circuit-synth/kicad-sch-api.git"
 "Bug Reports" = "https://github.com/circuit-synth/kicad-sch-api/issues"
 Changelog = "https://github.com/circuit-synth/kicad-sch-api/blob/main/CHANGELOG.md"
