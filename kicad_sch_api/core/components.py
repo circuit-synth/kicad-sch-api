@@ -39,6 +39,11 @@ class Component:
 
     # Core properties with validation
     @property
+    def uuid(self) -> str:
+        """Component UUID."""
+        return self._data.uuid
+
+    @property
     def reference(self) -> str:
         """Component reference (e.g., 'R1')."""
         return self._data.reference

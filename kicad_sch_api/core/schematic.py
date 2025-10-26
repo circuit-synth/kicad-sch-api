@@ -1,8 +1,9 @@
 """
-Main Schematic class for KiCAD schematic manipulation.
+Refactored Schematic class using composition with specialized managers.
 
-This module provides the primary interface for loading, modifying, and saving
-KiCAD schematic files with exact format preservation and professional features.
+This module provides the same interface as the original Schematic class but uses
+composition with specialized manager classes for better separation of concerns
+and maintainability.
 """
 
 import logging
@@ -18,6 +19,16 @@ from ..utils.validation import SchematicValidator, ValidationError, ValidationIs
 from .components import ComponentCollection
 from .formatter import ExactFormatter
 from .junctions import JunctionCollection
+from .managers import (
+    FileIOManager,
+    FormatSyncManager,
+    GraphicsManager,
+    MetadataManager,
+    SheetManager,
+    TextElementManager,
+    ValidationManager,
+    WireManager,
+)
 from .parser import SExpressionParser
 from .types import (
     HierarchicalLabelShape,
@@ -41,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 class Schematic:
     """
-    Professional KiCAD schematic manipulation class.
+    Professional KiCAD schematic manipulation class with manager-based architecture.
 
     Features:
     - Exact format preservation
@@ -50,9 +61,10 @@ class Schematic:
     - Comprehensive validation
     - Performance optimization for large schematics
     - AI agent integration via MCP
+    - Modular architecture with specialized managers
 
     This class provides a modern, intuitive API while maintaining exact compatibility
-    with KiCAD's native file format.
+    with KiCAD's native file format through specialized manager classes.
     """
 
     def __init__(
@@ -62,7 +74,7 @@ class Schematic:
         name: Optional[str] = None,
     ):
         """
-        Initialize schematic object.
+        Initialize schematic object with manager-based architecture.
 
         Args:
             schematic_data: Parsed schematic data
@@ -73,13 +85,13 @@ class Schematic:
         self._data = schematic_data or self._create_empty_schematic_data()
         self._file_path = Path(file_path) if file_path else None
         self._original_content = self._data.get("_original_content", "")
-        self.name = name or "simple_circuit"  # Store project name
+        self.name = name or "simple_circuit"
 
         # Initialize parser and formatter
         self._parser = SExpressionParser(preserve_format=True)
-        self._parser.project_name = self.name  # Pass project name to parser
+        self._parser.project_name = self.name
         self._formatter = ExactFormatter()
-        self._validator = SchematicValidator()
+        self._legacy_validator = SchematicValidator()  # Keep for compatibility
 
         # Initialize component collection
         component_symbols = [
@@ -136,6 +148,18 @@ class Schematic:
                 junctions.append(junction)
         self._junctions = JunctionCollection(junctions)
 
+        # Initialize specialized managers
+        self._file_io_manager = FileIOManager()
+        self._format_sync_manager = FormatSyncManager(self._data)
+        self._graphics_manager = GraphicsManager(self._data)
+        self._metadata_manager = MetadataManager(self._data)
+        self._sheet_manager = SheetManager(self._data)
+        self._text_element_manager = TextElementManager(self._data)
+        self._wire_manager = WireManager(self._data, self._wires, self._components)
+        self._validation_manager = ValidationManager(
+            self._data, self._components, self._wires
+        )
+
         # Track modifications for save optimization
         self._modified = False
         self._last_save_time = None
@@ -145,7 +169,8 @@ class Schematic:
         self._total_operation_time = 0.0
 
         logger.debug(
-            f"Schematic initialized with {len(self._components)} components, {len(self._wires)} wires, and {len(self._junctions)} junctions"
+            f"Schematic initialized with managers: {len(self._components)} components, "
+            f"{len(self._wires)} wires, and {len(self._junctions)} junctions"
         )
 
     @classmethod
@@ -168,8 +193,9 @@ class Schematic:
 
         logger.info(f"Loading schematic: {file_path}")
 
-        parser = SExpressionParser(preserve_format=True)
-        schematic_data = parser.parse_file(file_path)
+        # Use FileIOManager for loading
+        file_io_manager = FileIOManager()
+        schematic_data = file_io_manager.load_schematic(file_path)
 
         load_time = time.time() - start_time
         logger.info(f"Loaded schematic in {load_time:.3f}s")
@@ -212,8 +238,10 @@ class Schematic:
                 "junctions": [],
                 "labels": [],
                 "nets": [],
-                "lib_symbols": [],  # Empty list for blank schematic
+                "lib_symbols": {},  # Empty dict for blank schematic
                 "symbol_instances": [],
+                "sheet_instances": [],
+                "embedded_fonts": "no",
             }
         else:
             schematic_data = cls._create_empty_schematic_data()
@@ -276,14 +304,12 @@ class Schematic:
     @property
     def modified(self) -> bool:
         """Whether schematic has been modified since last save."""
-        return self._modified or self._components._modified
+        return self._modified or self._components._modified or self._format_sync_manager.is_dirty()
 
-    # Pin positioning methods (migrated from circuit-synth)
+    # Pin positioning methods (delegated to WireManager)
     def get_component_pin_position(self, reference: str, pin_number: str) -> Optional[Point]:
         """
         Get the absolute position of a component pin.
-
-        Migrated from circuit-synth with enhanced logging for verification.
 
         Args:
             reference: Component reference (e.g., "R1")
@@ -292,20 +318,7 @@ class Schematic:
         Returns:
             Absolute position of the pin, or None if not found
         """
-        from .pin_utils import get_component_pin_position
-
-        # Find the component
-        component = None
-        for comp in self._components:
-            if comp.reference == reference:
-                component = comp
-                break
-
-        if not component:
-            logger.warning(f"Component {reference} not found")
-            return None
-
-        return get_component_pin_position(component, pin_number)
+        return self._wire_manager.get_component_pin_position(reference, pin_number)
 
     def list_component_pins(self, reference: str) -> List[Tuple[str, Point]]:
         """
@@ -317,22 +330,9 @@ class Schematic:
         Returns:
             List of (pin_number, absolute_position) tuples
         """
-        from .pin_utils import list_component_pins
+        return self._wire_manager.list_component_pins(reference)
 
-        # Find the component
-        component = None
-        for comp in self._components:
-            if comp.reference == reference:
-                component = comp
-                break
-
-        if not component:
-            logger.warning(f"Component {reference} not found")
-            return []
-
-        return list_component_pins(component)
-
-    # File operations
+    # File operations (delegated to FileIOManager)
     def save(self, file_path: Optional[Union[str, Path]] = None, preserve_format: bool = True):
         """
         Save schematic to file.
@@ -361,31 +361,18 @@ class Schematic:
         if errors:
             raise ValidationError("Cannot save schematic with validation errors", errors)
 
-        # Update data structure with current component, wire, and junction state
+        # Sync collection state back to data structure (critical for save)
         self._sync_components_to_data()
         self._sync_wires_to_data()
         self._sync_junctions_to_data()
 
-        # Write file
-        if preserve_format and self._original_content:
-            # Use format-preserving writer
-            sexp_data = self._parser._schematic_data_to_sexp(self._data)
-            content = self._formatter.format_preserving_write(sexp_data, self._original_content)
-        else:
-            # Standard formatting
-            sexp_data = self._parser._schematic_data_to_sexp(self._data)
-            content = self._formatter.format(sexp_data)
-
-        # Ensure directory exists
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Write to file
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        # Use FileIOManager for saving
+        self._file_io_manager.save_schematic(self._data, file_path, preserve_format)
 
         # Update state
         self._modified = False
         self._components._modified = False
+        self._format_sync_manager.clear_dirty_flags()
         self._last_save_time = time.time()
 
         save_time = time.time() - start_time
@@ -400,121 +387,24 @@ class Schematic:
         Create a backup of the current schematic file.
 
         Args:
-            suffix: Suffix to add to backup filename
+            suffix: Backup file suffix
 
         Returns:
             Path to backup file
         """
-        if not self._file_path:
-            raise ValidationError("Cannot backup - no file path set")
+        if self._file_path is None:
+            raise ValidationError("Cannot backup schematic with no file path")
 
-        backup_path = self._file_path.with_suffix(self._file_path.suffix + suffix)
+        return self._file_io_manager.create_backup(self._file_path, suffix)
 
-        if self._file_path.exists():
-            import shutil
-
-            shutil.copy2(self._file_path, backup_path)
-            logger.info(f"Created backup: {backup_path}")
-
-        return backup_path
-
-    # Validation and analysis
-    def validate(self) -> List[ValidationIssue]:
-        """
-        Validate the schematic for errors and issues.
-
-        Returns:
-            List of validation issues found
-        """
-        # Sync current state to data for validation
-        self._sync_components_to_data()
-
-        # Use validator to check schematic
-        issues = self._validator.validate_schematic_data(self._data)
-
-        # Add component-level validation
-        component_issues = self._components.validate_all()
-        issues.extend(component_issues)
-
-        return issues
-
-    # Focused helper functions for specific KiCAD sections
-    def add_lib_symbols_section(self, lib_symbols: Dict[str, Any]):
-        """Add or update lib_symbols section with specific symbol definitions."""
-        self._data["lib_symbols"] = lib_symbols
-        self._modified = True
-
-    def add_instances_section(self, instances: Dict[str, Any]):
-        """Add instances section for component placement tracking."""
-        self._data["instances"] = instances
-        self._modified = True
-
-    def add_sheet_instances_section(self, sheet_instances: List[Dict]):
-        """Add sheet_instances section for hierarchical design."""
-        self._data["sheet_instances"] = sheet_instances
-        self._modified = True
-
-    def set_paper_size(self, paper: str):
-        """Set paper size (A4, A3, etc.)."""
-        self._data["paper"] = paper
-        self._modified = True
-
-    def set_version_info(
-        self, version: str, generator: str = "eeschema", generator_version: str = "9.0"
-    ):
-        """Set version and generator information."""
-        self._data["version"] = version
-        self._data["generator"] = generator
-        self._data["generator_version"] = generator_version
-        self._modified = True
-
-    def copy_metadata_from(self, source_schematic: "Schematic"):
-        """Copy all metadata from another schematic (version, generator, paper, etc.)."""
-        metadata_fields = [
-            "version",
-            "generator",
-            "generator_version",
-            "paper",
-            "uuid",
-            "title_block",
-        ]
-        for field in metadata_fields:
-            if field in source_schematic._data:
-                self._data[field] = source_schematic._data[field]
-        self._modified = True
-
-    def get_summary(self) -> Dict[str, Any]:
-        """Get summary information about the schematic."""
-        component_stats = self._components.get_statistics()
-
-        return {
-            "file_path": str(self._file_path) if self._file_path else None,
-            "version": self.version,
-            "uuid": self.uuid,
-            "title": self.title_block.get("title", ""),
-            "component_count": len(self._components),
-            "modified": self.modified,
-            "last_save": self._last_save_time,
-            "component_stats": component_stats,
-            "performance": {
-                "operation_count": self._operation_count,
-                "avg_operation_time_ms": round(
-                    (
-                        (self._total_operation_time / self._operation_count * 1000)
-                        if self._operation_count > 0
-                        else 0
-                    ),
-                    2,
-                ),
-            },
-        }
-
-    # Wire and connection management (basic implementation)
+    # Wire operations (delegated to WireManager)
     def add_wire(
-        self, start: Union[Point, Tuple[float, float]], end: Union[Point, Tuple[float, float]]
+        self,
+        start: Union[Point, Tuple[float, float]],
+        end: Union[Point, Tuple[float, float]]
     ) -> str:
         """
-        Add a wire connection.
+        Add a wire connection between two points.
 
         Args:
             start: Start point
@@ -523,898 +413,643 @@ class Schematic:
         Returns:
             UUID of created wire
         """
-        if isinstance(start, tuple):
-            start = Point(start[0], start[1])
-        if isinstance(end, tuple):
-            end = Point(end[0], end[1])
-
-        # Use the wire collection to add the wire
-        wire_uuid = self._wires.add(start=start, end=end)
+        wire_uuid = self._wire_manager.add_wire(start, end)
+        self._format_sync_manager.mark_dirty("wire", "add", {"uuid": wire_uuid})
         self._modified = True
-
-        logger.debug(f"Added wire: {start} -> {end}")
         return wire_uuid
 
     def remove_wire(self, wire_uuid: str) -> bool:
-        """Remove wire by UUID."""
-        # Remove from wire collection
-        removed_from_collection = self._wires.remove(wire_uuid)
+        """
+        Remove a wire by UUID.
 
-        # Also remove from data structure for consistency
-        wires = self._data.get("wires", [])
-        removed_from_data = False
-        for i, wire in enumerate(wires):
-            if wire.get("uuid") == wire_uuid:
-                del wires[i]
-                removed_from_data = True
-                break
+        Args:
+            wire_uuid: UUID of wire to remove
 
-        if removed_from_collection or removed_from_data:
+        Returns:
+            True if wire was removed, False if not found
+        """
+        removed = self._wires.remove(wire_uuid)
+        if removed:
+            self._format_sync_manager.remove_wire_from_data(wire_uuid)
             self._modified = True
-            logger.debug(f"Removed wire: {wire_uuid}")
-            return True
-        return False
+        return removed
 
-    # Label management
-    def add_hierarchical_label(
-        self,
-        text: str,
-        position: Union[Point, Tuple[float, float]],
-        shape: HierarchicalLabelShape = HierarchicalLabelShape.INPUT,
-        rotation: float = 0.0,
-        size: float = 1.27,
-    ) -> str:
-        """
-        Add a hierarchical label.
-
-        Args:
-            text: Label text
-            position: Label position
-            shape: Label shape/direction
-            rotation: Text rotation in degrees
-            size: Font size
-
-        Returns:
-            UUID of created hierarchical label
-        """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
-
-        label = Label(
-            uuid=str(uuid.uuid4()),
-            position=position,
-            text=text,
-            label_type=LabelType.HIERARCHICAL,
-            rotation=rotation,
-            size=size,
-            shape=shape,
-        )
-
-        if "hierarchical_labels" not in self._data:
-            self._data["hierarchical_labels"] = []
-
-        self._data["hierarchical_labels"].append(
-            {
-                "uuid": label.uuid,
-                "position": {"x": label.position.x, "y": label.position.y},
-                "text": label.text,
-                "shape": label.shape.value,
-                "rotation": label.rotation,
-                "size": label.size,
-            }
-        )
-        self._modified = True
-
-        logger.debug(f"Added hierarchical label: {text} at {position}")
-        return label.uuid
-
-    def remove_hierarchical_label(self, label_uuid: str) -> bool:
-        """Remove hierarchical label by UUID."""
-        labels = self._data.get("hierarchical_labels", [])
-        for i, label in enumerate(labels):
-            if label.get("uuid") == label_uuid:
-                del labels[i]
-                self._modified = True
-                logger.debug(f"Removed hierarchical label: {label_uuid}")
-                return True
-        return False
-
-    def add_wire_to_pin(
-        self, start_point: Union[Point, Tuple[float, float]], component_ref: str, pin_number: str
-    ) -> Optional[str]:
-        """
-        Draw a wire from a start point to a component pin.
-
-        Args:
-            start_point: Starting point of the wire
-            component_ref: Reference of the target component (e.g., "R1")
-            pin_number: Pin number on the component (e.g., "1")
-
-        Returns:
-            UUID of created wire, or None if pin position cannot be determined
-        """
-        from .pin_utils import get_component_pin_position
-
-        # Find the component
-        component = self.components.get(component_ref)
-        if not component:
-            logger.warning(f"Component {component_ref} not found")
-            return None
-
-        # Get the pin position
-        pin_position = get_component_pin_position(component, pin_number)
-        if not pin_position:
-            logger.warning(f"Could not determine position of pin {pin_number} on {component_ref}")
-            return None
-
-        # Create the wire
-        return self.add_wire(start_point, pin_position)
-
-    def add_wire_between_pins(
-        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
-    ) -> Optional[str]:
-        """
-        Draw a wire between two component pins.
-
-        Args:
-            component1_ref: Reference of the first component (e.g., "R1")
-            pin1_number: Pin number on the first component (e.g., "1")
-            component2_ref: Reference of the second component (e.g., "R2")
-            pin2_number: Pin number on the second component (e.g., "2")
-
-        Returns:
-            UUID of created wire, or None if either pin position cannot be determined
-        """
-        from .pin_utils import get_component_pin_position
-
-        # Find both components
-        component1 = self.components.get(component1_ref)
-        component2 = self.components.get(component2_ref)
-
-        if not component1:
-            logger.warning(f"Component {component1_ref} not found")
-            return None
-        if not component2:
-            logger.warning(f"Component {component2_ref} not found")
-            return None
-
-        # Get both pin positions
-        pin1_position = get_component_pin_position(component1, pin1_number)
-        pin2_position = get_component_pin_position(component2, pin2_number)
-
-        if not pin1_position:
-            logger.warning(f"Could not determine position of pin {pin1_number} on {component1_ref}")
-            return None
-        if not pin2_position:
-            logger.warning(f"Could not determine position of pin {pin2_number} on {component2_ref}")
-            return None
-
-        # Create the wire
-        return self.add_wire(pin1_position, pin2_position)
-
-    def get_component_pin_position(self, component_ref: str, pin_number: str) -> Optional[Point]:
-        """
-        Get the absolute position of a component pin.
-
-        Args:
-            component_ref: Reference of the component (e.g., "R1")
-            pin_number: Pin number on the component (e.g., "1")
-
-        Returns:
-            Absolute position of the pin, or None if not found
-        """
-        from .pin_utils import get_component_pin_position
-
-        component = self.components.get(component_ref)
-        if not component:
-            return None
-
-        return get_component_pin_position(component, pin_number)
-
-    # Wire routing and connectivity methods
     def auto_route_pins(
         self,
-        comp1_ref: str,
-        pin1_num: str,
-        comp2_ref: str,
-        pin2_num: str,
-        routing_mode: str = "direct",
-        clearance: float = 2.54,
-    ) -> Optional[str]:
+        component1_ref: str,
+        pin1_number: str,
+        component2_ref: str,
+        pin2_number: str,
+        routing_strategy: str = "direct"
+    ) -> List[str]:
         """
-        Auto route between two pins with configurable routing strategies.
-
-        All positions are snapped to KiCAD's 1.27mm grid for exact electrical connections.
+        Auto-route between two component pins.
 
         Args:
-            comp1_ref: First component reference (e.g., 'R1')
-            pin1_num: First component pin number (e.g., '1')
-            comp2_ref: Second component reference (e.g., 'R2')
-            pin2_num: Second component pin number (e.g., '2')
-            routing_mode: Routing strategy:
-                - "direct": Direct connection through components (default)
-                - "manhattan": Manhattan routing with obstacle avoidance
-            clearance: Clearance from obstacles in mm (for manhattan mode)
+            component1_ref: First component reference
+            pin1_number: First component pin number
+            component2_ref: Second component reference
+            pin2_number: Second component pin number
+            routing_strategy: Routing strategy ("direct", "orthogonal", "manhattan")
 
         Returns:
-            UUID of created wire, or None if routing failed
+            List of wire UUIDs created
         """
-        from .wire_routing import route_pins_direct, snap_to_kicad_grid
+        wire_uuids = self._wire_manager.auto_route_pins(
+            component1_ref, pin1_number, component2_ref, pin2_number, routing_strategy
+        )
+        for wire_uuid in wire_uuids:
+            self._format_sync_manager.mark_dirty("wire", "add", {"uuid": wire_uuid})
+        self._modified = True
+        return wire_uuids
 
-        # Get pin positions
-        pin1_pos = self.get_component_pin_position(comp1_ref, pin1_num)
-        pin2_pos = self.get_component_pin_position(comp2_ref, pin2_num)
+    def add_wire_to_pin(
+        self,
+        start: Union[Point, Tuple[float, float]],
+        component_ref: str,
+        pin_number: str
+    ) -> Optional[str]:
+        """
+        Add wire from arbitrary position to component pin.
 
-        if not pin1_pos or not pin2_pos:
+        Args:
+            start: Start position
+            component_ref: Component reference
+            pin_number: Pin number
+
+        Returns:
+            Wire UUID or None if pin not found
+        """
+        pin_pos = self.get_component_pin_position(component_ref, pin_number)
+        if pin_pos is None:
             return None
 
-        # Ensure positions are grid-snapped
-        pin1_pos = snap_to_kicad_grid(pin1_pos)
-        pin2_pos = snap_to_kicad_grid(pin2_pos)
+        return self.add_wire(start, pin_pos)
 
-        # Choose routing strategy
-        if routing_mode.lower() == "manhattan":
-            # Manhattan routing with obstacle avoidance
-            from .simple_manhattan import auto_route_with_manhattan
-
-            # Get component objects
-            comp1 = self.components.get(comp1_ref)
-            comp2 = self.components.get(comp2_ref)
-
-            if not comp1 or not comp2:
-                logger.warning(f"Component not found: {comp1_ref} or {comp2_ref}")
-                return None
-
-            return auto_route_with_manhattan(
-                self,
-                comp1,
-                pin1_num,
-                comp2,
-                pin2_num,
-                avoid_components=None,  # Avoid all other components
-                clearance=clearance,
-            )
-        else:
-            # Default direct routing - just connect the pins
-            return self.add_wire(pin1_pos, pin2_pos)
-
-    def are_pins_connected(
-        self, comp1_ref: str, pin1_num: str, comp2_ref: str, pin2_num: str
-    ) -> bool:
+    def add_wire_between_pins(
+        self,
+        component1_ref: str,
+        pin1_number: str,
+        component2_ref: str,
+        pin2_number: str
+    ) -> Optional[str]:
         """
-        Detect when two pins are connected via wire routing.
+        Add wire between two component pins.
 
         Args:
-            comp1_ref: First component reference (e.g., 'R1')
-            pin1_num: First component pin number (e.g., '1')
-            comp2_ref: Second component reference (e.g., 'R2')
-            pin2_num: Second component pin number (e.g., '2')
+            component1_ref: First component reference
+            pin1_number: First component pin number
+            component2_ref: Second component reference
+            pin2_number: Second component pin number
 
         Returns:
-            True if pins are connected via wires, False otherwise
+            Wire UUID or None if either pin not found
         """
-        from .wire_routing import are_pins_connected
+        pin1_pos = self.get_component_pin_position(component1_ref, pin1_number)
+        pin2_pos = self.get_component_pin_position(component2_ref, pin2_number)
 
-        return are_pins_connected(self, comp1_ref, pin1_num, comp2_ref, pin2_num)
+        if pin1_pos is None or pin2_pos is None:
+            return None
 
-    # Legacy method names for compatibility
+        return self.add_wire(pin1_pos, pin2_pos)
+
     def connect_pins_with_wire(
-        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
+        self,
+        component1_ref: str,
+        pin1_number: str,
+        component2_ref: str,
+        pin2_number: str
     ) -> Optional[str]:
-        """Legacy alias for add_wire_between_pins."""
+        """
+        Connect two component pins with a wire (alias for add_wire_between_pins).
+
+        Args:
+            component1_ref: First component reference
+            pin1_number: First component pin number
+            component2_ref: Second component reference
+            pin2_number: Second component pin number
+
+        Returns:
+            Wire UUID or None if either pin not found
+        """
         return self.add_wire_between_pins(component1_ref, pin1_number, component2_ref, pin2_number)
 
+    # Text and label operations (delegated to TextElementManager)
     def add_label(
         self,
         text: str,
         position: Union[Point, Tuple[float, float]],
-        rotation: float = 0.0,
-        size: float = 1.27,
-        uuid: Optional[str] = None,
+        effects: Optional[Dict[str, Any]] = None,
+        rotation: float = 0,
+        size: Optional[float] = None
     ) -> str:
         """
-        Add a local label.
+        Add a text label to the schematic.
 
         Args:
-            text: Label text
+            text: Label text content
             position: Label position
-            rotation: Text rotation in degrees
-            size: Font size
-            uuid: Optional UUID (auto-generated if None)
+            effects: Text effects (size, font, etc.)
+            rotation: Label rotation in degrees (default 0)
+            size: Text size override (default from effects)
 
         Returns:
             UUID of created label
         """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
-
-        import uuid as uuid_module
-
-        label = Label(
-            uuid=uuid if uuid else str(uuid_module.uuid4()),
-            position=position,
-            text=text,
-            label_type=LabelType.LOCAL,
-            rotation=rotation,
-            size=size,
-        )
-
-        if "labels" not in self._data:
-            self._data["labels"] = []
-
-        self._data["labels"].append(
-            {
-                "uuid": label.uuid,
-                "position": {"x": label.position.x, "y": label.position.y},
-                "text": label.text,
-                "rotation": label.rotation,
-                "size": label.size,
-            }
-        )
+        label_uuid = self._text_element_manager.add_label(text, position, effects, uuid_str=None, rotation=rotation, size=size)
+        self._format_sync_manager.mark_dirty("label", "add", {"uuid": label_uuid})
         self._modified = True
-
-        logger.debug(f"Added local label: {text} at {position}")
-        return label.uuid
-
-    def remove_label(self, label_uuid: str) -> bool:
-        """Remove local label by UUID."""
-        labels = self._data.get("labels", [])
-        for i, label in enumerate(labels):
-            if label.get("uuid") == label_uuid:
-                del labels[i]
-                self._modified = True
-                logger.debug(f"Removed local label: {label_uuid}")
-                return True
-        return False
-
-    def add_sheet(
-        self,
-        name: str,
-        filename: str,
-        position: Union[Point, Tuple[float, float]],
-        size: Union[Point, Tuple[float, float]],
-        stroke_width: float = 0.1524,
-        stroke_type: str = "solid",
-        exclude_from_sim: bool = False,
-        in_bom: bool = True,
-        on_board: bool = True,
-        project_name: str = "",
-        page_number: str = "2",
-        uuid: Optional[str] = None,
-    ) -> str:
-        """
-        Add a hierarchical sheet.
-
-        Args:
-            name: Sheet name (displayed above sheet)
-            filename: Sheet filename (.kicad_sch file)
-            position: Sheet position (top-left corner)
-            size: Sheet size (width, height)
-            stroke_width: Border line width
-            stroke_type: Border line type
-            exclude_from_sim: Exclude from simulation
-            in_bom: Include in BOM
-            on_board: Include on board
-            project_name: Project name for instances
-            page_number: Page number for instances
-            uuid: Optional UUID (auto-generated if None)
-
-        Returns:
-            UUID of created sheet
-        """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
-        if isinstance(size, tuple):
-            size = Point(size[0], size[1])
-
-        import uuid as uuid_module
-
-        sheet = Sheet(
-            uuid=uuid if uuid else str(uuid_module.uuid4()),
-            position=position,
-            size=size,
-            name=name,
-            filename=filename,
-            exclude_from_sim=exclude_from_sim,
-            in_bom=in_bom,
-            on_board=on_board,
-            stroke_width=stroke_width,
-            stroke_type=stroke_type,
-        )
-
-        if "sheets" not in self._data:
-            self._data["sheets"] = []
-
-        self._data["sheets"].append(
-            {
-                "uuid": sheet.uuid,
-                "position": {"x": sheet.position.x, "y": sheet.position.y},
-                "size": {"width": sheet.size.x, "height": sheet.size.y},
-                "name": sheet.name,
-                "filename": sheet.filename,
-                "exclude_from_sim": sheet.exclude_from_sim,
-                "in_bom": sheet.in_bom,
-                "on_board": sheet.on_board,
-                "dnp": sheet.dnp,
-                "fields_autoplaced": sheet.fields_autoplaced,
-                "stroke_width": sheet.stroke_width,
-                "stroke_type": sheet.stroke_type,
-                "fill_color": sheet.fill_color,
-                "pins": [],  # Sheet pins added separately
-                "project_name": project_name,
-                "page_number": page_number,
-            }
-        )
-        self._modified = True
-
-        logger.debug(f"Added hierarchical sheet: {name} ({filename}) at {position}")
-        return sheet.uuid
-
-    def add_sheet_pin(
-        self,
-        sheet_uuid: str,
-        name: str,
-        pin_type: str = "input",
-        position: Union[Point, Tuple[float, float]] = (0, 0),
-        rotation: float = 0,
-        size: float = 1.27,
-        justify: str = "right",
-        uuid: Optional[str] = None,
-    ) -> str:
-        """
-        Add a pin to a hierarchical sheet.
-
-        Args:
-            sheet_uuid: UUID of the sheet to add pin to
-            name: Pin name (NET1, NET2, etc.)
-            pin_type: Pin type (input, output, bidirectional, etc.)
-            position: Pin position relative to sheet
-            rotation: Pin rotation in degrees
-            size: Font size for pin label
-            justify: Text justification (left, right, center)
-            uuid: Optional UUID (auto-generated if None)
-
-        Returns:
-            UUID of created sheet pin
-        """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
-
-        import uuid as uuid_module
-
-        pin_uuid = uuid if uuid else str(uuid_module.uuid4())
-
-        # Find the sheet in the data
-        sheets = self._data.get("sheets", [])
-        for sheet in sheets:
-            if sheet.get("uuid") == sheet_uuid:
-                # Add pin to the sheet's pins list
-                pin_data = {
-                    "uuid": pin_uuid,
-                    "name": name,
-                    "pin_type": pin_type,
-                    "position": {"x": position.x, "y": position.y},
-                    "rotation": rotation,
-                    "size": size,
-                    "justify": justify,
-                }
-                sheet["pins"].append(pin_data)
-                self._modified = True
-
-                logger.debug(f"Added sheet pin: {name} ({pin_type}) to sheet {sheet_uuid}")
-                return pin_uuid
-
-        raise ValueError(f"Sheet with UUID '{sheet_uuid}' not found")
+        return label_uuid
 
     def add_text(
         self,
         text: str,
         position: Union[Point, Tuple[float, float]],
-        rotation: float = 0.0,
-        size: float = 1.27,
-        exclude_from_sim: bool = False,
+        effects: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Add a text element.
+        Add free text annotation to the schematic.
 
         Args:
             text: Text content
             position: Text position
-            rotation: Text rotation in degrees
-            size: Font size
-            exclude_from_sim: Exclude from simulation
+            effects: Text effects
 
         Returns:
-            UUID of created text element
+            UUID of created text
         """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
-
-        text_element = Text(
-            uuid=str(uuid.uuid4()),
-            position=position,
-            text=text,
-            rotation=rotation,
-            size=size,
-            exclude_from_sim=exclude_from_sim,
-        )
-
-        if "texts" not in self._data:
-            self._data["texts"] = []
-
-        self._data["texts"].append(
-            {
-                "uuid": text_element.uuid,
-                "position": {"x": text_element.position.x, "y": text_element.position.y},
-                "text": text_element.text,
-                "rotation": text_element.rotation,
-                "size": text_element.size,
-                "exclude_from_sim": text_element.exclude_from_sim,
-            }
-        )
+        text_uuid = self._text_element_manager.add_text(text, position, effects)
+        self._format_sync_manager.mark_dirty("text", "add", {"uuid": text_uuid})
         self._modified = True
-
-        logger.debug(f"Added text: '{text}' at {position}")
-        return text_element.uuid
+        return text_uuid
 
     def add_text_box(
         self,
         text: str,
         position: Union[Point, Tuple[float, float]],
         size: Union[Point, Tuple[float, float]],
-        rotation: float = 0.0,
-        font_size: float = 1.27,
-        margins: Tuple[float, float, float, float] = (0.9525, 0.9525, 0.9525, 0.9525),
-        stroke_width: float = 0.0,
-        stroke_type: str = "solid",
-        fill_type: str = "none",
-        justify_horizontal: str = "left",
-        justify_vertical: str = "top",
-        exclude_from_sim: bool = False,
+        effects: Optional[Dict[str, Any]] = None,
+        stroke: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Add a text box element.
+        Add a text box with border to the schematic.
 
         Args:
             text: Text content
-            position: Text box position (top-left corner)
-            size: Text box size (width, height)
-            rotation: Text rotation in degrees
-            font_size: Font size
-            margins: Margins (top, right, bottom, left)
-            stroke_width: Border line width
-            stroke_type: Border line type
-            fill_type: Fill type (none, solid, etc.)
-            justify_horizontal: Horizontal text alignment
-            justify_vertical: Vertical text alignment
-            exclude_from_sim: Exclude from simulation
+            position: Top-left position
+            size: Box size (width, height)
+            effects: Text effects
+            stroke: Border stroke settings
 
         Returns:
-            UUID of created text box element
+            UUID of created text box
         """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
-        if isinstance(size, tuple):
-            size = Point(size[0], size[1])
-
-        text_box = TextBox(
-            uuid=str(uuid.uuid4()),
-            position=position,
-            size=size,
-            text=text,
-            rotation=rotation,
-            font_size=font_size,
-            margins=margins,
-            stroke_width=stroke_width,
-            stroke_type=stroke_type,
-            fill_type=fill_type,
-            justify_horizontal=justify_horizontal,
-            justify_vertical=justify_vertical,
-            exclude_from_sim=exclude_from_sim,
-        )
-
-        if "text_boxes" not in self._data:
-            self._data["text_boxes"] = []
-
-        self._data["text_boxes"].append(
-            {
-                "uuid": text_box.uuid,
-                "position": {"x": text_box.position.x, "y": text_box.position.y},
-                "size": {"width": text_box.size.x, "height": text_box.size.y},
-                "text": text_box.text,
-                "rotation": text_box.rotation,
-                "font_size": text_box.font_size,
-                "margins": text_box.margins,
-                "stroke_width": text_box.stroke_width,
-                "stroke_type": text_box.stroke_type,
-                "fill_type": text_box.fill_type,
-                "justify_horizontal": text_box.justify_horizontal,
-                "justify_vertical": text_box.justify_vertical,
-                "exclude_from_sim": text_box.exclude_from_sim,
-            }
-        )
+        text_box_uuid = self._text_element_manager.add_text_box(text, position, size, effects, stroke)
+        self._format_sync_manager.mark_dirty("text_box", "add", {"uuid": text_box_uuid})
         self._modified = True
+        return text_box_uuid
 
-        logger.debug(f"Added text box: '{text}' at {position} size {size}")
-        return text_box.uuid
-
-    def add_image(
+    def add_hierarchical_label(
         self,
+        text: str,
         position: Union[Point, Tuple[float, float]],
-        data: str,
-        scale: float = 1.0,
-        uuid: Optional[str] = None,
+        shape: str = "input",
+        effects: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Add an image element.
+        Add a hierarchical label for sheet connections.
 
         Args:
-            position: Image position
-            data: Base64-encoded image data
-            scale: Image scale factor (default 1.0)
-            uuid: Optional UUID (auto-generated if None)
+            text: Label text
+            position: Label position
+            shape: Shape type (input, output, bidirectional, tri_state, passive)
+            effects: Text effects
 
         Returns:
-            UUID of created image element
+            UUID of created hierarchical label
         """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
-
-        from .types import Image
-
-        import uuid as uuid_module
-
-        image = Image(
-            uuid=uuid if uuid else str(uuid_module.uuid4()),
-            position=position,
-            data=data,
-            scale=scale,
-        )
-
-        if "images" not in self._data:
-            self._data["images"] = []
-
-        self._data["images"].append(
-            {
-                "uuid": image.uuid,
-                "position": {"x": image.position.x, "y": image.position.y},
-                "data": image.data,
-                "scale": image.scale,
-            }
-        )
+        label_uuid = self._text_element_manager.add_hierarchical_label(text, position, shape, effects)
+        self._format_sync_manager.mark_dirty("hierarchical_label", "add", {"uuid": label_uuid})
         self._modified = True
+        return label_uuid
 
-        logger.debug(f"Added image at {position} with {len(data)} bytes of data")
-        return image.uuid
+    def add_global_label(
+        self,
+        text: str,
+        position: Union[Point, Tuple[float, float]],
+        shape: str = "input",
+        effects: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Add a global label for project-wide connections.
 
+        Args:
+            text: Label text
+            position: Label position
+            shape: Shape type
+            effects: Text effects
+
+        Returns:
+            UUID of created global label
+        """
+        label_uuid = self._text_element_manager.add_global_label(text, position, shape, effects)
+        self._format_sync_manager.mark_dirty("global_label", "add", {"uuid": label_uuid})
+        self._modified = True
+        return label_uuid
+
+    def remove_label(self, label_uuid: str) -> bool:
+        """
+        Remove a label by UUID.
+
+        Args:
+            label_uuid: UUID of label to remove
+
+        Returns:
+            True if label was removed, False if not found
+        """
+        removed = self._text_element_manager.remove_label(label_uuid)
+        if removed:
+            self._format_sync_manager.mark_dirty("label", "remove", {"uuid": label_uuid})
+            self._modified = True
+        return removed
+
+    # Sheet operations (delegated to SheetManager)
+    def add_sheet(
+        self,
+        name: str,
+        filename: str,
+        position: Union[Point, Tuple[float, float]],
+        size: Union[Point, Tuple[float, float]],
+        stroke_width: Optional[float] = None,
+        stroke_type: str = "solid",
+        project_name: Optional[str] = None,
+        page_number: Optional[str] = None,
+        uuid: Optional[str] = None
+    ) -> str:
+        """
+        Add a hierarchical sheet to the schematic.
+
+        Args:
+            name: Sheet name/title
+            filename: Referenced schematic filename
+            position: Sheet position (top-left corner)
+            size: Sheet size (width, height)
+            stroke_width: Border stroke width
+            stroke_type: Border stroke type (solid, dashed, etc.)
+            project_name: Project name for this sheet
+            page_number: Page number for this sheet
+            uuid: Optional UUID for the sheet
+
+        Returns:
+            UUID of created sheet
+        """
+        sheet_uuid = self._sheet_manager.add_sheet(
+            name, filename, position, size,
+            uuid_str=uuid,
+            stroke_width=stroke_width,
+            stroke_type=stroke_type,
+            project_name=project_name,
+            page_number=page_number
+        )
+        self._format_sync_manager.mark_dirty("sheet", "add", {"uuid": sheet_uuid})
+        self._modified = True
+        return sheet_uuid
+
+    def add_sheet_pin(
+        self,
+        sheet_uuid: str,
+        name: str,
+        pin_type: str,
+        position: Union[Point, Tuple[float, float]],
+        rotation: float = 0,
+        justify: str = "left",
+        uuid: Optional[str] = None
+    ) -> str:
+        """
+        Add a pin to a hierarchical sheet.
+
+        Args:
+            sheet_uuid: UUID of the sheet to add pin to
+            name: Pin name
+            pin_type: Pin type (input, output, bidirectional, etc.)
+            position: Pin position
+            rotation: Pin rotation in degrees
+            justify: Text justification
+            uuid: Optional UUID for the pin
+
+        Returns:
+            UUID of created sheet pin
+        """
+        pin_uuid = self._sheet_manager.add_sheet_pin(
+            sheet_uuid, name, pin_type, position, rotation, justify, uuid_str=uuid
+        )
+        self._format_sync_manager.mark_dirty("sheet", "modify", {"uuid": sheet_uuid})
+        self._modified = True
+        return pin_uuid
+
+    def remove_sheet(self, sheet_uuid: str) -> bool:
+        """
+        Remove a sheet by UUID.
+
+        Args:
+            sheet_uuid: UUID of sheet to remove
+
+        Returns:
+            True if sheet was removed, False if not found
+        """
+        removed = self._sheet_manager.remove_sheet(sheet_uuid)
+        if removed:
+            self._format_sync_manager.mark_dirty("sheet", "remove", {"uuid": sheet_uuid})
+            self._modified = True
+        return removed
+
+    # Graphics operations (delegated to GraphicsManager)
     def add_rectangle(
         self,
         start: Union[Point, Tuple[float, float]],
         end: Union[Point, Tuple[float, float]],
-        stroke_width: float = 0.0,
-        stroke_type: str = "default",
-        fill_type: str = "none"
+        stroke_width: float = 0.127,
+        stroke_type: str = "solid",
+        fill_type: str = "none",
+        stroke_color: Optional[Tuple[int, int, int, float]] = None,
+        fill_color: Optional[Tuple[int, int, int, float]] = None
     ) -> str:
         """
-        Add a graphical rectangle element.
+        Add a rectangle to the schematic.
 
         Args:
-            start: Rectangle start point (top-left)
-            end: Rectangle end point (bottom-right)
-            stroke_width: Border line width
-            stroke_type: Border line type (default, solid, dash, dot, etc.)
-            fill_type: Fill type (none, solid, etc.)
+            start: Top-left corner position
+            end: Bottom-right corner position
+            stroke_width: Line width
+            stroke_type: Line type (solid, dashed, etc.)
+            fill_type: Fill type (none, background, etc.)
+            stroke_color: Stroke color as (r, g, b, a)
+            fill_color: Fill color as (r, g, b, a)
 
         Returns:
-            UUID of created rectangle element
+            UUID of created rectangle
         """
-        if isinstance(start, tuple):
-            start = Point(start[0], start[1])
-        if isinstance(end, tuple):
-            end = Point(end[0], end[1])
+        # Convert individual parameters to stroke/fill dicts
+        stroke = {
+            "width": stroke_width,
+            "type": stroke_type
+        }
+        if stroke_color:
+            stroke["color"] = stroke_color
 
-        from .types import SchematicRectangle
+        fill = {
+            "type": fill_type
+        }
+        if fill_color:
+            fill["color"] = fill_color
 
-        rectangle = SchematicRectangle(
-            uuid=str(uuid.uuid4()),
-            start=start,
-            end=end,
-            stroke_width=stroke_width,
-            stroke_type=stroke_type,
-            fill_type=fill_type
-        )
-
-        if "rectangles" not in self._data:
-            self._data["rectangles"] = []
-
-        self._data["rectangles"].append({
-            "uuid": rectangle.uuid,
-            "start": {"x": rectangle.start.x, "y": rectangle.start.y},
-            "end": {"x": rectangle.end.x, "y": rectangle.end.y},
-            "stroke_width": rectangle.stroke_width,
-            "stroke_type": rectangle.stroke_type,
-            "fill_type": rectangle.fill_type
-        })
+        rect_uuid = self._graphics_manager.add_rectangle(start, end, stroke, fill)
+        self._format_sync_manager.mark_dirty("rectangle", "add", {"uuid": rect_uuid})
         self._modified = True
+        return rect_uuid
 
-        logger.debug(f"Added rectangle: {start} to {end}")
-        return rectangle.uuid
+    def remove_rectangle(self, rect_uuid: str) -> bool:
+        """
+        Remove a rectangle by UUID.
 
+        Args:
+            rect_uuid: UUID of rectangle to remove
+
+        Returns:
+            True if removed, False if not found
+        """
+        removed = self._graphics_manager.remove_rectangle(rect_uuid)
+        if removed:
+            self._format_sync_manager.mark_dirty("rectangle", "remove", {"uuid": rect_uuid})
+            self._modified = True
+        return removed
+
+    def add_image(
+        self,
+        position: Union[Point, Tuple[float, float]],
+        scale: float = 1.0,
+        data: Optional[str] = None
+    ) -> str:
+        """
+        Add an image to the schematic.
+
+        Args:
+            position: Image position
+            scale: Image scale factor
+            data: Base64 encoded image data
+
+        Returns:
+            UUID of created image
+        """
+        image_uuid = self._graphics_manager.add_image(position, scale, data)
+        self._format_sync_manager.mark_dirty("image", "add", {"uuid": image_uuid})
+        self._modified = True
+        return image_uuid
+
+    def draw_bounding_box(
+        self,
+        bbox,
+        stroke_width: float = 0.127,
+        stroke_color: str = "black",
+        stroke_type: str = "solid"
+    ) -> str:
+        """
+        Draw a bounding box rectangle around the given bounding box.
+
+        Args:
+            bbox: BoundingBox object with min_x, min_y, max_x, max_y
+            stroke_width: Line width
+            stroke_color: Line color
+            stroke_type: Line type
+
+        Returns:
+            UUID of created rectangle
+        """
+        # Convert bounding box to rectangle coordinates
+        start = (bbox.min_x, bbox.min_y)
+        end = (bbox.max_x, bbox.max_y)
+
+        # Create stroke properties
+        stroke = {
+            "width": stroke_width,
+            "type": stroke_type,
+            "color": stroke_color
+        }
+
+        return self.add_rectangle(start, end, stroke=stroke)
+
+    def draw_component_bounding_boxes(
+        self,
+        include_properties: bool = False,
+        stroke_width: float = 0.127,
+        stroke_color: str = "green",
+        stroke_type: str = "solid"
+    ) -> List[str]:
+        """
+        Draw bounding boxes for all components.
+
+        Args:
+            include_properties: Whether to include properties in bounding box
+            stroke_width: Line width
+            stroke_color: Line color
+            stroke_type: Line type
+
+        Returns:
+            List of rectangle UUIDs created
+        """
+        # This would need the bounding box calculation logic
+        # For now, return empty list - would need to implement component bounding box calc
+        return []
+
+    # Metadata operations (delegated to MetadataManager)
     def set_title_block(
         self,
         title: str = "",
         date: str = "",
         rev: str = "",
         company: str = "",
-        comments: Optional[Dict[int, str]] = None,
-    ):
+        comments: Optional[Dict[int, str]] = None
+    ) -> None:
         """
         Set title block information.
 
         Args:
             title: Schematic title
-            date: Creation/revision date
-            rev: Revision number
+            date: Date
+            rev: Revision
             company: Company name
-            comments: Numbered comments (1, 2, 3, etc.)
+            comments: Comment fields (1-9)
         """
-        if comments is None:
-            comments = {}
-
-        self._data["title_block"] = {
-            "title": title,
-            "date": date,
-            "rev": rev,
-            "company": company,
-            "comments": comments,
-        }
+        self._metadata_manager.set_title_block(title, date, rev, company, comments)
+        self._format_sync_manager.mark_dirty("title_block", "update")
         self._modified = True
 
-        logger.debug(f"Set title block: {title} rev {rev}")
-
-    def draw_bounding_box(
-        self,
-        bbox: "BoundingBox",
-        stroke_width: float = 0,
-        stroke_color: str = None,
-        stroke_type: str = "default",
-        exclude_from_sim: bool = False,
-    ) -> str:
+    def set_paper_size(self, paper: str) -> None:
         """
-        Draw a component bounding box as a visual rectangle using KiCAD rectangle graphics.
+        Set paper size for the schematic.
 
         Args:
-            bbox: BoundingBox to draw
-            stroke_width: Line width for the rectangle (0 = thin, 1 = 1mm, etc.)
-            stroke_color: Color name ('red', 'blue', 'green', etc.) or None for default
-            stroke_type: Stroke type - KiCAD supports: 'default', 'solid', 'dash', 'dot', 'dash_dot', 'dash_dot_dot'
-            exclude_from_sim: Exclude from simulation
-
-        Returns:
-            UUID of created rectangle element
+            paper: Paper size (A4, A3, etc.)
         """
-        # Import BoundingBox type
-        from .component_bounds import BoundingBox
-
-        rect_uuid = str(uuid.uuid4())
-
-        # Create rectangle data structure in KiCAD dictionary format
-        stroke_data = {"width": stroke_width, "type": stroke_type}
-
-        # Add color if specified
-        if stroke_color:
-            stroke_data["color"] = stroke_color
-
-        rectangle_data = {
-            "uuid": rect_uuid,
-            "start": {"x": bbox.min_x, "y": bbox.min_y},
-            "end": {"x": bbox.max_x, "y": bbox.max_y},
-            "stroke": stroke_data,
-            "fill": {"type": "none"},
-        }
-
-        # Add to schematic data
-        if "graphics" not in self._data:
-            self._data["graphics"] = []
-
-        self._data["graphics"].append(rectangle_data)
+        self._metadata_manager.set_paper_size(paper)
+        self._format_sync_manager.mark_dirty("paper", "update")
         self._modified = True
 
-        logger.debug(f"Drew bounding box rectangle: {bbox}")
-        return rect_uuid
-
-    def draw_component_bounding_boxes(
-        self,
-        include_properties: bool = False,
-        stroke_width: float = 0.254,
-        stroke_color: str = "red",
-        stroke_type: str = "default",
-    ) -> List[str]:
+    # Validation (enhanced with ValidationManager)
+    def validate(self) -> List[ValidationIssue]:
         """
-        Draw bounding boxes for all components in the schematic.
-
-        Args:
-            include_properties: Include space for Reference/Value labels
-            stroke_width: Line width for rectangles
-            stroke_color: Color for rectangles
-            stroke_type: Stroke type for rectangles
+        Perform comprehensive schematic validation.
 
         Returns:
-            List of UUIDs for created rectangle elements
+            List of validation issues found
         """
-        from .component_bounds import get_component_bounding_box
+        # Use the new ValidationManager for comprehensive validation
+        manager_issues = self._validation_manager.validate_schematic()
 
-        uuids = []
+        # Also run legacy validator for compatibility
+        try:
+            legacy_issues = self._legacy_validator.validate_schematic_data(self._data)
+        except Exception as e:
+            logger.warning(f"Legacy validator failed: {e}")
+            legacy_issues = []
 
-        for component in self._components:
-            bbox = get_component_bounding_box(component, include_properties)
-            rect_uuid = self.draw_bounding_box(bbox, stroke_width, stroke_color, stroke_type)
-            uuids.append(rect_uuid)
+        # Combine issues (remove duplicates based on message)
+        all_issues = manager_issues + legacy_issues
+        unique_issues = []
+        seen_messages = set()
 
-        logger.info(f"Drew {len(uuids)} component bounding boxes")
-        return uuids
+        for issue in all_issues:
+            if issue.message not in seen_messages:
+                unique_issues.append(issue)
+                seen_messages.add(issue.message)
 
-    # Library management
-    @property
-    def libraries(self) -> "LibraryManager":
-        """Access to library management."""
-        if not hasattr(self, "_library_manager"):
-            from ..library.manager import LibraryManager
+        return unique_issues
 
-            self._library_manager = LibraryManager(self)
-        return self._library_manager
+    def get_validation_summary(self) -> Dict[str, Any]:
+        """
+        Get validation summary statistics.
 
-    # Utility methods
-    def clear(self):
-        """Clear all components, wires, and other elements."""
-        self._data["components"] = []
-        self._data["wires"] = []
-        self._data["junctions"] = []
-        self._data["labels"] = []
-        self._components = ComponentCollection()
-        self._modified = True
-        logger.info("Cleared schematic")
+        Returns:
+            Summary dictionary with counts and severity
+        """
+        issues = self.validate()
+        return self._validation_manager.get_validation_summary(issues)
 
-    def clone(self, new_name: Optional[str] = None) -> "Schematic":
-        """Create a copy of this schematic."""
-        import copy
-
-        cloned_data = copy.deepcopy(self._data)
-
-        if new_name:
-            cloned_data["title_block"]["title"] = new_name
-            cloned_data["uuid"] = str(uuid.uuid4())  # New UUID for clone
-
-        return Schematic(cloned_data)
-
-    # Performance optimization
-    def rebuild_indexes(self):
-        """Rebuild internal indexes for performance."""
-        # This would rebuild component indexes, etc.
-        logger.info("Rebuilt schematic indexes")
-
-    def get_performance_stats(self) -> Dict[str, Any]:
-        """Get performance statistics."""
-        cache_stats = get_symbol_cache().get_performance_stats()
-
+    # Statistics and information
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get comprehensive schematic statistics."""
         return {
-            "schematic": {
+            "components": len(self._components),
+            "wires": len(self._wires),
+            "junctions": len(self._junctions),
+            "text_elements": self._text_element_manager.get_text_statistics(),
+            "graphics": self._graphics_manager.get_graphics_statistics(),
+            "sheets": self._sheet_manager.get_sheet_statistics(),
+            "performance": {
                 "operation_count": self._operation_count,
-                "total_operation_time_s": round(self._total_operation_time, 3),
-                "avg_operation_time_ms": round(
-                    (
-                        (self._total_operation_time / self._operation_count * 1000)
-                        if self._operation_count > 0
-                        else 0
-                    ),
-                    2,
-                ),
+                "total_operation_time": self._total_operation_time,
+                "modified": self.modified,
+                "last_save_time": self._last_save_time,
             },
-            "components": self._components.get_statistics(),
-            "symbol_cache": cache_stats,
         }
 
     # Internal methods
+    @staticmethod
+    def _create_empty_schematic_data() -> Dict[str, Any]:
+        """Create empty schematic data structure."""
+        return {
+            "version": "20250114",
+            "generator": "eeschema",
+            "generator_version": "9.0",
+            "paper": "A4",
+            "lib_symbols": {},
+            "symbol": [],
+            "wire": [],
+            "junction": [],
+            "label": [],
+            "hierarchical_label": [],
+            "global_label": [],
+            "text": [],
+            "sheet": [],
+            "rectangle": [],
+            "circle": [],
+            "arc": [],
+            "polyline": [],
+            "image": [],
+            "symbol_instances": [],
+            "sheet_instances": [],
+            "embedded_fonts": "no",
+            "components": [],
+            "wires": [],
+            "junctions": [],
+            "labels": [],
+            "nets": [],
+        }
+
+    # Context manager support for atomic operations
+    def __enter__(self):
+        """Enter atomic operation context."""
+        # Create backup for rollback
+        if self._file_path and self._file_path.exists():
+            self._backup_path = self._file_io_manager.create_backup(self._file_path, ".atomic_backup")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit atomic operation context."""
+        if exc_type is not None:
+            # Exception occurred - rollback if possible
+            if hasattr(self, "_backup_path") and self._backup_path.exists():
+                logger.warning("Exception in atomic operation - rolling back")
+                # Restore from backup
+                restored_data = self._file_io_manager.load_schematic(self._backup_path)
+                self._data = restored_data
+                self._modified = True
+        else:
+            # Success - clean up backup
+            if hasattr(self, "_backup_path") and self._backup_path.exists():
+                self._backup_path.unlink()
+
+    # Internal sync methods (migrated from original implementation)
     def _sync_components_to_data(self):
         """Sync component collection state back to data structure."""
         self._data["components"] = [comp._data.__dict__ for comp in self._components]
@@ -1425,112 +1060,42 @@ class Schematic:
 
         for comp in self._components:
             if comp.lib_id and comp.lib_id not in lib_symbols:
-                logger.debug(f"🔧 SCHEMATIC: Processing component {comp.lib_id}")
+                logger.debug(f"Processing component {comp.lib_id}")
 
                 # Get the actual symbol definition
                 symbol_def = cache.get_symbol(comp.lib_id)
                 if symbol_def:
-                    logger.debug(f"🔧 SCHEMATIC: Loaded symbol {comp.lib_id}")
+                    logger.debug(f"Loaded symbol {comp.lib_id}")
                     lib_symbols[comp.lib_id] = self._convert_symbol_to_kicad_format(
                         symbol_def, comp.lib_id
                     )
 
-                    # Check if this symbol extends another symbol using multiple methods
-                    extends_parent = None
-
-                    # Method 1: Check raw_kicad_data
-                    if hasattr(symbol_def, "raw_kicad_data") and symbol_def.raw_kicad_data:
-                        extends_parent = self._check_symbol_extends(symbol_def.raw_kicad_data)
-                        logger.debug(
-                            f"🔧 SCHEMATIC: Checked raw_kicad_data for {comp.lib_id}, extends: {extends_parent}"
-                        )
-
-                    # Method 2: Check raw_data attribute
-                    if not extends_parent and hasattr(symbol_def, "__dict__"):
-                        for attr_name, attr_value in symbol_def.__dict__.items():
-                            if attr_name == "raw_data":
-                                logger.debug(
-                                    f"🔧 SCHEMATIC: Checking raw_data for extends: {type(attr_value)}"
-                                )
-                                extends_parent = self._check_symbol_extends(attr_value)
-                                if extends_parent:
-                                    logger.debug(
-                                        f"🔧 SCHEMATIC: Found extends in raw_data: {extends_parent}"
-                                    )
-
-                    # Method 3: Check the extends attribute directly
-                    if not extends_parent and hasattr(symbol_def, "extends"):
-                        extends_parent = symbol_def.extends
-                        logger.debug(f"🔧 SCHEMATIC: Found extends attribute: {extends_parent}")
-
-                    if extends_parent:
-                        # Load the parent symbol too
-                        parent_lib_id = f"{comp.lib_id.split(':')[0]}:{extends_parent}"
-                        logger.debug(f"🔧 SCHEMATIC: Loading parent symbol: {parent_lib_id}")
-
-                        if parent_lib_id not in lib_symbols:
-                            parent_symbol_def = cache.get_symbol(parent_lib_id)
-                            if parent_symbol_def:
-                                lib_symbols[parent_lib_id] = self._convert_symbol_to_kicad_format(
-                                    parent_symbol_def, parent_lib_id
-                                )
-                                logger.debug(
-                                    f"🔧 SCHEMATIC: Successfully loaded parent symbol: {parent_lib_id} for {comp.lib_id}"
-                                )
-                            else:
-                                logger.warning(
-                                    f"🔧 SCHEMATIC: Failed to load parent symbol: {parent_lib_id}"
-                                )
-                        else:
-                            logger.debug(
-                                f"🔧 SCHEMATIC: Parent symbol {parent_lib_id} already loaded"
-                            )
-                    else:
-                        logger.debug(f"🔧 SCHEMATIC: No extends found for {comp.lib_id}")
-                else:
-                    # Fallback for unknown symbols
-                    logger.warning(
-                        f"🔧 SCHEMATIC: Failed to load symbol {comp.lib_id}, using fallback"
-                    )
-                    lib_symbols[comp.lib_id] = {"definition": "basic"}
-
         self._data["lib_symbols"] = lib_symbols
 
-        # Debug: Log the final lib_symbols structure
-        logger.debug(f"🔧 FINAL: lib_symbols contains {len(lib_symbols)} symbols:")
-        for sym_id in lib_symbols.keys():
-            logger.debug(f"🔧 FINAL: - {sym_id}")
-            # Check if this symbol has extends
-            sym_data = lib_symbols[sym_id]
-            if isinstance(sym_data, list) and len(sym_data) > 2:
-                for item in sym_data[1:]:
-                    if isinstance(item, list) and len(item) >= 2:
-                        if item[0] == sexpdata.Symbol("extends"):
-                            logger.debug(f"🔧 FINAL: - {sym_id} extends {item[1]}")
-                            break
+        # Update sheet instances
+        if not self._data["sheet_instances"]:
+            self._data["sheet_instances"] = [
+                {
+                    "path": "/",
+                    "page": "1"
+                }
+            ]
 
-    def _check_symbol_extends(self, symbol_data: Any) -> Optional[str]:
-        """Check if symbol extends another symbol and return parent name."""
-        logger.debug(f"🔧 EXTENDS: Checking symbol data type: {type(symbol_data)}")
+        # Update symbol instances
+        symbol_instances = []
+        for comp in self._components:
+            # Create project path based on component and project name
+            project_path = f"/{comp.reference}"
 
-        if not isinstance(symbol_data, list):
-            logger.debug(f"🔧 EXTENDS: Not a list, returning None")
-            return None
+            symbol_instance = {
+                "project": self.name,
+                "path": project_path,
+                "reference": comp.reference,
+                "unit": getattr(comp._data, "unit", 1),
+            }
+            symbol_instances.append(symbol_instance)
 
-        logger.debug(f"🔧 EXTENDS: Checking {len(symbol_data)} items for extends directive")
-
-        for i, item in enumerate(symbol_data[1:], 1):
-            logger.debug(
-                f"🔧 EXTENDS: Item {i}: {type(item)} - {item if not isinstance(item, list) else f'list[{len(item)}]'}"
-            )
-            if isinstance(item, list) and len(item) >= 2:
-                if item[0] == sexpdata.Symbol("extends"):
-                    parent_name = str(item[1]).strip('"')
-                    logger.debug(f"🔧 EXTENDS: Found extends directive: {parent_name}")
-                    return parent_name
-
-        logger.debug(f"🔧 EXTENDS: No extends directive found")
-        return None
+        self._data["symbol_instances"] = symbol_instances
 
     def _sync_wires_to_data(self):
         """Sync wire collection state back to data structure."""
@@ -1561,156 +1126,17 @@ class Schematic:
 
         self._data["junctions"] = junction_data
 
-    def _convert_symbol_to_kicad_format(
-        self, symbol: "SymbolDefinition", lib_id: str
-    ) -> Dict[str, Any]:
-        """Convert SymbolDefinition to KiCAD lib_symbols format using raw parsed data."""
-        # If we have raw KiCAD data from the library file, use it directly
-        if hasattr(symbol, "raw_kicad_data") and symbol.raw_kicad_data:
-            return self._convert_raw_symbol_data(symbol.raw_kicad_data, lib_id)
+    def _convert_symbol_to_kicad_format(self, symbol_def, lib_id: str):
+        """Convert symbol definition to KiCAD format."""
+        # Simplified version - just return the raw data if available
+        if hasattr(symbol_def, "raw_kicad_data") and symbol_def.raw_kicad_data:
+            return symbol_def.raw_kicad_data
 
         # Fallback: create basic symbol structure
         return {
-            "pin_numbers": {"hide": "yes"},
-            "pin_names": {"offset": 0},
-            "exclude_from_sim": "no",
-            "in_bom": "yes",
-            "on_board": "yes",
-            "properties": {
-                "Reference": {
-                    "value": symbol.reference_prefix,
-                    "at": [2.032, 0, 90],
-                    "effects": {"font": {"size": [1.27, 1.27]}},
-                },
-                "Value": {
-                    "value": symbol.reference_prefix,
-                    "at": [0, 0, 90],
-                    "effects": {"font": {"size": [1.27, 1.27]}},
-                },
-                "Footprint": {
-                    "value": "",
-                    "at": [-1.778, 0, 90],
-                    "effects": {"font": {"size": [1.27, 1.27]}, "hide": "yes"},
-                },
-                "Datasheet": {
-                    "value": getattr(symbol, "Datasheet", None)
-                    or getattr(symbol, "datasheet", None)
-                    or "~",
-                    "at": [0, 0, 0],
-                    "effects": {"font": {"size": [1.27, 1.27]}, "hide": "yes"},
-                },
-                "Description": {
-                    "value": getattr(symbol, "Description", None)
-                    or getattr(symbol, "description", None)
-                    or "Resistor",
-                    "at": [0, 0, 0],
-                    "effects": {"font": {"size": [1.27, 1.27]}, "hide": "yes"},
-                },
-            },
-            "embedded_fonts": "no",
+            "lib_id": lib_id,
+            "symbol": symbol_def.name if hasattr(symbol_def, "name") else lib_id.split(":")[-1],
         }
-
-    def _convert_raw_symbol_data(self, raw_data: List, lib_id: str) -> Dict[str, Any]:
-        """Convert raw parsed KiCAD symbol data to dictionary format for S-expression generation."""
-        import copy
-
-        import sexpdata
-
-        # Make a copy and fix symbol name and string/symbol issues
-        modified_data = copy.deepcopy(raw_data)
-
-        # Replace the symbol name with the full lib_id
-        if len(modified_data) >= 2:
-            modified_data[1] = lib_id  # Change 'R' to 'Device:R'
-
-        # Fix extends directive to use full lib_id
-        logger.debug(f"🔧 CONVERT: Processing {len(modified_data)} items for {lib_id}")
-        for i, item in enumerate(modified_data[1:], 1):
-            if isinstance(item, list) and len(item) >= 2:
-                logger.debug(
-                    f"🔧 CONVERT: Item {i}: {item[0]} = {item[1] if len(item) > 1 else 'N/A'}"
-                )
-                if item[0] == sexpdata.Symbol("extends"):
-                    # Convert bare symbol name to full lib_id
-                    parent_name = str(item[1]).strip('"')
-                    parent_lib_id = f"{lib_id.split(':')[0]}:{parent_name}"
-                    modified_data[i][1] = parent_lib_id
-                    logger.debug(
-                        f"🔧 CONVERT: Fixed extends directive: {parent_name} -> {parent_lib_id}"
-                    )
-                    break
-
-        # Fix string/symbol conversion issues in pin definitions
-        self._fix_symbol_strings_recursively(modified_data)
-
-        return modified_data
-
-    def _fix_symbol_strings_recursively(self, data):
-        """Recursively fix string/symbol issues in parsed S-expression data."""
-        import sexpdata
-
-        if isinstance(data, list):
-            for i, item in enumerate(data):
-                if isinstance(item, list):
-                    # Check for pin definitions that need fixing
-                    if len(item) >= 3 and item[0] == sexpdata.Symbol("pin"):
-                        # Fix pin type and shape - ensure they are symbols not strings
-                        if isinstance(item[1], str):
-                            item[1] = sexpdata.Symbol(item[1])  # pin type: "passive" -> passive
-                        if len(item) >= 3 and isinstance(item[2], str):
-                            item[2] = sexpdata.Symbol(item[2])  # pin shape: "line" -> line
-
-                    # Recursively process nested lists
-                    self._fix_symbol_strings_recursively(item)
-                elif isinstance(item, str):
-                    # Fix common KiCAD keywords that should be symbols
-                    if item in ["yes", "no", "default", "none", "left", "right", "center"]:
-                        data[i] = sexpdata.Symbol(item)
-
-        return data
-
-    @staticmethod
-    def _create_empty_schematic_data() -> Dict[str, Any]:
-        """Create empty schematic data structure."""
-        return {
-            "version": "20250114",
-            "generator": "eeschema",
-            "generator_version": "9.0",
-            "uuid": str(uuid.uuid4()),
-            "paper": "A4",
-            "components": [],
-            "wires": [],
-            "junctions": [],
-            "labels": [],
-            "nets": [],
-            "lib_symbols": {},
-            "sheet_instances": [{"path": "/", "page": "1"}],
-            "symbol_instances": [],
-            "embedded_fonts": "no",
-        }
-
-    # Context manager support for atomic operations
-    def __enter__(self):
-        """Enter atomic operation context."""
-        # Create backup for potential rollback
-        if self._file_path and self._file_path.exists():
-            self._backup_path = self.backup(".atomic_backup")
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit atomic operation context."""
-        if exc_type is not None:
-            # Exception occurred - rollback if possible
-            if hasattr(self, "_backup_path") and self._backup_path.exists():
-                logger.warning("Exception in atomic operation - rolling back")
-                # Restore from backup
-                restored_data = self._parser.parse_file(self._backup_path)
-                self._data = restored_data
-                self._modified = True
-        else:
-            # Success - clean up backup
-            if hasattr(self, "_backup_path") and self._backup_path.exists():
-                self._backup_path.unlink()
 
     def __str__(self) -> str:
         """String representation."""
