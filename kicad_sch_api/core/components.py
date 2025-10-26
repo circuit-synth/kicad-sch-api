@@ -11,6 +11,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..library.cache import SymbolDefinition, get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
+from .collections import BaseCollection
 from .ic_manager import ICManager
 from .types import Point, SchematicPin, SchematicSymbol
 
@@ -261,9 +262,12 @@ class Component:
         )
 
 
-class ComponentCollection:
+class ComponentCollection(BaseCollection[Component]):
     """
     Collection class for efficient component management.
+
+    Inherits from BaseCollection for standard operations and adds component-specific
+    functionality including reference, lib_id, and value-based indexing.
 
     Provides fast lookup, filtering, and bulk operations for schematic components.
     Optimized for schematics with hundreds or thousands of components.
@@ -276,18 +280,18 @@ class ComponentCollection:
         Args:
             components: Initial list of component data
         """
-        self._components: List[Component] = []
+        # Initialize base collection
+        super().__init__([], collection_name="components")
+
+        # Additional component-specific indexes
         self._reference_index: Dict[str, Component] = {}
         self._lib_id_index: Dict[str, List[Component]] = {}
         self._value_index: Dict[str, List[Component]] = {}
-        self._modified = False
 
         # Add initial components
         if components:
             for comp_data in components:
                 self._add_to_indexes(Component(comp_data, self))
-
-        logger.debug(f"ComponentCollection initialized with {len(self._components)} components")
 
     def add(
         self,
@@ -375,7 +379,7 @@ class ComponentCollection:
 
         # Add to collection
         self._add_to_indexes(component)
-        self._modified = True
+        self._mark_modified()
 
         logger.info(f"Added component: {reference} ({lib_id})")
         return component
@@ -432,7 +436,7 @@ class ComponentCollection:
             component = Component(component_data, self)
             self._add_to_indexes(component)
 
-        self._modified = True
+        self._mark_modified()
         logger.info(
             f"Added multi-unit IC: {reference_prefix} ({lib_id}) with {len(unit_components)} units"
         )
@@ -453,9 +457,11 @@ class ComponentCollection:
         if not component:
             return False
 
-        # Remove from all indexes
+        # Remove from component-specific indexes
         self._remove_from_indexes(component)
-        self._modified = True
+
+        # Remove from base collection using UUID
+        super().remove(component.uuid)
 
         logger.info(f"Removed component: {reference}")
         return True
@@ -479,7 +485,7 @@ class ComponentCollection:
         Returns:
             List of matching components
         """
-        results = list(self._components)
+        results = list(self._items)
 
         # Apply filters
         if "lib_id" in criteria:
@@ -517,7 +523,7 @@ class ComponentCollection:
     def filter_by_type(self, component_type: str) -> List[Component]:
         """Filter components by type (e.g., 'R' for resistors)."""
         return [
-            c for c in self._components if c.symbol_name.upper().startswith(component_type.upper())
+            c for c in self._items if c.symbol_name.upper().startswith(component_type.upper())
         ]
 
     def in_area(self, x1: float, y1: float, x2: float, y2: float) -> List[Component]:
@@ -532,7 +538,7 @@ class ComponentCollection:
             point = Point(point[0], point[1])
 
         results = []
-        for component in self._components:
+        for component in self._items:
             if component.position.distance_to(point) <= radius:
                 results.append(component)
         return results
@@ -564,21 +570,21 @@ class ComponentCollection:
                     component.set_property(key, str(value))
 
         if matching:
-            self._modified = True
+            self._mark_modified()
 
         logger.info(f"Bulk updated {len(matching)} components")
         return len(matching)
 
     def sort_by_reference(self):
         """Sort components by reference designator."""
-        self._components.sort(key=lambda c: c.reference)
+        self._items.sort(key=lambda c: c.reference)
 
     def sort_by_position(self, by_x: bool = True):
         """Sort components by position."""
         if by_x:
-            self._components.sort(key=lambda c: (c.position.x, c.position.y))
+            self._items.sort(key=lambda c: (c.position.x, c.position.y))
         else:
-            self._components.sort(key=lambda c: (c.position.y, c.position.x))
+            self._items.sort(key=lambda c: (c.position.y, c.position.x))
 
     def validate_all(self) -> List[ValidationIssue]:
         """Validate all components in collection."""
@@ -586,12 +592,12 @@ class ComponentCollection:
         validator = SchematicValidator()
 
         # Validate individual components
-        for component in self._components:
+        for component in self._items:
             issues = component.validate()
             all_issues.extend(issues)
 
         # Validate collection-level rules
-        references = [c.reference for c in self._components]
+        references = [c.reference for c in self._items]
         if len(references) != len(set(references)):
             # Find duplicates
             seen = set()
@@ -615,7 +621,7 @@ class ComponentCollection:
         lib_counts = {}
         value_counts = {}
 
-        for component in self._components:
+        for component in self._items:
             # Count by library
             lib = component.library
             lib_counts[lib] = lib_counts.get(lib, 0) + 1
@@ -626,36 +632,47 @@ class ComponentCollection:
                 value_counts[value] = value_counts.get(value, 0) + 1
 
         return {
-            "total_components": len(self._components),
+            "total_components": len(self._items),
             "unique_references": len(self._reference_index),
             "libraries_used": len(lib_counts),
             "library_breakdown": lib_counts,
             "most_common_values": sorted(value_counts.items(), key=lambda x: x[1], reverse=True)[
                 :10
             ],
-            "modified": self._modified,
+            "modified": self.is_modified(),
         }
 
     # Collection interface
-    def __len__(self) -> int:
-        """Number of components."""
-        return len(self._components)
-
-    def __iter__(self) -> Iterator[Component]:
-        """Iterate over components."""
-        return iter(self._components)
+    # __len__, __iter__ inherited from BaseCollection
 
     def __getitem__(self, key: Union[int, str]) -> Component:
-        """Get component by index or reference."""
-        if isinstance(key, int):
-            return self._components[key]
-        elif isinstance(key, str):
+        """
+        Get component by index, UUID, or reference.
+
+        Args:
+            key: Integer index, UUID string, or reference string
+
+        Returns:
+            Component at the specified location
+
+        Raises:
+            KeyError: If UUID or reference not found
+            IndexError: If index out of range
+            TypeError: If key is invalid type
+        """
+        if isinstance(key, str):
+            # Try reference first (most common use case)
             component = self._reference_index.get(key)
-            if component is None:
+            if component is not None:
+                return component
+            # Fall back to UUID lookup (from base class)
+            try:
+                return super().__getitem__(key)
+            except KeyError:
                 raise KeyError(f"Component not found: {key}")
-            return component
         else:
-            raise TypeError(f"Invalid key type: {type(key)}")
+            # Integer index (from base class)
+            return super().__getitem__(key)
 
     def __contains__(self, reference: str) -> bool:
         """Check if reference exists."""
@@ -663,8 +680,11 @@ class ComponentCollection:
 
     # Internal methods
     def _add_to_indexes(self, component: Component):
-        """Add component to all indexes."""
-        self._components.append(component)
+        """Add component to all indexes (base + component-specific)."""
+        # Add to base collection (UUID index)
+        self._add_item(component)
+
+        # Add to reference index
         self._reference_index[component.reference] = component
 
         # Add to lib_id index
@@ -681,8 +701,8 @@ class ComponentCollection:
             self._value_index[value].append(component)
 
     def _remove_from_indexes(self, component: Component):
-        """Remove component from all indexes."""
-        self._components.remove(component)
+        """Remove component from component-specific indexes (not base UUID index)."""
+        # Remove from reference index
         del self._reference_index[component.reference]
 
         # Remove from lib_id index
@@ -705,10 +725,7 @@ class ComponentCollection:
             component = self._reference_index[old_ref]
             del self._reference_index[old_ref]
             self._reference_index[new_ref] = component
-
-    def _mark_modified(self):
-        """Mark collection as modified."""
-        self._modified = True
+            # Note: UUID doesn't change when reference changes, so base index is unaffected
 
     def _generate_reference(self, lib_id: str) -> str:
         """Generate unique reference for component."""
@@ -730,7 +747,7 @@ class ComponentCollection:
         grid_size = 10.0  # 10mm grid
         max_per_row = 10
 
-        row = len(self._components) // max_per_row
-        col = len(self._components) % max_per_row
+        row = len(self._items) // max_per_row
+        col = len(self._items) % max_per_row
 
         return Point(col * grid_size, row * grid_size)
