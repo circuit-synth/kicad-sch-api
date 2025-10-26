@@ -84,17 +84,21 @@ class SheetManager:
 
         sheet_data = {
             "uuid": uuid_str,
-            "at": [position.x, position.y],
-            "size": [size.x, size.y],
-            "stroke": {
-                "width": stroke_width if stroke_width is not None else 0.1524,
-                "type": stroke_type
-            },
-            "fill": {
-                "color": [255, 255, 255, 0.0]
-            },
+            "position": {"x": position.x, "y": position.y},
+            "size": {"width": size.x, "height": size.y},
+            "stroke_width": stroke_width if stroke_width is not None else 0.1524,
+            "stroke_type": stroke_type,
+            "fill_color": (255, 255, 255, 0.0),
             "name": name,
-            "file": filename,
+            "filename": filename,
+            "exclude_from_sim": False,
+            "in_bom": True,
+            "on_board": True,
+            "dnp": False,
+            "fields_autoplaced": True,
+            "pins": [],
+            "project_name": project_name,
+            "page_number": page_number if page_number else "2",
             "instances": [
                 {
                     "project": project_name,
@@ -105,18 +109,14 @@ class SheetManager:
             ]
         }
 
-        # Add page number if provided
-        if page_number is not None:
-            sheet_data["instances"][0]["page"] = page_number
-
-        # Add sheet pins if provided
+        # Add sheet pins if provided (though usually added separately)
         if sheet_pins:
-            sheet_data["pin"] = sheet_pins
+            sheet_data["pins"] = sheet_pins
 
         # Add to schematic data
-        if "sheet" not in self._data:
-            self._data["sheet"] = []
-        self._data["sheet"].append(sheet_data)
+        if "sheets" not in self._data:
+            self._data["sheets"] = []
+        self._data["sheets"].append(sheet_data)
 
         logger.debug(f"Added sheet '{name}' ({filename}) at {position}")
         return uuid_str
@@ -158,7 +158,7 @@ class SheetManager:
             pin_type = "input"
 
         # Find the sheet
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
                 pin_data = {
@@ -195,7 +195,7 @@ class SheetManager:
         Returns:
             True if sheet was removed, False if not found
         """
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for i, sheet in enumerate(sheets):
             if sheet.get("uuid") == sheet_uuid:
                 # Also remove from sheet instances
@@ -218,7 +218,7 @@ class SheetManager:
         Returns:
             True if pin was removed, False if not found
         """
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
                 pins = sheet.get("pin", [])
@@ -241,7 +241,7 @@ class SheetManager:
         Returns:
             Sheet data or None if not found
         """
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("name") == name:
                 return sheet
@@ -261,7 +261,7 @@ class SheetManager:
         if not filename.endswith('.kicad_sch'):
             filename = f"{filename}.kicad_sch"
 
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("file") == filename:
                 return sheet
@@ -277,7 +277,7 @@ class SheetManager:
         Returns:
             List of pin data
         """
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
                 pins = sheet.get("pin", [])
@@ -311,7 +311,7 @@ class SheetManager:
         if isinstance(size, tuple):
             size = Point(size[0], size[1])
 
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
                 sheet["size"] = [size.x, size.y]
@@ -339,7 +339,7 @@ class SheetManager:
         if isinstance(position, tuple):
             position = Point(position[0], position[1])
 
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
                 sheet["at"] = [position.x, position.y]
@@ -356,7 +356,7 @@ class SheetManager:
         Returns:
             Dictionary representing sheet hierarchy
         """
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
 
         hierarchy = {
             "root": {
@@ -388,7 +388,7 @@ class SheetManager:
             List of validation warnings
         """
         warnings = []
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
 
         for sheet in sheets:
             sheet_name = sheet.get("name", "Unknown")
@@ -419,7 +419,7 @@ class SheetManager:
         Returns:
             Dictionary with sheet statistics
         """
-        sheets = self._data.get("sheet", [])
+        sheets = self._data.get("sheets", [])
 
         total_pins = sum(len(sheet.get("pin", [])) for sheet in sheets)
         sheet_instances = self._data.get("sheet_instances", [])
