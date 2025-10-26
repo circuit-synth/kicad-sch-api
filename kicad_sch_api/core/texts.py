@@ -10,6 +10,7 @@ import uuid
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
+from .collections import BaseCollection
 from .types import Point, Text
 
 logger = logging.getLogger(__name__)
@@ -124,9 +125,12 @@ class TextElement:
         return f"<Text '{self.text}' @ {self.position}>"
 
 
-class TextCollection:
+class TextCollection(BaseCollection[TextElement]):
     """
     Collection class for efficient text element management.
+
+    Inherits from BaseCollection for standard operations and adds text-specific
+    functionality including content-based indexing.
 
     Provides fast lookup, filtering, and bulk operations for schematic text elements.
     """
@@ -138,17 +142,16 @@ class TextCollection:
         Args:
             texts: Initial list of text data
         """
-        self._texts: List[TextElement] = []
-        self._uuid_index: Dict[str, TextElement] = {}
+        # Initialize base collection with empty list (we'll add elements below)
+        super().__init__([], collection_name="texts")
+
+        # Additional text-specific index
         self._content_index: Dict[str, List[TextElement]] = {}
-        self._modified = False
 
         # Add initial texts
         if texts:
             for text_data in texts:
                 self._add_to_indexes(TextElement(text_data, self))
-
-        logger.debug(f"TextCollection initialized with {len(self._texts)} texts")
 
     def add(
         self,
@@ -209,14 +212,9 @@ class TextCollection:
         # Create wrapper and add to collection
         text_element = TextElement(text_data, self)
         self._add_to_indexes(text_element)
-        self._mark_modified()
 
         logger.debug(f"Added text: {text_element}")
         return text_element
-
-    def get(self, text_uuid: str) -> Optional[TextElement]:
-        """Get text by UUID."""
-        return self._uuid_index.get(text_uuid)
 
     def remove(self, text_uuid: str) -> bool:
         """
@@ -228,13 +226,19 @@ class TextCollection:
         Returns:
             True if text was removed, False if not found
         """
-        text_element = self._uuid_index.get(text_uuid)
+        text_element = self.get(text_uuid)
         if not text_element:
             return False
 
-        # Remove from indexes
-        self._remove_from_indexes(text_element)
-        self._mark_modified()
+        # Remove from content index
+        content = text_element.text
+        if content in self._content_index:
+            self._content_index[content].remove(text_element)
+            if not self._content_index[content]:
+                del self._content_index[content]
+
+        # Remove using base class method
+        super().remove(text_uuid)
 
         logger.debug(f"Removed text: {text_element}")
         return True
@@ -254,14 +258,14 @@ class TextCollection:
             return self._content_index.get(content, []).copy()
         else:
             matches = []
-            for text_element in self._texts:
+            for text_element in self._items:
                 if content.lower() in text_element.text.lower():
                     matches.append(text_element)
             return matches
 
     def filter(self, predicate: Callable[[TextElement], bool]) -> List[TextElement]:
         """
-        Filter texts by predicate function.
+        Filter texts by predicate function (delegates to base class find).
 
         Args:
             predicate: Function that returns True for texts to include
@@ -269,7 +273,7 @@ class TextCollection:
         Returns:
             List of texts matching predicate
         """
-        return [text for text in self._texts if predicate(text)]
+        return self.find(predicate)
 
     def bulk_update(self, criteria: Callable[[TextElement], bool], updates: Dict[str, Any]):
         """
@@ -280,7 +284,7 @@ class TextCollection:
             updates: Dictionary of property updates
         """
         updated_count = 0
-        for text_element in self._texts:
+        for text_element in self._items:
             if criteria(text_element):
                 for prop, value in updates.items():
                     if hasattr(text_element, prop):
@@ -293,15 +297,12 @@ class TextCollection:
 
     def clear(self):
         """Remove all texts from collection."""
-        self._texts.clear()
-        self._uuid_index.clear()
         self._content_index.clear()
-        self._mark_modified()
+        super().clear()
 
     def _add_to_indexes(self, text_element: TextElement):
-        """Add text to internal indexes."""
-        self._texts.append(text_element)
-        self._uuid_index[text_element.uuid] = text_element
+        """Add text to internal indexes (base + content index)."""
+        self._add_item(text_element)
 
         # Add to content index
         content = text_element.text
@@ -309,35 +310,7 @@ class TextCollection:
             self._content_index[content] = []
         self._content_index[content].append(text_element)
 
-    def _remove_from_indexes(self, text_element: TextElement):
-        """Remove text from internal indexes."""
-        self._texts.remove(text_element)
-        del self._uuid_index[text_element.uuid]
-
-        # Remove from content index
-        content = text_element.text
-        if content in self._content_index:
-            self._content_index[content].remove(text_element)
-            if not self._content_index[content]:
-                del self._content_index[content]
-
-    def _mark_modified(self):
-        """Mark collection as modified."""
-        self._modified = True
-
-    # Collection interface methods
-    def __len__(self) -> int:
-        """Return number of texts."""
-        return len(self._texts)
-
-    def __iter__(self) -> Iterator[TextElement]:
-        """Iterate over texts."""
-        return iter(self._texts)
-
-    def __getitem__(self, index: int) -> TextElement:
-        """Get text by index."""
-        return self._texts[index]
-
+    # Collection interface methods - __len__, __iter__, __getitem__ inherited from BaseCollection
     def __bool__(self) -> bool:
         """Return True if collection has texts."""
-        return len(self._texts) > 0
+        return len(self._items) > 0
