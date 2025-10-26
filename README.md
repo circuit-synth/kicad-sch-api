@@ -1,5 +1,10 @@
 # KiCAD Schematic API
 
+[![Documentation Status](https://readthedocs.org/projects/kicad-sch-api/badge/?version=latest)](https://kicad-sch-api.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/kicad-sch-api.svg)](https://badge.fury.io/py/kicad-sch-api)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **Professional Python library for KiCAD schematic file manipulation with exact format preservation**
 
 ## Overview
@@ -405,10 +410,15 @@ sch.save()  # Guaranteed exact KiCAD format
 
 ## 📖 Documentation
 
-- **[API Reference](docs/api.md)**: Complete API documentation
+Full documentation is available at **[kicad-sch-api.readthedocs.io](https://kicad-sch-api.readthedocs.io/)**
+
+Quick links:
+- **[Getting Started Guide](https://kicad-sch-api.readthedocs.io/en/latest/GETTING_STARTED.html)**: Complete beginner's tutorial
+- **[API Reference](https://kicad-sch-api.readthedocs.io/en/latest/API_REFERENCE.html)**: Complete API documentation
+- **[Recipes & Patterns](https://kicad-sch-api.readthedocs.io/en/latest/RECIPES.html)**: Practical examples
+- **[Why Use This Library?](https://kicad-sch-api.readthedocs.io/en/latest/WHY_USE_THIS_LIBRARY.html)**: Value proposition and use cases
+- **[Architecture](https://kicad-sch-api.readthedocs.io/en/latest/ARCHITECTURE.html)**: Internal design details
 - **[Examples](examples/)**: Code examples and tutorials
-- **[MCP Integration](docs/mcp.md)**: AI agent integration guide
-- **[Development](docs/development.md)**: Contributing and development setup
 
 ## 🤝 Contributing
 
