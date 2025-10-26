@@ -10,6 +10,7 @@ import uuid
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
+from .collections import BaseCollection
 from .types import Label, Point
 
 logger = logging.getLogger(__name__)
@@ -114,9 +115,12 @@ class LabelElement:
         return f"<Label '{self.text}' @ {self.position}>"
 
 
-class LabelCollection:
+class LabelCollection(BaseCollection[LabelElement]):
     """
     Collection class for efficient label element management.
+
+    Inherits from BaseCollection for standard operations and adds label-specific
+    functionality including text-based indexing.
 
     Provides fast lookup, filtering, and bulk operations for schematic label elements.
     """
@@ -128,17 +132,16 @@ class LabelCollection:
         Args:
             labels: Initial list of label data
         """
-        self._labels: List[LabelElement] = []
-        self._uuid_index: Dict[str, LabelElement] = {}
+        # Initialize base collection
+        super().__init__([], collection_name="labels")
+
+        # Additional label-specific index
         self._text_index: Dict[str, List[LabelElement]] = {}
-        self._modified = False
 
         # Add initial labels
         if labels:
             for label_data in labels:
                 self._add_to_indexes(LabelElement(label_data, self))
-
-        logger.debug(f"LabelCollection initialized with {len(self._labels)} labels")
 
     def add(
         self,
@@ -201,9 +204,7 @@ class LabelCollection:
         logger.debug(f"Added label: {label_element}")
         return label_element
 
-    def get(self, label_uuid: str) -> Optional[LabelElement]:
-        """Get label by UUID."""
-        return self._uuid_index.get(label_uuid)
+    # get() method inherited from BaseCollection
 
     def get_by_text(self, text: str) -> List[LabelElement]:
         """Get all labels with the given text."""
@@ -219,13 +220,19 @@ class LabelCollection:
         Returns:
             True if label was removed, False if not found
         """
-        label_element = self._uuid_index.get(label_uuid)
+        label_element = self.get(label_uuid)
         if not label_element:
             return False
 
-        # Remove from indexes
-        self._remove_from_indexes(label_element)
-        self._mark_modified()
+        # Remove from text index
+        text = label_element.text
+        if text in self._text_index:
+            self._text_index[text].remove(label_element)
+            if not self._text_index[text]:
+                del self._text_index[text]
+
+        # Remove using base class method
+        super().remove(label_uuid)
 
         logger.debug(f"Removed label: {label_element}")
         return True
@@ -245,7 +252,7 @@ class LabelCollection:
             return self._text_index.get(text, []).copy()
         else:
             matches = []
-            for label_element in self._labels:
+            for label_element in self._items:
                 if text.lower() in label_element.text.lower():
                     matches.append(label_element)
             return matches
@@ -260,7 +267,7 @@ class LabelCollection:
         Returns:
             List of labels matching predicate
         """
-        return [label for label in self._labels if predicate(label)]
+        return [label for label in self._items if predicate(label)]
 
     def bulk_update(self, criteria: Callable[[LabelElement], bool], updates: Dict[str, Any]):
         """
@@ -271,7 +278,7 @@ class LabelCollection:
             updates: Dictionary of property updates
         """
         updated_count = 0
-        for label_element in self._labels:
+        for label_element in self._items:
             if criteria(label_element):
                 for prop, value in updates.items():
                     if hasattr(label_element, prop):
@@ -284,33 +291,18 @@ class LabelCollection:
 
     def clear(self):
         """Remove all labels from collection."""
-        self._labels.clear()
-        self._uuid_index.clear()
         self._text_index.clear()
-        self._mark_modified()
+        super().clear()
 
     def _add_to_indexes(self, label_element: LabelElement):
-        """Add label to internal indexes."""
-        self._labels.append(label_element)
-        self._uuid_index[label_element.uuid] = label_element
+        """Add label to internal indexes (base + text index)."""
+        self._add_item(label_element)
 
         # Add to text index
         text = label_element.text
         if text not in self._text_index:
             self._text_index[text] = []
         self._text_index[text].append(label_element)
-
-    def _remove_from_indexes(self, label_element: LabelElement):
-        """Remove label from internal indexes."""
-        self._labels.remove(label_element)
-        del self._uuid_index[label_element.uuid]
-
-        # Remove from text index
-        text = label_element.text
-        if text in self._text_index:
-            self._text_index[text].remove(label_element)
-            if not self._text_index[text]:
-                del self._text_index[text]
 
     def _update_text_index(self, old_text: str, label_element: LabelElement):
         """Update text index when label text changes."""
@@ -326,23 +318,7 @@ class LabelCollection:
             self._text_index[new_text] = []
         self._text_index[new_text].append(label_element)
 
-    def _mark_modified(self):
-        """Mark collection as modified."""
-        self._modified = True
-
-    # Collection interface methods
-    def __len__(self) -> int:
-        """Return number of labels."""
-        return len(self._labels)
-
-    def __iter__(self) -> Iterator[LabelElement]:
-        """Iterate over labels."""
-        return iter(self._labels)
-
-    def __getitem__(self, index: int) -> LabelElement:
-        """Get label by index."""
-        return self._labels[index]
-
+    # Collection interface methods - __len__, __iter__, __getitem__ inherited from BaseCollection
     def __bool__(self) -> bool:
         """Return True if collection has labels."""
-        return len(self._labels) > 0
+        return len(self._items) > 0
