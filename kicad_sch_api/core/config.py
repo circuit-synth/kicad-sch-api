@@ -6,8 +6,8 @@ This module centralizes all magic numbers and configuration values
 to make them easily configurable and maintainable.
 """
 
-from dataclasses import dataclass
-from typing import Any, Dict, Tuple
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Tuple
 
 
 @dataclass
@@ -57,9 +57,88 @@ class DefaultValues:
 
     project_name: str = "untitled"
     stroke_width: float = 0.0
+    stroke_type: str = "default"
+    fill_type: str = "none"
     font_size: float = 1.27
     pin_name_size: float = 1.27
     pin_number_size: float = 1.27
+
+
+@dataclass
+class FileFormatConstants:
+    """KiCAD file format identifiers and version strings."""
+
+    file_type: str = "kicad_sch"
+    generator_default: str = "eeschema"
+    version_default: str = "20250114"
+    generator_version_default: str = "9.0"
+
+
+@dataclass
+class PaperSizeConstants:
+    """Standard paper size definitions."""
+
+    default: str = "A4"
+    valid_sizes: List[str] = field(
+        default_factory=lambda: ["A4", "A3", "A2", "A1", "A0", "Letter", "Legal", "Tabloid"]
+    )
+
+
+@dataclass
+class FieldNames:
+    """Common S-expression field names to avoid typos."""
+
+    # File structure
+    version: str = "version"
+    generator: str = "generator"
+    generator_version: str = "generator_version"
+    uuid: str = "uuid"
+    paper: str = "paper"
+
+    # Positioning
+    at: str = "at"
+    xy: str = "xy"
+    pts: str = "pts"
+    start: str = "start"
+    end: str = "end"
+    mid: str = "mid"
+    center: str = "center"
+    radius: str = "radius"
+
+    # Styling
+    stroke: str = "stroke"
+    fill: str = "fill"
+    width: str = "width"
+    type: str = "type"
+    color: str = "color"
+
+    # Text/Font
+    font: str = "font"
+    size: str = "size"
+    effects: str = "effects"
+
+    # Components
+    pin: str = "pin"
+    property: str = "property"
+    symbol: str = "symbol"
+    lib_id: str = "lib_id"
+
+    # Graphics
+    polyline: str = "polyline"
+    arc: str = "arc"
+    circle: str = "circle"
+    rectangle: str = "rectangle"
+    bezier: str = "bezier"
+
+    # Connection elements
+    wire: str = "wire"
+    junction: str = "junction"
+    no_connect: str = "no_connect"
+    label: str = "label"
+
+    # Hierarchical
+    sheet: str = "sheet"
+    sheet_instances: str = "sheet_instances"
 
 
 class KiCADConfig:
@@ -71,6 +150,9 @@ class KiCADConfig:
         self.sheet = SheetSettings()
         self.tolerance = ToleranceSettings()
         self.defaults = DefaultValues()
+        self.file_format = FileFormatConstants()
+        self.paper = PaperSizeConstants()
+        self.fields = FieldNames()
 
         # Names that should not generate title_block (for backward compatibility)
         # Include test schematic names to maintain reference compatibility

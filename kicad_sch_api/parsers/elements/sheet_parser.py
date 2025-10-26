@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import sexpdata
 
+from ...core.config import config
 from ..base import BaseElementParser
 
 logger = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ class SheetParser(BaseElementParser):
             "pin_type": str(item[2]) if len(item) > 2 else "input",
             "position": {"x": 0, "y": 0},
             "rotation": 0,
-            "size": 1.27,
+            "size": config.defaults.font_size,
             "justify": "right",
             "uuid": None,
         }
@@ -265,7 +266,7 @@ class SheetParser(BaseElementParser):
         name_prop.append(
             [
                 sexpdata.Symbol("effects"),
-                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), config.defaults.font_size, config.defaults.font_size]],
                 [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")],
             ]
         )
@@ -279,7 +280,7 @@ class SheetParser(BaseElementParser):
         file_prop.append(
             [
                 sexpdata.Symbol("effects"),
-                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), 1.27, 1.27]],
+                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), config.defaults.font_size, config.defaults.font_size]],
                 [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("top")],
             ]
         )
@@ -324,7 +325,7 @@ class SheetParser(BaseElementParser):
             pin_sexp.append([sexpdata.Symbol("uuid"), pin_data["uuid"]])
 
         # Add effects
-        size = pin_data.get("size", 1.27)
+        size = pin_data.get("size", config.defaults.font_size)
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
         effects.append(font)
