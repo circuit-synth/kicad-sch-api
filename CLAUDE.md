@@ -10,22 +10,25 @@ kicad-sch-api is a professional KiCAD schematic manipulation library with exact 
 
 ```
 kicad-sch-api/
-├── python/                          # Core Python library
-│   ├── kicad_sch_api/              # Main package
-│   │   ├── core/                   # Core schematic functionality
-│   │   ├── library/                # Symbol library management
-│   │   └── utils/                  # Validation and utilities
-│   └── tests/                      # Comprehensive test suite
-├── python/                          # Core Python library
-└── simple_circuit.kicad_sch        # Test schematic for development
+├── kicad_sch_api/                  # Main package
+│   ├── core/                       # Core schematic functionality
+│   ├── collections/                # Enhanced collection classes
+│   ├── geometry/                   # Geometric calculations
+│   ├── library/                    # Symbol library management
+│   ├── symbols/                    # Symbol caching and validation
+│   ├── parsers/                    # Element parsers
+│   ├── interfaces/                 # Type protocols
+│   ├── discovery/                  # Component search
+│   └── utils/                      # Validation and utilities
+├── tests/                          # Comprehensive test suite
+└── examples/                       # Usage examples
 ```
 
 ## Key Commands
 
 ### Development Environment Setup
 ```bash
-# Install in development mode (from python/ directory)
-cd python
+# Install in development mode
 uv pip install -e .
 
 # Or install with dev dependencies
@@ -57,20 +60,20 @@ uv run pytest -m "unit" -v           # Unit tests
 ### Code Quality (ALWAYS run before commits)
 ```bash
 # Format code
-uv run black python/kicad_sch_api/ python/tests/
-uv run isort python/kicad_sch_api/ python/tests/
+uv run black kicad_sch_api/ tests/
+uv run isort kicad_sch_api/ tests/
 
 # Type checking
-uv run mypy python/kicad_sch_api/
+uv run mypy kicad_sch_api/
 
 # Linting
-uv run flake8 python/kicad_sch_api/ python/tests/
+uv run flake8 kicad_sch_api/ tests/
 
 # Run all quality checks
-uv run black python/kicad_sch_api/ python/tests/ && \
-uv run isort python/kicad_sch_api/ python/tests/ && \
-uv run mypy python/kicad_sch_api/ && \
-uv run flake8 python/kicad_sch_api/ python/tests/
+uv run black kicad_sch_api/ tests/ && \
+uv run isort kicad_sch_api/ tests/ && \
+uv run mypy kicad_sch_api/ && \
+uv run flake8 kicad_sch_api/ tests/
 ```
 
 ## Core API Usage
