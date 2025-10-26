@@ -23,6 +23,13 @@ Professional KiCAD Schematic Manipulation Library
 
 .. toctree::
    :maxdepth: 2
+   :caption: Feature Documentation
+
+   ERC_PRD
+   ERC_ERD
+
+.. toctree::
+   :maxdepth: 2
    :caption: API Documentation
 
    api/modules
