@@ -274,9 +274,10 @@ class ValidationManager:
             )
 
         # Check paper size
+        from ..config import config
+
         paper = self._data.get("paper")
-        valid_papers = ["A4", "A3", "A2", "A1", "A0", "Letter", "Legal", "Tabloid"]
-        if paper and paper not in valid_papers:
+        if paper and paper not in config.paper.valid_sizes:
             issues.append(
                 ValidationIssue(
                     category="metadata",

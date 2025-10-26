@@ -39,10 +39,10 @@ class MetadataManager:
         Args:
             paper: Paper size (e.g., "A4", "A3", "Letter", "Legal")
         """
-        valid_sizes = ["A4", "A3", "A2", "A1", "A0", "Letter", "Legal", "Tabloid"]
+        from ..config import config
 
-        if paper not in valid_sizes:
-            logger.warning(f"Unusual paper size: {paper}. Valid sizes: {valid_sizes}")
+        if paper not in config.paper.valid_sizes:
+            logger.warning(f"Unusual paper size: {paper}. Valid sizes: {config.paper.valid_sizes}")
 
         self._data["paper"] = paper
         logger.debug(f"Set paper size: {paper}")
@@ -260,9 +260,10 @@ class MetadataManager:
             issues.append("Title block missing title")
 
         # Check paper size
+        from ..config import config
+
         paper = self.get_paper_size()
-        valid_sizes = ["A4", "A3", "A2", "A1", "A0", "Letter", "Legal", "Tabloid"]
-        if paper and paper not in valid_sizes:
+        if paper and paper not in config.paper.valid_sizes:
             issues.append(f"Non-standard paper size: {paper}")
 
         return issues

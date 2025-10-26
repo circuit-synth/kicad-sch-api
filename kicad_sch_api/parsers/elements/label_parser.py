@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional
 
 import sexpdata
 
+from ...core.config import config
+
 from ..base import BaseElementParser
 
 logger = logging.getLogger(__name__)
@@ -31,7 +33,7 @@ class LabelParser(BaseElementParser):
             "text": str(item[1]),  # Label text is second element
             "position": {"x": 0, "y": 0},
             "rotation": 0,
-            "size": 1.27,
+            "size": config.defaults.font_size,
             "uuid": None,
         }
 
@@ -74,7 +76,7 @@ class LabelParser(BaseElementParser):
             "shape": "input",  # input/output/bidirectional/tri_state/passive
             "position": {"x": 0, "y": 0},
             "rotation": 0,
-            "size": 1.27,
+            "size": config.defaults.font_size,
             "justify": "left",
             "uuid": None,
         }
@@ -143,7 +145,7 @@ class LabelParser(BaseElementParser):
         sexp.append([sexpdata.Symbol("at"), x, y, rotation])
 
         # Add effects (font properties)
-        size = label_data.get("size", 1.27)
+        size = label_data.get("size", config.defaults.font_size)
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
         effects.append(font)
@@ -174,7 +176,7 @@ class LabelParser(BaseElementParser):
         sexp.append([sexpdata.Symbol("at"), x, y, rotation])
 
         # Add effects (font properties)
-        size = hlabel_data.get("size", 1.27)
+        size = hlabel_data.get("size", config.defaults.font_size)
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
         effects.append(font)

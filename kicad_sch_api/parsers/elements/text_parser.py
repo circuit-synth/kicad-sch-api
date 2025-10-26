@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional
 
 import sexpdata
 
+from ...core.config import config
+
 from ..base import BaseElementParser
 
 logger = logging.getLogger(__name__)
@@ -32,7 +34,7 @@ class TextParser(BaseElementParser):
             "exclude_from_sim": False,
             "position": {"x": 0, "y": 0},
             "rotation": 0,
-            "size": 1.27,
+            "size": config.defaults.font_size,
             "uuid": None,
         }
 
@@ -79,7 +81,7 @@ class TextParser(BaseElementParser):
             "stroke_width": 0,
             "stroke_type": "solid",
             "fill_type": "none",
-            "font_size": 1.27,
+            "font_size": config.defaults.font_size,
             "justify_horizontal": "left",
             "justify_vertical": "top",
             "uuid": None,
@@ -168,7 +170,7 @@ class TextParser(BaseElementParser):
         sexp.append([sexpdata.Symbol("at"), x, y, rotation])
 
         # Add effects (font properties)
-        size = text_data.get("size", 1.27)
+        size = text_data.get("size", config.defaults.font_size)
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
         effects.append(font)
@@ -228,7 +230,7 @@ class TextParser(BaseElementParser):
         sexp.append(fill_sexp)
 
         # Add effects (font properties and justification)
-        font_size = text_box_data.get("font_size", 1.27)
+        font_size = text_box_data.get("font_size", config.defaults.font_size)
         justify_h = text_box_data.get("justify_horizontal", "left")
         justify_v = text_box_data.get("justify_vertical", "top")
 
