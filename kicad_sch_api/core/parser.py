@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import sexpdata
 
+from ..parsers.utils import color_to_rgb255, color_to_rgba
 from ..utils.validation import ValidationError, ValidationIssue
 from .formatter import ExactFormatter
 from .types import Junction, Label, Net, Point, SchematicSymbol, Wire
@@ -2306,45 +2307,11 @@ class SExpressionParser:
 
     def _color_to_rgba(self, color_name: str) -> List[float]:
         """Convert color name to RGBA values (0.0-1.0) for KiCAD compatibility."""
-        # Basic color mapping for common colors (0.0-1.0 range)
-        color_map = {
-            "red": [1.0, 0.0, 0.0, 1.0],
-            "blue": [0.0, 0.0, 1.0, 1.0],
-            "green": [0.0, 1.0, 0.0, 1.0],
-            "yellow": [1.0, 1.0, 0.0, 1.0],
-            "magenta": [1.0, 0.0, 1.0, 1.0],
-            "cyan": [0.0, 1.0, 1.0, 1.0],
-            "black": [0.0, 0.0, 0.0, 1.0],
-            "white": [1.0, 1.0, 1.0, 1.0],
-            "gray": [0.5, 0.5, 0.5, 1.0],
-            "grey": [0.5, 0.5, 0.5, 1.0],
-            "orange": [1.0, 0.5, 0.0, 1.0],
-            "purple": [0.5, 0.0, 0.5, 1.0],
-        }
-
-        # Return RGBA values, default to black if color not found
-        return color_map.get(color_name.lower(), [0.0, 0.0, 0.0, 1.0])
+        return color_to_rgba(color_name)
 
     def _color_to_rgb255(self, color_name: str) -> List[int]:
         """Convert color name to RGB values (0-255) for KiCAD rectangle graphics."""
-        # Basic color mapping for common colors (0-255 range)
-        color_map = {
-            "red": [255, 0, 0],
-            "blue": [0, 0, 255],
-            "green": [0, 255, 0],
-            "yellow": [255, 255, 0],
-            "magenta": [255, 0, 255],
-            "cyan": [0, 255, 255],
-            "black": [0, 0, 0],
-            "white": [255, 255, 255],
-            "gray": [128, 128, 128],
-            "grey": [128, 128, 128],
-            "orange": [255, 128, 0],
-            "purple": [128, 0, 128],
-        }
-
-        # Return RGB values, default to black if color not found
-        return color_map.get(color_name.lower(), [0, 0, 0])
+        return color_to_rgb255(color_name)
 
     def get_validation_issues(self) -> List[ValidationIssue]:
         """Get list of validation issues from last parse operation."""
