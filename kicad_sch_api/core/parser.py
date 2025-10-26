@@ -57,7 +57,21 @@ class SExpressionParser:
         self._library_parser = LibraryParser()
         self._symbol_parser = SymbolParser()
         self._metadata_parser = MetadataParser()
+        self._project_name = None
         logger.info(f"S-expression parser initialized (format preservation: {preserve_format})")
+
+    @property
+    def project_name(self):
+        """Get project name."""
+        return self._project_name
+
+    @project_name.setter
+    def project_name(self, value):
+        """Set project name on parser and propagate to sub-parsers."""
+        self._project_name = value
+        # Propagate to symbol parser which needs it for instances
+        if hasattr(self, '_symbol_parser'):
+            self._symbol_parser.project_name = value
 
     def parse_file(self, filepath: Union[str, Path]) -> Dict[str, Any]:
         """
