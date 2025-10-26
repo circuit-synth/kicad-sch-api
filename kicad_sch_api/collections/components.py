@@ -238,6 +238,7 @@ class ComponentCollection(IndexedCollection[Component]):
             raise ValidationError(f"Invalid reference format: {reference}")
 
         # Check for duplicate reference
+        self._ensure_indexes_current()
         if reference in self._reference_index:
             raise ValidationError(f"Reference {reference} already exists")
 
@@ -264,7 +265,6 @@ class ComponentCollection(IndexedCollection[Component]):
             value=value,
             position=position,
             rotation=0.0,
-            mirror="",
             unit=unit,
             in_bom=True,
             on_board=True,
@@ -348,6 +348,9 @@ class ComponentCollection(IndexedCollection[Component]):
         }
 
         prefix = ref_prefixes.get(base_ref, "U")
+
+        # Ensure indexes are current before checking
+        self._ensure_indexes_current()
 
         # Find next available number
         counter = 1

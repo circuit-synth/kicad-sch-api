@@ -426,7 +426,7 @@ class TestComponent:
             position=Point(100, 100)
         )
         collection = ComponentCollection()
-        component = Component(symbol_data, component)
+        component = Component(symbol_data, collection)
 
         component.position = (200, 200)
         assert component.position == Point(200, 200)
@@ -473,5 +473,5 @@ class TestComponent:
         assert "Component(ref='R1'" in repr_str
         assert "lib_id='Device:R'" in repr_str
         assert "value='10k'" in repr_str
-        assert "pos=Point(x=100.0, y=100.0)" in repr_str
+        assert "pos=(100.000, 100.000)" in repr_str
         assert "rotation=90.0" in repr_str
