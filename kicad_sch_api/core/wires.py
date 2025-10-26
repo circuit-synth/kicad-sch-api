@@ -9,21 +9,26 @@ import logging
 import uuid as uuid_module
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from .collections import BaseCollection
 from .types import Point, Wire, WireType
 
 logger = logging.getLogger(__name__)
 
 
-class WireCollection:
+class WireCollection(BaseCollection[Wire]):
     """
     Professional wire collection with enhanced management features.
 
+    Inherits from BaseCollection for standard operations and adds wire-specific
+    functionality.
+
     Features:
-    - Fast UUID-based lookup and indexing
-    - Bulk operations for performance
+    - Fast UUID-based lookup and indexing (inherited)
+    - Bulk operations for performance (inherited)
     - Multi-point wire support
     - Validation and conflict detection
     - Junction management integration
+    - Wire geometry queries (horizontal, vertical, by-point)
     """
 
     def __init__(self, wires: Optional[List[Wire]] = None) -> None:
@@ -33,32 +38,7 @@ class WireCollection:
         Args:
             wires: Initial list of wires
         """
-        self._wires: List[Wire] = wires or []
-        self._uuid_index: Dict[str, int] = {}
-        self._modified = False
-
-        # Build UUID index
-        self._rebuild_index()
-
-        logger.debug(f"WireCollection initialized with {len(self._wires)} wires")
-
-    def _rebuild_index(self) -> None:
-        """Rebuild UUID index for fast lookups."""
-        self._uuid_index = {wire.uuid: i for i, wire in enumerate(self._wires)}
-
-    def __len__(self) -> int:
-        """Number of wires in collection."""
-        return len(self._wires)
-
-    def __iter__(self) -> Any:
-        """Iterate over wires."""
-        return iter(self._wires)
-
-    def __getitem__(self, uuid: str) -> Wire:
-        """Get wire by UUID."""
-        if uuid not in self._uuid_index:
-            raise KeyError(f"Wire with UUID '{uuid}' not found")
-        return self._wires[self._uuid_index[uuid]]
+        super().__init__(wires, collection_name="wires")
 
     def add(
         self,
@@ -114,34 +94,11 @@ class WireCollection:
         # Create wire
         wire = Wire(uuid=uuid, points=wire_points, wire_type=wire_type, stroke_width=stroke_width)
 
-        # Add to collection
-        self._wires.append(wire)
-        self._uuid_index[uuid] = len(self._wires) - 1
-        self._modified = True
+        # Add to collection using base class method
+        self._add_item(wire)
 
         logger.debug(f"Added wire: {len(wire_points)} points, UUID={uuid}")
         return uuid
-
-    def remove(self, uuid: str) -> bool:
-        """
-        Remove wire by UUID.
-
-        Args:
-            uuid: Wire UUID to remove
-
-        Returns:
-            True if wire was removed, False if not found
-        """
-        if uuid not in self._uuid_index:
-            return False
-
-        index = self._uuid_index[uuid]
-        del self._wires[index]
-        self._rebuild_index()
-        self._modified = True
-
-        logger.debug(f"Removed wire: {uuid}")
-        return True
 
     def get_by_point(
         self, point: Union[Point, Tuple[float, float]], tolerance: Optional[float] = None
@@ -164,7 +121,7 @@ class WireCollection:
             point = Point(point[0], point[1])
 
         matching_wires = []
-        for wire in self._wires:
+        for wire in self._items:
             # Check if any wire point is close
             for wire_point in wire.points:
                 if wire_point.distance_to(point) <= tolerance:
@@ -213,40 +170,35 @@ class WireCollection:
 
     def get_horizontal_wires(self) -> List[Wire]:
         """Get all horizontal wires."""
-        return [wire for wire in self._wires if wire.is_horizontal()]
+        return [wire for wire in self._items if wire.is_horizontal()]
 
     def get_vertical_wires(self) -> List[Wire]:
         """Get all vertical wires."""
-        return [wire for wire in self._wires if wire.is_vertical()]
+        return [wire for wire in self._items if wire.is_vertical()]
 
     def get_statistics(self) -> Dict[str, Any]:
-        """Get wire collection statistics."""
-        total_length = sum(wire.length for wire in self._wires)
-        simple_wires = sum(1 for wire in self._wires if wire.is_simple())
-        multi_point_wires = len(self._wires) - simple_wires
+        """Get wire collection statistics (extends base statistics)."""
+        base_stats = super().get_statistics()
+        total_length = sum(wire.length for wire in self._items)
+        simple_wires = sum(1 for wire in self._items if wire.is_simple())
+        multi_point_wires = len(self._items) - simple_wires
 
         return {
-            "total_wires": len(self._wires),
+            **base_stats,
+            "total_wires": len(self._items),
             "simple_wires": simple_wires,
             "multi_point_wires": multi_point_wires,
             "total_length": total_length,
-            "avg_length": total_length / len(self._wires) if self._wires else 0,
+            "avg_length": total_length / len(self._items) if self._items else 0,
             "horizontal_wires": len(self.get_horizontal_wires()),
             "vertical_wires": len(self.get_vertical_wires()),
         }
 
-    def clear(self) -> None:
-        """Remove all wires from collection."""
-        self._wires.clear()
-        self._uuid_index.clear()
-        self._modified = True
-        logger.debug("Cleared all wires")
-
     @property
     def modified(self) -> bool:
         """Check if collection has been modified."""
-        return self._modified
+        return self.is_modified()
 
     def mark_saved(self) -> None:
         """Mark collection as saved (reset modified flag)."""
-        self._modified = False
+        self.reset_modified_flag()
