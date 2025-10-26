@@ -77,9 +77,16 @@ class GraphicsManager:
             "stroke_type": stroke.get("type", "solid"),
         }
 
+        # Add stroke color if provided
+        if "color" in stroke:
+            rectangle_data["stroke_color"] = stroke["color"]
+
         # Add fill type if provided
         if fill is not None:
             rectangle_data["fill_type"] = fill.get("type", "none")
+            # Add fill color if provided
+            if "color" in fill:
+                rectangle_data["fill_color"] = fill["color"]
         else:
             rectangle_data["fill_type"] = "none"
 

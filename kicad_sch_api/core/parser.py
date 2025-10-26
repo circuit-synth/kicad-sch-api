@@ -1959,12 +1959,20 @@ class SExpressionParser:
         stroke_sexp = [sexpdata.Symbol("stroke")]
         stroke_sexp.append([sexpdata.Symbol("width"), stroke_width])
         stroke_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(stroke_type)])
+        # Add stroke color if present
+        if "stroke_color" in rectangle_data:
+            r, g, b, a = rectangle_data["stroke_color"]
+            stroke_sexp.append([sexpdata.Symbol("color"), r, g, b, a])
         sexp.append(stroke_sexp)
 
         # Add fill
         fill_type = rectangle_data.get("fill_type", "none")
         fill_sexp = [sexpdata.Symbol("fill")]
         fill_sexp.append([sexpdata.Symbol("type"), sexpdata.Symbol(fill_type)])
+        # Add fill color if present
+        if "fill_color" in rectangle_data:
+            r, g, b, a = rectangle_data["fill_color"]
+            fill_sexp.append([sexpdata.Symbol("color"), r, g, b, a])
         sexp.append(fill_sexp)
 
         # Add UUID

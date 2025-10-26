@@ -88,7 +88,7 @@ class SheetManager:
             "size": {"width": size.x, "height": size.y},
             "stroke_width": stroke_width if stroke_width is not None else 0.1524,
             "stroke_type": stroke_type,
-            "fill_color": (255, 255, 255, 0.0),
+            "fill_color": (0, 0, 0, 0.0),
             "name": name,
             "filename": filename,
             "exclude_from_sim": False,
@@ -164,20 +164,15 @@ class SheetManager:
                 pin_data = {
                     "uuid": uuid_str,
                     "name": name,
-                    "shape": pin_type,
-                    "at": [position.x, position.y, rotation],
-                    "effects": {
-                        "font": {
-                            "size": [1.27, 1.27]
-                        },
-                        "justify": justify
-                    }
+                    "pin_type": pin_type,
+                    "position": {"x": position.x, "y": position.y},
+                    "rotation": rotation,
+                    "size": 1.27,
+                    "justify": justify
                 }
 
-                # Initialize pin array if needed
-                if "pin" not in sheet:
-                    sheet["pin"] = []
-                sheet["pin"].append(pin_data)
+                # Add to sheet's pins array (already initialized in add_sheet)
+                sheet["pins"].append(pin_data)
 
                 logger.debug(f"Added pin '{name}' to sheet {sheet_uuid}")
                 return uuid_str
@@ -221,7 +216,7 @@ class SheetManager:
         sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
-                pins = sheet.get("pin", [])
+                pins = sheet.get("pins", [])
                 for i, pin in enumerate(pins):
                     if pin.get("uuid") == pin_uuid:
                         del pins[i]
@@ -263,7 +258,7 @@ class SheetManager:
 
         sheets = self._data.get("sheets", [])
         for sheet in sheets:
-            if sheet.get("file") == filename:
+            if sheet.get("filename") == filename:
                 return sheet
         return None
 
@@ -280,13 +275,13 @@ class SheetManager:
         sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
-                pins = sheet.get("pin", [])
+                pins = sheet.get("pins", [])
                 return [
                     {
                         "uuid": pin.get("uuid"),
                         "name": pin.get("name"),
-                        "shape": pin.get("shape"),
-                        "position": Point(pin["at"][0], pin["at"][1]) if "at" in pin else None,
+                        "pin_type": pin.get("pin_type"),
+                        "position": Point(pin["position"]["x"], pin["position"]["y"]) if "position" in pin else None,
                         "data": pin
                     }
                     for pin in pins
@@ -314,7 +309,7 @@ class SheetManager:
         sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
-                sheet["size"] = [size.x, size.y]
+                sheet["size"] = {"width": size.x, "height": size.y}
                 logger.debug(f"Updated sheet size: {sheet_uuid}")
                 return True
 
@@ -342,7 +337,7 @@ class SheetManager:
         sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
-                sheet["at"] = [position.x, position.y]
+                sheet["position"] = {"x": position.x, "y": position.y}
                 logger.debug(f"Updated sheet position: {sheet_uuid}")
                 return True
 
@@ -371,10 +366,10 @@ class SheetManager:
             sheet_info = {
                 "uuid": sheet.get("uuid"),
                 "name": sheet.get("name"),
-                "filename": sheet.get("file"),
-                "pin_count": len(sheet.get("pin", [])),
-                "position": Point(sheet["at"][0], sheet["at"][1]) if "at" in sheet else None,
-                "size": Point(sheet["size"][0], sheet["size"][1]) if "size" in sheet else None
+                "filename": sheet.get("filename"),
+                "pin_count": len(sheet.get("pins", [])),
+                "position": Point(sheet["position"]["x"], sheet["position"]["y"]) if "position" in sheet else None,
+                "size": Point(sheet["size"]["width"], sheet["size"]["height"]) if "size" in sheet else None
             }
             hierarchy["root"]["children"].append(sheet_info)
 
@@ -392,19 +387,19 @@ class SheetManager:
 
         for sheet in sheets:
             sheet_name = sheet.get("name", "Unknown")
-            filename = sheet.get("file")
+            filename = sheet.get("filename")
 
             # Check filename format
             if filename and not filename.endswith('.kicad_sch'):
                 warnings.append(f"Sheet '{sheet_name}' has invalid filename: {filename}")
 
             # Check for duplicate filenames
-            filename_count = sum(1 for s in sheets if s.get("file") == filename)
+            filename_count = sum(1 for s in sheets if s.get("filename") == filename)
             if filename_count > 1:
                 warnings.append(f"Duplicate sheet filename: {filename}")
 
             # Check sheet pins
-            pins = sheet.get("pin", [])
+            pins = sheet.get("pins", [])
             pin_names = [pin.get("name") for pin in pins]
             duplicate_pins = set([name for name in pin_names if pin_names.count(name) > 1])
             if duplicate_pins:
@@ -421,7 +416,7 @@ class SheetManager:
         """
         sheets = self._data.get("sheets", [])
 
-        total_pins = sum(len(sheet.get("pin", [])) for sheet in sheets)
+        total_pins = sum(len(sheet.get("pins", [])) for sheet in sheets)
         sheet_instances = self._data.get("sheet_instances", [])
 
         return {
@@ -429,7 +424,7 @@ class SheetManager:
             "total_sheet_pins": total_pins,
             "average_pins_per_sheet": total_pins / len(sheets) if sheets else 0,
             "sheet_instances": len(sheet_instances),
-            "filenames": [sheet.get("file") for sheet in sheets if sheet.get("file")]
+            "filenames": [sheet.get("filename") for sheet in sheets if sheet.get("filename")]
         }
 
     def _remove_sheet_from_instances(self, sheet_uuid: str) -> None:
