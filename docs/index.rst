@@ -20,13 +20,15 @@ Professional KiCAD Schematic Manipulation Library
    API_REFERENCE
    RECIPES
    ARCHITECTURE
+   ERC_USER_GUIDE
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Feature Documentation
+   :maxdepth: 1
+   :caption: Developer Documentation
 
    ERC_PRD
    ERC_ERD
+   READTHEDOCS_SETUP
 
 .. toctree::
    :maxdepth: 2
