@@ -25,7 +25,7 @@ class JunctionCollection:
     - Validation and conflict detection
     """
 
-    def __init__(self, junctions: Optional[List[Junction]] = None):
+    def __init__(self, junctions: Optional[List[Junction]] = None) -> None:
         """
         Initialize junction collection.
 
@@ -41,7 +41,7 @@ class JunctionCollection:
 
         logger.debug(f"JunctionCollection initialized with {len(self._junctions)} junctions")
 
-    def _rebuild_index(self):
+    def _rebuild_index(self) -> None:
         """Rebuild UUID index for fast lookups."""
         self._uuid_index = {junction.uuid: i for i, junction in enumerate(self._junctions)}
 
@@ -49,7 +49,7 @@ class JunctionCollection:
         """Number of junctions in collection."""
         return len(self._junctions)
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         """Iterate over junctions."""
         return iter(self._junctions)
 
@@ -184,7 +184,7 @@ class JunctionCollection:
             "unique_colors": len(set(j.color for j in self._junctions)),
         }
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove all junctions from collection."""
         self._junctions.clear()
         self._uuid_index.clear()
@@ -196,6 +196,6 @@ class JunctionCollection:
         """Check if collection has been modified."""
         return self._modified
 
-    def mark_saved(self):
+    def mark_saved(self) -> None:
         """Mark collection as saved (reset modified flag)."""
         self._modified = False

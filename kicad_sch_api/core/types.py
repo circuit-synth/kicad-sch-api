@@ -18,14 +18,14 @@ class Point:
     x: float
     y: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Ensure coordinates are float
         object.__setattr__(self, "x", float(self.x))
         object.__setattr__(self, "y", float(self.y))
 
     def distance_to(self, other: "Point") -> float:
         """Calculate distance to another point."""
-        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+        return float(((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5)
 
     def offset(self, dx: float, dy: float) -> "Point":
         """Create new point offset by dx, dy."""
@@ -110,7 +110,7 @@ class SchematicPin:
     length: float = 2.54  # Standard pin length in mm
     rotation: float = 0.0  # Rotation in degrees
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Ensure types are correct
         self.pin_type = PinType(self.pin_type) if isinstance(self.pin_type, str) else self.pin_type
         self.pin_shape = (
@@ -135,7 +135,7 @@ class SchematicSymbol:
     on_board: bool = True
     unit: int = 1
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Generate UUID if not provided
         if not self.uuid:
             self.uuid = str(uuid4())
@@ -187,7 +187,7 @@ class Wire:
     stroke_width: float = 0.0
     stroke_type: str = "default"
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -200,7 +200,7 @@ class Wire:
             raise ValueError("Wire must have at least 2 points")
 
     @classmethod
-    def from_start_end(cls, uuid: str, start: Point, end: Point, **kwargs) -> "Wire":
+    def from_start_end(cls, uuid: str, start: Point, end: Point, **kwargs: Any) -> "Wire":
         """Create wire from start and end points (convenience method)."""
         return cls(uuid=uuid, points=[start, end], **kwargs)
 
@@ -248,7 +248,7 @@ class Junction:
     diameter: float = 0  # KiCAD default diameter
     color: Tuple[int, int, int, int] = (0, 0, 0, 0)  # RGBA color
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -284,7 +284,7 @@ class Label:
     size: float = 1.27
     shape: Optional[HierarchicalLabelShape] = None  # Only for hierarchical labels
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -309,7 +309,7 @@ class Text:
     size: float = 1.27
     exclude_from_sim: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -337,7 +337,7 @@ class TextBox:
     justify_vertical: str = "top"
     exclude_from_sim: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -353,7 +353,7 @@ class SchematicRectangle:
     stroke_type: str = "default"
     fill_type: str = "none"
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -382,7 +382,7 @@ class Image:
     data: str  # Base64-encoded image data
     scale: float = 1.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -394,7 +394,7 @@ class NoConnect:
     uuid: str
     position: Point
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -408,13 +408,13 @@ class Net:
     wires: List[str] = field(default_factory=list)  # Wire UUIDs
     labels: List[str] = field(default_factory=list)  # Label UUIDs
 
-    def add_connection(self, reference: str, pin: str):
+    def add_connection(self, reference: str, pin: str) -> None:
         """Add component pin to net."""
         connection = (reference, pin)
         if connection not in self.components:
             self.components.append(connection)
 
-    def remove_connection(self, reference: str, pin: str):
+    def remove_connection(self, reference: str, pin: str) -> None:
         """Remove component pin from net."""
         connection = (reference, pin)
         if connection in self.components:
@@ -440,7 +440,7 @@ class Sheet:
     stroke_type: str = "solid"
     fill_color: Tuple[float, float, float, float] = (0, 0, 0, 0.0)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -455,7 +455,7 @@ class SheetPin:
     pin_type: PinType = PinType.BIDIRECTIONAL
     size: float = 1.27
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 
@@ -498,7 +498,7 @@ class Schematic:
     rectangles: List[SchematicRectangle] = field(default_factory=list)
     lib_symbols: Dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.uuid:
             self.uuid = str(uuid4())
 

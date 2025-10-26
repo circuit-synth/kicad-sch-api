@@ -26,7 +26,7 @@ class WireCollection:
     - Junction management integration
     """
 
-    def __init__(self, wires: Optional[List[Wire]] = None):
+    def __init__(self, wires: Optional[List[Wire]] = None) -> None:
         """
         Initialize wire collection.
 
@@ -42,7 +42,7 @@ class WireCollection:
 
         logger.debug(f"WireCollection initialized with {len(self._wires)} wires")
 
-    def _rebuild_index(self):
+    def _rebuild_index(self) -> None:
         """Rebuild UUID index for fast lookups."""
         self._uuid_index = {wire.uuid: i for i, wire in enumerate(self._wires)}
 
@@ -50,7 +50,7 @@ class WireCollection:
         """Number of wires in collection."""
         return len(self._wires)
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         """Iterate over wires."""
         return iter(self._wires)
 
@@ -144,7 +144,7 @@ class WireCollection:
         return True
 
     def get_by_point(
-        self, point: Union[Point, Tuple[float, float]], tolerance: float = None
+        self, point: Union[Point, Tuple[float, float]], tolerance: Optional[float] = None
     ) -> List[Wire]:
         """
         Find wires that pass through or near a point.
@@ -235,7 +235,7 @@ class WireCollection:
             "vertical_wires": len(self.get_vertical_wires()),
         }
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove all wires from collection."""
         self._wires.clear()
         self._uuid_index.clear()
@@ -247,6 +247,6 @@ class WireCollection:
         """Check if collection has been modified."""
         return self._modified
 
-    def mark_saved(self):
+    def mark_saved(self) -> None:
         """Mark collection as saved (reset modified flag)."""
         self._modified = False
