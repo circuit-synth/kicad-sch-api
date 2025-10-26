@@ -1003,14 +1003,12 @@ class Schematic:
         start = (bbox.min_x, bbox.min_y)
         end = (bbox.max_x, bbox.max_y)
 
-        # Create stroke properties
-        stroke = {
-            "width": stroke_width,
-            "type": stroke_type,
-            "color": stroke_color
-        }
-
-        return self.add_rectangle(start, end, stroke=stroke)
+        return self.add_rectangle(
+            start,
+            end,
+            stroke_width=stroke_width,
+            stroke_type=stroke_type
+        )
 
     def draw_component_bounding_boxes(
         self,
