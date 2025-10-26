@@ -1,0 +1,11 @@
+📚 Documentation Analysis:
+  Markdown files: 14
+  Python code blocks: 29
+  Potential broken links: 5
+
+  Broken links:
+    README.md: docs/api.md
+    README.md: docs/mcp.md
+    README.md: docs/development.md
+    README.md: CONTRIBUTING.md
+    .claude/commands/dev/dead-code-analysis.md: params

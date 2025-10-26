@@ -65,7 +65,7 @@ class DefaultValues:
 class KiCADConfig:
     """Central configuration class for KiCAD schematic API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.properties = PropertyOffsets()
         self.grid = GridSettings()
         self.sheet = SheetSettings()
