@@ -803,7 +803,22 @@ class Schematic:
         Returns:
             UUID of created text box
         """
-        text_box_uuid = self._text_element_manager.add_text_box(text, position, size, effects, stroke)
+        text_box_uuid = self._text_element_manager.add_text_box(
+            text=text,
+            position=position,
+            size=size,
+            rotation=rotation,
+            font_size=font_size,
+            margins=margins,
+            stroke_width=stroke_width,
+            stroke_type=stroke_type,
+            fill_type=fill_type,
+            justify_horizontal=justify_horizontal,
+            justify_vertical=justify_vertical,
+            exclude_from_sim=exclude_from_sim,
+            effects=effects,
+            stroke=stroke
+        )
         self._format_sync_manager.mark_dirty("text_box", "add", {"uuid": text_box_uuid})
         self._modified = True
         return text_box_uuid

@@ -240,6 +240,15 @@ class TextElementManager:
         text: str,
         position: Union[Point, Tuple[float, float]],
         size: Union[Point, Tuple[float, float]],
+        rotation: float = 0.0,
+        font_size: float = 1.27,
+        margins: Optional[Tuple[float, float, float, float]] = None,
+        stroke_width: Optional[float] = None,
+        stroke_type: str = "solid",
+        fill_type: str = "none",
+        justify_horizontal: str = "left",
+        justify_vertical: str = "top",
+        exclude_from_sim: bool = False,
         effects: Optional[Dict[str, Any]] = None,
         stroke: Optional[Dict[str, Any]] = None,
         uuid_str: Optional[str] = None
@@ -251,8 +260,17 @@ class TextElementManager:
             text: Text content
             position: Top-left position
             size: Box size (width, height)
-            effects: Text effects
-            stroke: Border stroke settings
+            rotation: Text rotation in degrees
+            font_size: Text font size
+            margins: Box margins (top, bottom, left, right)
+            stroke_width: Border stroke width
+            stroke_type: Border stroke type (solid, dash, etc.)
+            fill_type: Fill type (none, outline, background)
+            justify_horizontal: Horizontal justification
+            justify_vertical: Vertical justification
+            exclude_from_sim: Whether to exclude from simulation
+            effects: Text effects (legacy, overrides font_size and justify if provided)
+            stroke: Border stroke settings (legacy, overrides stroke_width/type if provided)
             uuid_str: Optional UUID
 
         Returns:
@@ -266,25 +284,33 @@ class TextElementManager:
         if uuid_str is None:
             uuid_str = str(uuid.uuid4())
 
-        if effects is None:
-            effects = self._get_default_text_effects()
+        if margins is None:
+            margins = (0.9525, 0.9525, 0.9525, 0.9525)
 
-        if stroke is None:
-            stroke = {"width": 0.2, "type": "default"}
+        if stroke_width is None:
+            stroke_width = 0
 
+        # Build text_box_data matching parser format
         text_box_data = {
             "uuid": uuid_str,
             "text": text,
-            "start": [position.x, position.y],
-            "end": [position.x + size.x, position.y + size.y],
-            "effects": effects,
-            "stroke": stroke
+            "exclude_from_sim": exclude_from_sim,
+            "position": {"x": position.x, "y": position.y},
+            "rotation": rotation,
+            "size": {"width": size.x, "height": size.y},
+            "margins": margins,
+            "stroke_width": stroke_width,
+            "stroke_type": stroke_type,
+            "fill_type": fill_type,
+            "font_size": font_size,
+            "justify_horizontal": justify_horizontal,
+            "justify_vertical": justify_vertical
         }
 
-        # Add to schematic data
-        if "text_box" not in self._data:
-            self._data["text_box"] = []
-        self._data["text_box"].append(text_box_data)
+        # Add to schematic data (note: plural "text_boxes")
+        if "text_boxes" not in self._data:
+            self._data["text_boxes"] = []
+        self._data["text_boxes"].append(text_box_data)
 
         logger.debug(f"Added text box '{text}' at {position}, size {size}")
         return uuid_str
@@ -347,7 +373,7 @@ class TextElementManager:
         Returns:
             True if text box was removed, False if not found
         """
-        return self._remove_text_element_by_uuid("text_box", uuid_str)
+        return self._remove_text_element_by_uuid("text_boxes", uuid_str)
 
     def get_labels_at_position(
         self,
@@ -398,7 +424,7 @@ class TextElementManager:
         Returns:
             True if updated, False if not found
         """
-        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_box"]:
+        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_boxes"]:
             elements = self._data.get(text_type, [])
             for element in elements:
                 if element.get("uuid") == uuid_str:
@@ -417,13 +443,13 @@ class TextElementManager:
             Dictionary with text element types and their data
         """
         result = {}
-        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_box"]:
+        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_boxes"]:
             elements = self._data.get(text_type, [])
             result[text_type] = [
                 {
                     "uuid": elem.get("uuid"),
                     "text": elem.get("text"),
-                    "position": Point(elem["at"][0], elem["at"][1]) if "at" in elem else None,
+                    "position": Point(elem["at"][0], elem["at"][1]) if "at" in elem else Point(elem["position"]["x"], elem["position"]["y"]) if "position" in elem else None,
                     "data": elem
                 }
                 for elem in elements
@@ -441,7 +467,7 @@ class TextElementManager:
         stats = {}
         total_elements = 0
 
-        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_box"]:
+        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_boxes"]:
             count = len(self._data.get(text_type, []))
             stats[text_type] = count
             total_elements += count
@@ -480,17 +506,21 @@ class TextElementManager:
         all_elements = []
 
         # Collect all text elements with positions
-        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_box"]:
+        for text_type in ["label", "hierarchical_label", "global_label", "text", "text_boxes"]:
             elements = self._data.get(text_type, [])
             for element in elements:
                 if "at" in element:
                     position = Point(element["at"][0], element["at"][1])
-                    all_elements.append({
-                        "type": text_type,
-                        "position": position,
-                        "text": element.get("text", ""),
-                        "uuid": element.get("uuid")
-                    })
+                elif "position" in element:
+                    position = Point(element["position"]["x"], element["position"]["y"])
+                else:
+                    continue
+                all_elements.append({
+                    "type": text_type,
+                    "position": position,
+                    "text": element.get("text", ""),
+                    "uuid": element.get("uuid")
+                })
 
         # Check for overlapping elements
         overlap_threshold = 2.0  # Minimum distance
