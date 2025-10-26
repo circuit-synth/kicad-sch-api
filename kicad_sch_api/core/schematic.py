@@ -1059,16 +1059,27 @@ class Schematic:
         cache = get_symbol_cache()
 
         for comp in self._components:
+            print(f"\n--- Processing component {comp.reference} ---")
+            print(f"  lib_id: {comp.lib_id}")
+            print(f"  Already in lib_symbols: {comp.lib_id in lib_symbols}")
+
             if comp.lib_id and comp.lib_id not in lib_symbols:
-                logger.debug(f"Processing component {comp.lib_id}")
+                # logger.debug(f"Processing component {comp.lib_id}")  # Comment out
 
                 # Get the actual symbol definition
                 symbol_def = cache.get_symbol(comp.lib_id)
+                print(f"  Got symbol_def: {symbol_def is not None}")
+
                 if symbol_def:
-                    logger.debug(f"Loaded symbol {comp.lib_id}")
-                    lib_symbols[comp.lib_id] = self._convert_symbol_to_kicad_format(
-                        symbol_def, comp.lib_id
-                    )
+                    # logger.debug(f"Loaded symbol {comp.lib_id}")  # Comment out
+                    print(f"  Converting symbol for lib_id: {comp.lib_id}")
+                    converted_symbol = self._convert_symbol_to_kicad_format(symbol_def, comp.lib_id)
+                    lib_symbols[comp.lib_id] = converted_symbol
+                    print(f"  Symbol conversion complete")
+                else:
+                    print(f"  WARNING: No symbol definition found for {comp.lib_id}")
+            else:
+                print(f"  Skipping {comp.lib_id} (already processed or no lib_id)")
 
         self._data["lib_symbols"] = lib_symbols
 
@@ -1081,21 +1092,10 @@ class Schematic:
                 }
             ]
 
-        # Update symbol instances
-        symbol_instances = []
-        for comp in self._components:
-            # Create project path based on component and project name
-            project_path = f"/{comp.reference}"
-
-            symbol_instance = {
-                "project": self.name,
-                "path": project_path,
-                "reference": comp.reference,
-                "unit": getattr(comp._data, "unit", 1),
-            }
-            symbol_instances.append(symbol_instance)
-
-        self._data["symbol_instances"] = symbol_instances
+        # Remove symbol_instances section - instances are stored within each symbol in lib_symbols
+        # This matches KiCAD's format where instances are part of the symbol definition
+        if "symbol_instances" in self._data:
+            del self._data["symbol_instances"]
 
     def _sync_wires_to_data(self):
         """Sync wire collection state back to data structure."""
@@ -1128,15 +1128,87 @@ class Schematic:
 
     def _convert_symbol_to_kicad_format(self, symbol_def, lib_id: str):
         """Convert symbol definition to KiCAD format."""
-        # Simplified version - just return the raw data if available
+        print(f"\n=== _convert_symbol_to_kicad_format DEBUG ===")
+        print(f"lib_id: {lib_id}, schematic.name: {self.name}")
+
+        # Use raw data if available, but fix the symbol name to use full lib_id
         if hasattr(symbol_def, "raw_kicad_data") and symbol_def.raw_kicad_data:
-            return symbol_def.raw_kicad_data
+            raw_data = symbol_def.raw_kicad_data
+            print(f"Using raw_kicad_data, type: {type(raw_data)}, length: {len(raw_data) if isinstance(raw_data, list) else 'N/A'}")
+
+            # Check if raw data already contains instances with project info
+            project_refs_found = []
+            def find_project_refs(data, path="root"):
+                if isinstance(data, list):
+                    for i, item in enumerate(data):
+                        if hasattr(item, '__str__') and str(item) == 'project':
+                            if i < len(data) - 1:
+                                project_refs_found.append(f"{path}[{i}] = '{data[i+1]}'")
+                        elif isinstance(item, list):
+                            find_project_refs(item, f"{path}[{i}]")
+
+            find_project_refs(raw_data)
+            if project_refs_found:
+                print(f"FOUND PROJECT REFERENCES IN RAW DATA: {project_refs_found}")
+            else:
+                print("No project references found in raw data")
+
+            # Make a copy and fix the symbol name (index 1) to use full lib_id
+            if isinstance(raw_data, list) and len(raw_data) > 1:
+                fixed_data = raw_data.copy()
+                fixed_data[1] = lib_id  # Replace short name with full lib_id
+                print(f"Fixed symbol name from '{raw_data[1]}' to '{lib_id}'")
+
+                # Also fix any project references in instances to use current project name
+                print("Calling _fix_symbol_project_references...")
+                self._fix_symbol_project_references(fixed_data)
+
+                return fixed_data
+            else:
+                print("Raw data not in expected list format")
+                return raw_data
 
         # Fallback: create basic symbol structure
+        print("Using fallback symbol structure")
         return {
             "lib_id": lib_id,
             "symbol": symbol_def.name if hasattr(symbol_def, "name") else lib_id.split(":")[-1],
         }
+
+    def _fix_symbol_project_references(self, symbol_data):
+        """Fix project references in symbol instances to use current project name."""
+        print(f"_fix_symbol_project_references called, data type: {type(symbol_data)}")
+        if not isinstance(symbol_data, list):
+            return
+
+        # Recursively search for instances sections and update project names
+        for i, element in enumerate(symbol_data):
+            if isinstance(element, list):
+                # Check if this is an instances section
+                if len(element) > 0 and hasattr(element[0], '__str__') and str(element[0]) == 'instances':
+                    print(f"Found instances section at index {i}")
+                    # Look for project references within instances
+                    self._update_project_in_instances(element)
+                else:
+                    # Recursively check nested lists
+                    self._fix_symbol_project_references(element)
+
+    def _update_project_in_instances(self, instances_element):
+        """Update project name in instances element."""
+        print(f"_update_project_in_instances called, data type: {type(instances_element)}")
+        if not isinstance(instances_element, list):
+            return
+
+        for i, element in enumerate(instances_element):
+            if isinstance(element, list) and len(element) >= 2:
+                # Check if this is a project element: ['project', 'old_name', ...]
+                if hasattr(element[0], '__str__') and str(element[0]) == 'project':
+                    old_name = element[1]
+                    element[1] = self.name  # Replace with current schematic name
+                    print(f"FIXED: Changed project name from '{old_name}' to '{self.name}'")
+                else:
+                    # Recursively check nested elements
+                    self._update_project_in_instances(element)
 
     def __str__(self) -> str:
         """String representation."""
