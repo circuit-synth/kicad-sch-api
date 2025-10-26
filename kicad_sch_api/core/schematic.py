@@ -49,6 +49,7 @@ from .types import (
     TitleBlock,
     Wire,
     WireType,
+    point_from_dict_or_tuple,
 )
 from .wires import WireCollection
 
@@ -137,12 +138,7 @@ class Schematic:
             if isinstance(junction_dict, dict):
                 # Convert dict to Junction object
                 position = junction_dict.get("position", {"x": 0, "y": 0})
-                if isinstance(position, dict):
-                    pos = Point(position["x"], position["y"])
-                elif isinstance(position, (list, tuple)):
-                    pos = Point(position[0], position[1])
-                else:
-                    pos = position
+                pos = point_from_dict_or_tuple(position)
 
                 junction = Junction(
                     uuid=junction_dict.get("uuid", str(uuid.uuid4())),
@@ -160,12 +156,7 @@ class Schematic:
             if isinstance(text_dict, dict):
                 # Convert dict to Text object
                 position = text_dict.get("position", {"x": 0, "y": 0})
-                if isinstance(position, dict):
-                    pos = Point(position["x"], position["y"])
-                elif isinstance(position, (list, tuple)):
-                    pos = Point(position[0], position[1])
-                else:
-                    pos = position
+                pos = point_from_dict_or_tuple(position)
 
                 text = Text(
                     uuid=text_dict.get("uuid", str(uuid.uuid4())),
@@ -185,12 +176,7 @@ class Schematic:
             if isinstance(label_dict, dict):
                 # Convert dict to Label object
                 position = label_dict.get("position", {"x": 0, "y": 0})
-                if isinstance(position, dict):
-                    pos = Point(position["x"], position["y"])
-                elif isinstance(position, (list, tuple)):
-                    pos = Point(position[0], position[1])
-                else:
-                    pos = position
+                pos = point_from_dict_or_tuple(position)
 
                 label = Label(
                     uuid=label_dict.get("uuid", str(uuid.uuid4())),
@@ -219,12 +205,7 @@ class Schematic:
             if isinstance(hlabel_dict, dict):
                 # Convert dict to Label object
                 position = hlabel_dict.get("position", {"x": 0, "y": 0})
-                if isinstance(position, dict):
-                    pos = Point(position["x"], position["y"])
-                elif isinstance(position, (list, tuple)):
-                    pos = Point(position[0], position[1])
-                else:
-                    pos = position
+                pos = point_from_dict_or_tuple(position)
 
                 hlabel = Label(
                     uuid=hlabel_dict.get("uuid", str(uuid.uuid4())),
@@ -250,12 +231,7 @@ class Schematic:
             if isinstance(no_connect_dict, dict):
                 # Convert dict to NoConnect object
                 position = no_connect_dict.get("position", {"x": 0, "y": 0})
-                if isinstance(position, dict):
-                    pos = Point(position["x"], position["y"])
-                elif isinstance(position, (list, tuple)):
-                    pos = Point(position[0], position[1])
-                else:
-                    pos = position
+                pos = point_from_dict_or_tuple(position)
 
                 no_connect = NoConnect(
                     uuid=no_connect_dict.get("uuid", str(uuid.uuid4())),

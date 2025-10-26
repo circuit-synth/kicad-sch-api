@@ -35,6 +35,43 @@ class Point:
         return f"({self.x:.3f}, {self.y:.3f})"
 
 
+def point_from_dict_or_tuple(
+    position: Union[Point, Dict[str, float], Tuple[float, float], List[float], Any]
+) -> Point:
+    """
+    Convert various position formats to a Point object.
+
+    Supports multiple input formats for maximum flexibility:
+    - Point: Returns as-is
+    - Dict with 'x' and 'y' keys: Extracts and creates Point
+    - Tuple/List with 2 elements: Creates Point from coordinates
+    - Other: Returns as-is (assumes it's already a Point-like object)
+
+    Args:
+        position: Position in any supported format
+
+    Returns:
+        Point object
+
+    Example:
+        >>> point_from_dict_or_tuple({"x": 10, "y": 20})
+        Point(x=10.0, y=20.0)
+        >>> point_from_dict_or_tuple((10, 20))
+        Point(x=10.0, y=20.0)
+        >>> point_from_dict_or_tuple(Point(10, 20))
+        Point(x=10.0, y=20.0)
+    """
+    if isinstance(position, Point):
+        return position
+    elif isinstance(position, dict):
+        return Point(position.get("x", 0), position.get("y", 0))
+    elif isinstance(position, (list, tuple)) and len(position) >= 2:
+        return Point(position[0], position[1])
+    else:
+        # Assume it's already a Point-like object or will be handled by caller
+        return position
+
+
 @dataclass(frozen=True)
 class Rectangle:
     """Rectangle defined by two corner points."""
