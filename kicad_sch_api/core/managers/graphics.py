@@ -68,20 +68,25 @@ class GraphicsManager:
         if stroke is None:
             stroke = self._get_default_stroke()
 
+        # Convert to parser format (flat keys, dict positions)
         rectangle_data = {
             "uuid": uuid_str,
-            "start": [start.x, start.y],
-            "end": [end.x, end.y],
-            "stroke": stroke
+            "start": {"x": start.x, "y": start.y},
+            "end": {"x": end.x, "y": end.y},
+            "stroke_width": stroke.get("width", 0.127),
+            "stroke_type": stroke.get("type", "solid"),
         }
 
+        # Add fill type if provided
         if fill is not None:
-            rectangle_data["fill"] = fill
+            rectangle_data["fill_type"] = fill.get("type", "none")
+        else:
+            rectangle_data["fill_type"] = "none"
 
         # Add to schematic data
-        if "rectangle" not in self._data:
-            self._data["rectangle"] = []
-        self._data["rectangle"].append(rectangle_data)
+        if "rectangles" not in self._data:
+            self._data["rectangles"] = []
+        self._data["rectangles"].append(rectangle_data)
 
         logger.debug(f"Added rectangle from {start} to {end}")
         return uuid_str
@@ -262,9 +267,10 @@ class GraphicsManager:
         if uuid_str is None:
             uuid_str = str(uuid.uuid4())
 
+        # Store in parser format (position as dict)
         image_element = {
             "uuid": uuid_str,
-            "at": [position.x, position.y],
+            "position": {"x": position.x, "y": position.y},
             "scale": scale
         }
 
@@ -272,9 +278,9 @@ class GraphicsManager:
             image_element["data"] = image_data
 
         # Add to schematic data
-        if "image" not in self._data:
-            self._data["image"] = []
-        self._data["image"].append(image_element)
+        if "images" not in self._data:
+            self._data["images"] = []
+        self._data["images"].append(image_element)
 
         logger.debug(f"Added image at {position} with scale {scale}")
         return uuid_str

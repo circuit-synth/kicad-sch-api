@@ -204,8 +204,33 @@ class Schematic:
                 labels.append(label)
         self._labels = LabelCollection(labels)
 
-        # Initialize hierarchical labels collection (filter from labels)
+        # Initialize hierarchical labels collection (from both labels array and hierarchical_labels array)
         hierarchical_labels = [label for label in labels if label.label_type == LabelType.HIERARCHICAL]
+
+        # Also load from hierarchical_labels data if present
+        hierarchical_label_data = self._data.get("hierarchical_labels", [])
+        for hlabel_dict in hierarchical_label_data:
+            if isinstance(hlabel_dict, dict):
+                # Convert dict to Label object
+                position = hlabel_dict.get("position", {"x": 0, "y": 0})
+                if isinstance(position, dict):
+                    pos = Point(position["x"], position["y"])
+                elif isinstance(position, (list, tuple)):
+                    pos = Point(position[0], position[1])
+                else:
+                    pos = position
+
+                hlabel = Label(
+                    uuid=hlabel_dict.get("uuid", str(uuid.uuid4())),
+                    position=pos,
+                    text=hlabel_dict.get("text", ""),
+                    label_type=LabelType.HIERARCHICAL,
+                    rotation=hlabel_dict.get("rotation", 0.0),
+                    size=hlabel_dict.get("size", 1.27),
+                    shape=HierarchicalLabelShape(hlabel_dict.get("shape")) if hlabel_dict.get("shape") else None,
+                )
+                hierarchical_labels.append(hlabel)
+
         self._hierarchical_labels = LabelCollection(hierarchical_labels)
 
         # Initialize no-connect collection
@@ -499,6 +524,14 @@ class Schematic:
         self._sync_components_to_data()
         self._sync_wires_to_data()
         self._sync_junctions_to_data()
+        self._sync_texts_to_data()
+        self._sync_labels_to_data()
+        self._sync_hierarchical_labels_to_data()
+        self._sync_no_connects_to_data()
+        self._sync_nets_to_data()
+
+        # Ensure FileIOManager's parser has the correct project name
+        self._file_io_manager._parser.project_name = self.name
 
         # Use FileIOManager for saving
         self._file_io_manager.save_schematic(self._data, file_path, preserve_format)
@@ -675,7 +708,8 @@ class Schematic:
         position: Union[Point, Tuple[float, float]],
         effects: Optional[Dict[str, Any]] = None,
         rotation: float = 0,
-        size: Optional[float] = None
+        size: Optional[float] = None,
+        uuid: Optional[str] = None
     ) -> str:
         """
         Add a text label to the schematic.
@@ -686,19 +720,27 @@ class Schematic:
             effects: Text effects (size, font, etc.)
             rotation: Label rotation in degrees (default 0)
             size: Text size override (default from effects)
+            uuid: Specific UUID for label (auto-generated if None)
 
         Returns:
             UUID of created label
         """
-        label_uuid = self._text_element_manager.add_label(text, position, effects, uuid_str=None, rotation=rotation, size=size)
-        self._format_sync_manager.mark_dirty("label", "add", {"uuid": label_uuid})
+        # Use the new labels collection instead of manager
+        if size is None:
+            size = 1.27  # Default size
+        label = self._labels.add(text, position, rotation=rotation, size=size, label_uuid=uuid)
+        self._sync_labels_to_data()  # Sync immediately
+        self._format_sync_manager.mark_dirty("label", "add", {"uuid": label.uuid})
         self._modified = True
-        return label_uuid
+        return label.uuid
 
     def add_text(
         self,
         text: str,
         position: Union[Point, Tuple[float, float]],
+        rotation: float = 0.0,
+        size: float = 1.27,
+        exclude_from_sim: bool = False,
         effects: Optional[Dict[str, Any]] = None
     ) -> str:
         """
@@ -707,21 +749,35 @@ class Schematic:
         Args:
             text: Text content
             position: Text position
+            rotation: Text rotation in degrees
+            size: Text size
+            exclude_from_sim: Whether to exclude from simulation
             effects: Text effects
 
         Returns:
             UUID of created text
         """
-        text_uuid = self._text_element_manager.add_text(text, position, effects)
-        self._format_sync_manager.mark_dirty("text", "add", {"uuid": text_uuid})
+        # Use the new texts collection instead of manager
+        text_elem = self._texts.add(text, position, rotation=rotation, size=size, exclude_from_sim=exclude_from_sim)
+        self._sync_texts_to_data()  # Sync immediately
+        self._format_sync_manager.mark_dirty("text", "add", {"uuid": text_elem.uuid})
         self._modified = True
-        return text_uuid
+        return text_elem.uuid
 
     def add_text_box(
         self,
         text: str,
         position: Union[Point, Tuple[float, float]],
         size: Union[Point, Tuple[float, float]],
+        rotation: float = 0.0,
+        font_size: float = 1.27,
+        margins: Optional[Tuple[float, float, float, float]] = None,
+        stroke_width: Optional[float] = None,
+        stroke_type: str = "solid",
+        fill_type: str = "none",
+        justify_horizontal: str = "left",
+        justify_vertical: str = "top",
+        exclude_from_sim: bool = False,
         effects: Optional[Dict[str, Any]] = None,
         stroke: Optional[Dict[str, Any]] = None
     ) -> str:
@@ -732,8 +788,17 @@ class Schematic:
             text: Text content
             position: Top-left position
             size: Box size (width, height)
-            effects: Text effects
-            stroke: Border stroke settings
+            rotation: Text rotation in degrees
+            font_size: Text font size
+            margins: Box margins (top, bottom, left, right)
+            stroke_width: Border stroke width
+            stroke_type: Border stroke type (solid, dash, etc.)
+            fill_type: Fill type (none, outline, background)
+            justify_horizontal: Horizontal justification
+            justify_vertical: Vertical justification
+            exclude_from_sim: Whether to exclude from simulation
+            effects: Text effects (legacy)
+            stroke: Border stroke settings (legacy)
 
         Returns:
             UUID of created text box
@@ -748,6 +813,8 @@ class Schematic:
         text: str,
         position: Union[Point, Tuple[float, float]],
         shape: str = "input",
+        rotation: float = 0.0,
+        size: float = 1.27,
         effects: Optional[Dict[str, Any]] = None
     ) -> str:
         """
@@ -757,15 +824,19 @@ class Schematic:
             text: Label text
             position: Label position
             shape: Shape type (input, output, bidirectional, tri_state, passive)
+            rotation: Label rotation in degrees (default 0)
+            size: Label text size (default 1.27)
             effects: Text effects
 
         Returns:
             UUID of created hierarchical label
         """
-        label_uuid = self._text_element_manager.add_hierarchical_label(text, position, shape, effects)
-        self._format_sync_manager.mark_dirty("hierarchical_label", "add", {"uuid": label_uuid})
+        # Use the hierarchical_labels collection
+        hlabel = self._hierarchical_labels.add(text, position, rotation=rotation, size=size)
+        self._sync_hierarchical_labels_to_data()  # Sync immediately
+        self._format_sync_manager.mark_dirty("hierarchical_label", "add", {"uuid": hlabel.uuid})
         self._modified = True
-        return label_uuid
+        return hlabel.uuid
 
     def add_global_label(
         self,
@@ -801,9 +872,27 @@ class Schematic:
         Returns:
             True if label was removed, False if not found
         """
-        removed = self._text_element_manager.remove_label(label_uuid)
+        removed = self._labels.remove(label_uuid)
         if removed:
+            self._sync_labels_to_data()  # Sync immediately
             self._format_sync_manager.mark_dirty("label", "remove", {"uuid": label_uuid})
+            self._modified = True
+        return removed
+
+    def remove_hierarchical_label(self, label_uuid: str) -> bool:
+        """
+        Remove a hierarchical label by UUID.
+
+        Args:
+            label_uuid: UUID of hierarchical label to remove
+
+        Returns:
+            True if hierarchical label was removed, False if not found
+        """
+        removed = self._hierarchical_labels.remove(label_uuid)
+        if removed:
+            self._sync_hierarchical_labels_to_data()  # Sync immediately
+            self._format_sync_manager.mark_dirty("hierarchical_label", "remove", {"uuid": label_uuid})
             self._modified = True
         return removed
 
@@ -1010,6 +1099,55 @@ class Schematic:
             stroke_type=stroke_type
         )
 
+    def draw_bounding_box(
+        self,
+        bbox: "BoundingBox",
+        stroke_width: float = 0.127,
+        stroke_color: Optional[str] = None,
+        stroke_type: str = "solid"
+    ) -> str:
+        """
+        Draw a single bounding box as a rectangle.
+
+        Args:
+            bbox: BoundingBox to draw
+            stroke_width: Line width
+            stroke_color: Line color name (red, green, blue, etc.) or None
+            stroke_type: Line type (solid, dashed, etc.)
+
+        Returns:
+            UUID of created rectangle
+        """
+        from .component_bounds import BoundingBox
+
+        # Convert color name to RGBA tuple if provided
+        stroke_rgba = None
+        if stroke_color:
+            # Simple color name to RGB mapping
+            color_map = {
+                "red": (255, 0, 0, 1.0),
+                "green": (0, 255, 0, 1.0),
+                "blue": (0, 0, 255, 1.0),
+                "yellow": (255, 255, 0, 1.0),
+                "cyan": (0, 255, 255, 1.0),
+                "magenta": (255, 0, 255, 1.0),
+                "black": (0, 0, 0, 1.0),
+                "white": (255, 255, 255, 1.0),
+            }
+            stroke_rgba = color_map.get(stroke_color.lower(), (0, 255, 0, 1.0))
+
+        # Add rectangle using the manager
+        rect_uuid = self.add_rectangle(
+            start=(bbox.min_x, bbox.min_y),
+            end=(bbox.max_x, bbox.max_y),
+            stroke_width=stroke_width,
+            stroke_type=stroke_type,
+            stroke_color=stroke_rgba
+        )
+
+        logger.debug(f"Drew bounding box: {bbox}")
+        return rect_uuid
+
     def draw_component_bounding_boxes(
         self,
         include_properties: bool = False,
@@ -1029,9 +1167,17 @@ class Schematic:
         Returns:
             List of rectangle UUIDs created
         """
-        # This would need the bounding box calculation logic
-        # For now, return empty list - would need to implement component bounding box calc
-        return []
+        from .component_bounds import get_component_bounding_box
+
+        uuids = []
+
+        for component in self._components:
+            bbox = get_component_bounding_box(component, include_properties)
+            rect_uuid = self.draw_bounding_box(bbox, stroke_width, stroke_color, stroke_type)
+            uuids.append(rect_uuid)
+
+        logger.info(f"Drew {len(uuids)} component bounding boxes")
+        return uuids
 
     # Metadata operations (delegated to MetadataManager)
     def set_title_block(
@@ -1191,27 +1337,13 @@ class Schematic:
         cache = get_symbol_cache()
 
         for comp in self._components:
-            print(f"\n--- Processing component {comp.reference} ---")
-            print(f"  lib_id: {comp.lib_id}")
-            print(f"  Already in lib_symbols: {comp.lib_id in lib_symbols}")
-
             if comp.lib_id and comp.lib_id not in lib_symbols:
-                # logger.debug(f"Processing component {comp.lib_id}")  # Comment out
-
                 # Get the actual symbol definition
                 symbol_def = cache.get_symbol(comp.lib_id)
-                print(f"  Got symbol_def: {symbol_def is not None}")
 
                 if symbol_def:
-                    # logger.debug(f"Loaded symbol {comp.lib_id}")  # Comment out
-                    print(f"  Converting symbol for lib_id: {comp.lib_id}")
                     converted_symbol = self._convert_symbol_to_kicad_format(symbol_def, comp.lib_id)
                     lib_symbols[comp.lib_id] = converted_symbol
-                    print(f"  Symbol conversion complete")
-                else:
-                    print(f"  WARNING: No symbol definition found for {comp.lib_id}")
-            else:
-                print(f"  Skipping {comp.lib_id} (already processed or no lib_id)")
 
         self._data["lib_symbols"] = lib_symbols
 
@@ -1258,15 +1390,84 @@ class Schematic:
 
         self._data["junctions"] = junction_data
 
+    def _sync_texts_to_data(self):
+        """Sync text collection state back to data structure."""
+        text_data = []
+        for text_element in self._texts:
+            text_dict = {
+                "uuid": text_element.uuid,
+                "text": text_element.text,
+                "position": {"x": text_element.position.x, "y": text_element.position.y},
+                "rotation": text_element.rotation,
+                "size": text_element.size,
+                "exclude_from_sim": text_element.exclude_from_sim,
+            }
+            text_data.append(text_dict)
+
+        self._data["texts"] = text_data
+
+    def _sync_labels_to_data(self):
+        """Sync label collection state back to data structure."""
+        label_data = []
+        for label_element in self._labels:
+            label_dict = {
+                "uuid": label_element.uuid,
+                "text": label_element.text,
+                "position": {"x": label_element.position.x, "y": label_element.position.y},
+                "rotation": label_element.rotation,
+                "size": label_element.size,
+            }
+            label_data.append(label_dict)
+
+        self._data["labels"] = label_data
+
+    def _sync_hierarchical_labels_to_data(self):
+        """Sync hierarchical label collection state back to data structure."""
+        hierarchical_label_data = []
+        for hlabel_element in self._hierarchical_labels:
+            hlabel_dict = {
+                "uuid": hlabel_element.uuid,
+                "text": hlabel_element.text,
+                "position": {"x": hlabel_element.position.x, "y": hlabel_element.position.y},
+                "rotation": hlabel_element.rotation,
+                "size": hlabel_element.size,
+            }
+            hierarchical_label_data.append(hlabel_dict)
+
+        self._data["hierarchical_labels"] = hierarchical_label_data
+
+    def _sync_no_connects_to_data(self):
+        """Sync no-connect collection state back to data structure."""
+        no_connect_data = []
+        for no_connect_element in self._no_connects:
+            no_connect_dict = {
+                "uuid": no_connect_element.uuid,
+                "position": {"x": no_connect_element.position.x, "y": no_connect_element.position.y},
+            }
+            no_connect_data.append(no_connect_dict)
+
+        self._data["no_connects"] = no_connect_data
+
+    def _sync_nets_to_data(self):
+        """Sync net collection state back to data structure."""
+        net_data = []
+        for net_element in self._nets:
+            net_dict = {
+                "name": net_element.name,
+                "components": net_element.components,
+                "wires": net_element.wires,
+                "labels": net_element.labels,
+            }
+            net_data.append(net_dict)
+
+        self._data["nets"] = net_data
+
+
     def _convert_symbol_to_kicad_format(self, symbol_def, lib_id: str):
         """Convert symbol definition to KiCAD format."""
-        print(f"\n=== _convert_symbol_to_kicad_format DEBUG ===")
-        print(f"lib_id: {lib_id}, schematic.name: {self.name}")
-
         # Use raw data if available, but fix the symbol name to use full lib_id
         if hasattr(symbol_def, "raw_kicad_data") and symbol_def.raw_kicad_data:
             raw_data = symbol_def.raw_kicad_data
-            print(f"Using raw_kicad_data, type: {type(raw_data)}, length: {len(raw_data) if isinstance(raw_data, list) else 'N/A'}")
 
             # Check if raw data already contains instances with project info
             project_refs_found = []
@@ -1280,28 +1481,20 @@ class Schematic:
                             find_project_refs(item, f"{path}[{i}]")
 
             find_project_refs(raw_data)
-            if project_refs_found:
-                print(f"FOUND PROJECT REFERENCES IN RAW DATA: {project_refs_found}")
-            else:
-                print("No project references found in raw data")
 
             # Make a copy and fix the symbol name (index 1) to use full lib_id
             if isinstance(raw_data, list) and len(raw_data) > 1:
                 fixed_data = raw_data.copy()
                 fixed_data[1] = lib_id  # Replace short name with full lib_id
-                print(f"Fixed symbol name from '{raw_data[1]}' to '{lib_id}'")
 
                 # Also fix any project references in instances to use current project name
-                print("Calling _fix_symbol_project_references...")
                 self._fix_symbol_project_references(fixed_data)
 
                 return fixed_data
             else:
-                print("Raw data not in expected list format")
                 return raw_data
 
         # Fallback: create basic symbol structure
-        print("Using fallback symbol structure")
         return {
             "lib_id": lib_id,
             "symbol": symbol_def.name if hasattr(symbol_def, "name") else lib_id.split(":")[-1],
@@ -1309,7 +1502,6 @@ class Schematic:
 
     def _fix_symbol_project_references(self, symbol_data):
         """Fix project references in symbol instances to use current project name."""
-        print(f"_fix_symbol_project_references called, data type: {type(symbol_data)}")
         if not isinstance(symbol_data, list):
             return
 
@@ -1318,7 +1510,6 @@ class Schematic:
             if isinstance(element, list):
                 # Check if this is an instances section
                 if len(element) > 0 and hasattr(element[0], '__str__') and str(element[0]) == 'instances':
-                    print(f"Found instances section at index {i}")
                     # Look for project references within instances
                     self._update_project_in_instances(element)
                 else:
@@ -1327,7 +1518,6 @@ class Schematic:
 
     def _update_project_in_instances(self, instances_element):
         """Update project name in instances element."""
-        print(f"_update_project_in_instances called, data type: {type(instances_element)}")
         if not isinstance(instances_element, list):
             return
 
@@ -1337,7 +1527,6 @@ class Schematic:
                 if hasattr(element[0], '__str__') and str(element[0]) == 'project':
                     old_name = element[1]
                     element[1] = self.name  # Replace with current schematic name
-                    print(f"FIXED: Changed project name from '{old_name}' to '{self.name}'")
                 else:
                     # Recursively check nested elements
                     self._update_project_in_instances(element)

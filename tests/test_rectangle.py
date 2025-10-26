@@ -26,19 +26,19 @@ def test_add_rectangle():
     assert isinstance(rect_uuid, str)
 
     # Verify rectangle was added to internal data
-    assert "rectangle" in sch._data
-    assert len(sch._data["rectangle"]) == 1
+    assert "rectangles" in sch._data
+    assert len(sch._data["rectangles"]) == 1
 
     # Verify rectangle properties
-    rect = sch._data["rectangle"][0]
+    rect = sch._data["rectangles"][0]
     assert rect["uuid"] == rect_uuid
-    assert rect["start"][0] == 10.0
-    assert rect["start"][1] == 20.0
-    assert rect["end"][0] == 50.0
-    assert rect["end"][1] == 60.0
-    assert rect["stroke"]["width"] == 0.127
-    assert rect["stroke"]["type"] == "solid"
-    assert rect["fill"]["type"] == "none"
+    assert rect["start"]["x"] == 10.0
+    assert rect["start"]["y"] == 20.0
+    assert rect["end"]["x"] == 50.0
+    assert rect["end"]["y"] == 60.0
+    assert rect["stroke_width"] == 0.127
+    assert rect["stroke_type"] == "solid"
+    assert rect["fill_type"] == "none"
 
 
 def test_add_rectangle_with_point_objects():
@@ -55,9 +55,9 @@ def test_add_rectangle_with_point_objects():
     )
 
     assert rect_uuid is not None
-    rect = sch._data["rectangle"][0]
-    assert rect["start"][0] == 100.0
-    assert rect["start"][1] == 200.0
+    rect = sch._data["rectangles"][0]
+    assert rect["start"]["x"] == 100.0
+    assert rect["start"]["y"] == 200.0
 
 
 def test_add_multiple_rectangles():
@@ -68,7 +68,7 @@ def test_add_multiple_rectangles():
     rect2_uuid = sch.add_rectangle((20, 20), (30, 30))
     rect3_uuid = sch.add_rectangle((40, 40), (50, 50))
 
-    assert len(sch._data["rectangle"]) == 3
+    assert len(sch._data["rectangles"]) == 3
     assert rect1_uuid != rect2_uuid != rect3_uuid
 
 
@@ -78,10 +78,10 @@ def test_rectangle_default_values():
 
     rect_uuid = sch.add_rectangle((0, 0), (10, 10))
 
-    rect = sch._data["rectangle"][0]
-    assert rect["stroke"]["width"] == 0.127  # Our default value
-    assert rect["stroke"]["type"] == "solid"  # Our default value
-    assert rect["fill"]["type"] == "none"
+    rect = sch._data["rectangles"][0]
+    assert rect["stroke_width"] == 0.127  # Our default value
+    assert rect["stroke_type"] == "solid"  # Our default value
+    assert rect["fill_type"] == "none"
 
 
 if __name__ == "__main__":
