@@ -42,7 +42,7 @@ class GraphicsManager:
         end: Union[Point, Tuple[float, float]],
         stroke: Optional[Dict[str, Any]] = None,
         fill: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add a rectangle to the schematic.
@@ -104,7 +104,7 @@ class GraphicsManager:
         radius: float,
         stroke: Optional[Dict[str, Any]] = None,
         fill: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add a circle to the schematic.
@@ -132,7 +132,7 @@ class GraphicsManager:
             "uuid": uuid_str,
             "center": [center.x, center.y],
             "radius": radius,
-            "stroke": stroke
+            "stroke": stroke,
         }
 
         if fill is not None:
@@ -152,7 +152,7 @@ class GraphicsManager:
         mid: Union[Point, Tuple[float, float]],
         end: Union[Point, Tuple[float, float]],
         stroke: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add an arc to the schematic (defined by three points).
@@ -185,7 +185,7 @@ class GraphicsManager:
             "start": [start.x, start.y],
             "mid": [mid.x, mid.y],
             "end": [end.x, end.y],
-            "stroke": stroke
+            "stroke": stroke,
         }
 
         # Add to schematic data
@@ -201,7 +201,7 @@ class GraphicsManager:
         points: List[Union[Point, Tuple[float, float]]],
         stroke: Optional[Dict[str, Any]] = None,
         fill: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add a polyline (multi-segment line) to the schematic.
@@ -235,7 +235,7 @@ class GraphicsManager:
         polyline_data = {
             "uuid": uuid_str,
             "pts": [[pt.x, pt.y] for pt in converted_points],
-            "stroke": stroke
+            "stroke": stroke,
         }
 
         if fill is not None:
@@ -254,7 +254,7 @@ class GraphicsManager:
         position: Union[Point, Tuple[float, float]],
         scale: float = 1.0,
         image_data: Optional[str] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add an image to the schematic.
@@ -278,7 +278,7 @@ class GraphicsManager:
         image_element = {
             "uuid": uuid_str,
             "position": {"x": position.x, "y": position.y},
-            "scale": scale
+            "scale": scale,
         }
 
         if image_data is not None:
@@ -352,11 +352,7 @@ class GraphicsManager:
         """
         return self._remove_graphic_element("image", uuid_str)
 
-    def update_stroke(
-        self,
-        uuid_str: str,
-        stroke: Dict[str, Any]
-    ) -> bool:
+    def update_stroke(self, uuid_str: str, stroke: Dict[str, Any]) -> bool:
         """
         Update stroke properties for a graphic element.
 
@@ -378,11 +374,7 @@ class GraphicsManager:
         logger.warning(f"Graphic element not found for stroke update: {uuid_str}")
         return False
 
-    def update_fill(
-        self,
-        uuid_str: str,
-        fill: Dict[str, Any]
-    ) -> bool:
+    def update_fill(self, uuid_str: str, fill: Dict[str, Any]) -> bool:
         """
         Update fill properties for a graphic element.
 
@@ -407,7 +399,7 @@ class GraphicsManager:
     def get_graphics_in_area(
         self,
         area_start: Union[Point, Tuple[float, float]],
-        area_end: Union[Point, Tuple[float, float]]
+        area_end: Union[Point, Tuple[float, float]],
     ) -> List[Dict[str, Any]]:
         """
         Get all graphic elements within a specified area.
@@ -453,8 +445,9 @@ class GraphicsManager:
         for arc in arcs:
             arc_start = Point(arc["start"][0], arc["start"][1])
             arc_end = Point(arc["end"][0], arc["end"][1])
-            if self._point_in_area(arc_start, area_start, area_end) or \
-               self._point_in_area(arc_end, area_start, area_end):
+            if self._point_in_area(arc_start, area_start, area_end) or self._point_in_area(
+                arc_end, area_start, area_end
+            ):
                 result.append({"type": "arc", "data": arc})
 
         # Check images
@@ -476,13 +469,7 @@ class GraphicsManager:
         result = {}
         for element_type in ["rectangle", "circle", "arc", "polyline", "image"]:
             elements = self._data.get(element_type, [])
-            result[element_type] = [
-                {
-                    "uuid": elem.get("uuid"),
-                    "data": elem
-                }
-                for elem in elements
-            ]
+            result[element_type] = [{"uuid": elem.get("uuid"), "data": elem} for elem in elements]
 
         return result
 
@@ -516,24 +503,21 @@ class GraphicsManager:
 
     def _get_default_stroke(self) -> Dict[str, Any]:
         """Get default stroke properties."""
-        return {
-            "width": 0.254,
-            "type": "default"
-        }
+        return {"width": 0.254, "type": "default"}
 
     def _rectangles_overlap(
-        self,
-        area_start: Point, area_end: Point,
-        rect_start: Point, rect_end: Point
+        self, area_start: Point, area_end: Point, rect_start: Point, rect_end: Point
     ) -> bool:
         """Check if two rectangles overlap."""
-        return not (area_end.x < rect_start.x or area_start.x > rect_end.x or
-                   area_end.y < rect_start.y or area_start.y > rect_end.y)
+        return not (
+            area_end.x < rect_start.x
+            or area_start.x > rect_end.x
+            or area_end.y < rect_start.y
+            or area_start.y > rect_end.y
+        )
 
     def _circle_in_area(
-        self,
-        center: Point, radius: float,
-        area_start: Point, area_end: Point
+        self, center: Point, radius: float, area_start: Point, area_end: Point
     ) -> bool:
         """Check if circle intersects with area."""
         # Check if circle center is in area or if circle overlaps area bounds
@@ -548,9 +532,7 @@ class GraphicsManager:
         return distance <= radius
 
     def _polyline_in_area(
-        self,
-        points: List[List[float]],
-        area_start: Point, area_end: Point
+        self, points: List[List[float]], area_start: Point, area_end: Point
     ) -> bool:
         """Check if any part of polyline is in area."""
         for point_coords in points:
@@ -559,14 +541,9 @@ class GraphicsManager:
                 return True
         return False
 
-    def _point_in_area(
-        self,
-        point: Point,
-        area_start: Point, area_end: Point
-    ) -> bool:
+    def _point_in_area(self, point: Point, area_start: Point, area_end: Point) -> bool:
         """Check if point is within area."""
-        return (area_start.x <= point.x <= area_end.x and
-                area_start.y <= point.y <= area_end.y)
+        return area_start.x <= point.x <= area_end.x and area_start.y <= point.y <= area_end.y
 
     def validate_graphics(self) -> List[str]:
         """

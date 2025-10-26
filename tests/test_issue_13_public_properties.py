@@ -5,12 +5,13 @@ Tests all new public collection properties and their APIs.
 """
 
 import pytest
-from kicad_sch_api.core.schematic import Schematic
-from kicad_sch_api.core.types import Point, Text, Label, NoConnect, Net, LabelType
-from kicad_sch_api.core.texts import TextCollection, TextElement
+
 from kicad_sch_api.core.labels import LabelCollection, LabelElement
-from kicad_sch_api.core.no_connects import NoConnectCollection, NoConnectElement
 from kicad_sch_api.core.nets import NetCollection, NetElement
+from kicad_sch_api.core.no_connects import NoConnectCollection, NoConnectElement
+from kicad_sch_api.core.schematic import Schematic
+from kicad_sch_api.core.texts import TextCollection, TextElement
+from kicad_sch_api.core.types import Label, LabelType, Net, NoConnect, Point, Text
 from kicad_sch_api.utils.validation import ValidationError
 
 
@@ -20,7 +21,7 @@ class TestTextCollection:
     def test_texts_property_exists(self):
         """Test that schematic has texts property."""
         sch = Schematic.create("Test")
-        assert hasattr(sch, 'texts')
+        assert hasattr(sch, "texts")
         assert isinstance(sch.texts, TextCollection)
 
     def test_add_text(self):
@@ -37,11 +38,7 @@ class TestTextCollection:
         """Test adding text with custom parameters."""
         sch = Schematic.create("Test")
         text = sch.texts.add(
-            "Custom",
-            position=(50, 50),
-            rotation=90,
-            size=2.54,
-            exclude_from_sim=True
+            "Custom", position=(50, 50), rotation=90, size=2.54, exclude_from_sim=True
         )
 
         assert text.text == "Custom"
@@ -106,10 +103,7 @@ class TestTextCollection:
         text1 = sch.texts.add("Text1", position=(100, 100), size=1.0)
         text2 = sch.texts.add("Text2", position=(150, 150), size=1.0)
 
-        sch.texts.bulk_update(
-            criteria=lambda t: t.size < 2.0,
-            updates={"size": 3.0}
-        )
+        sch.texts.bulk_update(criteria=lambda t: t.size < 2.0, updates={"size": 3.0})
 
         assert text1.size == 3.0
         assert text2.size == 3.0
@@ -146,7 +140,7 @@ class TestLabelCollection:
     def test_labels_property_exists(self):
         """Test that schematic has labels property."""
         sch = Schematic.create("Test")
-        assert hasattr(sch, 'labels')
+        assert hasattr(sch, "labels")
         assert isinstance(sch.labels, LabelCollection)
 
     def test_add_label(self):
@@ -200,7 +194,7 @@ class TestLabelCollection:
     def test_hierarchical_labels_property(self):
         """Test hierarchical_labels property."""
         sch = Schematic.create("Test")
-        assert hasattr(sch, 'hierarchical_labels')
+        assert hasattr(sch, "hierarchical_labels")
         assert isinstance(sch.hierarchical_labels, LabelCollection)
 
 
@@ -210,7 +204,7 @@ class TestNoConnectCollection:
     def test_no_connects_property_exists(self):
         """Test that schematic has no_connects property."""
         sch = Schematic.create("Test")
-        assert hasattr(sch, 'no_connects')
+        assert hasattr(sch, "no_connects")
         assert isinstance(sch.no_connects, NoConnectCollection)
 
     def test_add_no_connect(self):
@@ -268,7 +262,7 @@ class TestNetCollection:
     def test_nets_property_exists(self):
         """Test that schematic has nets property."""
         sch = Schematic.create("Test")
-        assert hasattr(sch, 'nets')
+        assert hasattr(sch, "nets")
         assert isinstance(sch.nets, NetCollection)
 
     def test_add_net(self):
@@ -387,13 +381,13 @@ class TestBackwardsCompatibility:
         """Test that existing properties are still accessible."""
         sch = Schematic.create("Test")
 
-        assert hasattr(sch, 'components')
-        assert hasattr(sch, 'wires')
-        assert hasattr(sch, 'junctions')
-        assert hasattr(sch, 'version')
-        assert hasattr(sch, 'generator')
-        assert hasattr(sch, 'uuid')
-        assert hasattr(sch, 'title_block')
+        assert hasattr(sch, "components")
+        assert hasattr(sch, "wires")
+        assert hasattr(sch, "junctions")
+        assert hasattr(sch, "version")
+        assert hasattr(sch, "generator")
+        assert hasattr(sch, "uuid")
+        assert hasattr(sch, "title_block")
 
     def test_can_mix_old_and_new_apis(self):
         """Test using old and new APIs together."""

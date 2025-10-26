@@ -46,9 +46,9 @@ class LabelParser(BaseElementParser):
                 "bold": False,
                 "italic": False,
                 "hide": False,
-                "justify": []
+                "justify": [],
             },
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in element[2:]:
@@ -99,7 +99,7 @@ class LabelParser(BaseElementParser):
             "bold": False,
             "italic": False,
             "hide": False,
-            "justify": []
+            "justify": [],
         }
 
         for elem in effects_element[1:]:
@@ -176,9 +176,9 @@ class HierarchicalLabelParser(BaseElementParser):
                 "bold": False,
                 "italic": False,
                 "hide": False,
-                "justify": []
+                "justify": [],
             },
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in element[2:]:
@@ -217,7 +217,7 @@ class HierarchicalLabelParser(BaseElementParser):
             "bold": False,
             "italic": False,
             "hide": False,
-            "justify": []
+            "justify": [],
         }
 
         for elem in effects_element[1:]:

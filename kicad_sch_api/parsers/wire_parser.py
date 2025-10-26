@@ -39,7 +39,7 @@ class WireParser(BaseElementParser):
             "stroke_width": 0.0,
             "stroke_type": "default",
             "uuid": None,
-            "wire_type": "wire"  # Default to wire (vs bus)
+            "wire_type": "wire",  # Default to wire (vs bus)
         }
 
         for elem in element[1:]:

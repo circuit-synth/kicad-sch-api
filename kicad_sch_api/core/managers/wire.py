@@ -9,9 +9,9 @@ import logging
 import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from ...library.cache import get_symbol_cache
 from ..types import Point, Wire, WireType
 from ..wires import WireCollection
-from ...library.cache import get_symbol_cache
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,9 @@ class WireManager:
     - Wire-to-pin connections
     """
 
-    def __init__(self, schematic_data: Dict[str, Any], wire_collection: WireCollection, component_collection):
+    def __init__(
+        self, schematic_data: Dict[str, Any], wire_collection: WireCollection, component_collection
+    ):
         """
         Initialize WireManager.
 
@@ -43,9 +45,7 @@ class WireManager:
         self._symbol_cache = get_symbol_cache()
 
     def add_wire(
-        self,
-        start: Union[Point, Tuple[float, float]],
-        end: Union[Point, Tuple[float, float]]
+        self, start: Union[Point, Tuple[float, float]], end: Union[Point, Tuple[float, float]]
     ) -> str:
         """
         Add a wire connection.
@@ -97,10 +97,7 @@ class WireManager:
         return success
 
     def add_wire_to_pin(
-        self,
-        start: Union[Point, Tuple[float, float]],
-        component_ref: str,
-        pin_number: str
+        self, start: Union[Point, Tuple[float, float]], component_ref: str, pin_number: str
     ) -> str:
         """
         Add wire from a point to a component pin.
@@ -123,11 +120,7 @@ class WireManager:
         return self.add_wire(start, pin_position)
 
     def add_wire_between_pins(
-        self,
-        component1_ref: str,
-        pin1_number: str,
-        component2_ref: str,
-        pin2_number: str
+        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
     ) -> str:
         """
         Add wire between two component pins.
@@ -228,7 +221,7 @@ class WireManager:
         pin1_number: str,
         component2_ref: str,
         pin2_number: str,
-        routing_strategy: str = "direct"
+        routing_strategy: str = "direct",
     ) -> List[str]:
         """
         Auto-route between two pins with different strategies.
@@ -278,15 +271,13 @@ class WireManager:
         else:
             raise ValueError(f"Unknown routing strategy: {routing_strategy}")
 
-        logger.info(f"Auto-routed {component1_ref}:{pin1_number} to {component2_ref}:{pin2_number} using {routing_strategy}")
+        logger.info(
+            f"Auto-routed {component1_ref}:{pin1_number} to {component2_ref}:{pin2_number} using {routing_strategy}"
+        )
         return wire_uuids
 
     def are_pins_connected(
-        self,
-        component1_ref: str,
-        pin1_number: str,
-        component2_ref: str,
-        pin2_number: str
+        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
     ) -> bool:
         """
         Check if two pins are connected via wires.
@@ -308,8 +299,9 @@ class WireManager:
 
         # Check for direct wire connection
         for wire in self._wires:
-            if (wire.start == pin1_pos and wire.end == pin2_pos) or \
-               (wire.start == pin2_pos and wire.end == pin1_pos):
+            if (wire.start == pin1_pos and wire.end == pin2_pos) or (
+                wire.start == pin2_pos and wire.end == pin1_pos
+            ):
                 return True
 
         # TODO: Implement more sophisticated connectivity analysis
@@ -317,11 +309,7 @@ class WireManager:
         return False
 
     def connect_pins_with_wire(
-        self,
-        component1_ref: str,
-        pin1_number: str,
-        component2_ref: str,
-        pin2_number: str
+        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
     ) -> str:
         """
         Legacy alias for add_wire_between_pins.
@@ -345,9 +333,7 @@ class WireManager:
             Dictionary with wire statistics
         """
         total_wires = len(self._wires)
-        total_length = sum(
-            wire.start.distance_to(wire.end) for wire in self._wires
-        )
+        total_length = sum(wire.start.distance_to(wire.end) for wire in self._wires)
 
         return {
             "total_wires": total_wires,
@@ -356,5 +342,5 @@ class WireManager:
             "wire_types": {
                 "normal": len([w for w in self._wires if w.wire_type == WireType.WIRE]),
                 "bus": len([w for w in self._wires if w.wire_type == WireType.BUS]),
-            }
+            },
         }

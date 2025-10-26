@@ -29,10 +29,7 @@ class ValidationManager:
     """
 
     def __init__(
-        self,
-        schematic_data: Dict[str, Any],
-        component_collection=None,
-        wire_collection=None
+        self, schematic_data: Dict[str, Any], component_collection=None, wire_collection=None
     ):
         """
         Initialize ValidationManager.
@@ -63,12 +60,14 @@ class ValidationManager:
                 issues.extend(rule_issues)
                 logger.debug(f"Validation rule '{rule_name}' found {len(rule_issues)} issues")
             except Exception as e:
-                issues.append(ValidationIssue(
-                    category="validation_system",
-                    message=f"Validation rule '{rule_name}' failed: {e}",
-                    level="error",
-                    context={"rule": rule_name, "error": str(e)}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="validation_system",
+                        message=f"Validation rule '{rule_name}' failed: {e}",
+                        level="error",
+                        context={"rule": rule_name, "error": str(e)},
+                    )
+                )
                 logger.error(f"Validation rule '{rule_name}' failed: {e}")
 
         logger.info(f"Schematic validation completed with {len(issues)} issues")
@@ -98,22 +97,26 @@ class ValidationManager:
         # Check for duplicate references
         duplicates = set([ref for ref in references if references.count(ref) > 1])
         for duplicate_ref in duplicates:
-            issues.append(ValidationIssue(
-                category="component_references",
-                message=f"Duplicate component reference: {duplicate_ref}",
-                level="error",
-                context={"reference": duplicate_ref}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="component_references",
+                    message=f"Duplicate component reference: {duplicate_ref}",
+                    level="error",
+                    context={"reference": duplicate_ref},
+                )
+            )
 
         # Check reference format
         for ref in set(references):
             if not self._validate_reference_format(ref):
-                issues.append(ValidationIssue(
-                    category="component_references",
-                    message=f"Invalid reference format: {ref}",
-                    level="warning",
-                    context={"reference": ref}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="component_references",
+                        message=f"Invalid reference format: {ref}",
+                        level="warning",
+                        context={"reference": ref},
+                    )
+                )
 
         return issues
 
@@ -132,32 +135,38 @@ class ValidationManager:
         # Check for unconnected pins
         unconnected_pins = self._find_unconnected_pins()
         for component_ref, pin_number in unconnected_pins:
-            issues.append(ValidationIssue(
-                category="connectivity",
-                message=f"Unconnected pin: {component_ref}.{pin_number}",
-                level="warning",
-                context={"component": component_ref, "pin": pin_number}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="connectivity",
+                    message=f"Unconnected pin: {component_ref}.{pin_number}",
+                    level="warning",
+                    context={"component": component_ref, "pin": pin_number},
+                )
+            )
 
         # Check for floating wires
         floating_wires = self._find_floating_wires()
         for wire_uuid in floating_wires:
-            issues.append(ValidationIssue(
-                category="connectivity",
-                message=f"Floating wire (not connected to components): {wire_uuid}",
-                level="warning",
-                context={"wire": wire_uuid}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="connectivity",
+                    message=f"Floating wire (not connected to components): {wire_uuid}",
+                    level="warning",
+                    context={"wire": wire_uuid},
+                )
+            )
 
         # Check for short circuits
         short_circuits = self._find_potential_short_circuits()
         for circuit_info in short_circuits:
-            issues.append(ValidationIssue(
-                category="connectivity",
-                message=f"Potential short circuit: {circuit_info['description']}",
-                level="error",
-                context=circuit_info
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="connectivity",
+                    message=f"Potential short circuit: {circuit_info['description']}",
+                    level="error",
+                    context=circuit_info,
+                )
+            )
 
         return issues
 
@@ -174,23 +183,31 @@ class ValidationManager:
         if self._components:
             overlapping_components = self._find_overlapping_components()
             for comp1_ref, comp2_ref, distance in overlapping_components:
-                issues.append(ValidationIssue(
-                    category="positioning",
-                    message=f"Components too close: {comp1_ref} and {comp2_ref} (distance: {distance:.2f})",
-                    level="warning",
-                    context={"component1": comp1_ref, "component2": comp2_ref, "distance": distance}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="positioning",
+                        message=f"Components too close: {comp1_ref} and {comp2_ref} (distance: {distance:.2f})",
+                        level="warning",
+                        context={
+                            "component1": comp1_ref,
+                            "component2": comp2_ref,
+                            "distance": distance,
+                        },
+                    )
+                )
 
         # Check for components outside typical bounds
         if self._components:
             out_of_bounds = self._find_components_out_of_bounds()
             for component_ref, position in out_of_bounds:
-                issues.append(ValidationIssue(
-                    category="positioning",
-                    message=f"Component outside typical bounds: {component_ref} at {position}",
-                    level="info",
-                    context={"component": component_ref, "position": (position.x, position.y)}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="positioning",
+                        message=f"Component outside typical bounds: {component_ref} at {position}",
+                        level="info",
+                        context={"component": component_ref, "position": (position.x, position.y)},
+                    )
+                )
 
         return issues
 
@@ -228,41 +245,46 @@ class ValidationManager:
 
         # Check required metadata fields
         if not self._data.get("version"):
-            issues.append(ValidationIssue(
-                category="metadata",
-                message="Missing KiCAD version information",
-                level="warning",
-                context={}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="metadata",
+                    message="Missing KiCAD version information",
+                    level="warning",
+                    context={},
+                )
+            )
 
         if not self._data.get("generator"):
-            issues.append(ValidationIssue(
-                category="metadata",
-                message="Missing generator information",
-                level="info",
-                context={}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="metadata",
+                    message="Missing generator information",
+                    level="info",
+                    context={},
+                )
+            )
 
         # Check title block
         title_block = self._data.get("title_block", {})
         if not title_block.get("title"):
-            issues.append(ValidationIssue(
-                category="metadata",
-                message="Missing schematic title",
-                level="info",
-                context={}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="metadata", message="Missing schematic title", level="info", context={}
+                )
+            )
 
         # Check paper size
         paper = self._data.get("paper")
         valid_papers = ["A4", "A3", "A2", "A1", "A0", "Letter", "Legal", "Tabloid"]
         if paper and paper not in valid_papers:
-            issues.append(ValidationIssue(
-                category="metadata",
-                message=f"Non-standard paper size: {paper}",
-                level="info",
-                context={"paper": paper}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="metadata",
+                    message=f"Non-standard paper size: {paper}",
+                    level="info",
+                    context={"paper": paper},
+                )
+            )
 
         return issues
 
@@ -282,7 +304,7 @@ class ValidationManager:
             "warning_count": len([i for i in issues if i.level == "warning"]),
             "info_count": len([i for i in issues if i.level == "info"]),
             "categories": {},
-            "severity": "info"
+            "severity": "info",
         }
 
         # Count by category
@@ -391,7 +413,7 @@ class ValidationManager:
         min_distance = 10.0  # Minimum distance threshold
 
         for i, comp1 in enumerate(components):
-            for comp2 in components[i+1:]:
+            for comp2 in components[i + 1 :]:
                 distance = comp1.position.distance_to(comp2.position)
                 if distance < min_distance:
                     overlapping.append((comp1.reference, comp2.reference, distance))

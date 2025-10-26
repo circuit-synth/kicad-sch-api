@@ -17,4 +17,6 @@ DEFAULT_PIN_NUMBER_SIZE = 1.27  # 50 mils
 # Text width ratio for proportional font rendering
 # KiCad uses proportional fonts where average character width is ~0.65x height
 # This prevents label text from extending beyond calculated bounding boxes
-DEFAULT_PIN_TEXT_WIDTH_RATIO = 0.65  # Width to height ratio for pin text (proportional font average)
+DEFAULT_PIN_TEXT_WIDTH_RATIO = (
+    0.65  # Width to height ratio for pin text (proportional font average)
+)

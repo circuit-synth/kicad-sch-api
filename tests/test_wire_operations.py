@@ -234,7 +234,9 @@ class TestWireOperations:
 
             # Verify UUID is preserved
             assert "uuid" in read_data["wires"][0], "Wire UUID not preserved"
-            assert read_data["wires"][0]["uuid"] == wire_uuid, f"Wire UUID changed: {read_data['wires'][0]['uuid']} != {wire_uuid}"
+            assert (
+                read_data["wires"][0]["uuid"] == wire_uuid
+            ), f"Wire UUID changed: {read_data['wires'][0]['uuid']} != {wire_uuid}"
 
         finally:
             temp_file.unlink()
@@ -274,8 +276,12 @@ class TestWireOperations:
 
             # Verify stroke properties
             wire = read_data["wires"][0]
-            assert wire["stroke_width"] == 0.5, f"Stroke width not preserved: {wire['stroke_width']}"
-            assert wire["stroke_type"] == "dash", f"Stroke type not preserved: {wire['stroke_type']}"
+            assert (
+                wire["stroke_width"] == 0.5
+            ), f"Stroke width not preserved: {wire['stroke_width']}"
+            assert (
+                wire["stroke_type"] == "dash"
+            ), f"Stroke type not preserved: {wire['stroke_type']}"
 
         finally:
             temp_file.unlink()

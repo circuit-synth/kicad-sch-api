@@ -10,7 +10,7 @@ import uuid
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
-from .types import Point, NoConnect
+from .types import NoConnect, Point
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +169,9 @@ class NoConnectCollection:
         logger.debug(f"Removed no-connect: {no_connect_element}")
         return True
 
-    def find_at_position(self, position: Union[Point, Tuple[float, float]], tolerance: float = 0.1) -> List[NoConnectElement]:
+    def find_at_position(
+        self, position: Union[Point, Tuple[float, float]], tolerance: float = 0.1
+    ) -> List[NoConnectElement]:
         """
         Find no-connects at or near a position.
 

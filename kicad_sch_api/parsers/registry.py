@@ -99,7 +99,9 @@ class ElementParserRegistry:
 
         # Try fallback parser
         if self._fallback_parser:
-            self._logger.debug(f"Using fallback parser for unknown element type: {element_type_str}")
+            self._logger.debug(
+                f"Using fallback parser for unknown element type: {element_type_str}"
+            )
             return self._fallback_parser.parse(element)
 
         # No parser available

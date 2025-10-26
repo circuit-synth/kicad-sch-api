@@ -86,7 +86,7 @@ class SymbolResolver:
         max_chain_length = 0
 
         for symbol in self._inheritance_cache.values():
-            if hasattr(symbol, '_inheritance_depth'):
+            if hasattr(symbol, "_inheritance_depth"):
                 inheritance_chains += 1
                 max_chain_length = max(max_chain_length, symbol._inheritance_depth)
 
@@ -94,7 +94,7 @@ class SymbolResolver:
             "resolved_symbols": len(self._inheritance_cache),
             "inheritance_chains": inheritance_chains,
             "max_chain_length": max_chain_length,
-            "cache_size": len(self._inheritance_cache)
+            "cache_size": len(self._inheritance_cache),
         }
 
     def _resolve_with_inheritance(self, symbol: SymbolDefinition) -> Optional[SymbolDefinition]:
@@ -112,7 +112,9 @@ class SymbolResolver:
 
         # Check for circular inheritance
         if symbol.lib_id in self._resolution_stack:
-            logger.error(f"Circular inheritance detected: {' -> '.join(self._resolution_stack + [symbol.lib_id])}")
+            logger.error(
+                f"Circular inheritance detected: {' -> '.join(self._resolution_stack + [symbol.lib_id])}"
+            )
             return None
 
         self._resolution_stack.append(symbol.lib_id)
@@ -136,7 +138,7 @@ class SymbolResolver:
             resolved_symbol = self._merge_parent_into_child(symbol, resolved_parent)
 
             # Track inheritance depth for statistics
-            parent_depth = getattr(resolved_parent, '_inheritance_depth', 0)
+            parent_depth = getattr(resolved_parent, "_inheritance_depth", 0)
             resolved_symbol._inheritance_depth = parent_depth + 1
 
             logger.debug(f"Resolved inheritance: {symbol.lib_id} extends {parent_lib_id}")
@@ -168,9 +170,7 @@ class SymbolResolver:
         return f"{current_library}:{parent_name}"
 
     def _merge_parent_into_child(
-        self,
-        child: SymbolDefinition,
-        parent: SymbolDefinition
+        self, child: SymbolDefinition, parent: SymbolDefinition
     ) -> SymbolDefinition:
         """
         Merge parent symbol into child symbol.
@@ -188,10 +188,7 @@ class SymbolResolver:
         # Merge raw KiCAD data for exact format preservation
         if child.raw_kicad_data and parent.raw_kicad_data:
             merged.raw_kicad_data = self._merge_kicad_data(
-                child.raw_kicad_data,
-                parent.raw_kicad_data,
-                child.name,
-                parent.name
+                child.raw_kicad_data, parent.raw_kicad_data, child.name, parent.name
             )
 
         # Merge other properties
@@ -204,11 +201,7 @@ class SymbolResolver:
         return merged
 
     def _merge_kicad_data(
-        self,
-        child_data: List,
-        parent_data: List,
-        child_name: str,
-        parent_name: str
+        self, child_data: List, parent_data: List, child_name: str, parent_name: str
     ) -> List:
         """
         Merge parent KiCAD data into child KiCAD data.
@@ -227,11 +220,10 @@ class SymbolResolver:
 
         # Remove extends directive from child
         merged = [
-            item for item in merged
+            item
+            for item in merged
             if not (
-                isinstance(item, list) and
-                len(item) >= 2 and
-                item[0] == sexpdata.Symbol("extends")
+                isinstance(item, list) and len(item) >= 2 and item[0] == sexpdata.Symbol("extends")
             )
         ]
 
@@ -255,9 +247,7 @@ class SymbolResolver:
         return merged
 
     def _merge_symbol_properties(
-        self,
-        child: SymbolDefinition,
-        parent: SymbolDefinition
+        self, child: SymbolDefinition, parent: SymbolDefinition
     ) -> SymbolDefinition:
         """
         Merge symbol properties, with child properties taking precedence.
@@ -315,7 +305,9 @@ class SymbolResolver:
 
         def check_symbol(current_lib_id: str) -> None:
             if current_lib_id in visited:
-                issues.append(f"Circular inheritance detected: {' -> '.join(chain + [current_lib_id])}")
+                issues.append(
+                    f"Circular inheritance detected: {' -> '.join(chain + [current_lib_id])}"
+                )
                 return
 
             visited.add(current_lib_id)
@@ -329,7 +321,9 @@ class SymbolResolver:
             if symbol.extends:
                 parent_lib_id = self._resolve_parent_lib_id(symbol.extends, symbol.library)
                 if not self._cache.has_symbol(parent_lib_id):
-                    issues.append(f"Parent symbol not found: {parent_lib_id} (extended by {current_lib_id})")
+                    issues.append(
+                        f"Parent symbol not found: {parent_lib_id} (extended by {current_lib_id})"
+                    )
                 else:
                     check_symbol(parent_lib_id)
 

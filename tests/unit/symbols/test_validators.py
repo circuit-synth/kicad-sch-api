@@ -5,13 +5,14 @@ Tests the SymbolValidator functionality for comprehensive symbol
 validation and error reporting.
 """
 
-import pytest
 from unittest.mock import Mock
 
-from kicad_sch_api.symbols.validators import SymbolValidator
-from kicad_sch_api.symbols.cache import ISymbolCache
+import pytest
+
+from kicad_sch_api.core.types import PinType, Point, SchematicPin
 from kicad_sch_api.library.cache import SymbolDefinition
-from kicad_sch_api.core.types import Point, SchematicPin, PinType
+from kicad_sch_api.symbols.cache import ISymbolCache
+from kicad_sch_api.symbols.validators import SymbolValidator
 from kicad_sch_api.utils.validation import ValidationIssue
 
 
@@ -87,18 +88,12 @@ class TestSymbolValidator:
             description="Resistor",
             pins=[
                 SchematicPin(
-                    number="1",
-                    name="Pin1",
-                    position=Point(0, 0),
-                    pin_type=PinType.PASSIVE
+                    number="1", name="Pin1", position=Point(0, 0), pin_type=PinType.PASSIVE
                 ),
                 SchematicPin(
-                    number="2",
-                    name="Pin2",
-                    position=Point(1, 0),
-                    pin_type=PinType.PASSIVE
-                )
-            ]
+                    number="2", name="Pin2", position=Point(1, 0), pin_type=PinType.PASSIVE
+                ),
+            ],
         )
 
         issues = validator.validate_symbol(symbol)
@@ -113,8 +108,8 @@ class TestSymbolValidator:
 
         symbol = SymbolDefinition(
             lib_id="Test:Empty",  # Valid format
-            name="",    # Missing
-            library="", # Missing
+            name="",  # Missing
+            library="",  # Missing
             reference_prefix="",  # Missing
         )
 
@@ -133,19 +128,14 @@ class TestSymbolValidator:
             library="Device",
             reference_prefix="U",
             pins=[
-                SchematicPin(
-                    number="1",
-                    name="Pin1",
-                    position=Point(0, 0),
-                    pin_type=PinType.INPUT
-                ),
+                SchematicPin(number="1", name="Pin1", position=Point(0, 0), pin_type=PinType.INPUT),
                 SchematicPin(
                     number="1",  # Duplicate number
                     name="Pin1Dup",
                     position=Point(1, 0),
-                    pin_type=PinType.OUTPUT
-                )
-            ]
+                    pin_type=PinType.OUTPUT,
+                ),
+            ],
         )
 
         issues = validator.validate_symbol(symbol)
@@ -164,19 +154,14 @@ class TestSymbolValidator:
             library="Device",
             reference_prefix="U",
             pins=[
-                SchematicPin(
-                    number="1",
-                    name="Pin1",
-                    position=Point(0, 0),
-                    pin_type=PinType.INPUT
-                ),
+                SchematicPin(number="1", name="Pin1", position=Point(0, 0), pin_type=PinType.INPUT),
                 SchematicPin(
                     number="2",
                     name="Pin2",
                     position=Point(0, 0),  # Same position
-                    pin_type=PinType.OUTPUT
-                )
-            ]
+                    pin_type=PinType.OUTPUT,
+                ),
+            ],
         )
 
         issues = validator.validate_symbol(symbol)
@@ -190,11 +175,7 @@ class TestSymbolValidator:
         validator = SymbolValidator()
 
         symbol = SymbolDefinition(
-            lib_id="Device:NoPins",
-            name="NoPins",
-            library="Device",
-            reference_prefix="U",
-            pins=[]
+            lib_id="Device:NoPins", name="NoPins", library="Device", reference_prefix="U", pins=[]
         )
 
         issues = validator.validate_symbol(symbol)
@@ -212,7 +193,7 @@ class TestSymbolValidator:
             name="BadUnits",
             library="Device",
             reference_prefix="U",
-            units=0  # Invalid
+            units=0,  # Invalid
         )
 
         issues = validator.validate_symbol(symbol)
@@ -230,7 +211,7 @@ class TestSymbolValidator:
             name="Child",
             library="Device",
             reference_prefix="U",
-            extends="Parent"
+            extends="Parent",
         )
 
         issues = validator.validate_inheritance_chain(symbol)
@@ -249,7 +230,7 @@ class TestSymbolValidator:
             name="Simple",
             library="Device",
             reference_prefix="U",
-            extends=None
+            extends=None,
         )
 
         issues = validator.validate_inheritance_chain(symbol)
@@ -266,7 +247,7 @@ class TestSymbolValidator:
             name="Child",
             library="Device",
             reference_prefix="U",
-            extends="NonExistent"
+            extends="NonExistent",
         )
         cache.symbols["Device:Child"] = symbol  # Add symbol to cache
 
@@ -283,20 +264,12 @@ class TestSymbolValidator:
 
         # Create circular inheritance
         symbol_a = SymbolDefinition(
-            lib_id="Device:A",
-            name="A",
-            library="Device",
-            reference_prefix="U",
-            extends="B"
+            lib_id="Device:A", name="A", library="Device", reference_prefix="U", extends="B"
         )
         cache.symbols["Device:A"] = symbol_a
 
         symbol_b = SymbolDefinition(
-            lib_id="Device:B",
-            name="B",
-            library="Device",
-            reference_prefix="U",
-            extends="A"
+            lib_id="Device:B", name="B", library="Device", reference_prefix="U", extends="A"
         )
         cache.symbols["Device:B"] = symbol_b
 
@@ -316,18 +289,11 @@ class TestSymbolValidator:
             library="Device",
             reference_prefix="U",
             pins=[
-                SchematicPin(
-                    number="1",
-                    name="Input",
-                    position=Point(0, 0),
-                    pin_type=PinType.INPUT
-                )
+                SchematicPin(number="1", name="Input", position=Point(0, 0), pin_type=PinType.INPUT)
             ],
-            graphic_elements=[
-                {"type": "rectangle", "points": [(0, 0), (1, 1)]}
-            ],
+            graphic_elements=[{"type": "rectangle", "points": [(0, 0), (1, 1)]}],
             units=1,
-            unit_names={1: "Main"}
+            unit_names={1: "Main"},
         )
 
         issues = validator.validate_symbol_integrity(symbol)
@@ -344,7 +310,7 @@ class TestSymbolValidator:
             lib_id="Device:BadPrefix",
             name="BadPrefix",
             library="Device",
-            reference_prefix="R-1"  # Invalid character
+            reference_prefix="R-1",  # Invalid character
         )
 
         issues = validator.validate_symbol(symbol)
@@ -362,7 +328,7 @@ class TestSymbolValidator:
             name="GenericIC",
             library="Device",
             reference_prefix="U",
-            description=""  # No description
+            description="",  # No description
         )
 
         issues = validator.validate_symbol(symbol)
@@ -380,7 +346,7 @@ class TestSymbolValidator:
             name="BadExtends",
             library="Device",
             reference_prefix="U",
-            extends=""  # Empty extends
+            extends="",  # Empty extends
         )
 
         issues = validator.validate_symbol(symbol)
@@ -398,7 +364,7 @@ class TestSymbolValidator:
             name="SelfRef",
             library="Device",
             reference_prefix="U",
-            extends="SelfRef"  # Self reference
+            extends="SelfRef",  # Self reference
         )
 
         issues = validator.validate_symbol(symbol)
@@ -419,11 +385,11 @@ class TestSymbolValidator:
             pins=[
                 SchematicPin(
                     number="",  # Missing number
-                    name="",    # Missing name
+                    name="",  # Missing name
                     position=Point(0, 0),
-                    pin_type=None  # Missing type
+                    pin_type=None,  # Missing type
                 )
-            ]
+            ],
         )
 
         issues = validator.validate_symbol(symbol)
@@ -452,21 +418,13 @@ class TestSymbolValidator:
             reference_prefix="U",
             units=3,
             pins=[
+                SchematicPin(number="1", name="Pin1", position=Point(0, 0), pin_type=PinType.INPUT),
                 SchematicPin(
-                    number="1",
-                    name="Pin1",
-                    position=Point(0, 0),
-                    pin_type=PinType.INPUT
+                    number="2", name="Pin2", position=Point(1, 0), pin_type=PinType.OUTPUT
                 ),
-                SchematicPin(
-                    number="2",
-                    name="Pin2",
-                    position=Point(1, 0),
-                    pin_type=PinType.OUTPUT
-                )
                 # Unit 3 has no pins
             ],
-            unit_names={1: "Unit A", 2: "Unit B"}  # Unit 3 missing name
+            unit_names={1: "Unit A", 2: "Unit B"},  # Unit 3 missing name
         )
 
         issues = validator.validate_symbol(symbol)
@@ -522,10 +480,7 @@ class TestSymbolValidator:
         validator._validation_rules["failing_rule"] = failing_rule
 
         symbol = SymbolDefinition(
-            lib_id="Device:Test",
-            name="Test",
-            library="Device",
-            reference_prefix="U"
+            lib_id="Device:Test", name="Test", library="Device", reference_prefix="U"
         )
 
         issues = validator.validate_symbol(symbol)

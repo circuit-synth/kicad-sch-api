@@ -47,7 +47,7 @@ class SheetManager:
         stroke_width: Optional[float] = None,
         stroke_type: str = "solid",
         project_name: Optional[str] = None,
-        page_number: Optional[str] = None
+        page_number: Optional[str] = None,
     ) -> str:
         """
         Add a hierarchical sheet to the schematic.
@@ -79,7 +79,7 @@ class SheetManager:
             sheet_pins = []
 
         # Validate filename
-        if not filename.endswith('.kicad_sch'):
+        if not filename.endswith(".kicad_sch"):
             filename = f"{filename}.kicad_sch"
 
         sheet_data = {
@@ -100,13 +100,8 @@ class SheetManager:
             "project_name": project_name,
             "page_number": page_number if page_number else "2",
             "instances": [
-                {
-                    "project": project_name,
-                    "path": f"/{uuid_str}",
-                    "reference": name,
-                    "unit": 1
-                }
-            ]
+                {"project": project_name, "path": f"/{uuid_str}", "reference": name, "unit": 1}
+            ],
         }
 
         # Add sheet pins if provided (though usually added separately)
@@ -129,7 +124,7 @@ class SheetManager:
         position: Union[Point, Tuple[float, float]],
         rotation: float = 0,
         justify: str = "left",
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> Optional[str]:
         """
         Add a pin to an existing sheet.
@@ -168,7 +163,7 @@ class SheetManager:
                     "position": {"x": position.x, "y": position.y},
                     "rotation": rotation,
                     "size": 1.27,
-                    "justify": justify
+                    "justify": justify,
                 }
 
                 # Add to sheet's pins array (already initialized in add_sheet)
@@ -253,7 +248,7 @@ class SheetManager:
             Sheet data or None if not found
         """
         # Normalize filename
-        if not filename.endswith('.kicad_sch'):
+        if not filename.endswith(".kicad_sch"):
             filename = f"{filename}.kicad_sch"
 
         sheets = self._data.get("sheets", [])
@@ -281,18 +276,18 @@ class SheetManager:
                         "uuid": pin.get("uuid"),
                         "name": pin.get("name"),
                         "pin_type": pin.get("pin_type"),
-                        "position": Point(pin["position"]["x"], pin["position"]["y"]) if "position" in pin else None,
-                        "data": pin
+                        "position": (
+                            Point(pin["position"]["x"], pin["position"]["y"])
+                            if "position" in pin
+                            else None
+                        ),
+                        "data": pin,
                     }
                     for pin in pins
                 ]
         return []
 
-    def update_sheet_size(
-        self,
-        sheet_uuid: str,
-        size: Union[Point, Tuple[float, float]]
-    ) -> bool:
+    def update_sheet_size(self, sheet_uuid: str, size: Union[Point, Tuple[float, float]]) -> bool:
         """
         Update sheet size.
 
@@ -317,9 +312,7 @@ class SheetManager:
         return False
 
     def update_sheet_position(
-        self,
-        sheet_uuid: str,
-        position: Union[Point, Tuple[float, float]]
+        self, sheet_uuid: str, position: Union[Point, Tuple[float, float]]
     ) -> bool:
         """
         Update sheet position.
@@ -353,13 +346,7 @@ class SheetManager:
         """
         sheets = self._data.get("sheets", [])
 
-        hierarchy = {
-            "root": {
-                "uuid": self._data.get("uuid"),
-                "name": "Root Sheet",
-                "children": []
-            }
-        }
+        hierarchy = {"root": {"uuid": self._data.get("uuid"), "name": "Root Sheet", "children": []}}
 
         # Build sheet tree
         for sheet in sheets:
@@ -368,8 +355,16 @@ class SheetManager:
                 "name": sheet.get("name"),
                 "filename": sheet.get("filename"),
                 "pin_count": len(sheet.get("pins", [])),
-                "position": Point(sheet["position"]["x"], sheet["position"]["y"]) if "position" in sheet else None,
-                "size": Point(sheet["size"]["width"], sheet["size"]["height"]) if "size" in sheet else None
+                "position": (
+                    Point(sheet["position"]["x"], sheet["position"]["y"])
+                    if "position" in sheet
+                    else None
+                ),
+                "size": (
+                    Point(sheet["size"]["width"], sheet["size"]["height"])
+                    if "size" in sheet
+                    else None
+                ),
             }
             hierarchy["root"]["children"].append(sheet_info)
 
@@ -390,7 +385,7 @@ class SheetManager:
             filename = sheet.get("filename")
 
             # Check filename format
-            if filename and not filename.endswith('.kicad_sch'):
+            if filename and not filename.endswith(".kicad_sch"):
                 warnings.append(f"Sheet '{sheet_name}' has invalid filename: {filename}")
 
             # Check for duplicate filenames
@@ -424,7 +419,7 @@ class SheetManager:
             "total_sheet_pins": total_pins,
             "average_pins_per_sheet": total_pins / len(sheets) if sheets else 0,
             "sheet_instances": len(sheet_instances),
-            "filenames": [sheet.get("filename") for sheet in sheets if sheet.get("filename")]
+            "filenames": [sheet.get("filename") for sheet in sheets if sheet.get("filename")],
         }
 
     def _remove_sheet_from_instances(self, sheet_uuid: str) -> None:
@@ -435,13 +430,7 @@ class SheetManager:
                 del sheet_instances[i]
                 break
 
-    def add_sheet_instance(
-        self,
-        sheet_uuid: str,
-        project: str,
-        path: str,
-        reference: str
-    ) -> None:
+    def add_sheet_instance(self, sheet_uuid: str, project: str, path: str, reference: str) -> None:
         """
         Add sheet instance tracking.
 
@@ -458,7 +447,7 @@ class SheetManager:
             "uuid": sheet_uuid,
             "project": project,
             "path": path,
-            "reference": reference
+            "reference": reference,
         }
 
         self._data["sheet_instances"].append(instance_data)

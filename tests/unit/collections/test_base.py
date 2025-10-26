@@ -5,8 +5,9 @@ Tests the core functionality of the unified collection architecture
 including indexing, modification tracking, and common operations.
 """
 
-import pytest
 from typing import Any, Dict
+
+import pytest
 
 from kicad_sch_api.collections.base import IndexedCollection
 
@@ -52,10 +53,7 @@ class TestIndexedCollection:
 
     def test_collection_initialization_with_items(self):
         """Test collection initializes with items correctly."""
-        items = [
-            MockItem("uuid1", "item1"),
-            MockItem("uuid2", "item2")
-        ]
+        items = [MockItem("uuid1", "item1"), MockItem("uuid2", "item2")]
         collection = MockCollection(items)
 
         assert len(collection) == 2
@@ -129,7 +127,7 @@ class TestIndexedCollection:
         items = [
             MockItem("uuid1", "test1", "value1"),
             MockItem("uuid2", "test2", "value2"),
-            MockItem("uuid3", "other", "value1")
+            MockItem("uuid3", "other", "value1"),
         ]
         for item in items:
             collection.add(item)
@@ -152,7 +150,7 @@ class TestIndexedCollection:
         items = [
             MockItem("uuid1", "test1", "value1"),
             MockItem("uuid2", "test2", "value2"),
-            MockItem("uuid3", "test1", "value2")
+            MockItem("uuid3", "test1", "value2"),
         ]
         for item in items:
             collection.add(item)
@@ -195,10 +193,7 @@ class TestIndexedCollection:
     def test_getitem_by_index(self):
         """Test accessing items by index."""
         collection = MockCollection()
-        items = [
-            MockItem("uuid1", "first"),
-            MockItem("uuid2", "second")
-        ]
+        items = [MockItem("uuid1", "first"), MockItem("uuid2", "second")]
         for item in items:
             collection.add(item)
 
@@ -208,10 +203,7 @@ class TestIndexedCollection:
     def test_iteration(self):
         """Test iterating over collection."""
         collection = MockCollection()
-        items = [
-            MockItem("uuid1", "first"),
-            MockItem("uuid2", "second")
-        ]
+        items = [MockItem("uuid1", "first"), MockItem("uuid2", "second")]
         for item in items:
             collection.add(item)
 
@@ -221,10 +213,7 @@ class TestIndexedCollection:
     def test_clear_collection(self):
         """Test clearing all items from collection."""
         collection = MockCollection()
-        items = [
-            MockItem("uuid1", "first"),
-            MockItem("uuid2", "second")
-        ]
+        items = [MockItem("uuid1", "first"), MockItem("uuid2", "second")]
         for item in items:
             collection.add(item)
 
@@ -257,10 +246,7 @@ class TestIndexedCollection:
     def test_index_rebuilding(self):
         """Test automatic index rebuilding."""
         collection = MockCollection()
-        items = [
-            MockItem("uuid1", "first"),
-            MockItem("uuid2", "second")
-        ]
+        items = [MockItem("uuid1", "first"), MockItem("uuid2", "second")]
         for item in items:
             collection.add(item)
 
@@ -272,10 +258,7 @@ class TestIndexedCollection:
     def test_get_statistics(self):
         """Test collection statistics."""
         collection = MockCollection()
-        items = [
-            MockItem("uuid1", "first"),
-            MockItem("uuid2", "second")
-        ]
+        items = [MockItem("uuid1", "first"), MockItem("uuid2", "second")]
         for item in items:
             collection.add(item)
 
@@ -308,6 +291,7 @@ class TestIndexedCollection:
 
     def test_error_handling_in_get_item_uuid(self):
         """Test error handling when _get_item_uuid fails."""
+
         class BrokenCollection(IndexedCollection):
             def _get_item_uuid(self, item):
                 raise ValueError("Broken UUID extraction")

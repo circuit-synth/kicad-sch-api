@@ -43,7 +43,7 @@ class TextElementManager:
         effects: Optional[Dict[str, Any]] = None,
         uuid_str: Optional[str] = None,
         rotation: float = 0,
-        size: Optional[float] = None
+        size: Optional[float] = None,
     ) -> str:
         """
         Add a text label to the schematic.
@@ -79,7 +79,7 @@ class TextElementManager:
             "uuid": uuid_str,
             "text": text,
             "at": [position.x, position.y, rotation],  # KiCAD format: [x, y, rotation]
-            "effects": effects
+            "effects": effects,
         }
 
         # Add to schematic data
@@ -96,7 +96,7 @@ class TextElementManager:
         position: Union[Point, Tuple[float, float]],
         shape: str = "input",
         effects: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add a hierarchical label (for sheet connections).
@@ -130,7 +130,7 @@ class TextElementManager:
             "text": text,
             "shape": shape,
             "at": [position.x, position.y, 0],
-            "effects": effects
+            "effects": effects,
         }
 
         # Add to schematic data
@@ -147,7 +147,7 @@ class TextElementManager:
         position: Union[Point, Tuple[float, float]],
         shape: str = "input",
         effects: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add a global label (for project-wide connections).
@@ -181,7 +181,7 @@ class TextElementManager:
             "text": text,
             "shape": shape,
             "at": [position.x, position.y, 0],
-            "effects": effects
+            "effects": effects,
         }
 
         # Add to schematic data
@@ -197,7 +197,7 @@ class TextElementManager:
         text: str,
         position: Union[Point, Tuple[float, float]],
         effects: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add free text annotation.
@@ -224,7 +224,7 @@ class TextElementManager:
             "uuid": uuid_str,
             "text": text,
             "at": [position.x, position.y, 0],
-            "effects": effects
+            "effects": effects,
         }
 
         # Add to schematic data
@@ -251,7 +251,7 @@ class TextElementManager:
         exclude_from_sim: bool = False,
         effects: Optional[Dict[str, Any]] = None,
         stroke: Optional[Dict[str, Any]] = None,
-        uuid_str: Optional[str] = None
+        uuid_str: Optional[str] = None,
     ) -> str:
         """
         Add a text box with border.
@@ -304,7 +304,7 @@ class TextElementManager:
             "fill_type": fill_type,
             "font_size": font_size,
             "justify_horizontal": justify_horizontal,
-            "justify_vertical": justify_vertical
+            "justify_vertical": justify_vertical,
         }
 
         # Add to schematic data (note: plural "text_boxes")
@@ -376,9 +376,7 @@ class TextElementManager:
         return self._remove_text_element_by_uuid("text_boxes", uuid_str)
 
     def get_labels_at_position(
-        self,
-        position: Union[Point, Tuple[float, float]],
-        tolerance: float = 1.0
+        self, position: Union[Point, Tuple[float, float]], tolerance: float = 1.0
     ) -> List[Dict[str, Any]]:
         """
         Get all labels near a position.
@@ -399,21 +397,19 @@ class TextElementManager:
             for label in labels:
                 label_pos = Point(label["at"][0], label["at"][1])
                 if label_pos.distance_to(position) <= tolerance:
-                    matches.append({
-                        "type": label_type,
-                        "data": label,
-                        "uuid": label.get("uuid"),
-                        "text": label.get("text"),
-                        "position": label_pos
-                    })
+                    matches.append(
+                        {
+                            "type": label_type,
+                            "data": label,
+                            "uuid": label.get("uuid"),
+                            "text": label.get("text"),
+                            "position": label_pos,
+                        }
+                    )
 
         return matches
 
-    def update_text_effects(
-        self,
-        uuid_str: str,
-        effects: Dict[str, Any]
-    ) -> bool:
+    def update_text_effects(self, uuid_str: str, effects: Dict[str, Any]) -> bool:
         """
         Update text effects for any text element.
 
@@ -449,8 +445,16 @@ class TextElementManager:
                 {
                     "uuid": elem.get("uuid"),
                     "text": elem.get("text"),
-                    "position": Point(elem["at"][0], elem["at"][1]) if "at" in elem else Point(elem["position"]["x"], elem["position"]["y"]) if "position" in elem else None,
-                    "data": elem
+                    "position": (
+                        Point(elem["at"][0], elem["at"][1])
+                        if "at" in elem
+                        else (
+                            Point(elem["position"]["x"], elem["position"]["y"])
+                            if "position" in elem
+                            else None
+                        )
+                    ),
+                    "data": elem,
                 }
                 for elem in elements
             ]
@@ -487,13 +491,7 @@ class TextElementManager:
 
     def _get_default_text_effects(self) -> Dict[str, Any]:
         """Get default text effects configuration."""
-        return {
-            "font": {
-                "size": [1.27, 1.27],
-                "thickness": 0.254
-            },
-            "justify": ["left"]
-        }
+        return {"font": {"size": [1.27, 1.27], "thickness": 0.254}, "justify": ["left"]}
 
     def validate_text_positions(self) -> List[str]:
         """
@@ -515,17 +513,19 @@ class TextElementManager:
                     position = Point(element["position"]["x"], element["position"]["y"])
                 else:
                     continue
-                all_elements.append({
-                    "type": text_type,
-                    "position": position,
-                    "text": element.get("text", ""),
-                    "uuid": element.get("uuid")
-                })
+                all_elements.append(
+                    {
+                        "type": text_type,
+                        "position": position,
+                        "text": element.get("text", ""),
+                        "uuid": element.get("uuid"),
+                    }
+                )
 
         # Check for overlapping elements
         overlap_threshold = 2.0  # Minimum distance
         for i, elem1 in enumerate(all_elements):
-            for elem2 in all_elements[i+1:]:
+            for elem2 in all_elements[i + 1 :]:
                 distance = elem1["position"].distance_to(elem2["position"])
                 if distance < overlap_threshold:
                     warnings.append(

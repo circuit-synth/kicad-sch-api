@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import sexpdata
 
-from ..library.cache import SymbolDefinition, LibraryStats
+from ..library.cache import LibraryStats, SymbolDefinition
 from ..utils.validation import ValidationError
 
 logger = logging.getLogger(__name__)
@@ -199,7 +199,7 @@ class SymbolCache(ISymbolCache):
             library_path=library_path,
             file_size=stat.st_size,
             last_modified=stat.st_mtime,
-            symbol_count=0  # Will be updated when library is loaded
+            symbol_count=0,  # Will be updated when library is loaded
         )
 
         logger.info(f"Added library: {library_name} ({library_path})")
@@ -257,10 +257,10 @@ class SymbolCache(ISymbolCache):
                 name: {
                     "file_size": stats.file_size,
                     "symbols_count": stats.symbols_count,
-                    "last_loaded": stats.last_loaded
+                    "last_loaded": stats.last_loaded,
                 }
                 for name, stats in self._lib_stats.items()
-            }
+            },
         }
 
     # Private methods for implementation details
@@ -316,10 +316,7 @@ class SymbolCache(ISymbolCache):
         return None
 
     def _create_symbol_definition(
-        self,
-        symbol_data: List,
-        lib_id: str,
-        library_name: str
+        self, symbol_data: List, lib_id: str, library_name: str
     ) -> SymbolDefinition:
         """Create SymbolDefinition from parsed symbol data."""
         symbol_name = str(symbol_data[1]).strip('"')
@@ -345,7 +342,7 @@ class SymbolCache(ISymbolCache):
             power_symbol=properties.get("power_symbol", False),
             graphic_elements=graphic_elements,
             raw_kicad_data=symbol_data,
-            extends=extends  # Store extends information for resolver
+            extends=extends,  # Store extends information for resolver
         )
 
     def _extract_symbol_properties(self, symbol_data: List) -> Dict[str, Any]:
@@ -356,7 +353,7 @@ class SymbolCache(ISymbolCache):
             "keywords": "",
             "datasheet": "",
             "units": 1,
-            "power_symbol": False
+            "power_symbol": False,
         }
 
         for item in symbol_data[1:]:
@@ -446,7 +443,7 @@ class SymbolCache(ISymbolCache):
             index_data = {
                 "symbol_index": self._symbol_index,
                 "library_paths": [str(path) for path in self._library_paths],
-                "created": time.time()
+                "created": time.time(),
             }
 
             with open(self._index_file, "w") as f:

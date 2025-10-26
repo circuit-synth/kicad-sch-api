@@ -366,10 +366,7 @@ class SchematicRectangle:
     @property
     def center(self) -> Point:
         """Rectangle center point."""
-        return Point(
-            (self.start.x + self.end.x) / 2,
-            (self.start.y + self.end.y) / 2
-        )
+        return Point((self.start.x + self.end.x) / 2, (self.start.y + self.end.y) / 2)
 
 
 @dataclass

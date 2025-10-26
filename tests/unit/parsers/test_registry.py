@@ -5,13 +5,13 @@ Tests the parser registry functionality including registration,
 dispatching, and error handling.
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
-from kicad_sch_api.parsers.registry import ElementParserRegistry
-from kicad_sch_api.parsers.base import BaseElementParser
-from kicad_sch_api.interfaces.parser import IElementParser
+import pytest
 
+from kicad_sch_api.interfaces.parser import IElementParser
+from kicad_sch_api.parsers.base import BaseElementParser
+from kicad_sch_api.parsers.registry import ElementParserRegistry
 
 _UNSET = object()  # Sentinel value
 
@@ -149,7 +149,7 @@ class TestElementParserRegistry:
         elements = [
             ["type1", "data1"],
             ["type2", "data2"],
-            ["unknown", "data3"]  # This should be skipped
+            ["unknown", "data3"],  # This should be skipped
         ]
 
         results = registry.parse_elements(elements)

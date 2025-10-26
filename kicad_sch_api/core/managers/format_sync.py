@@ -9,8 +9,8 @@ and tracking changes for efficient updates.
 import logging
 from typing import Any, Dict, List, Optional, Set, Union
 
-from ..types import Point, Wire
 from ..components import Component
+from ..types import Point, Wire
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,9 @@ class FormatSyncManager:
         self._change_log: List[Dict[str, Any]] = []
         self._sync_lock = False
 
-    def mark_dirty(self, section: str, operation: str = "update", context: Optional[Dict] = None) -> None:
+    def mark_dirty(
+        self, section: str, operation: str = "update", context: Optional[Dict] = None
+    ) -> None:
         """
         Mark a data section as dirty for synchronization.
 
@@ -58,7 +60,7 @@ class FormatSyncManager:
             "section": section,
             "operation": operation,
             "timestamp": None,  # Would use datetime in real implementation
-            "context": context or {}
+            "context": context or {},
         }
         self._change_log.append(change_entry)
 
@@ -364,7 +366,9 @@ class FormatSyncManager:
         self._change_log.clear()
         logger.debug("Cleared change log")
 
-    def _update_symbol_data_from_component(self, symbol_data: Dict[str, Any], component: Component) -> None:
+    def _update_symbol_data_from_component(
+        self, symbol_data: Dict[str, Any], component: Component
+    ) -> None:
         """Update symbol S-expression data from component object."""
         # Update position and rotation
         symbol_data["at"] = [component.position.x, component.position.y, component.rotation]
@@ -396,17 +400,14 @@ class FormatSyncManager:
                     "name": name,
                     "value": value,
                     "at": [0, 0, 0],  # Default position
-                    "effects": {"font": {"size": [1.27, 1.27]}}
+                    "effects": {"font": {"size": [1.27, 1.27]}},
                 }
                 properties.append(new_prop)
 
     def _update_wire_data_from_object(self, wire_data: Dict[str, Any], wire: Wire) -> None:
         """Update wire S-expression data from wire object."""
         # Update endpoints
-        wire_data["pts"] = [
-            {"xy": [wire.start.x, wire.start.y]},
-            {"xy": [wire.end.x, wire.end.y]}
-        ]
+        wire_data["pts"] = [{"xy": [wire.start.x, wire.start.y]}, {"xy": [wire.end.x, wire.end.y]}]
 
         # Update stroke
         if "stroke" not in wire_data:
@@ -420,7 +421,7 @@ class FormatSyncManager:
             "lib_id": component.lib_id,
             "at": [component.position.x, component.position.y, component.rotation],
             "uuid": component.uuid,
-            "property": []
+            "property": [],
         }
 
         # Add properties
@@ -429,7 +430,7 @@ class FormatSyncManager:
                 "name": name,
                 "value": value,
                 "at": [0, 0, 0],  # Default position relative to symbol
-                "effects": {"font": {"size": [1.27, 1.27]}}
+                "effects": {"font": {"size": [1.27, 1.27]}},
             }
             symbol_data["property"].append(prop_data)
 
@@ -438,20 +439,16 @@ class FormatSyncManager:
     def _create_wire_data_from_object(self, wire: Wire) -> Dict[str, Any]:
         """Create S-expression data structure from wire object."""
         wire_data = {
-            "pts": [
-                {"xy": [wire.start.x, wire.start.y]},
-                {"xy": [wire.end.x, wire.end.y]}
-            ],
-            "stroke": {
-                "width": wire.stroke_width,
-                "type": "default"
-            },
-            "uuid": wire.uuid
+            "pts": [{"xy": [wire.start.x, wire.start.y]}, {"xy": [wire.end.x, wire.end.y]}],
+            "stroke": {"width": wire.stroke_width, "type": "default"},
+            "uuid": wire.uuid,
         }
 
         return wire_data
 
-    def validate_data_consistency(self, component_collection=None, wire_collection=None) -> List[str]:
+    def validate_data_consistency(
+        self, component_collection=None, wire_collection=None
+    ) -> List[str]:
         """
         Validate consistency between objects and S-expression data.
 

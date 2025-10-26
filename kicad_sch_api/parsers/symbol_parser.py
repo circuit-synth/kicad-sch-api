@@ -44,7 +44,7 @@ class SymbolParser(BaseElementParser):
             "fields_autoplaced": False,
             "uuid": None,
             "properties": [],
-            "instances": []
+            "instances": [],
         }
 
         for elem in element[1:]:
@@ -112,7 +112,7 @@ class SymbolParser(BaseElementParser):
             "name": str(prop_element[1]),
             "value": str(prop_element[2]),
             "position": {"x": 0, "y": 0, "angle": 0},
-            "effects": {}
+            "effects": {},
         }
 
         # Parse additional property elements
@@ -145,7 +145,7 @@ class SymbolParser(BaseElementParser):
             "bold": False,
             "italic": False,
             "hide": False,
-            "justify": []
+            "justify": [],
         }
 
         for elem in effects_element[1:]:
@@ -193,12 +193,7 @@ class SymbolParser(BaseElementParser):
 
     def _parse_instance(self, instance_element: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a single instance element."""
-        instance = {
-            "project": "",
-            "path": "",
-            "reference": "",
-            "unit": 1
-        }
+        instance = {"project": "", "path": "", "reference": "", "unit": 1}
 
         for elem in instance_element[1:]:
             if isinstance(elem, list) and len(elem) >= 2:

@@ -498,7 +498,7 @@ class SExpressionParser:
             "stroke_width": 0.0,
             "stroke_type": "default",
             "uuid": None,
-            "wire_type": "wire"  # Default to wire (vs bus)
+            "wire_type": "wire",  # Default to wire (vs bus)
         }
 
         for elem in item[1:]:
@@ -541,7 +541,7 @@ class SExpressionParser:
             "position": {"x": 0, "y": 0},
             "diameter": 0,
             "color": (0, 0, 0, 0),
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[1:]:
@@ -563,7 +563,12 @@ class SExpressionParser:
             elif elem_type == "color":
                 # Parse color: (color r g b a)
                 if len(elem) >= 5:
-                    junction_data["color"] = (int(elem[1]), int(elem[2]), int(elem[3]), int(elem[4]))
+                    junction_data["color"] = (
+                        int(elem[1]),
+                        int(elem[2]),
+                        int(elem[3]),
+                        int(elem[4]),
+                    )
 
             elif elem_type == "uuid":
                 junction_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
@@ -581,7 +586,7 @@ class SExpressionParser:
             "position": {"x": 0, "y": 0},
             "rotation": 0,
             "size": 1.27,
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[2:]:  # Skip label keyword and text
@@ -624,7 +629,7 @@ class SExpressionParser:
             "rotation": 0,
             "size": 1.27,
             "justify": "left",
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[2:]:  # Skip hierarchical_label keyword and text
@@ -649,7 +654,11 @@ class SExpressionParser:
                 # Parse effects for font size and justification: (effects (font (size x y)) (justify left))
                 for effect_elem in elem[1:]:
                     if isinstance(effect_elem, list):
-                        effect_type = str(effect_elem[0]) if isinstance(effect_elem[0], sexpdata.Symbol) else None
+                        effect_type = (
+                            str(effect_elem[0])
+                            if isinstance(effect_elem[0], sexpdata.Symbol)
+                            else None
+                        )
 
                         if effect_type == "font":
                             # Parse font size
@@ -671,10 +680,7 @@ class SExpressionParser:
     def _parse_no_connect(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a no_connect symbol."""
         # Format: (no_connect (at x y) (uuid ...))
-        no_connect_data = {
-            "position": {"x": 0, "y": 0},
-            "uuid": None
-        }
+        no_connect_data = {"position": {"x": 0, "y": 0}, "uuid": None}
 
         for elem in item[1:]:
             if not isinstance(elem, list):
@@ -702,7 +708,7 @@ class SExpressionParser:
             "position": {"x": 0, "y": 0},
             "rotation": 0,
             "size": 1.27,
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[2:]:
@@ -750,7 +756,7 @@ class SExpressionParser:
             "font_size": 1.27,
             "justify_horizontal": "left",
             "justify_vertical": "top",
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[2:]:
@@ -772,7 +778,12 @@ class SExpressionParser:
                     text_box_data["size"] = {"width": float(elem[1]), "height": float(elem[2])}
             elif elem_type == "margins":
                 if len(elem) >= 5:
-                    text_box_data["margins"] = (float(elem[1]), float(elem[2]), float(elem[3]), float(elem[4]))
+                    text_box_data["margins"] = (
+                        float(elem[1]),
+                        float(elem[2]),
+                        float(elem[3]),
+                        float(elem[4]),
+                    )
             elif elem_type == "stroke":
                 for stroke_elem in elem[1:]:
                     if isinstance(stroke_elem, list):
@@ -784,7 +795,9 @@ class SExpressionParser:
             elif elem_type == "fill":
                 for fill_elem in elem[1:]:
                     if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
-                        text_box_data["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        text_box_data["fill_type"] = (
+                            str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        )
             elif elem_type == "effects":
                 for effect_elem in elem[1:]:
                     if isinstance(effect_elem, list):
@@ -823,7 +836,7 @@ class SExpressionParser:
             "filename": "sheet.kicad_sch",
             "pins": [],
             "project_name": "",
-            "page_number": "2"
+            "page_number": "2",
         }
 
         for elem in item[1:]:
@@ -860,7 +873,12 @@ class SExpressionParser:
                 for fill_elem in elem[1:]:
                     if isinstance(fill_elem, list) and str(fill_elem[0]) == "color":
                         if len(fill_elem) >= 5:
-                            sheet_data["fill_color"] = (int(fill_elem[1]), int(fill_elem[2]), int(fill_elem[3]), float(fill_elem[4]))
+                            sheet_data["fill_color"] = (
+                                int(fill_elem[1]),
+                                int(fill_elem[2]),
+                                int(fill_elem[3]),
+                                float(fill_elem[4]),
+                            )
             elif elem_type == "uuid":
                 sheet_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
             elif elem_type == "property":
@@ -886,7 +904,9 @@ class SExpressionParser:
                             if isinstance(path_elem, list) and str(path_elem[0]) == "path":
                                 for page_elem in path_elem[1:]:
                                     if isinstance(page_elem, list) and str(page_elem[0]) == "page":
-                                        sheet_data["page_number"] = str(page_elem[1]) if len(page_elem) > 1 else "2"
+                                        sheet_data["page_number"] = (
+                                            str(page_elem[1]) if len(page_elem) > 1 else "2"
+                                        )
 
         return sheet_data
 
@@ -903,7 +923,7 @@ class SExpressionParser:
             "rotation": 0,
             "size": 1.27,
             "justify": "right",
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[3:]:
@@ -937,12 +957,7 @@ class SExpressionParser:
     def _parse_polyline(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a polyline graphical element."""
         # Format: (polyline (pts (xy x1 y1) (xy x2 y2) ...) (stroke ...) (uuid ...))
-        polyline_data = {
-            "points": [],
-            "stroke_width": 0,
-            "stroke_type": "default",
-            "uuid": None
-        }
+        polyline_data = {"points": [], "stroke_width": 0, "stroke_type": "default", "uuid": None}
 
         for elem in item[1:]:
             if not isinstance(elem, list):
@@ -977,7 +992,7 @@ class SExpressionParser:
             "stroke_width": 0,
             "stroke_type": "default",
             "fill_type": "none",
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[1:]:
@@ -1018,7 +1033,7 @@ class SExpressionParser:
             "stroke_width": 0,
             "stroke_type": "default",
             "fill_type": "none",
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[1:]:
@@ -1042,7 +1057,9 @@ class SExpressionParser:
             elif elem_type == "fill":
                 for fill_elem in elem[1:]:
                     if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
-                        circle_data["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        circle_data["fill_type"] = (
+                            str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        )
             elif elem_type == "uuid":
                 circle_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
 
@@ -1056,7 +1073,7 @@ class SExpressionParser:
             "stroke_width": 0,
             "stroke_type": "default",
             "fill_type": "none",
-            "uuid": None
+            "uuid": None,
         }
 
         for elem in item[1:]:
@@ -1080,7 +1097,9 @@ class SExpressionParser:
             elif elem_type == "fill":
                 for fill_elem in elem[1:]:
                     if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
-                        bezier_data["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        bezier_data["fill_type"] = (
+                            str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        )
             elif elem_type == "uuid":
                 bezier_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
 
@@ -1111,7 +1130,9 @@ class SExpressionParser:
             elif elem_type == "fill":
                 for fill_elem in elem[1:]:
                     if isinstance(fill_elem, list) and str(fill_elem[0]) == "type":
-                        rectangle["fill_type"] = str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        rectangle["fill_type"] = (
+                            str(fill_elem[1]) if len(fill_elem) >= 2 else "none"
+                        )
             elif elem_type == "uuid" and len(elem) >= 2:
                 rectangle["uuid"] = str(elem[1])
 
@@ -1120,12 +1141,7 @@ class SExpressionParser:
     def _parse_image(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse an image element."""
         # Format: (image (at x y) (uuid "...") (data "base64..."))
-        image = {
-            "position": {"x": 0, "y": 0},
-            "data": "",
-            "scale": 1.0,
-            "uuid": None
-        }
+        image = {"position": {"x": 0, "y": 0}, "data": "", "scale": 1.0, "uuid": None}
 
         for elem in item[1:]:
             if not isinstance(elem, list):
@@ -1264,14 +1280,24 @@ class SExpressionParser:
         if hierarchy_path:
             # Use the full hierarchical path (includes root + all sheet symbols)
             instance_path = hierarchy_path
-            logger.debug(f"🔧 Using FULL hierarchy_path: {instance_path} for component {symbol_data.get('reference', 'unknown')}")
+            logger.debug(
+                f"🔧 Using FULL hierarchy_path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
+            )
         else:
             # Fallback: use root_uuid or schematic_uuid for flat designs
-            root_uuid = symbol_data.get("properties", {}).get("root_uuid") or schematic_uuid or str(uuid.uuid4())
+            root_uuid = (
+                symbol_data.get("properties", {}).get("root_uuid")
+                or schematic_uuid
+                or str(uuid.uuid4())
+            )
             instance_path = f"/{root_uuid}"
-            logger.debug(f"🔧 Using root UUID path: {instance_path} for component {symbol_data.get('reference', 'unknown')}")
+            logger.debug(
+                f"🔧 Using root UUID path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
+            )
 
-        logger.debug(f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}")
+        logger.debug(
+            f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}"
+        )
         logger.debug(f"🔧 Using project name: '{project_name}'")
 
         sexp.append(
@@ -2008,7 +2034,7 @@ class SExpressionParser:
             # Split the data into 76-character chunks
             chunk_size = 76
             for i in range(0, len(data), chunk_size):
-                data_sexp.append(data[i:i+chunk_size])
+                data_sexp.append(data[i : i + chunk_size])
             sexp.append(data_sexp)
 
         return sexp

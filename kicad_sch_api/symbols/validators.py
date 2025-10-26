@@ -51,12 +51,14 @@ class SymbolValidator:
                 rule_issues = rule_func(symbol)
                 issues.extend(rule_issues)
             except Exception as e:
-                issues.append(ValidationIssue(
-                    category="validation",
-                    message=f"Validation rule '{rule_name}' failed: {e}",
-                    level="error",
-                    context={"symbol": symbol.lib_id, "rule": rule_name}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="validation",
+                        message=f"Validation rule '{rule_name}' failed: {e}",
+                        level="error",
+                        context={"symbol": symbol.lib_id, "rule": rule_name},
+                    )
+                )
 
         return issues
 
@@ -99,12 +101,14 @@ class SymbolValidator:
             return issues
 
         if not self._cache:
-            issues.append(ValidationIssue(
-                category="inheritance",
-                message="Cannot validate inheritance without cache",
-                level="warning",
-                context={"symbol": symbol.lib_id}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="inheritance",
+                    message="Cannot validate inheritance without cache",
+                    level="warning",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
             return issues
 
         # Check for inheritance chain issues
@@ -113,24 +117,28 @@ class SymbolValidator:
 
         while current_lib_id:
             if current_lib_id in visited:
-                issues.append(ValidationIssue(
-                    category="inheritance",
-                    message=f"Circular inheritance detected in chain starting from {symbol.lib_id}",
-                    level="error",
-                    context={"symbol": symbol.lib_id, "cycle_point": current_lib_id}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="inheritance",
+                        message=f"Circular inheritance detected in chain starting from {symbol.lib_id}",
+                        level="error",
+                        context={"symbol": symbol.lib_id, "cycle_point": current_lib_id},
+                    )
+                )
                 break
 
             visited.add(current_lib_id)
             current_symbol = self._cache.get_symbol(current_lib_id)
 
             if not current_symbol:
-                issues.append(ValidationIssue(
-                    category="inheritance",
-                    message=f"Missing symbol in inheritance chain: {current_lib_id}",
-                    level="error",
-                    context={"symbol": symbol.lib_id, "missing": current_lib_id}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="inheritance",
+                        message=f"Missing symbol in inheritance chain: {current_lib_id}",
+                        level="error",
+                        context={"symbol": symbol.lib_id, "missing": current_lib_id},
+                    )
+                )
                 break
 
             if not current_symbol.extends:
@@ -145,12 +153,14 @@ class SymbolValidator:
 
             # Check if parent exists
             if not self._cache.has_symbol(current_lib_id):
-                issues.append(ValidationIssue(
-                    category="inheritance",
-                    message=f"Parent symbol not found: {current_lib_id}",
-                    level="error",
-                    context={"symbol": symbol.lib_id, "parent": current_lib_id}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="inheritance",
+                        message=f"Parent symbol not found: {current_lib_id}",
+                        level="error",
+                        context={"symbol": symbol.lib_id, "parent": current_lib_id},
+                    )
+                )
                 break
 
         return issues
@@ -199,12 +209,14 @@ class SymbolValidator:
         issues = []
 
         if not self.validate_lib_id(symbol.lib_id):
-            issues.append(ValidationIssue(
-                category="lib_id",
-                message=f"Invalid lib_id format: {symbol.lib_id}",
-                level="error",
-                context={"symbol": symbol.lib_id}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="lib_id",
+                    message=f"Invalid lib_id format: {symbol.lib_id}",
+                    level="error",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
 
         return issues
 
@@ -213,28 +225,34 @@ class SymbolValidator:
         issues = []
 
         if not symbol.name:
-            issues.append(ValidationIssue(
-                category="required_fields",
-                message="Symbol name is required",
-                level="error",
-                context={"symbol": symbol.lib_id}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="required_fields",
+                    message="Symbol name is required",
+                    level="error",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
 
         if not symbol.library:
-            issues.append(ValidationIssue(
-                category="required_fields",
-                message="Symbol library is required",
-                level="error",
-                context={"symbol": symbol.lib_id}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="required_fields",
+                    message="Symbol library is required",
+                    level="error",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
 
         if not symbol.reference_prefix:
-            issues.append(ValidationIssue(
-                category="required_fields",
-                message="Symbol reference prefix is missing",
-                level="warning",
-                context={"symbol": symbol.lib_id}
-            ))
+            issues.append(
+                ValidationIssue(
+                    category="required_fields",
+                    message="Symbol reference prefix is missing",
+                    level="warning",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
 
         return issues
 
@@ -244,23 +262,29 @@ class SymbolValidator:
 
         if symbol.reference_prefix:
             # Check for invalid characters
-            invalid_chars = set(symbol.reference_prefix) - set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
+            invalid_chars = set(symbol.reference_prefix) - set(
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+            )
             if invalid_chars:
-                issues.append(ValidationIssue(
-                    category="reference_prefix",
-                    message=f"Reference prefix contains invalid characters: {invalid_chars}",
-                    level="warning",
-                    context={"symbol": symbol.lib_id, "prefix": symbol.reference_prefix}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="reference_prefix",
+                        message=f"Reference prefix contains invalid characters: {invalid_chars}",
+                        level="warning",
+                        context={"symbol": symbol.lib_id, "prefix": symbol.reference_prefix},
+                    )
+                )
 
             # Check for common patterns
             if symbol.reference_prefix.lower() in ["u", "ic"] and not symbol.description:
-                issues.append(ValidationIssue(
-                    category="reference_prefix",
-                    message="Generic IC prefix 'U' - consider adding description",
-                    level="info",
-                    context={"symbol": symbol.lib_id}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="reference_prefix",
+                        message="Generic IC prefix 'U' - consider adding description",
+                        level="info",
+                        context={"symbol": symbol.lib_id},
+                    )
+                )
 
         return issues
 
@@ -269,12 +293,14 @@ class SymbolValidator:
         issues = []
 
         if not symbol.pins:
-            issues.append(ValidationIssue(
+            issues.append(
+                ValidationIssue(
                     category="symbol",
                     level="warning",
-                message="Symbol has no pins defined",
-                context={"symbol": symbol.lib_id}
-            ))
+                    message="Symbol has no pins defined",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
             return issues
 
         # Check for duplicate pin numbers
@@ -282,24 +308,28 @@ class SymbolValidator:
         duplicates = set([num for num in pin_numbers if pin_numbers.count(num) > 1])
 
         if duplicates:
-            issues.append(ValidationIssue(
+            issues.append(
+                ValidationIssue(
                     category="symbol",
                     level="error",
-                message=f"Duplicate pin numbers found: {duplicates}",
-                context={"symbol": symbol.lib_id, "duplicates": list(duplicates)}
-            ))
+                    message=f"Duplicate pin numbers found: {duplicates}",
+                    context={"symbol": symbol.lib_id, "duplicates": list(duplicates)},
+                )
+            )
 
         # Check for pins with same position
         pin_positions = [(pin.position.x, pin.position.y) for pin in symbol.pins]
         for i, pos1 in enumerate(pin_positions):
-            for j, pos2 in enumerate(pin_positions[i+1:], i+1):
+            for j, pos2 in enumerate(pin_positions[i + 1 :], i + 1):
                 if pos1 == pos2:
-                    issues.append(ValidationIssue(
-                    category="symbol",
-                    level="warning",
-                        message=f"Pins at same position: {symbol.pins[i].number} and {symbol.pins[j].number}",
-                        context={"symbol": symbol.lib_id, "position": pos1}
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            category="symbol",
+                            level="warning",
+                            message=f"Pins at same position: {symbol.pins[i].number} and {symbol.pins[j].number}",
+                            context={"symbol": symbol.lib_id, "position": pos1},
+                        )
+                    )
 
         return issues
 
@@ -308,23 +338,27 @@ class SymbolValidator:
         issues = []
 
         if symbol.units < 1:
-            issues.append(ValidationIssue(
+            issues.append(
+                ValidationIssue(
                     category="symbol",
                     level="error",
-                message=f"Invalid unit count: {symbol.units}",
-                context={"symbol": symbol.lib_id}
-            ))
+                    message=f"Invalid unit count: {symbol.units}",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
 
         # Check unit names consistency
         if symbol.unit_names:
             for unit_num in symbol.unit_names:
                 if unit_num < 1 or unit_num > symbol.units:
-                    issues.append(ValidationIssue(
-                    category="symbol",
-                    level="warning",
-                        message=f"Unit name defined for invalid unit number: {unit_num}",
-                        context={"symbol": symbol.lib_id, "unit": unit_num}
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            category="symbol",
+                            level="warning",
+                            message=f"Unit name defined for invalid unit number: {unit_num}",
+                            context={"symbol": symbol.lib_id, "unit": unit_num},
+                        )
+                    )
 
         return issues
 
@@ -335,21 +369,25 @@ class SymbolValidator:
         if symbol.extends is not None:
             # Check extends format
             if not symbol.extends.strip():
-                issues.append(ValidationIssue(
-                    category="symbol",
-                    level="error",
-                    message="Empty extends directive",
-                    context={"symbol": symbol.lib_id}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="symbol",
+                        level="error",
+                        message="Empty extends directive",
+                        context={"symbol": symbol.lib_id},
+                    )
+                )
 
             # Check for self-reference
             if symbol.extends == symbol.name:
-                issues.append(ValidationIssue(
-                    category="symbol",
-                    level="error",
-                    message="Symbol cannot extend itself",
-                    context={"symbol": symbol.lib_id}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="symbol",
+                        level="error",
+                        message="Symbol cannot extend itself",
+                        context={"symbol": symbol.lib_id},
+                    )
+                )
 
         return issues
 
@@ -360,30 +398,36 @@ class SymbolValidator:
         for pin in symbol.pins:
             # Validate pin number
             if not pin.number:
-                issues.append(ValidationIssue(
-                    category="symbol",
-                    level="error",
-                    message="Pin missing number",
-                    context={"symbol": symbol.lib_id}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="symbol",
+                        level="error",
+                        message="Pin missing number",
+                        context={"symbol": symbol.lib_id},
+                    )
+                )
 
             # Validate pin name
             if not pin.name:
-                issues.append(ValidationIssue(
-                    category="symbol",
-                    level="warning",
-                    message=f"Pin {pin.number} missing name",
-                    context={"symbol": symbol.lib_id, "pin": pin.number}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        category="symbol",
+                        level="warning",
+                        message=f"Pin {pin.number} missing name",
+                        context={"symbol": symbol.lib_id, "pin": pin.number},
+                    )
+                )
 
             # Validate pin type
-            if not hasattr(pin, 'pin_type') or not pin.pin_type:
-                issues.append(ValidationIssue(
-                    category="symbol",
-                    level="warning",
-                    message=f"Pin {pin.number} missing pin type",
-                    context={"symbol": symbol.lib_id, "pin": pin.number}
-                ))
+            if not hasattr(pin, "pin_type") or not pin.pin_type:
+                issues.append(
+                    ValidationIssue(
+                        category="symbol",
+                        level="warning",
+                        message=f"Pin {pin.number} missing pin type",
+                        context={"symbol": symbol.lib_id, "pin": pin.number},
+                    )
+                )
 
         return issues
 
@@ -392,12 +436,14 @@ class SymbolValidator:
         issues = []
 
         if not symbol.graphic_elements:
-            issues.append(ValidationIssue(
+            issues.append(
+                ValidationIssue(
                     category="symbol",
                     level="info",
-                message="Symbol has no graphic elements",
-                context={"symbol": symbol.lib_id}
-            ))
+                    message="Symbol has no graphic elements",
+                    context={"symbol": symbol.lib_id},
+                )
+            )
 
         # Could add more graphic validation here
         # - Check for overlapping elements
@@ -414,7 +460,7 @@ class SymbolValidator:
         if symbol.units > 1:
             unit_pins = {}
             for pin in symbol.pins:
-                unit = getattr(pin, 'unit', 1)
+                unit = getattr(pin, "unit", 1)
                 if unit not in unit_pins:
                     unit_pins[unit] = []
                 unit_pins[unit].append(pin)
@@ -422,12 +468,14 @@ class SymbolValidator:
             # Check for empty units
             for unit_num in range(1, symbol.units + 1):
                 if unit_num not in unit_pins:
-                    issues.append(ValidationIssue(
-                    category="symbol",
-                    level="warning",
-                        message=f"Unit {unit_num} has no pins",
-                        context={"symbol": symbol.lib_id, "unit": unit_num}
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            category="symbol",
+                            level="warning",
+                            message=f"Unit {unit_num} has no pins",
+                            context={"symbol": symbol.lib_id, "unit": unit_num},
+                        )
+                    )
 
         return issues
 
@@ -446,8 +494,11 @@ class SymbolValidator:
             "error_count": len([i for i in issues if i.level.value == "error"]),
             "warning_count": len([i for i in issues if i.level.value == "warning"]),
             "info_count": len([i for i in issues if i.level.value == "info"]),
-            "severity": "error" if any(i.level.value == "error" for i in issues) else
-                      "warning" if any(i.level.value == "warning" for i in issues) else "info"
+            "severity": (
+                "error"
+                if any(i.level.value == "error" for i in issues)
+                else "warning" if any(i.level.value == "warning" for i in issues) else "info"
+            ),
         }
 
         return summary

@@ -11,6 +11,7 @@ Tests cover:
 """
 
 import pytest
+
 from kicad_sch_api.geometry import (
     DEFAULT_PIN_LENGTH,
     DEFAULT_PIN_NAME_OFFSET,
@@ -54,7 +55,9 @@ class TestSymbolBoundingBoxCalculator:
         assert SymbolBoundingBoxCalculator.DEFAULT_PIN_LENGTH == DEFAULT_PIN_LENGTH
         assert SymbolBoundingBoxCalculator.DEFAULT_PIN_NAME_OFFSET == DEFAULT_PIN_NAME_OFFSET
         assert SymbolBoundingBoxCalculator.DEFAULT_PIN_NUMBER_SIZE == DEFAULT_PIN_NUMBER_SIZE
-        assert SymbolBoundingBoxCalculator.DEFAULT_PIN_TEXT_WIDTH_RATIO == DEFAULT_PIN_TEXT_WIDTH_RATIO
+        assert (
+            SymbolBoundingBoxCalculator.DEFAULT_PIN_TEXT_WIDTH_RATIO == DEFAULT_PIN_TEXT_WIDTH_RATIO
+        )
 
     def test_empty_symbol_data_raises_error(self):
         """Test that empty symbol data raises ValueError."""
@@ -412,9 +415,7 @@ class TestCompleteSymbolBounds:
         full_bounds = SymbolBoundingBoxCalculator.calculate_bounding_box(
             symbol_data, include_properties=False
         )
-        placement_bounds = SymbolBoundingBoxCalculator.calculate_placement_bounding_box(
-            symbol_data
-        )
+        placement_bounds = SymbolBoundingBoxCalculator.calculate_placement_bounding_box(symbol_data)
 
         # Placement bounds should be tighter horizontally (no pin labels)
         # Note: Placement includes property spacing vertically, so height may be larger

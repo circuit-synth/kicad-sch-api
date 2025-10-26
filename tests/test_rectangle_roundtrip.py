@@ -4,7 +4,9 @@ Test rectangle round-trip: create, save, load, verify.
 
 import os
 import tempfile
+
 import pytest
+
 from kicad_sch_api import create_schematic, load_schematic
 
 
@@ -19,7 +21,7 @@ def test_rectangle_roundtrip():
         end=(50.0, 60.0),
         stroke_width=0.127,
         stroke_type="solid",
-        fill_type="none"
+        fill_type="none",
     )
 
     rect2_uuid = sch.add_rectangle(
@@ -27,11 +29,11 @@ def test_rectangle_roundtrip():
         end=(200.0, 150.0),
         stroke_width=0.254,
         stroke_type="default",
-        fill_type="none"
+        fill_type="none",
     )
 
     # Save to temporary file
-    with tempfile.NamedTemporaryFile(suffix=".kicad_sch", delete=False, mode='w') as f:
+    with tempfile.NamedTemporaryFile(suffix=".kicad_sch", delete=False, mode="w") as f:
         temp_path = f.name
 
     try:
@@ -77,18 +79,18 @@ def test_rectangle_format_preservation():
         end=(155.829, 148.049),
         stroke_width=0.127,
         stroke_type="solid",
-        fill_type="none"
+        fill_type="none",
     )
 
     # Save to string
-    with tempfile.NamedTemporaryFile(suffix=".kicad_sch", delete=False, mode='w') as f:
+    with tempfile.NamedTemporaryFile(suffix=".kicad_sch", delete=False, mode="w") as f:
         temp_path = f.name
 
     try:
         sch.save(temp_path)
 
         # Read file content
-        with open(temp_path, 'r') as f:
+        with open(temp_path, "r") as f:
             content = f.read()
 
         # Verify S-expression structure

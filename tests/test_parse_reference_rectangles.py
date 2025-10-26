@@ -3,8 +3,8 @@ Test parsing rectangles from the reference RP2040 schematic.
 """
 
 import pytest
-from kicad_sch_api import load_schematic
 
+from kicad_sch_api import load_schematic
 
 REFERENCE_SCHEMATIC = "/Users/shanemattner/Desktop/circuit-synth-examples/pcbs/rp2040-minimal/RP2040_Minimal/RP2040_Minimal.kicad_sch"
 
@@ -38,8 +38,10 @@ def test_parse_reference_schematic_rectangles():
         assert "fill_type" in rect
 
         print(f"Successfully parsed {len(rectangles)} rectangles from reference schematic")
-        print(f"First rectangle: start=({rect['start']['x']}, {rect['start']['y']}), "
-              f"end=({rect['end']['x']}, {rect['end']['y']})")
+        print(
+            f"First rectangle: start=({rect['start']['x']}, {rect['start']['y']}), "
+            f"end=({rect['end']['x']}, {rect['end']['y']})"
+        )
 
     except FileNotFoundError:
         pytest.skip(f"Reference schematic not found: {REFERENCE_SCHEMATIC}")

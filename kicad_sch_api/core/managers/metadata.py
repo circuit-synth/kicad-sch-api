@@ -48,9 +48,7 @@ class MetadataManager:
         logger.debug(f"Set paper size: {paper}")
 
     def set_version_info(
-        self,
-        version: Optional[int] = None,
-        generator: Optional[str] = None
+        self, version: Optional[int] = None, generator: Optional[str] = None
     ) -> None:
         """
         Set KiCAD version and generator information.
@@ -232,7 +230,11 @@ class MetadataManager:
             "date": title_block.get("date", ""),
             "comments": title_block.get("comments", {}),
             "lib_symbols_count": len(self.get_lib_symbols()),
-            "symbol_instances_count": len(self.get_symbol_instances()) if isinstance(self.get_symbol_instances(), list) else 1 if self.get_symbol_instances() else 0,
+            "symbol_instances_count": (
+                len(self.get_symbol_instances())
+                if isinstance(self.get_symbol_instances(), list)
+                else 1 if self.get_symbol_instances() else 0
+            ),
             "sheet_instances_count": len(self.get_sheet_instances()),
         }
 

@@ -5,10 +5,11 @@ Tests component-specific functionality including reference indexing,
 lib_id grouping, and component-specific operations.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from kicad_sch_api.collections.components import ComponentCollection, Component
+import pytest
+
+from kicad_sch_api.collections.components import Component, ComponentCollection
 from kicad_sch_api.core.types import Point, SchematicSymbol
 from kicad_sch_api.utils.validation import ValidationError
 
@@ -29,15 +30,15 @@ class TestComponentCollection:
                 lib_id="Device:R",
                 reference="R1",
                 value="10k",
-                position=Point(100, 100)
+                position=Point(100, 100),
             ),
             SchematicSymbol(
                 uuid="uuid2",
                 lib_id="Device:C",
                 reference="C1",
                 value="100nF",
-                position=Point(200, 100)
-            )
+                position=Point(200, 100),
+            ),
         ]
         collection = ComponentCollection(symbol_data)
 
@@ -45,9 +46,9 @@ class TestComponentCollection:
         assert collection.get_by_reference("R1") is not None
         assert collection.get_by_reference("C1") is not None
 
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id')
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_reference')
-    @patch('kicad_sch_api.core.geometry.snap_to_grid')
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
+    @patch("kicad_sch_api.core.geometry.snap_to_grid")
     def test_add_component_basic(self, mock_snap, mock_validate_ref, mock_validate_lib):
         """Test adding a basic component."""
         mock_validate_lib.return_value = True
@@ -57,10 +58,7 @@ class TestComponentCollection:
         collection = ComponentCollection()
 
         component = collection.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100, 100)
+            lib_id="Device:R", reference="R1", value="10k", position=(100, 100)
         )
 
         assert isinstance(component, Component)
@@ -69,9 +67,9 @@ class TestComponentCollection:
         assert component.value == "10k"
         assert len(collection) == 1
 
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id')
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_reference')
-    @patch('kicad_sch_api.core.geometry.snap_to_grid')
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
+    @patch("kicad_sch_api.core.geometry.snap_to_grid")
     def test_add_component_auto_reference(self, mock_snap, mock_validate_ref, mock_validate_lib):
         """Test adding component with auto-generated reference."""
         mock_validate_lib.return_value = True
@@ -80,14 +78,11 @@ class TestComponentCollection:
 
         collection = ComponentCollection()
 
-        component = collection.add(
-            lib_id="Device:R",
-            value="10k"
-        )
+        component = collection.add(lib_id="Device:R", value="10k")
 
         assert component.reference == "R1"  # Auto-generated
 
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id')
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
     def test_add_component_invalid_lib_id(self, mock_validate_lib):
         """Test adding component with invalid lib_id raises error."""
         mock_validate_lib.return_value = False
@@ -97,8 +92,8 @@ class TestComponentCollection:
         with pytest.raises(ValidationError, match="Invalid lib_id format"):
             collection.add(lib_id="InvalidLibId")
 
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id')
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_reference')
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
     def test_add_component_invalid_reference(self, mock_validate_ref, mock_validate_lib):
         """Test adding component with invalid reference raises error."""
         mock_validate_lib.return_value = True
@@ -109,10 +104,12 @@ class TestComponentCollection:
         with pytest.raises(ValidationError, match="Invalid reference format"):
             collection.add(lib_id="Device:R", reference="Invalid Ref")
 
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id')
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_reference')
-    @patch('kicad_sch_api.core.geometry.snap_to_grid')
-    def test_add_component_duplicate_reference(self, mock_snap, mock_validate_ref, mock_validate_lib):
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
+    @patch("kicad_sch_api.core.geometry.snap_to_grid")
+    def test_add_component_duplicate_reference(
+        self, mock_snap, mock_validate_ref, mock_validate_lib
+    ):
         """Test adding component with duplicate reference raises error."""
         mock_validate_lib.return_value = True
         mock_validate_ref.return_value = True
@@ -130,11 +127,7 @@ class TestComponentCollection:
     def test_get_by_reference(self):
         """Test getting components by reference."""
         symbol_data = SchematicSymbol(
-            uuid="uuid1",
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+            uuid="uuid1", lib_id="Device:R", reference="R1", value="10k", position=Point(100, 100)
         )
         collection = ComponentCollection([symbol_data])
 
@@ -153,22 +146,22 @@ class TestComponentCollection:
                 lib_id="Device:R",
                 reference="R1",
                 value="10k",
-                position=Point(100, 100)
+                position=Point(100, 100),
             ),
             SchematicSymbol(
                 uuid="uuid2",
                 lib_id="Device:R",
                 reference="R2",
                 value="1k",
-                position=Point(200, 100)
+                position=Point(200, 100),
             ),
             SchematicSymbol(
                 uuid="uuid3",
                 lib_id="Device:C",
                 reference="C1",
                 value="100nF",
-                position=Point(300, 100)
-            )
+                position=Point(300, 100),
+            ),
         ]
         collection = ComponentCollection(symbol_data)
 
@@ -191,22 +184,22 @@ class TestComponentCollection:
                 lib_id="Device:R",
                 reference="R1",
                 value="10k",
-                position=Point(100, 100)
+                position=Point(100, 100),
             ),
             SchematicSymbol(
                 uuid="uuid2",
                 lib_id="Device:R",
                 reference="R2",
                 value="10k",
-                position=Point(200, 100)
+                position=Point(200, 100),
             ),
             SchematicSymbol(
                 uuid="uuid3",
                 lib_id="Device:R",
                 reference="R3",
                 value="1k",
-                position=Point(300, 100)
-            )
+                position=Point(300, 100),
+            ),
         ]
         collection = ComponentCollection(symbol_data)
 
@@ -235,15 +228,15 @@ class TestComponentCollection:
                 lib_id="Device:R",
                 reference="R1",
                 value="10k",
-                position=Point(100, 100)
+                position=Point(100, 100),
             ),
             SchematicSymbol(
                 uuid="uuid2",
                 lib_id="Device:R",
                 reference="R2",
                 value="1k",
-                position=Point(200, 100)
-            )
+                position=Point(200, 100),
+            ),
         ]
         collection = ComponentCollection(symbol_data)
 
@@ -263,11 +256,7 @@ class TestComponentCollection:
     def test_update_reference_index(self):
         """Test updating reference index when component reference changes."""
         symbol_data = SchematicSymbol(
-            uuid="uuid1",
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+            uuid="uuid1", lib_id="Device:R", reference="R1", value="10k", position=Point(100, 100)
         )
         collection = ComponentCollection([symbol_data])
 
@@ -290,29 +279,28 @@ class TestComponentCollection:
                 lib_id="Device:R",
                 reference="R1",
                 value="10k",
-                position=Point(100, 100)
+                position=Point(100, 100),
             ),
             SchematicSymbol(
                 uuid="uuid2",
                 lib_id="Device:R",
                 reference="R2",
                 value="1k",
-                position=Point(200, 100)
+                position=Point(200, 100),
             ),
             SchematicSymbol(
                 uuid="uuid3",
                 lib_id="Device:C",
                 reference="C1",
                 value="100nF",
-                position=Point(300, 100)
-            )
+                position=Point(300, 100),
+            ),
         ]
         collection = ComponentCollection(symbol_data)
 
         # Bulk update all resistors
         updated_count = collection.bulk_update(
-            criteria={"lib_id": "Device:R"},
-            updates={"footprint": "Resistor_SMD:R_0603_1608Metric"}
+            criteria={"lib_id": "Device:R"}, updates={"footprint": "Resistor_SMD:R_0603_1608Metric"}
         )
 
         assert updated_count == 2
@@ -333,7 +321,7 @@ class TestComponent:
             value="10k",
             position=Point(100, 100),
             rotation=90.0,
-            footprint="Resistor_SMD:R_0603_1608Metric"
+            footprint="Resistor_SMD:R_0603_1608Metric",
         )
         collection = ComponentCollection()
         component = Component(symbol_data, collection)
@@ -346,17 +334,13 @@ class TestComponent:
         assert component.rotation == 90.0
         assert component.footprint == "Resistor_SMD:R_0603_1608Metric"
 
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_reference')
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
     def test_component_set_reference_valid(self, mock_validate):
         """Test setting valid component reference."""
         mock_validate.return_value = True
 
         symbol_data = SchematicSymbol(
-            uuid="uuid1",
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+            uuid="uuid1", lib_id="Device:R", reference="R1", value="10k", position=Point(100, 100)
         )
         collection = ComponentCollection()
         collection._reference_index = {}  # Empty index
@@ -365,17 +349,13 @@ class TestComponent:
         component.reference = "R99"
         assert component.reference == "R99"
 
-    @patch('kicad_sch_api.utils.validation.SchematicValidator.validate_reference')
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
     def test_component_set_reference_invalid(self, mock_validate):
         """Test setting invalid component reference raises error."""
         mock_validate.return_value = False
 
         symbol_data = SchematicSymbol(
-            uuid="uuid1",
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+            uuid="uuid1", lib_id="Device:R", reference="R1", value="10k", position=Point(100, 100)
         )
         collection = ComponentCollection()
         component = Component(symbol_data, collection)
@@ -386,11 +366,7 @@ class TestComponent:
     def test_component_set_value(self):
         """Test setting component value."""
         symbol_data = SchematicSymbol(
-            uuid="uuid1",
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+            uuid="uuid1", lib_id="Device:R", reference="R1", value="10k", position=Point(100, 100)
         )
         collection = ComponentCollection()
         component = Component(symbol_data, collection)
@@ -402,11 +378,7 @@ class TestComponent:
     def test_component_set_position_point(self):
         """Test setting component position with Point."""
         symbol_data = SchematicSymbol(
-            uuid="uuid1",
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+            uuid="uuid1", lib_id="Device:R", reference="R1", value="10k", position=Point(100, 100)
         )
         collection = ComponentCollection()
         component = Component(symbol_data, collection)
@@ -419,11 +391,7 @@ class TestComponent:
     def test_component_set_position_tuple(self):
         """Test setting component position with tuple."""
         symbol_data = SchematicSymbol(
-            uuid="uuid1",
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+            uuid="uuid1", lib_id="Device:R", reference="R1", value="10k", position=Point(100, 100)
         )
         collection = ComponentCollection()
         component = Component(symbol_data, collection)
@@ -440,7 +408,7 @@ class TestComponent:
             reference="R1",
             value="10k",
             position=Point(100, 100),
-            properties={"MPN": "RC0603FR-0710KL"}
+            properties={"MPN": "RC0603FR-0710KL"},
         )
         collection = ComponentCollection()
         component = Component(symbol_data, collection)
@@ -464,7 +432,7 @@ class TestComponent:
             reference="R1",
             value="10k",
             position=Point(100, 100),
-            rotation=90.0
+            rotation=90.0,
         )
         collection = ComponentCollection()
         component = Component(symbol_data, collection)

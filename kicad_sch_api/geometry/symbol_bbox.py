@@ -120,7 +120,9 @@ class SymbolBoundingBoxCalculator:
         if min_x == float("inf") or max_x == float("-inf"):
             raise ValueError(f"No valid geometry found in symbol data")
 
-        logger.debug(f"After geometry processing: ({min_x:.2f}, {min_y:.2f}) to ({max_x:.2f}, {max_y:.2f})")
+        logger.debug(
+            f"After geometry processing: ({min_x:.2f}, {min_y:.2f}) to ({max_x:.2f}, {max_y:.2f})"
+        )
         logger.debug(f"  Width: {max_x - min_x:.2f}, Height: {max_y - min_y:.2f}")
 
         # Add small margin for text that might extend beyond shapes
@@ -252,7 +254,9 @@ class SymbolBoundingBoxCalculator:
         if min_x == float("inf") or max_x == float("-inf"):
             raise ValueError(f"No valid geometry found in symbol data")
 
-        logger.debug(f"After geometry processing: ({min_x:.2f}, {min_y:.2f}) to ({max_x:.2f}, {max_y:.2f})")
+        logger.debug(
+            f"After geometry processing: ({min_x:.2f}, {min_y:.2f}) to ({max_x:.2f}, {max_y:.2f})"
+        )
         logger.debug(f"  Width: {max_x - min_x:.2f}, Height: {max_y - min_y:.2f}")
 
         # Add small margin for visual spacing
@@ -265,12 +269,16 @@ class SymbolBoundingBoxCalculator:
         # Add minimal space for component properties (Reference above, Value below)
         # Use adaptive spacing based on component height for better visual hierarchy
         component_height = max_y - min_y
-        property_spacing = max(3.0, component_height * 0.15)  # Adaptive: minimum 3mm or 15% of height
+        property_spacing = max(
+            3.0, component_height * 0.15
+        )  # Adaptive: minimum 3mm or 15% of height
         property_height = 1.27  # Reduced from 2.54mm
         min_y -= property_spacing + property_height  # Reference above
         max_y += property_spacing + property_height  # Value below
 
-        logger.debug(f"FINAL PLACEMENT BBOX: ({min_x:.2f}, {min_y:.2f}) to ({max_x:.2f}, {max_y:.2f})")
+        logger.debug(
+            f"FINAL PLACEMENT BBOX: ({min_x:.2f}, {min_y:.2f}) to ({max_x:.2f}, {max_y:.2f})"
+        )
         logger.debug(f"  Width: {max_x - min_x:.2f}, Height: {max_y - min_y:.2f}")
         logger.debug("=" * 50)
 
@@ -359,7 +367,10 @@ class SymbolBoundingBoxCalculator:
 
     @classmethod
     def get_symbol_dimensions(
-        cls, symbol_data: Dict[str, Any], include_properties: bool = True, pin_net_map: Optional[Dict[str, str]] = None
+        cls,
+        symbol_data: Dict[str, Any],
+        include_properties: bool = True,
+        pin_net_map: Optional[Dict[str, str]] = None,
     ) -> Tuple[float, float]:
         """
         Get the width and height of a symbol.
@@ -488,24 +499,28 @@ class SymbolBoundingBoxCalculator:
         # If no net name match, use minimal fallback to avoid oversized bounding boxes
         if pin_net_map and pin_number in pin_net_map:
             label_text = pin_net_map[pin_number]
-            logger.debug(f"  PIN {pin_number}: ✅ USING NET '{label_text}' (len={len(label_text)}), at=({x:.2f}, {y:.2f}), angle={angle}")
+            logger.debug(
+                f"  PIN {pin_number}: ✅ USING NET '{label_text}' (len={len(label_text)}), at=({x:.2f}, {y:.2f}), angle={angle}"
+            )
         else:
             # No net match - use minimal size (3 chars) instead of potentially long pin name
             label_text = "XXX"  # 3-character placeholder for unmatched pins
-            logger.debug(f"  PIN {pin_number}: ⚠️  NO MATCH, using minimal fallback (pin name was '{pin_name}'), at=({x:.2f}, {y:.2f})")
+            logger.debug(
+                f"  PIN {pin_number}: ⚠️  NO MATCH, using minimal fallback (pin name was '{pin_name}'), at=({x:.2f}, {y:.2f})"
+            )
 
         if label_text and label_text != "~":  # ~ means no name
             # Calculate text dimensions
             # For horizontal text: width = char_count * char_width
             name_width = (
-                len(label_text)
-                * cls.DEFAULT_TEXT_HEIGHT
-                * cls.DEFAULT_PIN_TEXT_WIDTH_RATIO
+                len(label_text) * cls.DEFAULT_TEXT_HEIGHT * cls.DEFAULT_PIN_TEXT_WIDTH_RATIO
             )
             # For vertical text: height = char_count * char_height (characters stack vertically)
             name_height = len(label_text) * cls.DEFAULT_TEXT_HEIGHT
 
-            logger.debug(f"    label_width={name_width:.2f}, label_height={name_height:.2f} (len={len(label_text)})")
+            logger.debug(
+                f"    label_width={name_width:.2f}, label_height={name_height:.2f} (len={len(label_text)})"
+            )
 
             # Adjust bounds based on pin orientation
             # Labels are placed at PIN ENDPOINT with offset, extending AWAY from the component
@@ -515,32 +530,36 @@ class SymbolBoundingBoxCalculator:
 
             if angle == 0:  # Pin points right - label extends LEFT from endpoint
                 label_x = end_x - offset - name_width
-                logger.debug(f"    Angle 0 (Right pin): min_x {min_x:.2f} -> {label_x:.2f} (offset={offset:.3f})")
+                logger.debug(
+                    f"    Angle 0 (Right pin): min_x {min_x:.2f} -> {label_x:.2f} (offset={offset:.3f})"
+                )
                 min_x = min(min_x, label_x)
             elif angle == 180:  # Pin points left - label extends RIGHT from endpoint
                 label_x = end_x + offset + name_width
-                logger.debug(f"    Angle 180 (Left pin): max_x {max_x:.2f} -> {label_x:.2f} (offset={offset:.3f})")
+                logger.debug(
+                    f"    Angle 180 (Left pin): max_x {max_x:.2f} -> {label_x:.2f} (offset={offset:.3f})"
+                )
                 max_x = max(max_x, label_x)
             elif angle == 90:  # Pin points up - label extends DOWN from endpoint
                 label_y = end_y - offset - name_height
-                logger.debug(f"    Angle 90 (Up pin): min_y {min_y:.2f} -> {label_y:.2f} (offset={offset:.3f})")
+                logger.debug(
+                    f"    Angle 90 (Up pin): min_y {min_y:.2f} -> {label_y:.2f} (offset={offset:.3f})"
+                )
                 min_y = min(min_y, label_y)
             elif angle == 270:  # Pin points down - label extends UP from endpoint
                 label_y = end_y + offset + name_height
-                logger.debug(f"    Angle 270 (Down pin): max_y {max_y:.2f} -> {label_y:.2f} (offset={offset:.3f})")
+                logger.debug(
+                    f"    Angle 270 (Down pin): max_y {max_y:.2f} -> {label_y:.2f} (offset={offset:.3f})"
+                )
                 max_y = max(max_y, label_y)
 
         # Pin numbers are typically placed near the component body
         if pin_number:
             num_width = (
-                len(pin_number)
-                * cls.DEFAULT_PIN_NUMBER_SIZE
-                * cls.DEFAULT_PIN_TEXT_WIDTH_RATIO
+                len(pin_number) * cls.DEFAULT_PIN_NUMBER_SIZE * cls.DEFAULT_PIN_TEXT_WIDTH_RATIO
             )
             # Add some space for the pin number
-            margin = (
-                cls.DEFAULT_PIN_NUMBER_SIZE * 1.5
-            )  # Increase margin for better spacing
+            margin = cls.DEFAULT_PIN_NUMBER_SIZE * 1.5  # Increase margin for better spacing
             min_x -= margin
             min_y -= margin
             max_x += margin

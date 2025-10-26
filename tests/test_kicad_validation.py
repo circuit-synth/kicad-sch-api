@@ -366,7 +366,7 @@ class TestKiCadValidation:
         # Test various special characters that need proper escaping
         test_strings = [
             "Simple text",
-            "Text with \"quotes\"",
+            'Text with "quotes"',
             "Text with 'apostrophes'",
             "Text with (parentheses)",
             "Text with µ (micro) symbol",
@@ -411,8 +411,9 @@ class TestKiCadValidation:
 
                 # Verify text is preserved correctly
                 read_data = parser.parse_file(temp_file)
-                assert read_data["texts"][0]["text"] == test_string, \
-                    f"Text not preserved: '{test_string}' != '{read_data['texts'][0]['text']}'"
+                assert (
+                    read_data["texts"][0]["text"] == test_string
+                ), f"Text not preserved: '{test_string}' != '{read_data['texts'][0]['text']}'"
             finally:
                 temp_file.unlink()
 

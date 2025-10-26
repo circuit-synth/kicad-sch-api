@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-10-26
+
+### Added
+- **Phase 4 Manager Architecture**: Complete refactoring of schematic data management
+  - Introduced `ComponentManager` for component operations and lib_symbols synchronization
+  - Introduced `WireManager` for wire and bus operations
+  - Introduced `JunctionManager` for junction operations
+  - Introduced `SheetManager` for hierarchical sheet management
+  - Introduced `TextElementManager` for label and text operations
+  - Introduced `GraphicsManager` for graphical elements (rectangles, circles, arcs, polylines)
+  - Composition-based architecture replacing monolithic schematic class
+
+- **Text Box Support**: Full text box functionality with complete KiCAD compatibility
+  - `add_text_box()` method with rotation, font size, margins, and justification
+  - Support for stroke styling and fill options
+  - Proper serialization matching KiCAD format exactly
+
+- **Enhanced Hierarchical Sheet Support**: Complete sheet management functionality
+  - Sheet creation with proper position, size, and styling
+  - Sheet pin management with multiple pin types (input, output, bidirectional, tri_state, passive)
+  - Sheet hierarchy validation and traversal
+  - Proper data structure matching KiCAD parser expectations
+
+- **Rectangle Color Support**: Full color support for graphical rectangles
+  - Stroke color customization (RGBA)
+  - Fill color customization (RGBA)
+  - Proper color serialization in S-expression output
+
+### Fixed
+- **Hierarchical Sheet Data Structure**: Fixed sheet serialization format
+  - Changed storage key from "sheet" (singular) to "sheets" (plural)
+  - Fixed position format from lists to dictionaries: `{"x": x, "y": y}`
+  - Fixed size format from lists to dictionaries: `{"width": w, "height": h}`
+  - Fixed fill_color default from white (255,255,255,0.0) to transparent black (0,0,0,0.0)
+  - Fixed sheet pin structure: "pin" → "pins", "shape" → "pin_type"
+
+- **Rectangle Color Flow**: Fixed color parameter propagation through managers and parser
+  - GraphicsManager now extracts and stores stroke_color and fill_color from stroke/fill dicts
+  - Parser now serializes colors in stroke and fill S-expression sections
+  - Complete color support for bounding box visualization
+
+- **Text Box Data Structure**: Fixed text box format to match parser expectations
+  - Changed storage key from "text_box" to "text_boxes" (plural)
+  - Implemented complete parameter set (rotation, font_size, margins, stroke, fill, justification)
+  - Fixed position/size format to use dictionaries instead of lists
+
+### Changed
+- **Schematic Class Refactoring**: Delegated operations to specialized managers
+  - Schematic class now composes managers instead of implementing all operations
+  - Cleaner separation of concerns and improved maintainability
+  - All existing APIs maintained for backward compatibility
+
+- **Test Suite**: All 302 tests passing (295 run, 7 skipped)
+  - Added tests for hierarchical sheets with proper serialization
+  - Added tests for rectangle colors with stroke and fill
+  - Added tests for text boxes with full parameter support
+  - Format preservation tests validate exact KiCAD compatibility
+
+### Technical Notes
+- Manager architecture enables easier feature additions and maintenance
+- All data structures now properly synchronized between managers and parser
+- Singular/plural key consistency enforced throughout codebase
+- Position and size formats standardized to dictionary format
+- 100% backward compatibility maintained - no breaking changes
+
 ## [0.3.0] - 2025-10-12
 
 ### Added

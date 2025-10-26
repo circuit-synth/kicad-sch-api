@@ -25,7 +25,7 @@ class Label:
         position: Point,
         rotation: float = 0.0,
         label_type: str = "label",
-        effects: Optional[Dict[str, Any]] = None
+        effects: Optional[Dict[str, Any]] = None,
     ):
         self.uuid = uuid
         self.text = text
@@ -150,7 +150,7 @@ class LabelCollection(IndexedCollection[Label]):
             position=position,
             rotation=rotation,
             label_type=label_type,
-            effects=effects or {}
+            effects=effects or {},
         )
 
         # Add to collection using base class method
@@ -176,9 +176,7 @@ class LabelCollection(IndexedCollection[Label]):
             return self._text_index.get(text_key, []).copy()
 
     def get_labels_at_position(
-        self,
-        position: Union[Point, Tuple[float, float]],
-        tolerance: float = 0.0
+        self, position: Union[Point, Tuple[float, float]], tolerance: float = 0.0
     ) -> List[Label]:
         """
         Get all labels at a specific position.
@@ -208,7 +206,7 @@ class LabelCollection(IndexedCollection[Label]):
             for label in self._items:
                 dx = abs(label.position.x - target_x)
                 dy = abs(label.position.y - target_y)
-                distance = (dx ** 2 + dy ** 2) ** 0.5
+                distance = (dx**2 + dy**2) ** 0.5
 
                 if distance <= tolerance:
                     matching_labels.append(label)
@@ -251,11 +249,7 @@ class LabelCollection(IndexedCollection[Label]):
         return self.get_labels_by_text(net_name, case_sensitive)
 
     def find_labels_in_region(
-        self,
-        min_x: float,
-        min_y: float,
-        max_x: float,
-        max_y: float
+        self, min_x: float, min_y: float, max_x: float, max_y: float
     ) -> List[Label]:
         """
         Find all labels within a rectangular region.
@@ -272,8 +266,7 @@ class LabelCollection(IndexedCollection[Label]):
         matching_labels = []
 
         for label in self._items:
-            if (min_x <= label.position.x <= max_x and
-                min_y <= label.position.y <= max_y):
+            if min_x <= label.position.x <= max_x and min_y <= label.position.y <= max_y:
                 matching_labels.append(label)
 
         return matching_labels
@@ -308,9 +301,7 @@ class LabelCollection(IndexedCollection[Label]):
         return True
 
     def update_label_position(
-        self,
-        label_uuid: str,
-        new_position: Union[Point, Tuple[float, float]]
+        self, label_uuid: str, new_position: Union[Point, Tuple[float, float]]
     ) -> bool:
         """
         Update the position of an existing label.
@@ -399,14 +390,15 @@ class LabelCollection(IndexedCollection[Label]):
         stats = super().get_statistics()
 
         # Add label-specific statistics
-        stats.update({
-            "unique_texts": len(self._text_index),
-            "unique_positions": len(self._position_index),
-            "label_types": {
-                label_type: len(labels)
-                for label_type, labels in self._type_index.items()
-            },
-            "net_count": len(self.get_net_names())
-        })
+        stats.update(
+            {
+                "unique_texts": len(self._text_index),
+                "unique_positions": len(self._position_index),
+                "label_types": {
+                    label_type: len(labels) for label_type, labels in self._type_index.items()
+                },
+                "net_count": len(self.get_net_names()),
+            }
+        )
 
         return stats

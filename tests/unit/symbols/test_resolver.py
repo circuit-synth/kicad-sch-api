@@ -5,13 +5,14 @@ Tests the SymbolResolver functionality for inheritance chain resolution
 while maintaining separation from caching concerns.
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
-from kicad_sch_api.symbols.resolver import SymbolResolver
-from kicad_sch_api.symbols.cache import ISymbolCache
-from kicad_sch_api.library.cache import SymbolDefinition
+import pytest
+
 from kicad_sch_api.core.types import Point, SchematicPin
+from kicad_sch_api.library.cache import SymbolDefinition
+from kicad_sch_api.symbols.cache import ISymbolCache
+from kicad_sch_api.symbols.resolver import SymbolResolver
 
 
 class MockCache(ISymbolCache):
@@ -67,11 +68,7 @@ class TestSymbolResolver:
 
         # Create symbol without extends
         symbol = SymbolDefinition(
-            lib_id="Device:R",
-            name="R",
-            library="Device",
-            reference_prefix="R",
-            extends=None
+            lib_id="Device:R", name="R", library="Device", reference_prefix="R", extends=None
         )
         cache.symbols["Device:R"] = symbol
 
@@ -94,7 +91,7 @@ class TestSymbolResolver:
             library="Device",
             reference_prefix="R",
             description="Generic resistor",
-            extends=None
+            extends=None,
         )
         cache.symbols["Device:R_Generic"] = parent
 
@@ -104,7 +101,7 @@ class TestSymbolResolver:
             name="R_Special",
             library="Device",
             reference_prefix="R",
-            extends="R_Generic"
+            extends="R_Generic",
         )
         cache.symbols["Device:R_Special"] = child
 
@@ -128,7 +125,7 @@ class TestSymbolResolver:
             reference_prefix="R",
             description="Base resistor",
             keywords="passive",
-            extends=None
+            extends=None,
         )
         cache.symbols["Device:R_Base"] = grandparent
 
@@ -138,7 +135,7 @@ class TestSymbolResolver:
             library="Device",
             reference_prefix="R",
             datasheet="http://example.com",
-            extends="R_Base"
+            extends="R_Base",
         )
         cache.symbols["Device:R_Generic"] = parent
 
@@ -147,7 +144,7 @@ class TestSymbolResolver:
             name="R_Special",
             library="Device",
             reference_prefix="R",
-            extends="R_Generic"
+            extends="R_Generic",
         )
         cache.symbols["Device:R_Special"] = child
 
@@ -159,7 +156,7 @@ class TestSymbolResolver:
         assert result.description == "Base resistor"  # From grandparent
         assert result.keywords == "passive"  # From grandparent
         assert result.datasheet == "http://example.com"  # From parent
-        assert hasattr(result, '_inheritance_depth')
+        assert hasattr(result, "_inheritance_depth")
         assert result._inheritance_depth == 2
 
     def test_resolve_symbol_missing_parent(self):
@@ -173,7 +170,7 @@ class TestSymbolResolver:
             name="R_Special",
             library="Device",
             reference_prefix="R",
-            extends="NonExistent"
+            extends="NonExistent",
         )
         cache.symbols["Device:R_Special"] = child
 
@@ -188,20 +185,12 @@ class TestSymbolResolver:
 
         # Create circular inheritance: A -> B -> A
         symbol_a = SymbolDefinition(
-            lib_id="Device:A",
-            name="A",
-            library="Device",
-            reference_prefix="U",
-            extends="B"
+            lib_id="Device:A", name="A", library="Device", reference_prefix="U", extends="B"
         )
         cache.symbols["Device:A"] = symbol_a
 
         symbol_b = SymbolDefinition(
-            lib_id="Device:B",
-            name="B",
-            library="Device",
-            reference_prefix="U",
-            extends="A"
+            lib_id="Device:B", name="B", library="Device", reference_prefix="U", extends="A"
         )
         cache.symbols["Device:B"] = symbol_b
 
@@ -216,11 +205,7 @@ class TestSymbolResolver:
 
         # Create symbol
         symbol = SymbolDefinition(
-            lib_id="Device:R",
-            name="R",
-            library="Device",
-            reference_prefix="R",
-            extends=None
+            lib_id="Device:R", name="R", library="Device", reference_prefix="R", extends=None
         )
         cache.symbols["Device:R"] = symbol
 
@@ -239,11 +224,7 @@ class TestSymbolResolver:
 
         # Add something to cache
         symbol = SymbolDefinition(
-            lib_id="Device:R",
-            name="R",
-            library="Device",
-            reference_prefix="R",
-            extends=None
+            lib_id="Device:R", name="R", library="Device", reference_prefix="R", extends=None
         )
         cache.symbols["Device:R"] = symbol
         resolver.resolve_symbol("Device:R")
@@ -265,7 +246,7 @@ class TestSymbolResolver:
             name="R_Base",
             library="Device",
             reference_prefix="R",
-            extends=None
+            extends=None,
         )
         cache.symbols["Device:R_Base"] = parent
 
@@ -274,7 +255,7 @@ class TestSymbolResolver:
             name="R_Special",
             library="Device",
             reference_prefix="R",
-            extends="R_Base"
+            extends="R_Base",
         )
         cache.symbols["Device:R_Special"] = child
 
@@ -320,16 +301,9 @@ class TestSymbolResolver:
             description="Parent description",
             keywords="parent keywords",
             datasheet="parent datasheet",
-            pins=[
-                SchematicPin(
-                    number="1",
-                    name="Pin1",
-                    position=Point(0, 0),
-                    pin_type="input"
-                )
-            ],
+            pins=[SchematicPin(number="1", name="Pin1", position=Point(0, 0), pin_type="input")],
             units=2,
-            unit_names={1: "Unit A", 2: "Unit B"}
+            unit_names={1: "Unit A", 2: "Unit B"},
         )
 
         # Create child with some properties
@@ -339,16 +313,9 @@ class TestSymbolResolver:
             library="Device",
             reference_prefix="U",
             description="Child description",  # This should take precedence
-            pins=[
-                SchematicPin(
-                    number="2",
-                    name="Pin2",
-                    position=Point(1, 1),
-                    pin_type="output"
-                )
-            ],
+            pins=[SchematicPin(number="2", name="Pin2", position=Point(1, 1), pin_type="output")],
             units=1,
-            unit_names={1: "Main"}
+            unit_names={1: "Main"},
         )
 
         merged = resolver._merge_symbol_properties(child, parent)
@@ -382,7 +349,7 @@ class TestSymbolResolver:
             name="Parent",
             library="Device",
             reference_prefix="U",
-            extends=None
+            extends=None,
         )
         cache.symbols["Device:Parent"] = parent
 
@@ -391,7 +358,7 @@ class TestSymbolResolver:
             name="Child",
             library="Device",
             reference_prefix="U",
-            extends="Parent"
+            extends="Parent",
         )
         cache.symbols["Device:Child"] = child
 
@@ -416,20 +383,12 @@ class TestSymbolResolver:
 
         # Create circular chain
         symbol_a = SymbolDefinition(
-            lib_id="Device:A",
-            name="A",
-            library="Device",
-            reference_prefix="U",
-            extends="B"
+            lib_id="Device:A", name="A", library="Device", reference_prefix="U", extends="B"
         )
         cache.symbols["Device:A"] = symbol_a
 
         symbol_b = SymbolDefinition(
-            lib_id="Device:B",
-            name="B",
-            library="Device",
-            reference_prefix="U",
-            extends="A"
+            lib_id="Device:B", name="B", library="Device", reference_prefix="U", extends="A"
         )
         cache.symbols["Device:B"] = symbol_b
 
@@ -449,7 +408,7 @@ class TestSymbolResolver:
             name="GrandParent",
             library="Device",
             reference_prefix="U",
-            extends=None
+            extends=None,
         )
         cache.symbols["Device:GrandParent"] = grandparent
 
@@ -458,7 +417,7 @@ class TestSymbolResolver:
             name="Parent",
             library="Device",
             reference_prefix="U",
-            extends="GrandParent"
+            extends="GrandParent",
         )
         cache.symbols["Device:Parent"] = parent
 
@@ -467,7 +426,7 @@ class TestSymbolResolver:
             name="Child",
             library="Device",
             reference_prefix="U",
-            extends="Parent"
+            extends="Parent",
         )
         cache.symbols["Device:Child"] = child
 
@@ -485,7 +444,7 @@ class TestSymbolResolver:
             name="Simple",
             library="Device",
             reference_prefix="U",
-            extends=None
+            extends=None,
         )
         cache.symbols["Device:Simple"] = symbol
 
@@ -500,20 +459,12 @@ class TestSymbolResolver:
 
         # Create circular chain
         symbol_a = SymbolDefinition(
-            lib_id="Device:A",
-            name="A",
-            library="Device",
-            reference_prefix="U",
-            extends="B"
+            lib_id="Device:A", name="A", library="Device", reference_prefix="U", extends="B"
         )
         cache.symbols["Device:A"] = symbol_a
 
         symbol_b = SymbolDefinition(
-            lib_id="Device:B",
-            name="B",
-            library="Device",
-            reference_prefix="U",
-            extends="A"
+            lib_id="Device:B", name="B", library="Device", reference_prefix="U", extends="A"
         )
         cache.symbols["Device:B"] = symbol_b
 

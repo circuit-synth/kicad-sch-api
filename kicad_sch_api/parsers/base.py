@@ -92,10 +92,7 @@ class BaseElementParser(IElementParser):
             return None
 
         try:
-            result = {
-                "x": float(element[1]),
-                "y": float(element[2])
-            }
+            result = {"x": float(element[1]), "y": float(element[2])}
 
             # Optional angle parameter
             if len(element) > 3:
@@ -105,7 +102,9 @@ class BaseElementParser(IElementParser):
         except (ValueError, IndexError):
             return None
 
-    def _extract_property_list(self, elements: List[Any], property_name: str) -> List[Dict[str, Any]]:
+    def _extract_property_list(
+        self, elements: List[Any], property_name: str
+    ) -> List[Dict[str, Any]]:
         """
         Extract all instances of a property from a list of elements.
 
@@ -118,9 +117,7 @@ class BaseElementParser(IElementParser):
         """
         properties = []
         for element in elements:
-            if (isinstance(element, list) and
-                len(element) > 0 and
-                element[0] == property_name):
+            if isinstance(element, list) and len(element) > 0 and element[0] == property_name:
                 prop = self._parse_property_element(element)
                 if prop:
                     properties.append(prop)
@@ -144,5 +141,5 @@ class BaseElementParser(IElementParser):
         return {
             "type": element[0],
             "value": element[1] if len(element) > 1 else None,
-            "raw": element
+            "raw": element,
         }

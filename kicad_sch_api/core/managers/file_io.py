@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
+from ...utils.validation import ValidationError
 from ..formatter import ExactFormatter
 from ..parser import SExpressionParser
-from ...utils.validation import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class FileIOManager:
         self,
         schematic_data: Dict[str, Any],
         file_path: Union[str, Path],
-        preserve_format: bool = True
+        preserve_format: bool = True,
     ) -> None:
         """
         Save schematic data to file.
@@ -203,7 +203,7 @@ class FileIOManager:
             "path": str(file_path.resolve()),
             "size": stat.st_size,
             "modified": stat.st_mtime,
-            "created": getattr(stat, 'st_birthtime', stat.st_ctime),
+            "created": getattr(stat, "st_birthtime", stat.st_ctime),
             "readable": file_path.is_file() and file_path.exists(),
             "writable": file_path.parent.exists() and file_path.parent.is_dir(),
             "extension": file_path.suffix,
@@ -238,6 +238,6 @@ class FileIOManager:
                 "image": [],
                 "sheet": [],
                 "sheet_instances": [],
-                "symbol_instances": []
+                "symbol_instances": [],
             }
         }

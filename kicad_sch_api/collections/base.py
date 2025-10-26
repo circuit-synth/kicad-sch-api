@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, Generic, Iterator, List, Optional, TypeV
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')  # Type variable for collection items
+T = TypeVar("T")  # Type variable for collection items
 
 
 class IndexedCollection(Generic[T], ABC):
@@ -183,6 +183,7 @@ class IndexedCollection(Generic[T], ABC):
         Returns:
             List of matching items
         """
+
         def matches_criteria(item: T) -> bool:
             for attr, value in criteria.items():
                 if not hasattr(item, attr) or getattr(item, attr) != value:
@@ -257,10 +258,7 @@ class IndexedCollection(Generic[T], ABC):
     def _rebuild_indexes(self) -> None:
         """Rebuild all indexes."""
         # Rebuild UUID index
-        self._uuid_index = {
-            self._get_item_uuid(item): i
-            for i, item in enumerate(self._items)
-        }
+        self._uuid_index = {self._get_item_uuid(item): i for i, item in enumerate(self._items)}
 
         # Let subclasses rebuild their additional indexes
         self._build_additional_indexes()
@@ -282,7 +280,7 @@ class IndexedCollection(Generic[T], ABC):
             "uuid_index_size": len(self._uuid_index),
             "modified": self._modified,
             "indexes_dirty": self._dirty_indexes,
-            "collection_type": self.__class__.__name__
+            "collection_type": self.__class__.__name__,
         }
 
     @property

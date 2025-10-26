@@ -5,13 +5,14 @@ Tests the symbol caching functionality while maintaining separation
 from inheritance resolution concerns.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
-from kicad_sch_api.symbols.cache import ISymbolCache, SymbolCache
-from kicad_sch_api.library.cache import SymbolDefinition
+import pytest
+
 from kicad_sch_api.core.types import Point
+from kicad_sch_api.library.cache import SymbolDefinition
+from kicad_sch_api.symbols.cache import ISymbolCache, SymbolCache
 
 
 class MockSymbolCache(ISymbolCache):
@@ -50,12 +51,12 @@ class TestISymbolCache:
         assert isinstance(cache, ISymbolCache)
 
         # Test all interface methods exist
-        assert hasattr(cache, 'get_symbol')
-        assert hasattr(cache, 'has_symbol')
-        assert hasattr(cache, 'add_library_path')
-        assert hasattr(cache, 'get_library_symbols')
-        assert hasattr(cache, 'clear_cache')
-        assert hasattr(cache, 'get_cache_statistics')
+        assert hasattr(cache, "get_symbol")
+        assert hasattr(cache, "has_symbol")
+        assert hasattr(cache, "add_library_path")
+        assert hasattr(cache, "get_library_symbols")
+        assert hasattr(cache, "clear_cache")
+        assert hasattr(cache, "get_cache_statistics")
 
     def test_mock_cache_basic_operations(self):
         """Test basic operations on mock cache."""
@@ -67,10 +68,7 @@ class TestISymbolCache:
 
         # Add symbol
         symbol = SymbolDefinition(
-            lib_id="Device:R",
-            name="R",
-            library="Device",
-            reference_prefix="R"
+            lib_id="Device:R", name="R", library="Device", reference_prefix="R"
         )
         cache.symbols["Device:R"] = symbol
 
@@ -201,7 +199,7 @@ class TestSymbolCache:
         assert stats["symbols_cached"] == 1
         assert stats["cache_hits"] == 10
         assert stats["cache_misses"] == 3
-        assert stats["hit_rate_percent"] == 10/13 * 100
+        assert stats["hit_rate_percent"] == 10 / 13 * 100
 
     def test_get_library_symbols_empty(self):
         """Test getting symbols from non-existent library."""
@@ -211,7 +209,10 @@ class TestSymbolCache:
 
         assert symbols == []
 
-    @patch("builtins.open", new_callable=mock_open, read_data="""
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data="""
         (kicad_symbol_lib
           (symbol "R" (pin_numbers hide)
             (property "Reference" "R" (id 0))
@@ -222,7 +223,8 @@ class TestSymbolCache:
             (property "Value" "C" (id 1))
           )
         )
-    """)
+    """,
+    )
     def test_get_library_symbols_with_content(self, mock_file, tmp_path):
         """Test getting symbols from library with content."""
         cache = SymbolCache(enable_persistence=False)
@@ -263,11 +265,7 @@ class TestSymbolCache:
         import sexpdata
 
         # Symbol data with extends
-        symbol_data = [
-            "symbol", "R_Special",
-            ["extends", "R"],
-            ["property", "Reference", "R"]
-        ]
+        symbol_data = ["symbol", "R_Special", ["extends", "R"], ["property", "Reference", "R"]]
 
         extends = cache._check_extends_directive(symbol_data)
 
@@ -306,10 +304,11 @@ class TestSymbolCache:
         cache = SymbolCache(enable_persistence=False)
 
         symbol_data = [
-            "symbol", "R",
+            "symbol",
+            "R",
             ["property", "Reference", "R?"],
             ["property", "ki_description", "Resistor"],
-            ["property", "ki_keywords", "passive"]
+            ["property", "ki_keywords", "passive"],
         ]
 
         properties = cache._extract_symbol_properties(symbol_data)
@@ -339,7 +338,7 @@ class TestSymbolCache:
         parsed_data = [
             sexpdata.Symbol("kicad_symbol_lib"),
             ["symbol", "R", ["property", "Reference", "R"]],
-            ["symbol", "C", ["property", "Reference", "C"]]
+            ["symbol", "C", ["property", "Reference", "C"]],
         ]
 
         symbol_data = cache._find_symbol_in_parsed_data(parsed_data, "R")
@@ -355,7 +354,7 @@ class TestSymbolCache:
 
         parsed_data = [
             sexpdata.Symbol("kicad_symbol_lib"),
-            ["symbol", "R", ["property", "Reference", "R"]]
+            ["symbol", "R", ["property", "Reference", "R"]],
         ]
 
         symbol_data = cache._find_symbol_in_parsed_data(parsed_data, "NotFound")

@@ -89,26 +89,22 @@ class JunctionCollection(IndexedCollection[Junction]):
         pos_key = (position.x, position.y)
         if pos_key in self._position_index:
             existing = self._position_index[pos_key]
-            raise ValueError(f"Junction already exists at position {position} (UUID: {existing.uuid})")
+            raise ValueError(
+                f"Junction already exists at position {position} (UUID: {existing.uuid})"
+            )
 
         # Generate UUID if not provided
         if junction_uuid is None:
             junction_uuid = str(uuid_module.uuid4())
 
         # Create junction
-        junction = Junction(
-            uuid=junction_uuid,
-            position=position,
-            diameter=diameter
-        )
+        junction = Junction(uuid=junction_uuid, position=position, diameter=diameter)
 
         # Add to collection using base class method
         return super().add(junction)
 
     def get_junction_at_position(
-        self,
-        position: Union[Point, Tuple[float, float]],
-        tolerance: float = 0.0
+        self, position: Union[Point, Tuple[float, float]], tolerance: float = 0.0
     ) -> Optional[Junction]:
         """
         Get junction at a specific position.
@@ -137,7 +133,7 @@ class JunctionCollection(IndexedCollection[Junction]):
             for junction in self._items:
                 dx = abs(junction.position.x - target_x)
                 dy = abs(junction.position.y - target_y)
-                distance = (dx ** 2 + dy ** 2) ** 0.5
+                distance = (dx**2 + dy**2) ** 0.5
 
                 if distance <= tolerance:
                     return junction
@@ -145,9 +141,7 @@ class JunctionCollection(IndexedCollection[Junction]):
             return None
 
     def has_junction_at_position(
-        self,
-        position: Union[Point, Tuple[float, float]],
-        tolerance: float = 0.0
+        self, position: Union[Point, Tuple[float, float]], tolerance: float = 0.0
     ) -> bool:
         """
         Check if a junction exists at a specific position.
@@ -162,11 +156,7 @@ class JunctionCollection(IndexedCollection[Junction]):
         return self.get_junction_at_position(position, tolerance) is not None
 
     def find_junctions_in_region(
-        self,
-        min_x: float,
-        min_y: float,
-        max_x: float,
-        max_y: float
+        self, min_x: float, min_y: float, max_x: float, max_y: float
     ) -> List[Junction]:
         """
         Find all junctions within a rectangular region.
@@ -183,16 +173,13 @@ class JunctionCollection(IndexedCollection[Junction]):
         matching_junctions = []
 
         for junction in self._items:
-            if (min_x <= junction.position.x <= max_x and
-                min_y <= junction.position.y <= max_y):
+            if min_x <= junction.position.x <= max_x and min_y <= junction.position.y <= max_y:
                 matching_junctions.append(junction)
 
         return matching_junctions
 
     def update_junction_position(
-        self,
-        junction_uuid: str,
-        new_position: Union[Point, Tuple[float, float]]
+        self, junction_uuid: str, new_position: Union[Point, Tuple[float, float]]
     ) -> bool:
         """
         Update the position of an existing junction.
@@ -286,8 +273,9 @@ class JunctionCollection(IndexedCollection[Junction]):
 
             # Allow small tolerance for floating point precision
             tolerance = grid_size * 0.01
-            if (x_remainder > tolerance and x_remainder < grid_size - tolerance) or \
-               (y_remainder > tolerance and y_remainder < grid_size - tolerance):
+            if (x_remainder > tolerance and x_remainder < grid_size - tolerance) or (
+                y_remainder > tolerance and y_remainder < grid_size - tolerance
+            ):
                 misaligned.append(junction)
 
         return misaligned
@@ -310,8 +298,10 @@ class JunctionCollection(IndexedCollection[Junction]):
             aligned_y = round(junction.position.y / grid_size) * grid_size
 
             # Check if position needs to change
-            if (abs(junction.position.x - aligned_x) > 0.001 or
-                abs(junction.position.y - aligned_y) > 0.001):
+            if (
+                abs(junction.position.x - aligned_x) > 0.001
+                or abs(junction.position.y - aligned_y) > 0.001
+            ):
 
                 # Update position
                 junction.position = Point(aligned_x, aligned_y)
@@ -326,11 +316,7 @@ class JunctionCollection(IndexedCollection[Junction]):
 
     # Bulk operations
     def remove_junctions_in_region(
-        self,
-        min_x: float,
-        min_y: float,
-        max_x: float,
-        max_y: float
+        self, min_x: float, min_y: float, max_x: float, max_y: float
     ) -> int:
         """
         Remove all junctions within a rectangular region.
@@ -365,14 +351,16 @@ class JunctionCollection(IndexedCollection[Junction]):
         # Calculate diameter statistics
         diameters = [junction.diameter for junction in self._items]
         if diameters:
-            stats.update({
-                "diameter_stats": {
-                    "min": min(diameters),
-                    "max": max(diameters),
-                    "average": sum(diameters) / len(diameters)
-                },
-                "grid_aligned": len(self._items) - len(self.validate_grid_alignment()),
-                "misaligned": len(self.validate_grid_alignment())
-            })
+            stats.update(
+                {
+                    "diameter_stats": {
+                        "min": min(diameters),
+                        "max": max(diameters),
+                        "average": sum(diameters) / len(diameters),
+                    },
+                    "grid_aligned": len(self._items) - len(self.validate_grid_alignment()),
+                    "misaligned": len(self.validate_grid_alignment()),
+                }
+            )
 
         return stats

@@ -65,7 +65,7 @@ class WireCollection(IndexedCollection[Wire]):
                 self._endpoint_index[endpoint].append(wire)
 
             # Type index
-            wire_type = getattr(wire, 'wire_type', WireType.WIRE)
+            wire_type = getattr(wire, "wire_type", WireType.WIRE)
             if wire_type not in self._type_index:
                 self._type_index[wire_type] = []
             self._type_index[wire_type].append(wire)
@@ -114,7 +114,7 @@ class WireCollection(IndexedCollection[Wire]):
             points=[start, end],
             wire_type=wire_type,
             stroke_width=stroke_width,
-            stroke_type=stroke_type
+            stroke_type=stroke_type,
         )
 
         # Add to collection using base class method
@@ -165,7 +165,7 @@ class WireCollection(IndexedCollection[Wire]):
             points=converted_points,
             wire_type=wire_type,
             stroke_width=stroke_width,
-            stroke_type=stroke_type
+            stroke_type=stroke_type,
         )
 
         # Add to collection using base class method
@@ -262,9 +262,7 @@ class WireCollection(IndexedCollection[Wire]):
         return networks
 
     def modify_wire_path(
-        self,
-        wire_uuid: str,
-        new_points: List[Union[Point, Tuple[float, float]]]
+        self, wire_uuid: str, new_points: List[Union[Point, Tuple[float, float]]]
     ) -> bool:
         """
         Modify the path of an existing wire.
@@ -325,7 +323,7 @@ class WireCollection(IndexedCollection[Wire]):
         self,
         wire_type: Optional[WireType] = None,
         stroke_width: Optional[float] = None,
-        stroke_type: Optional[str] = None
+        stroke_type: Optional[str] = None,
     ) -> int:
         """
         Bulk update stroke properties for wires.
@@ -368,15 +366,16 @@ class WireCollection(IndexedCollection[Wire]):
         stats = super().get_statistics()
 
         # Add wire-specific statistics
-        stats.update({
-            "endpoint_count": len(self._endpoint_index),
-            "wire_types": {
-                wire_type.value: len(wires)
-                for wire_type, wires in self._type_index.items()
-            },
-            "networks": len(self.find_wire_networks()),
-            "total_length": sum(self._calculate_wire_length(wire) for wire in self._items)
-        })
+        stats.update(
+            {
+                "endpoint_count": len(self._endpoint_index),
+                "wire_types": {
+                    wire_type.value: len(wires) for wire_type, wires in self._type_index.items()
+                },
+                "networks": len(self.find_wire_networks()),
+                "total_length": sum(self._calculate_wire_length(wire) for wire in self._items),
+            }
+        )
 
         return stats
 
@@ -400,7 +399,7 @@ class WireCollection(IndexedCollection[Wire]):
 
             dx = end_point.x - start_point.x
             dy = end_point.y - start_point.y
-            segment_length = (dx ** 2 + dy ** 2) ** 0.5
+            segment_length = (dx**2 + dy**2) ** 0.5
 
             total_length += segment_length
 

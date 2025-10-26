@@ -250,6 +250,7 @@ class ComponentCollection(IndexedCollection[Component]):
 
         # Always snap component position to KiCAD grid (1.27mm = 50mil)
         from ..core.geometry import snap_to_grid
+
         snapped_pos = snap_to_grid((position.x, position.y), grid_size=1.27)
         position = Point(snapped_pos[0], snapped_pos[1])
 
@@ -269,7 +270,7 @@ class ComponentCollection(IndexedCollection[Component]):
             in_bom=True,
             on_board=True,
             footprint=footprint,
-            properties=properties.copy()
+            properties=properties.copy(),
         )
 
         # Create component wrapper
@@ -335,16 +336,27 @@ class ComponentCollection(IndexedCollection[Component]):
 
         # Map common component types to standard prefixes
         ref_prefixes = {
-            "R": "R", "Resistor": "R",
-            "C": "C", "Capacitor": "C",
-            "L": "L", "Inductor": "L",
-            "D": "D", "Diode": "D",
-            "Q": "Q", "Transistor": "Q",
-            "U": "U", "IC": "U", "Amplifier": "U",
-            "J": "J", "Connector": "J",
-            "SW": "SW", "Switch": "SW",
-            "F": "F", "Fuse": "F",
-            "TP": "TP", "TestPoint": "TP",
+            "R": "R",
+            "Resistor": "R",
+            "C": "C",
+            "Capacitor": "C",
+            "L": "L",
+            "Inductor": "L",
+            "D": "D",
+            "Diode": "D",
+            "Q": "Q",
+            "Transistor": "Q",
+            "U": "U",
+            "IC": "U",
+            "Amplifier": "U",
+            "J": "J",
+            "Connector": "J",
+            "SW": "SW",
+            "Switch": "SW",
+            "F": "F",
+            "Fuse": "F",
+            "TP": "TP",
+            "TestPoint": "TP",
         }
 
         prefix = ref_prefixes.get(base_ref, "U")

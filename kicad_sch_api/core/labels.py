@@ -10,7 +10,7 @@ import uuid
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
-from .types import Point, Label
+from .types import Label, Point
 
 logger = logging.getLogger(__name__)
 

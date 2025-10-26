@@ -199,13 +199,19 @@ class Schematic:
                     label_type=LabelType(label_dict.get("label_type", "local")),
                     rotation=label_dict.get("rotation", 0.0),
                     size=label_dict.get("size", 1.27),
-                    shape=HierarchicalLabelShape(label_dict.get("shape")) if label_dict.get("shape") else None,
+                    shape=(
+                        HierarchicalLabelShape(label_dict.get("shape"))
+                        if label_dict.get("shape")
+                        else None
+                    ),
                 )
                 labels.append(label)
         self._labels = LabelCollection(labels)
 
         # Initialize hierarchical labels collection (from both labels array and hierarchical_labels array)
-        hierarchical_labels = [label for label in labels if label.label_type == LabelType.HIERARCHICAL]
+        hierarchical_labels = [
+            label for label in labels if label.label_type == LabelType.HIERARCHICAL
+        ]
 
         # Also load from hierarchical_labels data if present
         hierarchical_label_data = self._data.get("hierarchical_labels", [])
@@ -227,7 +233,11 @@ class Schematic:
                     label_type=LabelType.HIERARCHICAL,
                     rotation=hlabel_dict.get("rotation", 0.0),
                     size=hlabel_dict.get("size", 1.27),
-                    shape=HierarchicalLabelShape(hlabel_dict.get("shape")) if hlabel_dict.get("shape") else None,
+                    shape=(
+                        HierarchicalLabelShape(hlabel_dict.get("shape"))
+                        if hlabel_dict.get("shape")
+                        else None
+                    ),
                 )
                 hierarchical_labels.append(hlabel)
 
@@ -277,9 +287,7 @@ class Schematic:
         self._sheet_manager = SheetManager(self._data)
         self._text_element_manager = TextElementManager(self._data)
         self._wire_manager = WireManager(self._data, self._wires, self._components)
-        self._validation_manager = ValidationManager(
-            self._data, self._components, self._wires
-        )
+        self._validation_manager = ValidationManager(self._data, self._components, self._wires)
 
         # Track modifications for save optimization
         self._modified = False
@@ -566,9 +574,7 @@ class Schematic:
 
     # Wire operations (delegated to WireManager)
     def add_wire(
-        self,
-        start: Union[Point, Tuple[float, float]],
-        end: Union[Point, Tuple[float, float]]
+        self, start: Union[Point, Tuple[float, float]], end: Union[Point, Tuple[float, float]]
     ) -> str:
         """
         Add a wire connection between two points.
@@ -607,7 +613,7 @@ class Schematic:
         pin1_number: str,
         component2_ref: str,
         pin2_number: str,
-        routing_strategy: str = "direct"
+        routing_strategy: str = "direct",
     ) -> List[str]:
         """
         Auto-route between two component pins.
@@ -631,10 +637,7 @@ class Schematic:
         return wire_uuids
 
     def add_wire_to_pin(
-        self,
-        start: Union[Point, Tuple[float, float]],
-        component_ref: str,
-        pin_number: str
+        self, start: Union[Point, Tuple[float, float]], component_ref: str, pin_number: str
     ) -> Optional[str]:
         """
         Add wire from arbitrary position to component pin.
@@ -654,11 +657,7 @@ class Schematic:
         return self.add_wire(start, pin_pos)
 
     def add_wire_between_pins(
-        self,
-        component1_ref: str,
-        pin1_number: str,
-        component2_ref: str,
-        pin2_number: str
+        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
     ) -> Optional[str]:
         """
         Add wire between two component pins.
@@ -681,11 +680,7 @@ class Schematic:
         return self.add_wire(pin1_pos, pin2_pos)
 
     def connect_pins_with_wire(
-        self,
-        component1_ref: str,
-        pin1_number: str,
-        component2_ref: str,
-        pin2_number: str
+        self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
     ) -> Optional[str]:
         """
         Connect two component pins with a wire (alias for add_wire_between_pins).
@@ -709,7 +704,7 @@ class Schematic:
         effects: Optional[Dict[str, Any]] = None,
         rotation: float = 0,
         size: Optional[float] = None,
-        uuid: Optional[str] = None
+        uuid: Optional[str] = None,
     ) -> str:
         """
         Add a text label to the schematic.
@@ -741,7 +736,7 @@ class Schematic:
         rotation: float = 0.0,
         size: float = 1.27,
         exclude_from_sim: bool = False,
-        effects: Optional[Dict[str, Any]] = None
+        effects: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Add free text annotation to the schematic.
@@ -758,7 +753,9 @@ class Schematic:
             UUID of created text
         """
         # Use the new texts collection instead of manager
-        text_elem = self._texts.add(text, position, rotation=rotation, size=size, exclude_from_sim=exclude_from_sim)
+        text_elem = self._texts.add(
+            text, position, rotation=rotation, size=size, exclude_from_sim=exclude_from_sim
+        )
         self._sync_texts_to_data()  # Sync immediately
         self._format_sync_manager.mark_dirty("text", "add", {"uuid": text_elem.uuid})
         self._modified = True
@@ -779,7 +776,7 @@ class Schematic:
         justify_vertical: str = "top",
         exclude_from_sim: bool = False,
         effects: Optional[Dict[str, Any]] = None,
-        stroke: Optional[Dict[str, Any]] = None
+        stroke: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Add a text box with border to the schematic.
@@ -817,7 +814,7 @@ class Schematic:
             justify_vertical=justify_vertical,
             exclude_from_sim=exclude_from_sim,
             effects=effects,
-            stroke=stroke
+            stroke=stroke,
         )
         self._format_sync_manager.mark_dirty("text_box", "add", {"uuid": text_box_uuid})
         self._modified = True
@@ -830,7 +827,7 @@ class Schematic:
         shape: str = "input",
         rotation: float = 0.0,
         size: float = 1.27,
-        effects: Optional[Dict[str, Any]] = None
+        effects: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Add a hierarchical label for sheet connections.
@@ -858,7 +855,7 @@ class Schematic:
         text: str,
         position: Union[Point, Tuple[float, float]],
         shape: str = "input",
-        effects: Optional[Dict[str, Any]] = None
+        effects: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Add a global label for project-wide connections.
@@ -907,7 +904,9 @@ class Schematic:
         removed = self._hierarchical_labels.remove(label_uuid)
         if removed:
             self._sync_hierarchical_labels_to_data()  # Sync immediately
-            self._format_sync_manager.mark_dirty("hierarchical_label", "remove", {"uuid": label_uuid})
+            self._format_sync_manager.mark_dirty(
+                "hierarchical_label", "remove", {"uuid": label_uuid}
+            )
             self._modified = True
         return removed
 
@@ -922,7 +921,7 @@ class Schematic:
         stroke_type: str = "solid",
         project_name: Optional[str] = None,
         page_number: Optional[str] = None,
-        uuid: Optional[str] = None
+        uuid: Optional[str] = None,
     ) -> str:
         """
         Add a hierarchical sheet to the schematic.
@@ -942,12 +941,15 @@ class Schematic:
             UUID of created sheet
         """
         sheet_uuid = self._sheet_manager.add_sheet(
-            name, filename, position, size,
+            name,
+            filename,
+            position,
+            size,
             uuid_str=uuid,
             stroke_width=stroke_width,
             stroke_type=stroke_type,
             project_name=project_name,
-            page_number=page_number
+            page_number=page_number,
         )
         self._format_sync_manager.mark_dirty("sheet", "add", {"uuid": sheet_uuid})
         self._modified = True
@@ -961,7 +963,7 @@ class Schematic:
         position: Union[Point, Tuple[float, float]],
         rotation: float = 0,
         justify: str = "left",
-        uuid: Optional[str] = None
+        uuid: Optional[str] = None,
     ) -> str:
         """
         Add a pin to a hierarchical sheet.
@@ -1010,7 +1012,7 @@ class Schematic:
         stroke_type: str = "solid",
         fill_type: str = "none",
         stroke_color: Optional[Tuple[int, int, int, float]] = None,
-        fill_color: Optional[Tuple[int, int, int, float]] = None
+        fill_color: Optional[Tuple[int, int, int, float]] = None,
     ) -> str:
         """
         Add a rectangle to the schematic.
@@ -1028,16 +1030,11 @@ class Schematic:
             UUID of created rectangle
         """
         # Convert individual parameters to stroke/fill dicts
-        stroke = {
-            "width": stroke_width,
-            "type": stroke_type
-        }
+        stroke = {"width": stroke_width, "type": stroke_type}
         if stroke_color:
             stroke["color"] = stroke_color
 
-        fill = {
-            "type": fill_type
-        }
+        fill = {"type": fill_type}
         if fill_color:
             fill["color"] = fill_color
 
@@ -1066,7 +1063,7 @@ class Schematic:
         self,
         position: Union[Point, Tuple[float, float]],
         scale: float = 1.0,
-        data: Optional[str] = None
+        data: Optional[str] = None,
     ) -> str:
         """
         Add an image to the schematic.
@@ -1089,7 +1086,7 @@ class Schematic:
         bbox,
         stroke_width: float = 0.127,
         stroke_color: str = "black",
-        stroke_type: str = "solid"
+        stroke_type: str = "solid",
     ) -> str:
         """
         Draw a bounding box rectangle around the given bounding box.
@@ -1107,19 +1104,14 @@ class Schematic:
         start = (bbox.min_x, bbox.min_y)
         end = (bbox.max_x, bbox.max_y)
 
-        return self.add_rectangle(
-            start,
-            end,
-            stroke_width=stroke_width,
-            stroke_type=stroke_type
-        )
+        return self.add_rectangle(start, end, stroke_width=stroke_width, stroke_type=stroke_type)
 
     def draw_bounding_box(
         self,
         bbox: "BoundingBox",
         stroke_width: float = 0.127,
         stroke_color: Optional[str] = None,
-        stroke_type: str = "solid"
+        stroke_type: str = "solid",
     ) -> str:
         """
         Draw a single bounding box as a rectangle.
@@ -1157,7 +1149,7 @@ class Schematic:
             end=(bbox.max_x, bbox.max_y),
             stroke_width=stroke_width,
             stroke_type=stroke_type,
-            stroke_color=stroke_rgba
+            stroke_color=stroke_rgba,
         )
 
         logger.debug(f"Drew bounding box: {bbox}")
@@ -1168,7 +1160,7 @@ class Schematic:
         include_properties: bool = False,
         stroke_width: float = 0.127,
         stroke_color: str = "green",
-        stroke_type: str = "solid"
+        stroke_type: str = "solid",
     ) -> List[str]:
         """
         Draw bounding boxes for all components.
@@ -1201,7 +1193,7 @@ class Schematic:
         date: str = "",
         rev: str = "",
         company: str = "",
-        comments: Optional[Dict[int, str]] = None
+        comments: Optional[Dict[int, str]] = None,
     ) -> None:
         """
         Set title block information.
@@ -1324,7 +1316,9 @@ class Schematic:
         """Enter atomic operation context."""
         # Create backup for rollback
         if self._file_path and self._file_path.exists():
-            self._backup_path = self._file_io_manager.create_backup(self._file_path, ".atomic_backup")
+            self._backup_path = self._file_io_manager.create_backup(
+                self._file_path, ".atomic_backup"
+            )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1364,12 +1358,7 @@ class Schematic:
 
         # Update sheet instances
         if not self._data["sheet_instances"]:
-            self._data["sheet_instances"] = [
-                {
-                    "path": "/",
-                    "page": "1"
-                }
-            ]
+            self._data["sheet_instances"] = [{"path": "/", "page": "1"}]
 
         # Remove symbol_instances section - instances are stored within each symbol in lib_symbols
         # This matches KiCAD's format where instances are part of the symbol definition
@@ -1457,7 +1446,10 @@ class Schematic:
         for no_connect_element in self._no_connects:
             no_connect_dict = {
                 "uuid": no_connect_element.uuid,
-                "position": {"x": no_connect_element.position.x, "y": no_connect_element.position.y},
+                "position": {
+                    "x": no_connect_element.position.x,
+                    "y": no_connect_element.position.y,
+                },
             }
             no_connect_data.append(no_connect_dict)
 
@@ -1477,7 +1469,6 @@ class Schematic:
 
         self._data["nets"] = net_data
 
-
     def _convert_symbol_to_kicad_format(self, symbol_def, lib_id: str):
         """Convert symbol definition to KiCAD format."""
         # Use raw data if available, but fix the symbol name to use full lib_id
@@ -1486,10 +1477,11 @@ class Schematic:
 
             # Check if raw data already contains instances with project info
             project_refs_found = []
+
             def find_project_refs(data, path="root"):
                 if isinstance(data, list):
                     for i, item in enumerate(data):
-                        if hasattr(item, '__str__') and str(item) == 'project':
+                        if hasattr(item, "__str__") and str(item) == "project":
                             if i < len(data) - 1:
                                 project_refs_found.append(f"{path}[{i}] = '{data[i+1]}'")
                         elif isinstance(item, list):
@@ -1524,7 +1516,11 @@ class Schematic:
         for i, element in enumerate(symbol_data):
             if isinstance(element, list):
                 # Check if this is an instances section
-                if len(element) > 0 and hasattr(element[0], '__str__') and str(element[0]) == 'instances':
+                if (
+                    len(element) > 0
+                    and hasattr(element[0], "__str__")
+                    and str(element[0]) == "instances"
+                ):
                     # Look for project references within instances
                     self._update_project_in_instances(element)
                 else:
@@ -1539,7 +1535,7 @@ class Schematic:
         for i, element in enumerate(instances_element):
             if isinstance(element, list) and len(element) >= 2:
                 # Check if this is a project element: ['project', 'old_name', ...]
-                if hasattr(element[0], '__str__') and str(element[0]) == 'project':
+                if hasattr(element[0], "__str__") and str(element[0]) == "project":
                     old_name = element[1]
                     element[1] = self.name  # Replace with current schematic name
                 else:

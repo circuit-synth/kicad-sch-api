@@ -3,6 +3,7 @@ Test rectangle functionality in kicad-sch-api.
 """
 
 import pytest
+
 from kicad_sch_api.core.schematic import Schematic
 from kicad_sch_api.core.types import Point
 
@@ -18,7 +19,7 @@ def test_add_rectangle():
         end=(50.0, 60.0),
         stroke_width=0.127,
         stroke_type="solid",
-        fill_type="none"
+        fill_type="none",
     )
 
     # Verify UUID was returned
@@ -48,11 +49,7 @@ def test_add_rectangle_with_point_objects():
     start = Point(100.0, 200.0)
     end = Point(150.0, 250.0)
 
-    rect_uuid = sch.add_rectangle(
-        start=start,
-        end=end,
-        stroke_width=0.254
-    )
+    rect_uuid = sch.add_rectangle(start=start, end=end, stroke_width=0.254)
 
     assert rect_uuid is not None
     rect = sch._data["rectangles"][0]
