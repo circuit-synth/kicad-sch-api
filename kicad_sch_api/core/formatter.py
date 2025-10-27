@@ -125,6 +125,10 @@ class ExactFormatter:
         self.rules["global_label"] = FormatRule(inline=False, quote_indices={1})
         self.rules["hierarchical_label"] = FormatRule(inline=False, quote_indices={1})
 
+        # Text elements
+        self.rules["text"] = FormatRule(inline=False, quote_indices={1})
+        self.rules["text_box"] = FormatRule(inline=False, quote_indices={1})
+
         # Effects and text formatting
         self.rules["effects"] = FormatRule(inline=False)
         self.rules["font"] = FormatRule(inline=False)
@@ -279,6 +283,8 @@ class ExactFormatter:
             "junction",
             "label",
             "hierarchical_label",
+            "text",
+            "text_box",
             "polyline",
             "rectangle",
         ):
@@ -384,7 +390,8 @@ class ExactFormatter:
                 result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
             else:
                 if i in rule.quote_indices and isinstance(element, str):
-                    result += f' "{element}"'
+                    escaped_element = self._escape_string(element)
+                    result += f' "{escaped_element}"'
                 else:
                     result += f" {self._format_element(element, 0)}"
 
@@ -396,7 +403,8 @@ class ExactFormatter:
         indent = "\t" * indent_level
         next_indent = "\t" * (indent_level + 1)
 
-        result = f"({lst[0]}"
+        tag = str(lst[0])
+        result = f"({tag}"
 
         for i, element in enumerate(lst[1:], 1):
             if isinstance(element, list):
@@ -425,9 +433,18 @@ class ExactFormatter:
         return True
 
     def _escape_string(self, text: str) -> str:
-        """Escape quotes in string for S-expression formatting."""
-        # Replace double quotes with escaped quotes
-        return text.replace('"', '\\"')
+        """Escape special characters in string for S-expression formatting."""
+        # Escape backslashes first (must be done before other replacements)
+        text = text.replace('\\', '\\\\')
+        # Escape double quotes
+        text = text.replace('"', '\\"')
+        # Escape newlines (convert actual newlines to escaped representation)
+        text = text.replace('\n', '\\n')
+        # Escape carriage returns
+        text = text.replace('\r', '\\r')
+        # Escape tabs
+        text = text.replace('\t', '\\t')
+        return text
 
     def _needs_quoting(self, text: str) -> bool:
         """Check if string needs to be quoted."""
