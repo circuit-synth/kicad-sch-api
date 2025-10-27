@@ -425,9 +425,18 @@ class ExactFormatter:
         return True
 
     def _escape_string(self, text: str) -> str:
-        """Escape quotes in string for S-expression formatting."""
-        # Replace double quotes with escaped quotes
-        return text.replace('"', '\\"')
+        """Escape special characters in string for S-expression formatting."""
+        # Escape backslashes first (must be done before other replacements)
+        text = text.replace('\\', '\\\\')
+        # Escape double quotes
+        text = text.replace('"', '\\"')
+        # Escape newlines (convert actual newlines to escaped representation)
+        text = text.replace('\n', '\\n')
+        # Escape carriage returns
+        text = text.replace('\r', '\\r')
+        # Escape tabs
+        text = text.replace('\t', '\\t')
+        return text
 
     def _needs_quoting(self, text: str) -> bool:
         """Check if string needs to be quoted."""
