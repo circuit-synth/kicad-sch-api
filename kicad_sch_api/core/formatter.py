@@ -283,6 +283,8 @@ class ExactFormatter:
             "junction",
             "label",
             "hierarchical_label",
+            "text",
+            "text_box",
             "polyline",
             "rectangle",
         ):
