@@ -223,7 +223,7 @@ class TestExecutorModes:
         from kicad_sch_api.cli.base import KiCadExecutor
 
         executor = KiCadExecutor(mode='local', verbose=True)
-        result = export_netlist(simple_schematic, executor=executor)
+        result = export_netlist(sch_path, executor=executor)
 
         assert result.exists()
 
