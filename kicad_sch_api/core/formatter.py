@@ -125,6 +125,10 @@ class ExactFormatter:
         self.rules["global_label"] = FormatRule(inline=False, quote_indices={1})
         self.rules["hierarchical_label"] = FormatRule(inline=False, quote_indices={1})
 
+        # Text elements
+        self.rules["text"] = FormatRule(inline=False, quote_indices={1})
+        self.rules["text_box"] = FormatRule(inline=False, quote_indices={1})
+
         # Effects and text formatting
         self.rules["effects"] = FormatRule(inline=False)
         self.rules["font"] = FormatRule(inline=False)
