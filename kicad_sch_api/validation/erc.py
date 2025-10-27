@@ -5,14 +5,14 @@ Coordinates all validators and produces comprehensive ERC results.
 """
 
 import time
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
-from kicad_sch_api.validation.erc_models import ERCViolation, ERCResult, ERCConfig
+from kicad_sch_api.validation.erc_models import ERCConfig, ERCResult, ERCViolation
 from kicad_sch_api.validation.validators import (
     BaseValidator,
-    PinTypeValidator,
-    ConnectivityValidator,
     ComponentValidator,
+    ConnectivityValidator,
+    PinTypeValidator,
     PowerValidator,
 )
 

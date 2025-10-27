@@ -5,13 +5,14 @@ Tests the actual validation logic with test schematics.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 from kicad_sch_api.validation.erc import ElectricalRulesChecker
 from kicad_sch_api.validation.validators import (
-    PinTypeValidator,
-    ConnectivityValidator,
     ComponentValidator,
-    PowerValidator
+    ConnectivityValidator,
+    PinTypeValidator,
+    PowerValidator,
 )
 
 

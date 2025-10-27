@@ -17,6 +17,7 @@ import sexpdata
 from ..library.cache import get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
 from .components import ComponentCollection
+from .factories import ElementFactory
 from .formatter import ExactFormatter
 from .junctions import JunctionCollection
 from .labels import LabelCollection
@@ -52,7 +53,6 @@ from .types import (
     point_from_dict_or_tuple,
 )
 from .wires import WireCollection
-from .factories import ElementFactory
 
 logger = logging.getLogger(__name__)
 

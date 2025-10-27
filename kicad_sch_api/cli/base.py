@@ -6,11 +6,11 @@ either locally or via Docker containers.
 """
 
 import os
-import subprocess
 import shutil
-from pathlib import Path
-from typing import List, Optional, Dict, Any
+import subprocess
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from kicad_sch_api.cli.types import ExecutionMode
 

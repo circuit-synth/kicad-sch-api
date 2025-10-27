@@ -8,10 +8,10 @@ while maintaining exact format preservation.
 import logging
 import time
 from pathlib import Path
-from ..config import config
 from typing import Any, Dict, Optional, Union
 
 from ...utils.validation import ValidationError
+from ..config import config
 from ..formatter import ExactFormatter
 from ..parser import SExpressionParser
 

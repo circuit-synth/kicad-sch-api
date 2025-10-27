@@ -4,9 +4,9 @@ ERC data models: ERCViolation, ERCResult, ERCConfig.
 These models represent validation results and configuration.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Set, Any
 import json
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set
 
 from kicad_sch_api.core.types import Point
 

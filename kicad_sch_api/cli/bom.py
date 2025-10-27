@@ -1,7 +1,7 @@
 """Bill of Materials (BOM) export functionality using kicad-cli."""
 
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 from kicad_sch_api.cli.base import KiCadExecutor
 

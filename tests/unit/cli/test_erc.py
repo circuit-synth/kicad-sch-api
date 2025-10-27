@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from kicad_sch_api.cli.erc import run_erc, ErcReport, ErcViolation
+from kicad_sch_api.cli.erc import ErcReport, ErcViolation, run_erc
 
 
 class TestERCExecution:

@@ -4,8 +4,8 @@ ERC validators: PinType, Connectivity, Component, Power.
 Individual validators for different categories of electrical rules.
 """
 
-from typing import List, Dict, Set, Tuple, Optional, TYPE_CHECKING
 import re
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
 from kicad_sch_api.validation.erc_models import ERCViolation
 from kicad_sch_api.validation.pin_matrix import PinConflictMatrix, PinSeverity

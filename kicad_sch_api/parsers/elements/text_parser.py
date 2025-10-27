@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 import sexpdata
 
 from ...core.config import config
-
 from ..base import BaseElementParser
 
 logger = logging.getLogger(__name__)

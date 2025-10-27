@@ -5,6 +5,7 @@ Tests the ERC pin type compatibility matrix matching KiCAD behavior.
 """
 
 import pytest
+
 from kicad_sch_api.validation.pin_matrix import PinConflictMatrix, PinSeverity
 
 

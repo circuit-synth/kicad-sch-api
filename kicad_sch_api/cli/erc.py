@@ -1,9 +1,9 @@
 """Electrical Rule Check (ERC) functionality using kicad-cli."""
 
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from kicad_sch_api.cli.base import KiCadExecutor
 from kicad_sch_api.cli.types import ErcFormat, ErcSeverity, Units

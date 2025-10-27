@@ -5,8 +5,8 @@ Defines electrical compatibility rules between different pin types,
 matching KiCAD's default ERC matrix.
 """
 
-from typing import Dict, Tuple
 from enum import IntEnum
+from typing import Dict, Tuple
 
 
 class PinSeverity(IntEnum):

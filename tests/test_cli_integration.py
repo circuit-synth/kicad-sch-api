@@ -8,15 +8,15 @@ These tests require either:
 Tests will be skipped if neither is available.
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
+
+import kicad_sch_api as ksa
 from kicad_sch_api.cli import get_executor_info
-from kicad_sch_api.cli.netlist import export_netlist
 from kicad_sch_api.cli.bom import export_bom
 from kicad_sch_api.cli.erc import run_erc
-import kicad_sch_api as ksa
-
+from kicad_sch_api.cli.netlist import export_netlist
 
 # Check if KiCad CLI is available (local or Docker)
 executor_info = get_executor_info()

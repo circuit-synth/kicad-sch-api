@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from kicad_sch_api.cli.netlist import export_netlist, _get_extension_for_format
+from kicad_sch_api.cli.netlist import _get_extension_for_format, export_netlist
 
 
 class TestNetlistExport:

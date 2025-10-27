@@ -5,8 +5,9 @@ Following TDD approach - these tests define the expected behavior.
 """
 
 import pytest
-from kicad_sch_api.validation.erc_models import ERCViolation, ERCResult, ERCConfig
+
 from kicad_sch_api.core.types import Point
+from kicad_sch_api.validation.erc_models import ERCConfig, ERCResult, ERCViolation
 
 
 class TestERCViolation:

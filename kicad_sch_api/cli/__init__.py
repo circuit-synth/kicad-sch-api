@@ -21,15 +21,15 @@ Example:
 """
 
 from kicad_sch_api.cli.base import (
-    KiCadExecutor,
     ExecutionMode,
+    KiCadExecutor,
     get_executor_info,
     set_execution_mode,
 )
 from kicad_sch_api.cli.types import (
-    NetlistFormat,
     ErcFormat,
     ErcSeverity,
+    NetlistFormat,
     Units,
 )
 

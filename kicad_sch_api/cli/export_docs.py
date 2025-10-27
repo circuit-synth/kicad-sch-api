@@ -1,7 +1,7 @@
 """Document export functionality (PDF, SVG, DXF) using kicad-cli."""
 
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 from kicad_sch_api.cli.base import KiCadExecutor
 
