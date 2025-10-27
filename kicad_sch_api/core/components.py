@@ -448,11 +448,25 @@ class ComponentCollection(BaseCollection[Component]):
         Remove component by reference.
 
         Args:
-            reference: Component reference to remove
+            reference: Component reference to remove (e.g., "R1")
 
         Returns:
-            True if component was removed
+            True if component was removed, False if not found
+
+        Raises:
+            TypeError: If reference is not a string
+
+        Examples:
+            sch.components.remove("R1")
+            sch.components.remove("C2")
+
+        Note:
+            For removing by UUID or component object, use remove_by_uuid() or remove_component()
+            respectively. This maintains a clear, simple API contract.
         """
+        if not isinstance(reference, str):
+            raise TypeError(f"reference must be a string, not {type(reference).__name__}")
+
         component = self._reference_index.get(reference)
         if not component:
             return False
@@ -464,6 +478,70 @@ class ComponentCollection(BaseCollection[Component]):
         super().remove(component.uuid)
 
         logger.info(f"Removed component: {reference}")
+        return True
+
+    def remove_by_uuid(self, component_uuid: str) -> bool:
+        """
+        Remove component by UUID.
+
+        Args:
+            component_uuid: Component UUID to remove
+
+        Returns:
+            True if component was removed, False if not found
+
+        Raises:
+            TypeError: If UUID is not a string
+        """
+        if not isinstance(component_uuid, str):
+            raise TypeError(f"component_uuid must be a string, not {type(component_uuid).__name__}")
+
+        if component_uuid not in self._uuid_index:
+            return False
+
+        component = self._items[self._uuid_index[component_uuid]]
+
+        # Remove from component-specific indexes
+        self._remove_from_indexes(component)
+
+        # Remove from base collection
+        super().remove(component_uuid)
+
+        logger.info(f"Removed component by UUID: {component_uuid}")
+        return True
+
+    def remove_component(self, component: "Component") -> bool:
+        """
+        Remove component by component object.
+
+        Args:
+            component: Component object to remove
+
+        Returns:
+            True if component was removed, False if not found
+
+        Raises:
+            TypeError: If component is not a Component instance
+
+        Examples:
+            comp = sch.components.get("R1")
+            sch.components.remove_component(comp)
+        """
+        if not isinstance(component, Component):
+            raise TypeError(
+                f"component must be a Component instance, not {type(component).__name__}"
+            )
+
+        if component.uuid not in self._uuid_index:
+            return False
+
+        # Remove from component-specific indexes
+        self._remove_from_indexes(component)
+
+        # Remove from base collection
+        super().remove(component.uuid)
+
+        logger.info(f"Removed component: {component.reference}")
         return True
 
     def get(self, reference: str) -> Optional[Component]:
