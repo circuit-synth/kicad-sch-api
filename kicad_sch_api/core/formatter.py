@@ -403,7 +403,8 @@ class ExactFormatter:
         indent = "\t" * indent_level
         next_indent = "\t" * (indent_level + 1)
 
-        result = f"({lst[0]}"
+        tag = str(lst[0])
+        result = f"({tag}"
 
         for i, element in enumerate(lst[1:], 1):
             if isinstance(element, list):
