@@ -443,3 +443,131 @@ class TestComponent:
         assert "value='10k'" in repr_str
         assert "pos=(100.000, 100.000)" in repr_str
         assert "rotation=90.0" in repr_str
+
+    def test_remove_component_by_reference(self):
+        """Test removing component by reference."""
+        symbol_data = [
+            SchematicSymbol(
+                uuid="uuid1",
+                lib_id="Device:R",
+                reference="R1",
+                value="10k",
+                position=Point(100, 100),
+            ),
+            SchematicSymbol(
+                uuid="uuid2",
+                lib_id="Device:R",
+                reference="R2",
+                value="20k",
+                position=Point(200, 100),
+            ),
+        ]
+        collection = ComponentCollection(symbol_data)
+        assert len(collection) == 2
+
+        # Remove R2
+        result = collection.remove("R2")
+        assert result is True
+        assert len(collection) == 1
+        assert collection.get_by_reference("R1") is not None
+        assert collection.get_by_reference("R2") is None
+
+    def test_remove_component_by_uuid(self):
+        """Test removing component by UUID."""
+        symbol_data = SchematicSymbol(
+            uuid="test-uuid-123",
+            lib_id="Device:R",
+            reference="R1",
+            value="10k",
+            position=Point(100, 100),
+        )
+        collection = ComponentCollection([symbol_data])
+
+        # Remove by UUID
+        result = collection.remove_by_uuid("test-uuid-123")
+        assert result is True
+        assert len(collection) == 0
+        assert collection.get_by_reference("R1") is None
+
+    def test_remove_component_by_object(self):
+        """Test removing component by component object."""
+        symbol_data = SchematicSymbol(
+            uuid="uuid1",
+            lib_id="Device:R",
+            reference="R1",
+            value="10k",
+            position=Point(100, 100),
+        )
+        collection = ComponentCollection([symbol_data])
+        component = collection.get_by_reference("R1")
+
+        # Remove by object
+        result = collection.remove_component(component)
+        assert result is True
+        assert len(collection) == 0
+        assert collection.get_by_reference("R1") is None
+
+    def test_remove_nonexistent_component_by_reference(self):
+        """Test removing non-existent component by reference returns False."""
+        collection = ComponentCollection()
+        result = collection.remove("NonExistent")
+        assert result is False
+
+    def test_remove_nonexistent_component_by_uuid(self):
+        """Test removing non-existent component by UUID returns False."""
+        collection = ComponentCollection()
+        result = collection.remove_by_uuid("nonexistent-uuid")
+        assert result is False
+
+    def test_remove_component_invalid_type_reference(self):
+        """Test that remove() with non-string raises TypeError."""
+        collection = ComponentCollection()
+        with pytest.raises(TypeError, match="reference must be a string"):
+            collection.remove(123)
+
+    def test_remove_component_invalid_type_uuid(self):
+        """Test that remove_by_uuid() with non-string raises TypeError."""
+        collection = ComponentCollection()
+        with pytest.raises(TypeError, match="component_uuid must be a string"):
+            collection.remove_by_uuid(123)
+
+    def test_remove_component_invalid_type_object(self):
+        """Test that remove_component() with non-Component raises TypeError."""
+        collection = ComponentCollection()
+        with pytest.raises(TypeError, match="component must be a Component instance"):
+            collection.remove_component("R1")
+
+    def test_remove_updates_indexes(self):
+        """Test that removing component updates all indexes properly."""
+        symbol_data = [
+            SchematicSymbol(
+                uuid="uuid1",
+                lib_id="Device:R",
+                reference="R1",
+                value="10k",
+                position=Point(100, 100),
+            ),
+            SchematicSymbol(
+                uuid="uuid2",
+                lib_id="Device:C",
+                reference="C1",
+                value="100nF",
+                position=Point(200, 100),
+            ),
+        ]
+        collection = ComponentCollection(symbol_data)
+
+        # Verify initial state
+        assert "R1" in collection._reference_index
+        assert "Device:R" in collection._lib_id_index
+        assert "10k" in collection._value_index
+
+        # Remove R1
+        collection.remove("R1")
+
+        # Verify indexes are updated
+        assert "R1" not in collection._reference_index
+        assert "Device:R" not in collection._lib_id_index
+        assert "10k" not in collection._value_index
+        assert collection.get_by_lib_id("Device:R") == []
+        assert collection.get_by_value("10k") == []
