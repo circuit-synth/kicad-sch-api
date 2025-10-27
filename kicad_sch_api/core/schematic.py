@@ -1419,6 +1419,192 @@ class Schematic:
                     # Recursively check nested elements
                     self._update_project_in_instances(element)
 
+    # ============================================================================
+    # Export Methods (using kicad-cli)
+    # ============================================================================
+
+    def run_erc(self, **kwargs):
+        """
+        Run Electrical Rule Check (ERC) on this schematic.
+
+        This requires the schematic to be saved first.
+
+        Args:
+            **kwargs: Arguments passed to cli.erc.run_erc()
+                - output_path: Path for ERC report
+                - format: 'json' or 'report'
+                - severity: 'all', 'error', 'warning', 'exclusions'
+                - units: 'mm', 'in', 'mils'
+
+        Returns:
+            ErcReport with violations and summary
+
+        Example:
+            >>> report = sch.run_erc()
+            >>> if report.has_errors():
+            ...     print(f"Found {report.error_count} errors")
+        """
+        from kicad_sch_api.cli.erc import run_erc
+
+        if not self._file_path:
+            raise ValueError("Schematic must be saved before running ERC")
+
+        # Save first to ensure file is up-to-date
+        self.save()
+
+        return run_erc(self._file_path, **kwargs)
+
+    def export_netlist(self, format="kicadsexpr", **kwargs):
+        """
+        Export netlist from this schematic.
+
+        This requires the schematic to be saved first.
+
+        Args:
+            format: Netlist format (default: 'kicadsexpr')
+                - kicadsexpr: KiCad S-expression (default)
+                - kicadxml: KiCad XML
+                - spice: SPICE netlist
+                - spicemodel: SPICE with models
+                - cadstar, orcadpcb2, pads, allegro
+            **kwargs: Arguments passed to cli.netlist.export_netlist()
+
+        Returns:
+            Path to generated netlist file
+
+        Example:
+            >>> netlist = sch.export_netlist(format='spice')
+            >>> print(f"Netlist: {netlist}")
+        """
+        from kicad_sch_api.cli.netlist import export_netlist
+
+        if not self._file_path:
+            raise ValueError("Schematic must be saved before exporting netlist")
+
+        # Save first to ensure file is up-to-date
+        self.save()
+
+        return export_netlist(self._file_path, format=format, **kwargs)
+
+    def export_bom(self, **kwargs):
+        """
+        Export Bill of Materials (BOM) from this schematic.
+
+        This requires the schematic to be saved first.
+
+        Args:
+            **kwargs: Arguments passed to cli.bom.export_bom()
+                - output_path: Path for BOM file
+                - fields: List of fields to export
+                - group_by: Fields to group by
+                - exclude_dnp: Exclude Do-Not-Populate components
+                - And many more options...
+
+        Returns:
+            Path to generated BOM file
+
+        Example:
+            >>> bom = sch.export_bom(
+            ...     fields=['Reference', 'Value', 'Footprint', 'MPN'],
+            ...     group_by=['Value', 'Footprint'],
+            ...     exclude_dnp=True,
+            ... )
+        """
+        from kicad_sch_api.cli.bom import export_bom
+
+        if not self._file_path:
+            raise ValueError("Schematic must be saved before exporting BOM")
+
+        # Save first to ensure file is up-to-date
+        self.save()
+
+        return export_bom(self._file_path, **kwargs)
+
+    def export_pdf(self, **kwargs):
+        """
+        Export schematic as PDF.
+
+        This requires the schematic to be saved first.
+
+        Args:
+            **kwargs: Arguments passed to cli.export_docs.export_pdf()
+                - output_path: Path for PDF file
+                - theme: Color theme
+                - black_and_white: B&W export
+                - And more options...
+
+        Returns:
+            Path to generated PDF file
+
+        Example:
+            >>> pdf = sch.export_pdf(theme='Kicad Classic')
+        """
+        from kicad_sch_api.cli.export_docs import export_pdf
+
+        if not self._file_path:
+            raise ValueError("Schematic must be saved before exporting PDF")
+
+        # Save first to ensure file is up-to-date
+        self.save()
+
+        return export_pdf(self._file_path, **kwargs)
+
+    def export_svg(self, **kwargs):
+        """
+        Export schematic as SVG.
+
+        This requires the schematic to be saved first.
+
+        Args:
+            **kwargs: Arguments passed to cli.export_docs.export_svg()
+                - output_dir: Output directory
+                - theme: Color theme
+                - black_and_white: B&W export
+                - And more options...
+
+        Returns:
+            List of paths to generated SVG files
+
+        Example:
+            >>> svgs = sch.export_svg()
+            >>> for svg in svgs:
+            ...     print(f"Generated: {svg}")
+        """
+        from kicad_sch_api.cli.export_docs import export_svg
+
+        if not self._file_path:
+            raise ValueError("Schematic must be saved before exporting SVG")
+
+        # Save first to ensure file is up-to-date
+        self.save()
+
+        return export_svg(self._file_path, **kwargs)
+
+    def export_dxf(self, **kwargs):
+        """
+        Export schematic as DXF.
+
+        This requires the schematic to be saved first.
+
+        Args:
+            **kwargs: Arguments passed to cli.export_docs.export_dxf()
+
+        Returns:
+            List of paths to generated DXF files
+
+        Example:
+            >>> dxfs = sch.export_dxf()
+        """
+        from kicad_sch_api.cli.export_docs import export_dxf
+
+        if not self._file_path:
+            raise ValueError("Schematic must be saved before exporting DXF")
+
+        # Save first to ensure file is up-to-date
+        self.save()
+
+        return export_dxf(self._file_path, **kwargs)
+
     def __str__(self) -> str:
         """String representation."""
         title = self.title_block.get("title", "Untitled")
