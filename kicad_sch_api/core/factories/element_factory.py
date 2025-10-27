@@ -126,7 +126,7 @@ class ElementFactory:
             uuid=label_dict.get("uuid", str(uuid.uuid4())),
             position=pos,
             text=label_dict.get("text", ""),
-            label_type=LabelType(label_dict.get("label_type", "local")),
+            label_type=LabelType(label_dict.get("label_type", "label")),
             rotation=label_dict.get("rotation", 0.0),
             size=label_dict.get("size", 1.27),
             shape=(
