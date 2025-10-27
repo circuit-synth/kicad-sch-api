@@ -390,7 +390,8 @@ class ExactFormatter:
                 result += f"\n{next_indent}{self._format_element(element, indent_level + 1)}"
             else:
                 if i in rule.quote_indices and isinstance(element, str):
-                    result += f' "{element}"'
+                    escaped_element = self._escape_string(element)
+                    result += f' "{escaped_element}"'
                 else:
                     result += f" {self._format_element(element, 0)}"
 
