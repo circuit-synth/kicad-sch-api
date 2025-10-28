@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 import sexpdata
 
+from ...core.parsing_utils import parse_bool_property
 from ...core.types import Point
 from ..base import BaseElementParser
 
@@ -74,9 +75,15 @@ class SymbolParser(BaseElementParser):
                                 prop_value = str(prop_value).replace('\\"', '"')
                             symbol_data["properties"][prop_name] = prop_value
                 elif element_type == "in_bom":
-                    symbol_data["in_bom"] = sub_item[1] == "yes" if len(sub_item) > 1 else True
+                    symbol_data["in_bom"] = parse_bool_property(
+                        sub_item[1] if len(sub_item) > 1 else None,
+                        default=True
+                    )
                 elif element_type == "on_board":
-                    symbol_data["on_board"] = sub_item[1] == "yes" if len(sub_item) > 1 else True
+                    symbol_data["on_board"] = parse_bool_property(
+                        sub_item[1] if len(sub_item) > 1 else None,
+                        default=True
+                    )
 
             return symbol_data
 
