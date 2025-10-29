@@ -11,11 +11,12 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 from ..components import Component
 from ..types import Point, Wire
+from .base import BaseManager
 
 logger = logging.getLogger(__name__)
 
 
-class FormatSyncManager:
+class FormatSyncManager(BaseManager):
     """
     Manages synchronization between object models and S-expression data.
 
@@ -34,7 +35,7 @@ class FormatSyncManager:
         Args:
             schematic_data: Reference to schematic data
         """
-        self._data = schematic_data
+        super().__init__(schematic_data)
         self._dirty_flags: Set[str] = set()
         self._change_log: List[Dict[str, Any]] = []
         self._sync_lock = False
