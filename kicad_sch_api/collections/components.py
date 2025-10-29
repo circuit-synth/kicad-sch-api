@@ -120,7 +120,7 @@ class Component:
 
     def set_property(self, name: str, value: str) -> None:
         """Set component property value."""
-        self._data.properties[name] = value
+        self._data.set_property(name, value)
         self._collection._mark_modified()
 
     def __repr__(self) -> str:

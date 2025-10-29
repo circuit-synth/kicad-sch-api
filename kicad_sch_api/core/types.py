@@ -156,26 +156,238 @@ class SchematicPin:
 
 
 @dataclass
+class PropertyEffects:
+    """
+    Font and formatting effects for a component property.
+
+    Represents the (effects ...) section of a KiCad property S-expression.
+    """
+
+    font_size: Tuple[float, float] = (1.27, 1.27)  # (width, height)
+    justification: Optional[str] = None  # "left"|"right"|"center"|None
+    hide: bool = False
+
+    def to_sexp(self) -> List:
+        """
+        Convert to S-expression: (effects ...)
+
+        Returns:
+            S-expression list representing the effects
+        """
+        import sexpdata
+
+        effects = [sexpdata.Symbol("effects")]
+
+        # Font
+        effects.append([
+            sexpdata.Symbol("font"),
+            [sexpdata.Symbol("size"), self.font_size[0], self.font_size[1]]
+        ])
+
+        # Justification (optional)
+        if self.justification:
+            effects.append([
+                sexpdata.Symbol("justify"),
+                sexpdata.Symbol(self.justification)
+            ])
+
+        # Hide flag (optional)
+        if self.hide:
+            effects.append([
+                sexpdata.Symbol("hide"),
+                sexpdata.Symbol("yes")
+            ])
+
+        return effects
+
+
+@dataclass
+class ComponentProperty:
+    """
+    A component property with complete formatting data.
+
+    Represents a complete property S-expression:
+    (property "Name" "Value" (at x y rotation) (effects ...))
+
+    This captures all KiCad property attributes including position, rotation,
+    font size, justification, and visibility flags.
+    """
+
+    name: str
+    value: str
+    position: Optional[Tuple[float, float]] = None  # (x, y) - None = use defaults
+    rotation: float = 0.0  # degrees
+    effects: PropertyEffects = field(default_factory=PropertyEffects)
+
+    def to_sexp(self) -> List:
+        """
+        Convert to complete S-expression.
+
+        Returns:
+            S-expression list representing the complete property
+        """
+        import sexpdata
+
+        sexp = [
+            sexpdata.Symbol("property"),
+            self.name,
+            self.value,
+        ]
+
+        # Position (required in KiCad files)
+        if self.position:
+            x, y = self.position
+            # Format as int if whole number
+            x = int(x) if x == int(x) else x
+            y = int(y) if y == int(y) else y
+            r = int(self.rotation) if self.rotation == int(self.rotation) else self.rotation
+            sexp.append([sexpdata.Symbol("at"), x, y, r])
+
+        # Effects
+        sexp.append(self.effects.to_sexp())
+
+        return sexp
+
+
 class SchematicSymbol:
-    """Component symbol in a schematic."""
+    """
+    Component symbol in a schematic.
 
-    uuid: str
-    lib_id: str  # e.g., "Device:R"
-    position: Point
-    reference: str  # e.g., "R1"
-    value: str = ""
-    footprint: Optional[str] = None
-    properties: Dict[str, str] = field(default_factory=dict)
-    pins: List[SchematicPin] = field(default_factory=list)
-    rotation: float = 0.0
-    in_bom: bool = True
-    on_board: bool = True
-    unit: int = 1
+    Note: This class provides backward compatibility for old-style initialization
+    with reference/value/footprint as strings, while internally using property objects.
+    """
 
-    def __post_init__(self) -> None:
-        # Generate UUID if not provided
-        if not self.uuid:
-            self.uuid = str(uuid4())
+    def __init__(
+        self,
+        uuid: str,
+        lib_id: str,
+        position: Point,
+        reference_property: Optional[ComponentProperty] = None,
+        value_property: Optional[ComponentProperty] = None,
+        footprint_property: Optional[ComponentProperty] = None,
+        custom_properties: Optional[Dict[str, ComponentProperty]] = None,
+        pins: Optional[List[SchematicPin]] = None,
+        rotation: float = 0.0,
+        in_bom: bool = True,
+        on_board: bool = True,
+        unit: int = 1,
+        # Backward compatibility: accept old-style string parameters
+        reference: Optional[str] = None,
+        value: Optional[str] = None,
+        footprint: Optional[str] = None,
+        properties: Optional[Dict[str, str]] = None,
+    ):
+        """Initialize SchematicSymbol with property objects or legacy strings."""
+        self.uuid = uuid or str(uuid4())
+        self.lib_id = lib_id
+        self.position = position
+        self.pins = pins or []
+        self.rotation = rotation
+        self.in_bom = in_bom
+        self.on_board = on_board
+        self.unit = unit
+
+        # Handle property objects vs legacy strings
+        # Priority: property objects > legacy string parameters
+
+        # Reference
+        if reference_property:
+            self.reference_property = reference_property
+        elif reference:
+            self.reference_property = ComponentProperty("Reference", reference)
+        else:
+            self.reference_property = None
+
+        # Value
+        if value_property:
+            self.value_property = value_property
+        elif value:
+            self.value_property = ComponentProperty("Value", value)
+        else:
+            self.value_property = None
+
+        # Footprint
+        if footprint_property:
+            self.footprint_property = footprint_property
+        elif footprint:
+            self.footprint_property = ComponentProperty(
+                "Footprint", footprint, effects=PropertyEffects(hide=True)
+            )
+        else:
+            self.footprint_property = None
+
+        # Custom properties
+        if custom_properties:
+            self.custom_properties = custom_properties
+        elif properties:
+            # Convert legacy properties dict to ComponentProperty objects
+            self.custom_properties = {
+                name: ComponentProperty(name, val, effects=PropertyEffects(hide=True))
+                for name, val in properties.items()
+            }
+        else:
+            self.custom_properties = {}
+
+    @property
+    def reference(self) -> str:
+        """Get reference value (backward compatible)."""
+        return self.reference_property.value if self.reference_property else ""
+
+    @reference.setter
+    def reference(self, value: str) -> None:
+        """Set reference value, preserving formatting."""
+        if self.reference_property:
+            self.reference_property.value = value
+        else:
+            # Create new property with defaults
+            self.reference_property = ComponentProperty("Reference", value)
+
+    @property
+    def value(self) -> str:
+        """Get value (backward compatible)."""
+        return self.value_property.value if self.value_property else ""
+
+    @value.setter
+    def value(self, value: str) -> None:
+        """Set value, preserving formatting."""
+        if self.value_property:
+            self.value_property.value = value
+        else:
+            self.value_property = ComponentProperty("Value", value)
+
+    @property
+    def footprint(self) -> Optional[str]:
+        """Get footprint value (backward compatible)."""
+        return self.footprint_property.value if self.footprint_property else None
+
+    @footprint.setter
+    def footprint(self, value: Optional[str]) -> None:
+        """Set footprint value, preserving formatting."""
+        if value is None:
+            self.footprint_property = None
+        elif self.footprint_property:
+            self.footprint_property.value = value
+        else:
+            # Footprint defaults to hidden
+            self.footprint_property = ComponentProperty(
+                "Footprint",
+                value,
+                effects=PropertyEffects(hide=True)
+            )
+
+    @property
+    def properties(self) -> Dict[str, str]:
+        """Get custom property values (backward compatible)."""
+        return {name: prop.value for name, prop in self.custom_properties.items()}
+
+    def set_property(self, name: str, value: str) -> None:
+        """Set a custom property value (backward compatible)."""
+        if name in self.custom_properties:
+            self.custom_properties[name].value = value
+        else:
+            self.custom_properties[name] = ComponentProperty(
+                name, value, effects=PropertyEffects(hide=True)
+            )
 
     @property
     def library(self) -> str:
