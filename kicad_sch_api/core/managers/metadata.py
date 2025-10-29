@@ -8,10 +8,12 @@ paper size, title block, version information, and instance sections.
 import logging
 from typing import Any, Dict, List, Optional
 
+from .base import BaseManager
+
 logger = logging.getLogger(__name__)
 
 
-class MetadataManager:
+class MetadataManager(BaseManager):
     """
     Manages schematic metadata and configuration settings.
 
@@ -30,7 +32,7 @@ class MetadataManager:
         Args:
             schematic_data: Reference to schematic data dictionary
         """
-        self._data = schematic_data
+        super().__init__(schematic_data)
 
     def set_paper_size(self, paper: str) -> None:
         """

@@ -12,11 +12,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from ...library.cache import get_symbol_cache
 from ..types import Point, Wire, WireType
 from ..wires import WireCollection
+from .base import BaseManager
 
 logger = logging.getLogger(__name__)
 
 
-class WireManager:
+class WireManager(BaseManager):
     """
     Manages wire operations and pin connectivity in KiCAD schematics.
 
@@ -39,7 +40,7 @@ class WireManager:
             wire_collection: Wire collection for management
             component_collection: Component collection for pin lookups
         """
-        self._data = schematic_data
+        super().__init__(schematic_data)
         self._wires = wire_collection
         self._components = component_collection
         self._symbol_cache = get_symbol_cache()

@@ -14,11 +14,12 @@ from ...utils.validation import ValidationError
 from ..config import config
 from ..formatter import ExactFormatter
 from ..parser import SExpressionParser
+from .base import BaseManager
 
 logger = logging.getLogger(__name__)
 
 
-class FileIOManager:
+class FileIOManager(BaseManager):
     """
     Manages file I/O operations for KiCAD schematics.
 
@@ -31,6 +32,7 @@ class FileIOManager:
 
     def __init__(self):
         """Initialize the FileIOManager."""
+        super().__init__()
         self._parser = SExpressionParser(preserve_format=True)
         self._formatter = ExactFormatter()
 

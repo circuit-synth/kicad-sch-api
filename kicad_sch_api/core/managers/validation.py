@@ -11,11 +11,12 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ...utils.validation import ValidationError, ValidationIssue
 from ..types import Point
+from .base import BaseManager
 
 logger = logging.getLogger(__name__)
 
 
-class ValidationManager:
+class ValidationManager(BaseManager):
     """
     Comprehensive validation manager for schematic integrity.
 
@@ -39,7 +40,7 @@ class ValidationManager:
             component_collection: Component collection for validation
             wire_collection: Wire collection for connectivity analysis
         """
-        self._data = schematic_data
+        super().__init__(schematic_data)
         self._components = component_collection
         self._wires = wire_collection
         self._validation_rules = self._initialize_validation_rules()

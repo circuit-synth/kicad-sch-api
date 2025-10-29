@@ -5,6 +5,7 @@ This package contains specialized managers for different aspects of schematic
 manipulation, enabling clean separation of concerns and better maintainability.
 """
 
+from .base import BaseManager
 from .file_io import FileIOManager
 from .format_sync import FormatSyncManager
 from .graphics import GraphicsManager
@@ -15,6 +16,7 @@ from .validation import ValidationManager
 from .wire import WireManager
 
 __all__ = [
+    "BaseManager",
     "FileIOManager",
     "FormatSyncManager",
     "GraphicsManager",

@@ -11,11 +11,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..types import Point
+from .base import BaseManager
 
 logger = logging.getLogger(__name__)
 
 
-class SheetManager:
+class SheetManager(BaseManager):
     """
     Manages hierarchical sheets and multi-sheet project coordination.
 
@@ -34,7 +35,7 @@ class SheetManager:
         Args:
             schematic_data: Reference to schematic data
         """
-        self._data = schematic_data
+        super().__init__(schematic_data)
 
     def add_sheet(
         self,
