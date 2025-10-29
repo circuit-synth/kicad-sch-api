@@ -216,57 +216,19 @@ The configuration enforces the project's core requirements automatically.
 - **typing-extensions**: Type hint support for older Python versions
 - **uv**: Primary package and environment manager (NOT pip/venv)
 
-## Memory Bank System
+## Architecture Decision Records (ADR)
 
-This repository uses a **Code Memory Bank** system to maintain persistent development context and knowledge across sessions.
+Architectural decisions and technical rationale are documented in `docs/ADR.md`. This file contains:
 
-### Memory Bank Structure
+- **ADR-001**: S-expression Foundation with Enhanced API
+- **ADR-002**: Component-Centric API Design
+- **ADR-003**: Format Preservation Strategy
+- **ADR-004**: Testing Strategy with Reference Schematics
+- **ADR-005**: Performance Optimization Approach
+- **Technology Choices**: Python, sexpdata, pytest decisions
+- **Integration Patterns**: MCP Server architecture, error handling
 
-The `.memory_bank/` directory contains:
-
-- **activeContext.md**: Current development session state and focus areas
-- **decisionLog.md**: Technical decisions, trade-offs, and architectural choices (ADR format)
-- **productContext.md**: Project overview, value proposition, and target users
-- **progress.md**: Completed milestones, current tasks, and next priorities
-- **features/**: PRDs for planned features (create directory as needed)
-
-### Memory Bank Usage - REQUIRED WORKFLOW
-
-**⚠️ CRITICAL**: All development work MUST follow the memory bank workflow to maintain project context and decision history. Claude Code instances have not been following these instructions consistently - this MUST be enforced.
-
-#### Before Starting Any Work:
-1. **Read existing context**: Review `.memory_bank/` files to understand current state
-2. **Update active context**: Document what you're working on and why
-3. **Check decision log**: Ensure new work aligns with previous architectural decisions
-
-#### For New Features:
-1. **Write PRD**: Create Product Requirements Document in `.memory_bank/features/`
-2. **Update decision log**: Document architectural choices and trade-offs
-3. **Update progress**: Track milestones and implementation status
-
-#### Memory Bank Commands:
-```bash
-# REQUIRED: Update memory bank after any significant work
-/umb
-
-# Query past decisions and context
-# Example: "What decisions were made about S-expression parsing?"
-```
-
-#### Memory Bank Structure:
-- **activeContext.md**: Current session state, focus areas, active files
-- **decisionLog.md**: All architectural decisions with rationale (ADR format)
-- **productContext.md**: Project overview, value proposition, target users
-- **progress.md**: Milestones, current tasks, success metrics
-- **features/**: PRDs for planned features (create directory as needed)
-
-#### Required Workflow Pattern:
-1. **Before coding**: Read memory bank context, write feature PRD
-2. **During development**: Update active context with current work
-3. **After completing work**: Update decision log and progress
-4. **Use /umb command**: Update memory bank before ending session
-
-This ensures continuity of development decisions and maintains institutional knowledge across all AI development sessions.
+See `docs/ADR.md` for the complete decision history and architectural guidance.
 
 ## MCP Server Compatibility
 

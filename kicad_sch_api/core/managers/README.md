@@ -179,6 +179,6 @@ When adding new functionality:
 
 ## References
 
-- Architecture decision: See `../.memory_bank/decisionLog.md`
+- Architecture decision: See `docs/ADR.md` in project root
 - Design patterns: See `CLAUDE.md` in project root
 - Related code: `../schematic.py` for integration
