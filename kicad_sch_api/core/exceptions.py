@@ -7,9 +7,10 @@ All exceptions inherit from the base KiCadSchError class.
 
 from typing import Any, List, Optional, TYPE_CHECKING
 
-# Use TYPE_CHECKING to avoid circular imports
+# Import validation types for type hints
+# ValidationLevel is imported at runtime in methods that need it
 if TYPE_CHECKING:
-    from ..utils.validation import ValidationIssue, ValidationLevel
+    from ..utils.validation import ValidationIssue
 
 
 class KiCadSchError(Exception):
@@ -29,7 +30,7 @@ class ValidationError(KiCadSchError):
     def __init__(
         self,
         message: str,
-        issues: Optional[List[Any]] = None,
+        issues: Optional[List["ValidationIssue"]] = None,
         field: str = "",
         value: Any = None,
     ):
@@ -47,11 +48,11 @@ class ValidationError(KiCadSchError):
         self.value = value
         super().__init__(message)
 
-    def add_issue(self, issue: Any) -> None:
+    def add_issue(self, issue: "ValidationIssue") -> None:
         """Add a validation issue to this error."""
         self.issues.append(issue)
 
-    def get_errors(self) -> List[Any]:
+    def get_errors(self) -> List["ValidationIssue"]:
         """Get only error-level issues."""
         # Import here to avoid circular dependency
         from ..utils.validation import ValidationLevel
@@ -62,7 +63,7 @@ class ValidationError(KiCadSchError):
             if hasattr(issue, 'level') and issue.level in (ValidationLevel.ERROR, ValidationLevel.CRITICAL)
         ]
 
-    def get_warnings(self) -> List[Any]:
+    def get_warnings(self) -> List["ValidationIssue"]:
         """Get only warning-level issues."""
         # Import here to avoid circular dependency
         from ..utils.validation import ValidationLevel

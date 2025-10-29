@@ -53,6 +53,12 @@ from .core.config import KiCADConfig, config
 from .core.schematic import Schematic
 from .library.cache import SymbolLibraryCache, get_symbol_cache
 from .utils.validation import ValidationError, ValidationIssue
+# Commonly-used exceptions (ValidationError re-exported from utils for backward compat)
+from .core.exceptions import (
+    KiCadSchError,
+    ElementNotFoundError,
+    DuplicateElementError,
+)
 
 # Version info
 VERSION_INFO = (0, 4, 0)
@@ -69,8 +75,11 @@ __all__ = [
     "KiCADConfig",
     "config",
     # Exceptions
+    "KiCadSchError",
     "ValidationError",
     "ValidationIssue",
+    "ElementNotFoundError",
+    "DuplicateElementError",
     # Version info
     "__version__",
     "VERSION_INFO",
