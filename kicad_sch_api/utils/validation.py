@@ -11,7 +11,20 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Union
 
+# Import ValidationError from new exception hierarchy for backward compatibility
+from ..core.exceptions import ValidationError
+
 logger = logging.getLogger(__name__)
+
+# Export list for public API
+__all__ = [
+    'ValidationError',
+    'ValidationIssue',
+    'ValidationLevel',
+    'SchematicValidator',
+    'validate_schematic_file',
+    'collect_validation_errors',
+]
 
 
 class ValidationLevel(Enum):
@@ -43,28 +56,9 @@ class ValidationIssue:
         return f"{self.level.value.upper()}: {self.category}: {self.message}{context_str}{suggestion_str}"
 
 
-class ValidationError(Exception):
-    """Exception raised when critical validation errors are found."""
-
-    def __init__(self, message: str, issues: List[ValidationIssue] = None):
-        super().__init__(message)
-        self.issues = issues or []
-
-    def add_issue(self, issue: ValidationIssue):
-        """Add a validation issue to this error."""
-        self.issues.append(issue)
-
-    def get_errors(self) -> List[ValidationIssue]:
-        """Get only error-level issues."""
-        return [
-            issue
-            for issue in self.issues
-            if issue.level in (ValidationLevel.ERROR, ValidationLevel.CRITICAL)
-        ]
-
-    def get_warnings(self) -> List[ValidationIssue]:
-        """Get only warning-level issues."""
-        return [issue for issue in self.issues if issue.level == ValidationLevel.WARNING]
+# ValidationError is now imported from core.exceptions (see imports at top)
+# This provides backward compatibility for existing code while using the new
+# exception hierarchy
 
 
 class SchematicValidator:
