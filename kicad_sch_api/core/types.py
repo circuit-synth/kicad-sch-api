@@ -171,6 +171,7 @@ class SchematicSymbol:
     in_bom: bool = True
     on_board: bool = True
     unit: int = 1
+    instances: List["SymbolInstance"] = field(default_factory=list)  # FIX: Add instances field for hierarchical support
 
     def __post_init__(self) -> None:
         # Generate UUID if not provided
