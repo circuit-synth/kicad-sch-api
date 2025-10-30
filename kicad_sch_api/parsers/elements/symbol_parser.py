@@ -184,53 +184,83 @@ class SymbolParser(BaseElementParser):
         # Add instances section (required by KiCAD)
         from ...core.config import config
 
-        # Get project name from config or properties
-        project_name = symbol_data.get("properties", {}).get("project_name")
-        if not project_name:
-            project_name = getattr(self, "project_name", config.defaults.project_name)
+        # HIERARCHICAL FIX: Check if user explicitly set instances
+        # If so, preserve them exactly as-is (don't generate!)
+        user_instances = symbol_data.get("instances")
+        if user_instances:
+            logger.debug(f"🔍 HIERARCHICAL FIX: Component {symbol_data.get('reference')} has {len(user_instances)} user-set instance(s)")
+            # Build instances sexp from user data
+            instances_sexp = [sexpdata.Symbol("instances")]
+            for inst in user_instances:
+                project = inst.get('project', getattr(self, 'project_name', 'circuit'))
+                path = inst.get('path', '/')
+                reference = inst.get('reference', symbol_data.get('reference', 'U?'))
+                unit = inst.get('unit', 1)
 
-        # CRITICAL FIX: Use the FULL hierarchy_path from properties if available
-        # For hierarchical schematics, this contains the complete path: /root_uuid/sheet_symbol_uuid/...
-        # This ensures KiCad can properly annotate components in sub-sheets
-        hierarchy_path = symbol_data.get("properties", {}).get("hierarchy_path")
-        if hierarchy_path:
-            # Use the full hierarchical path (includes root + all sheet symbols)
-            instance_path = hierarchy_path
-            logger.debug(
-                f"🔧 Using FULL hierarchy_path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
-            )
-        else:
-            # Fallback: use root_uuid or schematic_uuid for flat designs
-            root_uuid = (
-                symbol_data.get("properties", {}).get("root_uuid")
-                or schematic_uuid
-                or str(uuid.uuid4())
-            )
-            instance_path = f"/{root_uuid}"
-            logger.debug(
-                f"🔧 Using root UUID path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
-            )
+                logger.debug(f"   Instance: project={project}, path={path}, ref={reference}, unit={unit}")
 
-        logger.debug(
-            f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}"
-        )
-        logger.debug(f"🔧 Using project name: '{project_name}'")
-
-        sexp.append(
-            [
-                sexpdata.Symbol("instances"),
-                [
+                instances_sexp.append([
                     sexpdata.Symbol("project"),
-                    project_name,
+                    project,
                     [
                         sexpdata.Symbol("path"),
-                        instance_path,
-                        [sexpdata.Symbol("reference"), symbol_data.get("reference", "U?")],
-                        [sexpdata.Symbol("unit"), symbol_data.get("unit", 1)],
+                        path,  # PRESERVE user-set hierarchical path!
+                        [sexpdata.Symbol("reference"), reference],
+                        [sexpdata.Symbol("unit"), unit],
                     ],
-                ],
-            ]
-        )
+                ])
+            sexp.append(instances_sexp)
+        else:
+            # No user-set instances - generate default (backward compatibility)
+            logger.debug(f"🔍 HIERARCHICAL FIX: Component {symbol_data.get('reference')} has NO user instances, generating default")
+
+            # Get project name from config or properties
+            project_name = symbol_data.get("properties", {}).get("project_name")
+            if not project_name:
+                project_name = getattr(self, "project_name", config.defaults.project_name)
+
+            # CRITICAL FIX: Use the FULL hierarchy_path from properties if available
+            # For hierarchical schematics, this contains the complete path: /root_uuid/sheet_symbol_uuid/...
+            # This ensures KiCad can properly annotate components in sub-sheets
+            hierarchy_path = symbol_data.get("properties", {}).get("hierarchy_path")
+            if hierarchy_path:
+                # Use the full hierarchical path (includes root + all sheet symbols)
+                instance_path = hierarchy_path
+                logger.debug(
+                    f"🔧 Using FULL hierarchy_path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
+                )
+            else:
+                # Fallback: use root_uuid or schematic_uuid for flat designs
+                root_uuid = (
+                    symbol_data.get("properties", {}).get("root_uuid")
+                    or schematic_uuid
+                    or str(uuid.uuid4())
+                )
+                instance_path = f"/{root_uuid}"
+                logger.debug(
+                    f"🔧 Using root UUID path: {instance_path} for component {symbol_data.get('reference', 'unknown')}"
+                )
+
+            logger.debug(
+                f"🔧 Component properties keys: {list(symbol_data.get('properties', {}).keys())}"
+            )
+            logger.debug(f"🔧 Using project name: '{project_name}'")
+
+            sexp.append(
+                [
+                    sexpdata.Symbol("instances"),
+                    [
+                        sexpdata.Symbol("project"),
+                        project_name,
+                        [
+                            sexpdata.Symbol("path"),
+                            instance_path,
+                            [sexpdata.Symbol("reference"), symbol_data.get("reference", "U?")],
+                            [sexpdata.Symbol("unit"), symbol_data.get("unit", 1)],
+                        ],
+                    ],
+                ]
+            )
 
         return sexp
 
