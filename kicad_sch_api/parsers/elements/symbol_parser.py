@@ -151,8 +151,9 @@ class SymbolParser(BaseElementParser):
         if symbol_data.get("value"):
             # Power symbol values need different positioning
             if is_power_symbol:
+                rotation = symbol_data.get("rotation", 0)
                 val_prop = self._create_power_symbol_value_property(
-                    symbol_data["value"], pos, lib_id
+                    symbol_data["value"], pos, lib_id, rotation
                 )
             else:
                 val_prop = self._create_property_with_positioning(
@@ -312,22 +313,39 @@ class SymbolParser(BaseElementParser):
 
 
     def _create_power_symbol_value_property(
-        self, value: str, component_pos: Point, lib_id: str
+        self, value: str, component_pos: Point, lib_id: str, rotation: float = 0
     ) -> List[Any]:
-        """Create Value property for power symbols with correct positioning."""
-        # Power symbols have different value positioning based on type
-        if "GND" in lib_id:
-            # GND value goes below the symbol
-            prop_x = component_pos.x
-            prop_y = component_pos.y + 5.08  # Below GND symbol
-        elif "+3.3V" in lib_id or "VDD" in lib_id:
-            # Positive voltage values go below the symbol
-            prop_x = component_pos.x
-            prop_y = component_pos.y - 5.08  # Above symbol (negative offset)
+        """Create Value property for power symbols with correct positioning.
+
+        Matches circuit-synth power_symbol_positioning.py logic exactly.
+        """
+        offset = 5.08  # KiCad standard offset
+        is_gnd_type = "GND" in lib_id.upper() or "VSS" in lib_id.upper()
+
+        # Rotation-aware positioning (matching circuit-synth logic)
+        if rotation == 0:
+            if is_gnd_type:
+                prop_x, prop_y = component_pos.x, component_pos.y + offset  # GND points down, text below
+            else:
+                prop_x, prop_y = component_pos.x, component_pos.y - offset  # VCC points up, text above
+        elif rotation == 90:
+            if is_gnd_type:
+                prop_x, prop_y = component_pos.x - offset, component_pos.y  # GND left, text left
+            else:
+                prop_x, prop_y = component_pos.x + offset, component_pos.y  # VCC right, text right
+        elif rotation == 180:
+            if is_gnd_type:
+                prop_x, prop_y = component_pos.x, component_pos.y - offset  # GND inverted up, text above
+            else:
+                prop_x, prop_y = component_pos.x, component_pos.y + offset  # VCC inverted down, text below
+        elif rotation == 270:
+            if is_gnd_type:
+                prop_x, prop_y = component_pos.x + offset, component_pos.y  # GND right, text right
+            else:
+                prop_x, prop_y = component_pos.x - offset, component_pos.y  # VCC left, text left
         else:
-            # Default power symbol positioning
-            prop_x = component_pos.x
-            prop_y = component_pos.y + 3.556
+            # Fallback for non-standard rotations
+            prop_x, prop_y = component_pos.x, component_pos.y - offset if not is_gnd_type else component_pos.y + offset
 
         prop_sexp = [
             sexpdata.Symbol("property"),
