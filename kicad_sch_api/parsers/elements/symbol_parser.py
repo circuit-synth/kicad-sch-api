@@ -139,25 +139,25 @@ class SymbolParser(BaseElementParser):
         # Add properties with proper positioning and effects
         lib_id = symbol_data.get("lib_id", "")
         is_power_symbol = "power:" in lib_id
+        rotation = symbol_data.get("rotation", 0)
 
         if symbol_data.get("reference"):
             # Power symbol references should be hidden by default
             ref_hide = is_power_symbol
             ref_prop = self._create_property_with_positioning(
-                "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide
+                "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide, rotation=rotation
             )
             sexp.append(ref_prop)
 
         if symbol_data.get("value"):
             # Power symbol values need different positioning
             if is_power_symbol:
-                rotation = symbol_data.get("rotation", 0)
                 val_prop = self._create_power_symbol_value_property(
                     symbol_data["value"], pos, lib_id, rotation
                 )
             else:
                 val_prop = self._create_property_with_positioning(
-                    "Value", symbol_data["value"], pos, 1, "left"
+                    "Value", symbol_data["value"], pos, 1, "left", rotation=rotation
                 )
             sexp.append(val_prop)
 
@@ -274,13 +274,14 @@ class SymbolParser(BaseElementParser):
         offset_index: int,
         justify: str = "left",
         hide: bool = False,
+        rotation: float = 0,
     ) -> List[Any]:
         """Create a property with proper positioning and effects like KiCAD."""
         from ...core.config import config
 
         # Calculate property position using configuration
-        prop_x, prop_y, rotation = config.get_property_position(
-            prop_name, (component_pos.x, component_pos.y), offset_index
+        prop_x, prop_y, text_rotation = config.get_property_position(
+            prop_name, (component_pos.x, component_pos.y), offset_index, rotation
         )
 
         # Build effects section based on hide status
@@ -304,7 +305,7 @@ class SymbolParser(BaseElementParser):
                 sexpdata.Symbol("at"),
                 round(prop_x, 4) if prop_x != int(prop_x) else int(prop_x),
                 round(prop_y, 4) if prop_y != int(prop_y) else int(prop_y),
-                rotation,
+                text_rotation,
             ],
             effects,
         ]

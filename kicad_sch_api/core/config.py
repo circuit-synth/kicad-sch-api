@@ -174,35 +174,48 @@ class KiCADConfig:
         return name.lower() not in self.no_title_block_names
 
     def get_property_position(
-        self, property_name: str, component_pos: Tuple[float, float], offset_index: int = 0
+        self, property_name: str, component_pos: Tuple[float, float], offset_index: int = 0, component_rotation: float = 0
     ) -> Tuple[float, float, float]:
         """
-        Calculate property position relative to component.
+        Calculate property position relative to component, accounting for component rotation.
+
+        Args:
+            property_name: Name of the property (Reference, Value, etc.)
+            component_pos: (x, y) position of component
+            offset_index: Stacking offset for multiple properties
+            component_rotation: Rotation of the component in degrees (0, 90, 180, 270)
 
         Returns:
             Tuple of (x, y, rotation) for the property
         """
+        import math
+
         x, y = component_pos
 
+        # Get base offsets (for 0° rotation)
         if property_name == "Reference":
-            return (x + self.properties.reference_x, y + self.properties.reference_y, 0)
+            dx, dy = self.properties.reference_x, self.properties.reference_y
         elif property_name == "Value":
-            return (x + self.properties.value_x, y + self.properties.value_y, 0)
+            dx, dy = self.properties.value_x, self.properties.value_y
         elif property_name == "Footprint":
             # Footprint positioned to left of component, rotated 90 degrees
-            return (x - 1.778, y, self.properties.footprint_rotation)  # Exact match for reference
+            return (x - 1.778, y, self.properties.footprint_rotation)
         elif property_name in ["Datasheet", "Description"]:
             # Hidden properties at component center
             return (x, y, 0)
         else:
             # Other properties stacked vertically below
-            return (
-                x + self.properties.reference_x,
-                y
-                + self.properties.value_y
-                + (self.properties.hidden_property_offset * offset_index),
-                0,
-            )
+            dx = self.properties.reference_x
+            dy = self.properties.value_y + (self.properties.hidden_property_offset * offset_index)
+
+        # Apply rotation transform to offsets
+        # Text stays at 0° rotation (readable), but position rotates around component
+        # KiCad uses clockwise rotation, so negate the angle
+        rotation_rad = math.radians(-component_rotation)
+        dx_rotated = dx * math.cos(rotation_rad) - dy * math.sin(rotation_rad)
+        dy_rotated = dx * math.sin(rotation_rad) + dy * math.cos(rotation_rad)
+
+        return (x + dx_rotated, y + dy_rotated, 0)
 
 
 # Global configuration instance
