@@ -71,20 +71,29 @@ def apply_transformation(
 
     Migrated from circuit-synth for accurate pin position calculation.
 
+    CRITICAL: Symbol coordinates use normal Y-axis (+Y is up), but schematic
+    coordinates use inverted Y-axis (+Y is down). We must negate Y from symbol
+    space before applying transformations.
+
     Args:
-        point: Point to transform (x, y) relative to origin
-        origin: Component origin point
+        point: Point to transform (x, y) relative to origin in SYMBOL space
+        origin: Component origin point in SCHEMATIC space
         rotation: Rotation in degrees (0, 90, 180, 270)
         mirror: Mirror axis ("x" or "y" or None)
 
     Returns:
-        Transformed absolute position (x, y)
+        Transformed absolute position (x, y) in SCHEMATIC space
     """
     x, y = point
 
     logger.debug(f"Transforming point ({x}, {y}) with rotation={rotation}°, mirror={mirror}")
 
-    # Apply mirroring first
+    # CRITICAL: Negate Y to convert from symbol space (normal Y) to schematic space (inverted Y)
+    # This must happen BEFORE rotation/mirroring
+    y = -y
+    logger.debug(f"After Y-axis inversion (symbol→schematic): ({x}, {y})")
+
+    # Apply mirroring
     if mirror == "x":
         x = -x
         logger.debug(f"After X mirror: ({x}, {y})")

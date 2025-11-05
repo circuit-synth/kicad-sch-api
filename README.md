@@ -106,6 +106,72 @@ main_sch.save("main.kicad_sch")
 power_sch.save("power.kicad_sch")
 ```
 
+## ⚠️ Critical: KiCAD Coordinate System
+
+### Understanding Symbol vs Schematic Coordinate Spaces
+
+**KiCAD uses TWO different coordinate systems** - this is critical for accurate pin positioning:
+
+#### Symbol Space (Library Definitions)
+- Uses **NORMAL Y-axis** (+Y is UP) like standard mathematics
+- All component symbols in KiCAD libraries are defined this way
+- Example: Resistor pin 1 at `(0, 3.81)`, pin 2 at `(0, -3.81)`
+
+#### Schematic Space (Placed Components)
+- Uses **INVERTED Y-axis** (+Y is DOWN) like most computer graphics
+- Lower Y values = visually HIGHER on screen (top)
+- Higher Y values = visually LOWER on screen (bottom)
+
+#### The Transformation Problem
+
+When placing a symbol on a schematic, **Y coordinates must be negated** to convert between coordinate systems:
+
+```python
+# Symbol library defines (normal Y-axis, +Y up):
+Pin 1: (0, +3.81)   # Upward from origin
+Pin 2: (0, -3.81)   # Downward from origin
+
+# Component placed at (100, 100) in schematic:
+# After transformation (inverted Y-axis, +Y down):
+Pin 1: (100, 96.52)    # Top (100 + (-3.81))
+Pin 2: (100, 103.81)   # Bottom (100 + (+3.81))
+```
+
+This transformation happens automatically in `geometry.py:apply_transformation()` before applying rotation and mirroring.
+
+#### Why This Matters
+
+**All pin position calculations depend on this transformation:**
+- Wire connectivity analysis
+- Pin-to-pin routing
+- Component placement
+- Hierarchical sheet connections
+- ERC (Electrical Rule Check) validation
+
+**Without this transformation**, pin positions would be swapped, breaking all connectivity analysis.
+
+### Grid Alignment Requirement
+
+**All positions in KiCAD schematics MUST be grid-aligned:**
+
+- **Default grid:** 1.27mm (50 mil)
+- **Common values:** 0.00, 1.27, 2.54, 3.81, 5.08, 6.35, 7.62, 8.89, 10.16...
+- **Required for:** Component positions, wire endpoints, pin positions, junction positions
+
+```python
+# Good - grid aligned
+sch.components.add('Device:R', 'R1', '10k', position=(100.33, 101.60))
+
+# Bad - off grid (will cause connectivity issues)
+sch.components.add('Device:R', 'R2', '10k', position=(100.5, 101.3))
+```
+
+Grid alignment ensures:
+- ✅ Proper electrical connectivity
+- ✅ Professional schematic appearance
+- ✅ Correct ERC validation
+- ✅ No floating-point connectivity errors
+
 ## 🔧 Advanced Features
 
 ### Component Bounding Boxes and Colored Graphics (NEW in v0.3.1)
