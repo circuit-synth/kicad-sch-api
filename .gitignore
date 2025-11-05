@@ -111,5 +111,10 @@ mcp-server/.npm/
 *.temp
 *.temporary
 
-
+# PyPI credentials
+.pypirc
 *.pypirc
+
+# Example output
+examples/output/
+build_env/

@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 from ..library.cache import SymbolDefinition, get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
 from .collections import BaseCollection
+from .exceptions import LibraryError
 from .ic_manager import ICManager
 from .types import Point, SchematicPin, SchematicSymbol
 
@@ -322,6 +323,7 @@ class ComponentCollection(BaseCollection[Component]):
 
         Raises:
             ValidationError: If component data is invalid
+            LibraryError: If the KiCAD symbol library is not found
         """
         # Validate lib_id
         validator = SchematicValidator()
@@ -371,8 +373,17 @@ class ComponentCollection(BaseCollection[Component]):
         # Get symbol definition and update pins
         symbol_cache = get_symbol_cache()
         symbol_def = symbol_cache.get_symbol(lib_id)
-        if symbol_def:
-            component_data.pins = symbol_def.pins.copy()
+        if not symbol_def:
+            # Provide helpful error message with library name
+            library_name = lib_id.split(":")[0] if ":" in lib_id else "unknown"
+            raise LibraryError(
+                f"Symbol '{lib_id}' not found in KiCAD libraries. "
+                f"Please verify the library name '{library_name}' and symbol name are correct. "
+                f"Common libraries include: Device, Connector_Generic, Regulator_Linear, RF_Module",
+                field="lib_id",
+                value=lib_id
+            )
+        component_data.pins = symbol_def.pins.copy()
 
         # Create component wrapper
         component = Component(component_data, self)

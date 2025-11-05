@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from kicad_sch_api.collections.components import Component, ComponentCollection
+from kicad_sch_api.core.exceptions import LibraryError
 from kicad_sch_api.core.types import Point, SchematicSymbol
 from kicad_sch_api.utils.validation import ValidationError
 
@@ -123,6 +124,71 @@ class TestComponentCollection:
         # Try to add duplicate reference
         with pytest.raises(ValidationError, match="Reference R1 already exists"):
             collection.add(lib_id="Device:C", reference="R1")
+
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
+    @patch("kicad_sch_api.core.geometry.snap_to_grid")
+    @patch("kicad_sch_api.core.components.get_symbol_cache")
+    def test_add_component_missing_symbol(
+        self, mock_get_cache, mock_snap, mock_validate_ref, mock_validate_lib
+    ):
+        """Test adding component with missing KiCAD symbol raises LibraryError."""
+        mock_validate_lib.return_value = True
+        mock_validate_ref.return_value = True
+        mock_snap.return_value = (100.0, 100.0)
+
+        # Mock symbol cache to return None (symbol not found)
+        mock_cache = MagicMock()
+        mock_cache.get_symbol.return_value = None
+        mock_get_cache.return_value = mock_cache
+
+        collection = ComponentCollection()
+
+        # Try to add component with non-existent symbol
+        with pytest.raises(LibraryError) as exc_info:
+            collection.add(
+                lib_id="NonExistent:FakeSymbol",
+                reference="U1",
+                value="test"
+            )
+
+        # Verify error message contains helpful information
+        error_msg = str(exc_info.value)
+        assert "NonExistent:FakeSymbol" in error_msg
+        assert "not found" in error_msg
+        assert "NonExistent" in error_msg  # Library name
+
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
+    @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_reference")
+    @patch("kicad_sch_api.core.geometry.snap_to_grid")
+    @patch("kicad_sch_api.core.components.get_symbol_cache")
+    def test_add_component_wrong_library_name(
+        self, mock_get_cache, mock_snap, mock_validate_ref, mock_validate_lib
+    ):
+        """Test adding component with wrong library name raises helpful LibraryError."""
+        mock_validate_lib.return_value = True
+        mock_validate_ref.return_value = True
+        mock_snap.return_value = (100.0, 100.0)
+
+        # Mock symbol cache to return None
+        mock_cache = MagicMock()
+        mock_cache.get_symbol.return_value = None
+        mock_get_cache.return_value = mock_cache
+
+        collection = ComponentCollection()
+
+        # Try to add connector with wrong library (common mistake)
+        with pytest.raises(LibraryError) as exc_info:
+            collection.add(
+                lib_id="Connector:Conn_01x04",  # Should be Connector_Generic
+                reference="J1",
+                value="Header"
+            )
+
+        # Verify error message mentions common libraries
+        error_msg = str(exc_info.value)
+        assert "Connector:Conn_01x04" in error_msg
+        assert "Common libraries" in error_msg or "Connector_Generic" in error_msg
 
     def test_get_by_reference(self):
         """Test getting components by reference."""
