@@ -1,0 +1,28 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "6bcc9c64-c045-49cb-8a5f-dbb809271687")
+	(paper "A4")
+	(title_block
+		(title "Global Label Rotations Reference")
+	)
+	(lib_symbols)
+	(hierarchical_label "hier_label_1"
+		(shape input)
+		(at 157.48 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d6f3547d-af5d-45a5-8c7c-a018c5fbdda7")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

@@ -1,0 +1,97 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "1bd90c7a-8fda-4f71-bc8a-e0635f645034")
+	(paper "A4")
+	(title_block
+		(title "Text Box Rotations Reference")
+	)
+	(lib_symbols)
+	(text_box "TEXT_BOX_0"
+		(exclude_from_sim no)
+		(at 107.95 100.33 0)
+		(size 20 10)
+		(margins 0.9525 0.9525 0.9525 0.9525)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "19ccca5a-26ca-4a7f-9e3e-346cae64c290")
+	)
+	(text_box "TEXT_BOX_180"
+		(exclude_from_sim no)
+		(at 104.46 147.48 0)
+		(size 20 10)
+		(margins 0.9525 0.9525 0.9525 0.9525)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "3f664506-4ba6-481d-8b7a-2abb3ab49f25")
+	)
+	(text_box "TEXT_BOX_270"
+		(exclude_from_sim no)
+		(at 151.29 148.59 90)
+		(size 10 20)
+		(margins 0.9525 0.9525 0.9525 0.9525)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "89c350cb-91a5-4ecc-91b4-74c67f18d9b5")
+	)
+	(text_box "TEXT_BOX_90"
+		(exclude_from_sim no)
+		(at 153.67 91.76 90)
+		(size 10 20)
+		(margins 0.9525 0.9525 0.9525 0.9525)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "c4cbce78-e3de-49d4-9a9b-c01896b0d670")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

@@ -1,0 +1,21 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "b4fbeadb-ac27-411f-89ec-f8266f90eceb")
+	(paper "A4")
+	(title_block
+		(title "No Connect Reference")
+	)
+	(lib_symbols)
+	(no_connect
+		(at 100 100)
+		(uuid "f8caf306-9a06-4ce5-87eb-de25339eba9b")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

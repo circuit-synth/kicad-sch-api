@@ -1,0 +1,57 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "066026ed-a91b-4554-aac6-103163c240de")
+	(paper "A4")
+	(title_block
+		(title "Text Rotations Reference")
+	)
+	(lib_symbols)
+	(text "TEXT_0"
+		(exclude_from_sim no)
+		(at 100 100 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "ef9682f6-5eed-414e-b7ed-2ece9d5ddd77")
+	)
+	(text "TEXT_90"
+		(exclude_from_sim no)
+		(at 150 100 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "2be74d24-80b3-4581-aa69-7ac70d382039")
+	)
+	(text "TEXT_180"
+		(exclude_from_sim no)
+		(at 100 150 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "0145dc9e-3c88-498a-911f-47d7340ac59e")
+	)
+	(text "TEXT_270"
+		(exclude_from_sim no)
+		(at 150 150 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "aa3e7fb4-83a7-4faf-ab47-fd1b16a559a2")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

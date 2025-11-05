@@ -1,0 +1,57 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "37419483-4101-421e-a02e-eecfb649a4c0")
+	(paper "A4")
+	(title_block
+		(title "Label Rotations Reference")
+	)
+	(lib_symbols)
+	(label "LABEL_0"
+		(at 100 100 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "6217bd34-b40a-4dd7-9bba-96f27e4e4451")
+	)
+	(label "LABEL_90"
+		(at 150 100 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8c5d5a58-1a96-4651-9365-84d4910759aa")
+	)
+	(label "LABEL_180"
+		(at 100 150 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "e3317233-15bb-434d-adcb-7d8c0edc3a97")
+	)
+	(label "LABEL_270"
+		(at 150 150 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "31b3b32b-aca6-4095-920a-188314a2e1ae")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
