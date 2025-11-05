@@ -100,8 +100,9 @@ class Component:
 
     @rotation.setter
     def rotation(self, value: float):
-        """Set component rotation."""
-        self._data.rotation = value
+        """Set component rotation with normalization to 0-360 range."""
+        # Normalize rotation to 0-360 range
+        self._data.rotation = value % 360
         self._collection._mark_modified()
 
     @property
@@ -123,6 +124,15 @@ class Component:
         """Set component property value."""
         self._data.properties[name] = value
         self._collection._mark_modified()
+
+    def rotate(self, angle: float) -> None:
+        """
+        Rotate component by angle.
+
+        Args:
+            angle: Rotation angle in degrees (added to current rotation)
+        """
+        self.rotation = (self.rotation + angle) % 360
 
     def __repr__(self) -> str:
         """Detailed representation."""
@@ -261,6 +271,9 @@ class ComponentCollection(IndexedCollection[Component]):
         # Generate UUID if not provided
         if component_uuid is None:
             component_uuid = str(uuid.uuid4())
+
+        # Normalize rotation to 0-360 range
+        rotation = rotation % 360
 
         # Create SchematicSymbol data
         symbol_data = SchematicSymbol(
@@ -426,6 +439,69 @@ class ComponentCollection(IndexedCollection[Component]):
         if old_reference in self._reference_index:
             component = self._reference_index.pop(old_reference)
             self._reference_index[new_reference] = component
+
+    # Component removal methods
+    def remove(self, reference: str) -> bool:
+        """
+        Remove a component by reference.
+
+        Args:
+            reference: Component reference to remove (e.g., 'R1')
+
+        Returns:
+            True if component was removed, False if not found
+
+        Raises:
+            TypeError: If reference is not a string
+        """
+        if not isinstance(reference, str):
+            raise TypeError("reference must be a string")
+
+        self._ensure_indexes_current()
+
+        # Get component by reference
+        component = self.get_by_reference(reference)
+        if component is None:
+            return False
+
+        # Remove using base class method with UUID
+        return super().remove(component.uuid)
+
+    def remove_by_uuid(self, component_uuid: str) -> bool:
+        """
+        Remove a component by UUID.
+
+        Args:
+            component_uuid: Component UUID to remove
+
+        Returns:
+            True if component was removed, False if not found
+
+        Raises:
+            TypeError: If component_uuid is not a string
+        """
+        if not isinstance(component_uuid, str):
+            raise TypeError("component_uuid must be a string")
+
+        return super().remove(component_uuid)
+
+    def remove_component(self, component: Component) -> bool:
+        """
+        Remove a component by component object.
+
+        Args:
+            component: Component instance to remove
+
+        Returns:
+            True if component was removed, False if not found
+
+        Raises:
+            TypeError: If component is not a Component instance
+        """
+        if not isinstance(component, Component):
+            raise TypeError("component must be a Component instance")
+
+        return super().remove(component.uuid)
 
     # Bulk operations for performance
     def bulk_update(self, criteria: Dict[str, Any], updates: Dict[str, Any]) -> int:

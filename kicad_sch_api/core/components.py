@@ -360,6 +360,9 @@ class ComponentCollection(BaseCollection[Component]):
             f"Component {reference} position snapped to grid: ({position.x:.3f}, {position.y:.3f})"
         )
 
+        # Normalize rotation to 0-360 range
+        rotation = rotation % 360
+
         # Create component data
         component_data = SchematicSymbol(
             uuid=component_uuid if component_uuid else str(uuid.uuid4()),

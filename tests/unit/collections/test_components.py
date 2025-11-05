@@ -623,6 +623,9 @@ class TestComponent:
         ]
         collection = ComponentCollection(symbol_data)
 
+        # Ensure indexes are built before checking
+        collection._ensure_indexes_current()
+
         # Verify initial state
         assert "R1" in collection._reference_index
         assert "Device:R" in collection._lib_id_index
@@ -630,6 +633,9 @@ class TestComponent:
 
         # Remove R1
         collection.remove("R1")
+
+        # Ensure indexes are rebuilt after removal
+        collection._ensure_indexes_current()
 
         # Verify indexes are updated
         assert "R1" not in collection._reference_index
