@@ -1,0 +1,79 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "b1ec0f9d-48e6-4d99-be5d-b46effd578a7")
+	(paper "A4")
+	(title_block
+		(title "Sheet Pins Reference")
+	)
+	(lib_symbols)
+	(sheet
+		(at 100 100)
+		(size 50 30)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "3b72d469-13aa-4132-8b68-cb1219a5cd8f")
+		(property "Sheetname" "SubSheet"
+			(at 100 99.2884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "subsheet.kicad_sch"
+			(at 100 130.5846 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "INPUT" input
+			(at 100 110 0)
+			(uuid "fd7a7c23-393d-41f7-ae05-73a3ff81bf19")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "OUTPUT" output
+			(at 150 110 0)
+			(uuid "48a993b4-39db-4a58-9538-19b29c22bf48")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project None
+				(path "/b1ec0f9d-48e6-4d99-be5d-b46effd578a7"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
