@@ -302,6 +302,7 @@ class ComponentCollection(BaseCollection[Component]):
         position: Optional[Union[Point, Tuple[float, float]]] = None,
         footprint: Optional[str] = None,
         unit: int = 1,
+        rotation: float = 0.0,
         component_uuid: Optional[str] = None,
         **properties,
     ) -> Component:
@@ -315,6 +316,7 @@ class ComponentCollection(BaseCollection[Component]):
             position: Component position (auto-placed if None)
             footprint: Component footprint
             unit: Unit number for multi-unit components (1-based)
+            rotation: Component rotation in degrees (0, 90, 180, 270)
             component_uuid: Specific UUID for component (auto-generated if None)
             **properties: Additional component properties
 
@@ -367,6 +369,7 @@ class ComponentCollection(BaseCollection[Component]):
             value=value,
             footprint=footprint,
             unit=unit,
+            rotation=rotation,
             properties=properties,
         )
 
