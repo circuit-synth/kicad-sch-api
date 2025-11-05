@@ -405,6 +405,22 @@ capacitor.set_property("MPN", "CL10B104KB8NNNC")
 ## Error Handling
 
 ```python
+# Import exceptions
+from kicad_sch_api.core.exceptions import LibraryError, ValidationError
+
+# Handle missing KiCAD symbols
+try:
+    component = sch.components.add("NonExistent:FakeSymbol", "U1", "IC")
+except LibraryError as e:
+    print(f"Symbol not found: {e}")
+    # Error message includes library name and suggestions
+
+# Handle invalid component data
+try:
+    component = sch.components.add("Device:R", "INVALID REF!", "10k")
+except ValidationError as e:
+    print(f"Validation error: {e}")
+
 # Check if component exists
 component = sch.components.get("R1")
 if component is None:
