@@ -483,8 +483,8 @@ class ExactFormatter:
             for item in lst[1:]:
                 if isinstance(item, list) and len(item) >= 1:
                     tag = str(item[0])
-                    if tag in ["version", "generator", "generator_version"] and len(item) >= 2:
-                        if tag in ["generator", "generator_version"]:
+                    if tag in ["version", "generator", "generator_version", "uuid"] and len(item) >= 2:
+                        if tag in ["generator", "generator_version", "uuid"]:
                             header_parts.append(f'({tag} "{item[1]}")')
                         else:
                             header_parts.append(f"({tag} {item[1]})")

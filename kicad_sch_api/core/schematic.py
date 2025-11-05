@@ -1159,10 +1159,13 @@ class Schematic:
     @staticmethod
     def _create_empty_schematic_data() -> Dict[str, Any]:
         """Create empty schematic data structure."""
+        from uuid import uuid4
+
         return {
             "version": "20250114",
             "generator": "eeschema",
             "generator_version": "9.0",
+            "uuid": str(uuid4()),
             "paper": "A4",
             "lib_symbols": {},
             "symbol": [],
