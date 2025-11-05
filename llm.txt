@@ -129,14 +129,93 @@ if pin_pos:
 
 ### Labels and Text
 
-```python
-# Net label
-sch.add_label("VCC", position=(125, 100))
-sch.add_label("GND", position=(125, 120))
+Labels connect nets and name signals in your schematic.
 
-# Hierarchical label (for multi-sheet designs)
-sch.add_hierarchical_label("VCC", label_type="input", position=(50, 100))
-sch.add_hierarchical_label("OUTPUT", label_type="output", position=(250, 100))
+#### Basic Label Addition
+
+```python
+# Simple net label at a position
+label_uuid = sch.add_label("VCC", position=(125, 100))
+
+# With rotation (0, 90, 180, 270 degrees)
+label_uuid = sch.add_label("DATA", position=(150, 110), rotation=90)
+
+# With custom size
+label_uuid = sch.add_label("SIGNAL", position=(100, 90), size=1.5)
+```
+
+#### Two Ways to Add Labels
+
+```python
+# Method 1: Using Schematic.add_label() (recommended)
+label_uuid = sch.add_label("NET1", position=(100, 100))
+
+# Method 2: Using LabelCollection.add() directly
+label = sch.labels.add("NET2", position=(100, 110))
+label_uuid = label.uuid
+```
+
+#### Label Operations
+
+```python
+# Find labels by text
+vcc_labels = sch.labels.get_by_text("VCC")
+for label in vcc_labels:
+    print(f"VCC label at ({label.position.x}, {label.position.y})")
+
+# Get label by UUID
+label = sch.labels.get(label_uuid)
+if label:
+    print(f"Label text: {label.text}")
+
+# Update label properties
+label = sch.labels.get(label_uuid)
+label.text = "NEW_NET"
+label.rotation = 90
+label.size = 1.5
+
+# Remove label
+sch.labels.remove(label_uuid)
+
+# Find labels with filter
+data_labels = sch.labels.filter(lambda l: "DATA" in l.text)
+```
+
+#### Hierarchical Labels (Multi-Sheet Designs)
+
+```python
+# Input signal from parent sheet
+sch.add_hierarchical_label("VCC", position=(50, 100), shape="input")
+
+# Output signal to parent sheet
+sch.add_hierarchical_label("OUTPUT", position=(250, 100), shape="output")
+
+# Bidirectional signal
+sch.add_hierarchical_label("I2C_SDA", position=(150, 100), shape="bidirectional")
+
+# Available shapes: input, output, bidirectional, tri_state, passive
+```
+
+#### Label Best Practices
+
+```python
+# Use descriptive names
+sch.add_label("UART_TX", position=(100, 100))  # ✅ Clear
+sch.add_label("A1", position=(100, 110))        # ❌ Unclear
+
+# Keep labels near connections
+wire = sch.wires.add(start=(100, 100), end=(150, 100))
+sch.add_label("VCC", position=(125, 98))  # Near the wire
+
+# Use consistent naming
+sch.add_label("I2C_SCL", position=(100, 100))
+sch.add_label("I2C_SDA", position=(100, 110))
+
+# Common power/ground labels
+sch.add_label("VCC", position=(100, 50))
+sch.add_label("3V3", position=(150, 50))
+sch.add_label("GND", position=(100, 150))
+sch.add_label("VBUS", position=(50, 50))
 ```
 
 ### Component Search and Filtering
