@@ -25,6 +25,7 @@ from .managers import (
     FileIOManager,
     FormatSyncManager,
     GraphicsManager,
+    HierarchyManager,
     MetadataManager,
     SheetManager,
     TextElementManager,
@@ -152,6 +153,7 @@ class Schematic:
         self._file_io_manager = FileIOManager()
         self._format_sync_manager = FormatSyncManager(self._data)
         self._graphics_manager = GraphicsManager(self._data)
+        self._hierarchy_manager = HierarchyManager(self._data)
         self._metadata_manager = MetadataManager(self._data)
         self._sheet_manager = SheetManager(self._data)
         self._text_element_manager = TextElementManager(self._data)
@@ -354,6 +356,20 @@ class Schematic:
     def sheets(self):
         """Sheet manager for hierarchical sheet operations."""
         return self._sheet_manager
+
+    @property
+    def hierarchy(self):
+        """
+        Advanced hierarchy manager for complex hierarchical designs.
+
+        Provides features for:
+        - Sheet reuse tracking (sheets used multiple times)
+        - Cross-sheet signal tracking
+        - Sheet pin validation
+        - Hierarchy flattening
+        - Signal tracing through hierarchy
+        """
+        return self._hierarchy_manager
 
     # Pin positioning methods (delegated to WireManager)
     def get_component_pin_position(self, reference: str, pin_number: str) -> Optional[Point]:

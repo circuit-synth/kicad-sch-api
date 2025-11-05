@@ -20,11 +20,11 @@ class TestHierarchicalInstances:
     def test_instances_field_exists(self):
         """Test that SchematicSymbol has instances field."""
         sch = Schematic(name="test_project")
-        comp = sch.add_component(
-            library_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+        comp = sch.components.add(
+            "Device:R",
+            "R1",
+            "10k",
+            (100, 100)
         )
 
         # Should have instances field (even if empty)
@@ -34,11 +34,11 @@ class TestHierarchicalInstances:
     def test_set_hierarchical_instance(self):
         """Test setting a hierarchical instance path."""
         sch = Schematic(name="test_project")
-        comp = sch.add_component(
-            library_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+        comp = sch.components.add(
+            "Device:R",
+            "R1",
+            "10k",
+            (100, 100)
         )
 
         # Set hierarchical instance
@@ -65,11 +65,11 @@ class TestHierarchicalInstances:
 
             # Create schematic with hierarchical instance
             sch = Schematic(name="test_project")
-            comp = sch.add_component(
-                library_id="Device:R",
-                reference="R1",
-                value="10k",
-                position=Point(100, 100)
+            comp = sch.components.add(
+                "Device:R",
+            "R1",
+                "10k",
+                (100, 100)
             )
 
             # Set hierarchical path
@@ -109,11 +109,11 @@ class TestHierarchicalInstances:
             output_path = Path(tmpdir) / "test_multi_instance.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.add_component(
-                library_id="Device:R",
-                reference="R1",
-                value="10k",
-                position=Point(100, 100)
+            comp = sch.components.add(
+                "Device:R",
+            "R1",
+                "10k",
+                (100, 100)
             )
 
             # Set multiple instances
@@ -142,11 +142,11 @@ class TestHierarchicalInstances:
 
             # Create component without setting instances
             sch = Schematic(name="test_project")
-            comp = sch.add_component(
-                library_id="Device:R",
-                reference="R1",
-                value="10k",
-                position=Point(100, 100)
+            comp = sch.components.add(
+                "Device:R",
+            "R1",
+                "10k",
+                (100, 100)
             )
 
             # Don't set instances - should get auto-generated path
@@ -162,11 +162,11 @@ class TestHierarchicalInstances:
     def test_empty_instances_list(self):
         """Test component with empty instances list."""
         sch = Schematic(name="test_project")
-        comp = sch.add_component(
-            library_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=Point(100, 100)
+        comp = sch.components.add(
+            "Device:R",
+            "R1",
+            "10k",
+            (100, 100)
         )
 
         # Explicitly set empty list
@@ -185,11 +185,11 @@ class TestHierarchicalPaths:
             output_path = Path(tmpdir) / "test_root.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.add_component(
-                library_id="Device:R",
-                reference="R1",
-                value="10k",
-                position=Point(100, 100)
+            comp = sch.components.add(
+                "Device:R",
+            "R1",
+                "10k",
+                (100, 100)
             )
 
             inst = SymbolInstance(path="/", reference="R1", unit=1)
@@ -207,11 +207,11 @@ class TestHierarchicalPaths:
             output_path = Path(tmpdir) / "test_two_level.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.add_component(
-                library_id="Device:R",
-                reference="R2",
-                value="4.7k",
-                position=Point(100, 100)
+            comp = sch.components.add(
+                "Device:R",
+            "R2",
+                "4.7k",
+                (100, 100)
             )
 
             path = "/b0893f52-599b-414d-923c-1b56f2f78600/6c965abc-eb03-4248-b925-eaa4d33b8832"
@@ -230,11 +230,11 @@ class TestHierarchicalPaths:
             output_path = Path(tmpdir) / "test_three_level.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.add_component(
-                library_id="Device:R",
-                reference="R3",
-                value="1k",
-                position=Point(100, 100)
+            comp = sch.components.add(
+                "Device:R",
+            "R3",
+                "1k",
+                (100, 100)
             )
 
             # Three-level path

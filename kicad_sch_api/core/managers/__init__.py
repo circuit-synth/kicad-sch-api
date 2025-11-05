@@ -9,6 +9,7 @@ from .base import BaseManager
 from .file_io import FileIOManager
 from .format_sync import FormatSyncManager
 from .graphics import GraphicsManager
+from .hierarchy import HierarchyManager
 from .metadata import MetadataManager
 from .sheet import SheetManager
 from .text_elements import TextElementManager
@@ -20,6 +21,7 @@ __all__ = [
     "FileIOManager",
     "FormatSyncManager",
     "GraphicsManager",
+    "HierarchyManager",
     "MetadataManager",
     "SheetManager",
     "TextElementManager",
