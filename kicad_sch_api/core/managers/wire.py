@@ -10,6 +10,7 @@ import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ...library.cache import get_symbol_cache
+from ..connectivity import ConnectivityAnalyzer, Net
 from ..types import Point, Wire, WireType
 from ..wires import WireCollection
 from .base import BaseManager
@@ -30,7 +31,11 @@ class WireManager(BaseManager):
     """
 
     def __init__(
-        self, schematic_data: Dict[str, Any], wire_collection: WireCollection, component_collection
+        self,
+        schematic_data: Dict[str, Any],
+        wire_collection: WireCollection,
+        component_collection,
+        schematic,
     ):
         """
         Initialize WireManager.
@@ -39,11 +44,17 @@ class WireManager(BaseManager):
             schematic_data: Reference to schematic data
             wire_collection: Wire collection for management
             component_collection: Component collection for pin lookups
+            schematic: Reference to parent Schematic object for connectivity analysis
         """
         super().__init__(schematic_data)
         self._wires = wire_collection
         self._components = component_collection
+        self._schematic = schematic
         self._symbol_cache = get_symbol_cache()
+
+        # Lazy-initialized connectivity analyzer (always hierarchical)
+        self._connectivity_analyzer: Optional[ConnectivityAnalyzer] = None
+        self._connectivity_valid = False
 
     def add_wire(
         self, start: Union[Point, Tuple[float, float]], end: Union[Point, Tuple[float, float]]
@@ -65,6 +76,9 @@ class WireManager(BaseManager):
 
         # Use the wire collection to add the wire
         wire_uuid = self._wires.add(start=start, end=end)
+
+        # Invalidate connectivity cache
+        self._invalidate_connectivity()
 
         logger.debug(f"Added wire: {start} -> {end}")
         return wire_uuid
@@ -93,6 +107,8 @@ class WireManager(BaseManager):
 
         success = removed_from_collection or removed_from_data
         if success:
+            # Invalidate connectivity cache
+            self._invalidate_connectivity()
             logger.debug(f"Removed wire: {wire_uuid}")
 
         return success
@@ -152,7 +168,8 @@ class WireManager(BaseManager):
         """
         Get absolute position of a component pin.
 
-        This consolidates the duplicate implementations in the original schematic class.
+        Uses the same geometry transformation as the connectivity analyzer
+        to ensure consistent pin positions.
 
         Args:
             component_ref: Component reference (e.g., "R1")
@@ -161,27 +178,20 @@ class WireManager(BaseManager):
         Returns:
             Absolute pin position or None if not found
         """
+        from ..pin_utils import list_component_pins
+
         # Find component
         component = self._components.get(component_ref)
         if not component:
             logger.warning(f"Component not found: {component_ref}")
             return None
 
-        # Get symbol definition from cache
-        symbol_def = self._symbol_cache.get_symbol(component.lib_id)
-        if not symbol_def:
-            logger.warning(f"Symbol definition not found: {component.lib_id}")
-            return None
+        # Use pin_utils to get correct transformed positions
+        pins = list_component_pins(component)
 
-        # Find pin in symbol definition
-        for pin in symbol_def.pins:
-            if pin.number == pin_number:
-                # Calculate absolute position
-                # Apply component rotation/mirroring if needed (simplified for now)
-                absolute_x = component.position.x + pin.position.x
-                absolute_y = component.position.y + pin.position.y
-
-                return Point(absolute_x, absolute_y)
+        for pin_num, pin_pos in pins:
+            if pin_num == pin_number:
+                return pin_pos
 
         logger.warning(f"Pin {pin_number} not found on component {component_ref}")
         return None
@@ -190,31 +200,24 @@ class WireManager(BaseManager):
         """
         List all pins and their positions for a component.
 
+        Uses the same geometry transformation as the connectivity analyzer
+        to ensure consistent pin positions.
+
         Args:
             component_ref: Component reference
 
         Returns:
             List of (pin_number, absolute_position) tuples
         """
-        pins = []
+        from ..pin_utils import list_component_pins
 
         # Find component
         component = self._components.get(component_ref)
         if not component:
-            return pins
+            return []
 
-        # Get symbol definition
-        symbol_def = self._symbol_cache.get_symbol(component.lib_id)
-        if not symbol_def:
-            return pins
-
-        # Calculate absolute positions for all pins
-        for pin in symbol_def.pins:
-            absolute_x = component.position.x + pin.position.x
-            absolute_y = component.position.y + pin.position.y
-            pins.append((pin.number, Point(absolute_x, absolute_y)))
-
-        return pins
+        # Use pin_utils to get correct transformed positions
+        return list_component_pins(component)
 
     def auto_route_pins(
         self,
@@ -281,7 +284,14 @@ class WireManager(BaseManager):
         self, component1_ref: str, pin1_number: str, component2_ref: str, pin2_number: str
     ) -> bool:
         """
-        Check if two pins are connected via wires.
+        Check if two pins are electrically connected.
+
+        Performs full connectivity analysis including:
+        - Direct wire connections
+        - Connections through junctions
+        - Connections through labels (local/global/hierarchical)
+        - Connections through power symbols
+        - Hierarchical sheet connections
 
         Args:
             component1_ref: First component reference
@@ -290,29 +300,15 @@ class WireManager(BaseManager):
             pin2_number: Second component pin number
 
         Returns:
-            True if pins are connected, False otherwise
+            True if pins are electrically connected, False otherwise
         """
-        pin1_pos = self.get_component_pin_position(component1_ref, pin1_number)
-        pin2_pos = self.get_component_pin_position(component2_ref, pin2_number)
+        self._ensure_connectivity()
 
-        if pin1_pos is None or pin2_pos is None:
-            return False
+        if self._connectivity_analyzer:
+            return self._connectivity_analyzer.are_connected(
+                component1_ref, pin1_number, component2_ref, pin2_number
+            )
 
-        # Check for direct wire connection
-        for wire in self._wires:
-            if (wire.start == pin1_pos and wire.end == pin2_pos) or (
-                wire.start == pin2_pos and wire.end == pin1_pos
-            ):
-                return True
-
-        # TODO: Implement more sophisticated connectivity analysis
-        # NOTE: Current implementation only checks for direct wire connections between pins.
-        # A full implementation would:
-        # 1. Follow wire networks through junctions (connection points)
-        # 2. Trace through labels (global/hierarchical net connections)
-        # 3. Build a complete net connectivity graph
-        # This is a known limitation - use ValidationManager for full electrical rule checking.
-        # Priority: MEDIUM - Would enable better automated wiring validation
         return False
 
     def connect_pins_with_wire(
@@ -351,3 +347,64 @@ class WireManager(BaseManager):
                 "bus": len([w for w in self._wires if w.wire_type == WireType.BUS]),
             },
         }
+
+    def get_net_for_pin(self, component_ref: str, pin_number: str) -> Optional[Net]:
+        """
+        Get the electrical net connected to a specific pin.
+
+        Args:
+            component_ref: Component reference (e.g., "R1")
+            pin_number: Pin number
+
+        Returns:
+            Net object if pin is connected, None otherwise
+        """
+        self._ensure_connectivity()
+
+        if self._connectivity_analyzer:
+            return self._connectivity_analyzer.get_net_for_pin(component_ref, pin_number)
+
+        return None
+
+    def get_connected_pins(self, component_ref: str, pin_number: str) -> List[Tuple[str, str]]:
+        """
+        Get all pins electrically connected to a specific pin.
+
+        Args:
+            component_ref: Component reference (e.g., "R1")
+            pin_number: Pin number
+
+        Returns:
+            List of (reference, pin_number) tuples for all connected pins
+        """
+        self._ensure_connectivity()
+
+        if self._connectivity_analyzer:
+            return self._connectivity_analyzer.get_connected_pins(component_ref, pin_number)
+
+        return []
+
+    def _ensure_connectivity(self):
+        """
+        Ensure connectivity analysis is up-to-date.
+
+        Lazily initializes and runs connectivity analyzer on first query.
+        Re-runs analysis if schematic has changed since last analysis.
+        """
+        if not self._connectivity_valid:
+            logger.debug("Running connectivity analysis (hierarchical)...")
+            self._connectivity_analyzer = ConnectivityAnalyzer()
+            self._connectivity_analyzer.analyze(self._schematic, hierarchical=True)
+            self._connectivity_valid = True
+            logger.debug("Connectivity analysis complete")
+
+    def _invalidate_connectivity(self):
+        """
+        Invalidate connectivity cache.
+
+        Called when schematic changes that affect connectivity (wires, components, etc.).
+        Next connectivity query will trigger re-analysis.
+        """
+        if self._connectivity_valid:
+            logger.debug("Invalidating connectivity cache")
+            self._connectivity_valid = False

@@ -246,6 +246,36 @@ if pin_position:
 invalid_wire = sch.add_wire_between_pins("R999", "1", "R1", "1")  # Returns None
 ```
 
+### Connectivity Analysis
+
+```python
+# Check if pins are electrically connected
+# Traces through wires, junctions, labels, and hierarchical connections
+if sch.are_pins_connected("R1", "2", "R2", "1"):
+    print("R1 pin 2 and R2 pin 1 are connected")
+
+# Get the electrical net for a pin
+net = sch.get_net_for_pin("R1", "2")
+if net:
+    print(f"Net: {net.name}")
+    print(f"Pins on this net: {len(net.pins)}")
+    for pin in net.pins:
+        print(f"  - {pin.reference}.{pin.pin_number}")
+
+# Get all pins connected to a specific pin
+connected_pins = sch.get_connected_pins("R1", "2")
+for ref, pin_num in connected_pins:
+    print(f"Connected: {ref}.{pin_num}")
+
+# Connectivity analysis includes:
+# - Direct wire connections
+# - Connections through junctions
+# - Local and global labels
+# - Hierarchical labels (cross-sheet connections)
+# - Power symbols (VCC, GND, etc.)
+# - Sheet pins connecting parent/child schematics
+```
+
 ### Component Bounding Box Visualization (NEW in v0.3.1)
 
 ```python
