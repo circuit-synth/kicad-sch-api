@@ -196,16 +196,37 @@ class SchematicSymbol:
         return None
 
     def get_pin_position(self, pin_number: str) -> Optional[Point]:
-        """Get absolute position of a pin."""
+        """Get absolute position of a pin with rotation transformation.
+
+        Args:
+            pin_number: Pin number to get position for
+
+        Returns:
+            Absolute position of the pin in schematic coordinates, or None if pin not found
+
+        Note:
+            Applies standard 2D rotation matrix to transform pin position from
+            symbol's local coordinate system to schematic's global coordinate system.
+        """
+        import math
+
         pin = self.get_pin(pin_number)
         if not pin:
             return None
-        # TODO: Apply rotation and symbol position transformation
-        # NOTE: Currently assumes 0° rotation. For rotated components, pin positions
-        # would need to be transformed using rotation matrix before adding to component position.
-        # This affects pin-to-pin wiring accuracy for rotated components.
-        # Priority: MEDIUM - Would improve wiring accuracy for rotated components
-        return Point(self.position.x + pin.position.x, self.position.y + pin.position.y)
+
+        # Apply rotation transformation using standard 2D rotation matrix
+        # [x'] = [cos(θ)  -sin(θ)] [x]
+        # [y']   [sin(θ)   cos(θ)] [y]
+        angle_rad = math.radians(self.rotation)
+        cos_a = math.cos(angle_rad)
+        sin_a = math.sin(angle_rad)
+
+        # Rotate pin position from symbol's local coordinates
+        rotated_x = pin.position.x * cos_a - pin.position.y * sin_a
+        rotated_y = pin.position.x * sin_a + pin.position.y * cos_a
+
+        # Add to component position to get absolute position
+        return Point(self.position.x + rotated_x, self.position.y + rotated_y)
 
 
 class WireType(Enum):
