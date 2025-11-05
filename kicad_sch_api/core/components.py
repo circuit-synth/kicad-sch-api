@@ -107,8 +107,29 @@ class Component:
 
     @rotation.setter
     def rotation(self, value: float):
-        """Set component rotation."""
-        self._data.rotation = float(value) % 360
+        """Set component rotation (must be 0, 90, 180, or 270 degrees).
+
+        KiCad only supports these four rotation angles for components.
+
+        Args:
+            value: Rotation angle in degrees (0, 90, 180, or 270)
+
+        Raises:
+            ValueError: If rotation is not 0, 90, 180, or 270
+        """
+        # Normalize rotation to 0-360 range
+        normalized = float(value) % 360
+
+        # KiCad only accepts 0, 90, 180, or 270 degrees
+        VALID_ROTATIONS = {0, 90, 180, 270}
+        if normalized not in VALID_ROTATIONS:
+            raise ValueError(
+                f"Component rotation must be 0, 90, 180, or 270 degrees. "
+                f"Got {value}° (normalized to {normalized}°). "
+                f"KiCad does not support arbitrary rotation angles."
+            )
+
+        self._data.rotation = normalized
         self._collection._mark_modified()
 
     @property
@@ -360,8 +381,16 @@ class ComponentCollection(BaseCollection[Component]):
             f"Component {reference} position snapped to grid: ({position.x:.3f}, {position.y:.3f})"
         )
 
-        # Normalize rotation to 0-360 range
+        # Normalize and validate rotation
         rotation = rotation % 360
+
+        # KiCad only accepts 0, 90, 180, or 270 degrees
+        VALID_ROTATIONS = {0, 90, 180, 270}
+        if rotation not in VALID_ROTATIONS:
+            raise ValidationError(
+                f"Component rotation must be 0, 90, 180, or 270 degrees. "
+                f"Got {rotation}°. KiCad does not support arbitrary rotation angles."
+            )
 
         # Create component data
         component_data = SchematicSymbol(
