@@ -33,7 +33,7 @@ pip install kicad-sch-api
 
 # Or install from source
 git clone https://github.com/circuit-synth/kicad-sch-api.git
-cd kicad-sch-api/python
+cd kicad-sch-api
 uv pip install -e .
 ```
 
@@ -134,29 +134,29 @@ bbox_uuids = sch.draw_component_bounding_boxes(
 )
 ```
 
-### Manhattan Routing with Obstacle Avoidance (NEW in v0.3.1)
+### Manhattan Routing with Obstacle Avoidance
 
 ```python
+# Automatic routing between component pins
+wire_segments = sch.auto_route_pins(
+    "R1", "2", "R2", "1",         # From R1 pin 2 to R2 pin 1
+    routing_mode="manhattan",      # L-shaped routing
+    avoid_components=True          # Avoid component bounding boxes
+)
+
+# Manual routing with custom obstacles
 from kicad_sch_api.core.manhattan_routing import ManhattanRouter
 from kicad_sch_api.core.types import Point
 
-# Create router
 router = ManhattanRouter()
+obstacle_bbox = get_component_bounding_box(sch.components.get("C1"))
+path = router.route_between_points(
+    Point(50, 50), Point(150, 150),
+    [obstacle_bbox],
+    clearance=2.0
+)
 
-# Add components that act as obstacles
-r1 = sch.components.add("Device:R", "R1", "1k", (50, 50))
-r2 = sch.components.add("Device:R", "R2", "2k", (150, 150))
-obstacle = sch.components.add("Device:C", "C1", "100nF", (100, 100))
-
-# Get obstacle bounding boxes
-obstacle_bbox = get_component_bounding_box(obstacle, include_properties=False)
-
-# Route around obstacles
-start_point = Point(r1.position.x, r1.position.y)
-end_point = Point(r2.position.x, r2.position.y)
-path = router.route_between_points(start_point, end_point, [obstacle_bbox], clearance=2.0)
-
-# Add wires along the path
+# Add wires along the routed path
 for i in range(len(path) - 1):
     sch.wires.add(path[i], path[i + 1])
 ```
@@ -207,30 +207,6 @@ print(f"Drew {len(bbox_uuids)} component bounding boxes")
 # Expand bounding box for clearance analysis
 expanded_bbox = bbox.expand(2.54)  # Expand by 2.54mm (0.1 inch) 
 clearance_rect = sch.draw_bounding_box(expanded_bbox)
-```
-
-### Manhattan Routing with Obstacle Avoidance (NEW in v0.3.1)
-
-```python
-# Automatic Manhattan routing between component pins
-wire_segments = sch.auto_route_pins(
-    "R1", "2",           # From component R1, pin 2
-    "R2", "1",           # To component R2, pin 1  
-    routing_mode="manhattan",  # Manhattan (L-shaped) routing
-    avoid_components=True      # Avoid component bounding boxes
-)
-
-# Direct routing (straight line)
-direct_wire = sch.auto_route_pins("C1", "1", "C2", "2", routing_mode="direct")
-
-# Manual obstacle avoidance using bounding boxes
-bbox_r1 = get_component_bounding_box(sch.components.get("R1"))
-bbox_r2 = get_component_bounding_box(sch.components.get("R2"))
-
-# Check if routing path intersects with component
-def path_clear(start, end, obstacles):
-    # Custom collision detection logic
-    return not any(bbox.intersects_line(start, end) for bbox in obstacles)
 ```
 
 ### Component Search and Management
