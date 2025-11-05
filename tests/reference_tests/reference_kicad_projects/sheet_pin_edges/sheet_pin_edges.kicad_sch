@@ -1,0 +1,99 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "26c92f52-1e6e-4baa-a1e5-4642c9466951")
+	(paper "A4")
+	(title_block
+		(title "Sheet Pin Edges Test")
+	)
+	(lib_symbols)
+	(sheet
+		(at 100 100)
+		(size 50 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "2f77a068-fef4-484b-b0c4-a726cd19410f")
+		(property "Sheetname" "SubSheet"
+			(at 100 99.2884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "subsheet.kicad_sch"
+			(at 100 140.5846 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "PIN_BOTTOM" output
+			(at 127 140 270)
+			(uuid "9fe3f9ac-ba2b-4075-991a-4ce7336625b8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PIN_LEFT" input
+			(at 100 118.11 180)
+			(uuid "7b9f2a06-35eb-4577-945f-4aa2f105485c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "PIN_RIGHT" input
+			(at 150 118.11 0)
+			(uuid "fa0a460e-c785-4a2c-a914-730740fb3f43")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "PIN_TOP" output
+			(at 127 100 90)
+			(uuid "8a9660a6-a211-4caf-9ff7-2997b42f875a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(instances
+			(project "sheet_pin_edges"
+				(path "/26c92f52-1e6e-4baa-a1e5-4642c9466951"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

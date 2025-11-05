@@ -842,28 +842,42 @@ class Schematic:
         sheet_uuid: str,
         name: str,
         pin_type: str,
-        position: Union[Point, Tuple[float, float]],
-        rotation: float = 0,
-        justify: str = "left",
+        edge: str,
+        position_along_edge: float,
         uuid: Optional[str] = None,
     ) -> str:
         """
-        Add a pin to a hierarchical sheet.
+        Add a pin to a hierarchical sheet using edge-based positioning.
 
         Args:
             sheet_uuid: UUID of the sheet to add pin to
             name: Pin name
-            pin_type: Pin type (input, output, bidirectional, etc.)
-            position: Pin position
-            rotation: Pin rotation in degrees
-            justify: Text justification
+            pin_type: Pin type (input, output, bidirectional, tri_state, passive)
+            edge: Edge to place pin on ("right", "bottom", "left", "top")
+            position_along_edge: Distance along edge from reference corner (mm)
             uuid: Optional UUID for the pin
 
         Returns:
             UUID of created sheet pin
+
+        Edge positioning (clockwise from right):
+            - "right": Pins face right (0°), position measured from top edge
+            - "bottom": Pins face down (270°), position measured from left edge
+            - "left": Pins face left (180°), position measured from bottom edge
+            - "top": Pins face up (90°), position measured from left edge
+
+        Example:
+            >>> # Sheet at (100, 100) with size (50, 40)
+            >>> sch.add_sheet_pin(
+            ...     sheet_uuid=sheet_id,
+            ...     name="DATA_IN",
+            ...     pin_type="input",
+            ...     edge="left",
+            ...     position_along_edge=20  # 20mm from top on left edge
+            ... )
         """
         pin_uuid = self._sheet_manager.add_sheet_pin(
-            sheet_uuid, name, pin_type, position, rotation, justify, uuid_str=uuid
+            sheet_uuid, name, pin_type, edge, position_along_edge, uuid_str=uuid
         )
         self._format_sync_manager.mark_dirty("sheet", "modify", {"uuid": sheet_uuid})
         self._modified = True
