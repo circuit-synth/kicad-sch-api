@@ -1,0 +1,53 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "b4ec9d7b-b234-4016-bddf-e8775dc7d181")
+	(paper "A4")
+	(title_block
+		(title "Rectangles Reference")
+	)
+	(lib_symbols)
+	(rectangle
+		(start 100 100)
+		(end 150 130)
+		(stroke
+			(width 0.5)
+			(type solid)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "89f8182b-d132-41d1-9a36-c2a3573bd906")
+	)
+	(rectangle
+		(start 100 140)
+		(end 150 170)
+		(stroke
+			(width 0.5)
+			(type solid)
+		)
+		(fill
+			(type background)
+		)
+		(uuid "257bff6c-006b-4039-ba83-ced33b31feea")
+	)
+	(rectangle
+		(start 160 100)
+		(end 210 130)
+		(stroke
+			(width 0.5)
+			(type dash)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "6c99c3fa-ffb3-4e13-b234-7ba573e9233b")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
