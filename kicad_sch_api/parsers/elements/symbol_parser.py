@@ -62,6 +62,11 @@ class SymbolParser(BaseElementParser):
                     prop_data = self._parse_property(sub_item)
                     if prop_data:
                         prop_name = prop_data.get("name")
+
+                        # Store original S-expression for format preservation
+                        sexp_key = f"__sexp_{prop_name}"
+                        symbol_data["properties"][sexp_key] = sub_item
+
                         if prop_name == "Reference":
                             symbol_data["reference"] = prop_data.get("value")
                         elif prop_name == "Value":
@@ -142,38 +147,82 @@ class SymbolParser(BaseElementParser):
         rotation = symbol_data.get("rotation", 0)
 
         if symbol_data.get("reference"):
-            # Power symbol references should be hidden by default
-            ref_hide = is_power_symbol
-            ref_prop = self._create_property_with_positioning(
-                "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide, rotation=rotation
-            )
-            sexp.append(ref_prop)
+            # Check for preserved S-expression
+            preserved_ref = symbol_data.get("properties", {}).get("__sexp_Reference")
+            if preserved_ref:
+                # Use preserved format but update the value
+                ref_prop = list(preserved_ref)
+                if len(ref_prop) >= 3:
+                    ref_prop[2] = symbol_data["reference"]
+                sexp.append(ref_prop)
+            else:
+                # No preserved format - create new (for newly added components)
+                ref_hide = is_power_symbol
+                ref_prop = self._create_property_with_positioning(
+                    "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide, rotation=rotation
+                )
+                sexp.append(ref_prop)
 
         if symbol_data.get("value"):
-            # Power symbol values need different positioning
-            if is_power_symbol:
-                val_prop = self._create_power_symbol_value_property(
-                    symbol_data["value"], pos, lib_id, rotation
-                )
+            # Check for preserved S-expression
+            preserved_val = symbol_data.get("properties", {}).get("__sexp_Value")
+            if preserved_val:
+                # Use preserved format but update the value
+                val_prop = list(preserved_val)
+                if len(val_prop) >= 3:
+                    val_prop[2] = symbol_data["value"]
+                sexp.append(val_prop)
             else:
-                val_prop = self._create_property_with_positioning(
-                    "Value", symbol_data["value"], pos, 1, "left", rotation=rotation
-                )
-            sexp.append(val_prop)
+                # No preserved format - create new (for newly added components)
+                if is_power_symbol:
+                    val_prop = self._create_power_symbol_value_property(
+                        symbol_data["value"], pos, lib_id, rotation
+                    )
+                else:
+                    val_prop = self._create_property_with_positioning(
+                        "Value", symbol_data["value"], pos, 1, "left", rotation=rotation
+                    )
+                sexp.append(val_prop)
 
         footprint = symbol_data.get("footprint")
         if footprint is not None:  # Include empty strings but not None
-            fp_prop = self._create_property_with_positioning(
-                "Footprint", footprint, pos, 2, "left", hide=True
-            )
-            sexp.append(fp_prop)
+            # Check for preserved S-expression
+            preserved_fp = symbol_data.get("properties", {}).get("__sexp_Footprint")
+            if preserved_fp:
+                # Use preserved format but update the value
+                fp_prop = list(preserved_fp)
+                if len(fp_prop) >= 3:
+                    fp_prop[2] = footprint
+                sexp.append(fp_prop)
+            else:
+                # No preserved format - create new (for newly added components)
+                fp_prop = self._create_property_with_positioning(
+                    "Footprint", footprint, pos, 2, "left", hide=True
+                )
+                sexp.append(fp_prop)
 
         for prop_name, prop_value in symbol_data.get("properties", {}).items():
-            escaped_value = str(prop_value).replace('"', '\\"')
-            prop = self._create_property_with_positioning(
-                prop_name, escaped_value, pos, 3, "left", hide=True
-            )
-            sexp.append(prop)
+            # Skip internal preservation keys
+            if prop_name.startswith("__sexp_"):
+                continue
+
+            # Check if we have a preserved S-expression for this custom property
+            preserved_prop = symbol_data.get("properties", {}).get(f"__sexp_{prop_name}")
+            if preserved_prop:
+                # Use preserved format but update the value
+                prop = list(preserved_prop)
+                if len(prop) >= 3:
+                    # Re-escape quotes when saving
+                    escaped_value = str(prop_value).replace('"', '\\"')
+                    prop[2] = escaped_value
+                sexp.append(prop)
+            else:
+                # No preserved format - create new (for newly added properties)
+                escaped_value = str(prop_value).replace('"', '\\"')
+                prop = self._create_property_with_positioning(
+                    prop_name, escaped_value, pos, 3, "left", hide=True
+                )
+                sexp.append(prop)
 
         # Add pin UUID assignments (required by KiCAD)
         for pin in symbol_data.get("pins", []):
