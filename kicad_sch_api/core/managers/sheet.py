@@ -122,29 +122,30 @@ class SheetManager(BaseManager):
         sheet_uuid: str,
         name: str,
         pin_type: str,
-        position: Union[Point, Tuple[float, float]],
-        rotation: float = 0,
-        justify: str = "left",
+        edge: str,
+        position_along_edge: float,
         uuid_str: Optional[str] = None,
     ) -> Optional[str]:
         """
-        Add a pin to an existing sheet.
+        Add a pin to an existing sheet using edge-based positioning.
 
         Args:
             sheet_uuid: UUID of target sheet
             name: Pin name
             pin_type: Pin type (input, output, bidirectional, tri_state, passive)
-            position: Pin position relative to sheet
-            rotation: Pin rotation in degrees
-            justify: Text justification (left, right, center)
+            edge: Edge to place pin on ("right", "bottom", "left", "top")
+            position_along_edge: Distance along edge from reference corner (mm)
             uuid_str: Optional pin UUID
 
         Returns:
             UUID of created pin, or None if sheet not found
-        """
-        if isinstance(position, tuple):
-            position = Point(position[0], position[1])
 
+        Edge positioning (clockwise from right):
+            - "right": rotation=0°, justify="right", position from top edge
+            - "bottom": rotation=270°, justify="left", position from left edge
+            - "left": rotation=180°, justify="left", position from bottom edge
+            - "top": rotation=90°, justify="right", position from left edge
+        """
         if uuid_str is None:
             uuid_str = str(uuid.uuid4())
 
@@ -153,15 +154,49 @@ class SheetManager(BaseManager):
             logger.warning(f"Invalid sheet pin type: {pin_type}. Using 'input'")
             pin_type = "input"
 
+        valid_edges = ["right", "bottom", "left", "top"]
+        if edge not in valid_edges:
+            logger.error(f"Invalid edge: {edge}. Must be one of {valid_edges}")
+            return None
+
         # Find the sheet
         sheets = self._data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("uuid") == sheet_uuid:
+                # Get sheet bounds
+                sheet_x = sheet["position"]["x"]
+                sheet_y = sheet["position"]["y"]
+                sheet_width = sheet["size"]["width"]
+                sheet_height = sheet["size"]["height"]
+
+                # Calculate position, rotation, and justification based on edge
+                # Clockwise: right (0°) → bottom (270°) → left (180°) → top (90°)
+                if edge == "right":
+                    x = sheet_x + sheet_width
+                    y = sheet_y + position_along_edge
+                    rotation = 0
+                    justify = "right"
+                elif edge == "bottom":
+                    x = sheet_x + position_along_edge
+                    y = sheet_y + sheet_height
+                    rotation = 270
+                    justify = "left"
+                elif edge == "left":
+                    x = sheet_x
+                    y = sheet_y + sheet_height - position_along_edge
+                    rotation = 180
+                    justify = "left"
+                elif edge == "top":
+                    x = sheet_x + position_along_edge
+                    y = sheet_y
+                    rotation = 90
+                    justify = "right"
+
                 pin_data = {
                     "uuid": uuid_str,
                     "name": name,
                     "pin_type": pin_type,
-                    "position": {"x": position.x, "y": position.y},
+                    "position": {"x": x, "y": y},
                     "rotation": rotation,
                     "size": 1.27,
                     "justify": justify,
@@ -170,7 +205,9 @@ class SheetManager(BaseManager):
                 # Add to sheet's pins array (already initialized in add_sheet)
                 sheet["pins"].append(pin_data)
 
-                logger.debug(f"Added pin '{name}' to sheet {sheet_uuid}")
+                logger.debug(
+                    f"Added pin '{name}' to sheet {sheet_uuid} on {edge} edge at ({x}, {y})"
+                )
                 return uuid_str
 
         logger.warning(f"Sheet not found: {sheet_uuid}")

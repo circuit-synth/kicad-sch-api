@@ -1,0 +1,61 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "160bb7da-959a-4fbd-8fce-828f02a93276")
+	(paper "A4")
+	(title_block
+		(title "SubSheet")
+	)
+	(lib_symbols)
+	(hierarchical_label "PIN_RIGHT"
+		(shape input)
+		(at 181.61 101.6 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "20395c8d-38ba-41ee-9a54-8ddcf6cb2279")
+	)
+	(hierarchical_label "PIN_BOTTOM"
+		(shape output)
+		(at 165.1 120.65 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+	)
+	(hierarchical_label "PIN_LEFT"
+		(shape input)
+		(at 148.59 107.95 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "b2c3d4e5-f6a7-8901-bcde-f12345678901")
+	)
+	(hierarchical_label "PIN_TOP"
+		(shape output)
+		(at 170.18 88.9 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "c3d4e5f6-a7b8-9012-cdef-123456789012")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

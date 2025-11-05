@@ -23,13 +23,15 @@ def main():
     )
 
     # Add sheet pins matching the reference with exact UUIDs
+    # Sheet bounds: position=(137.16, 69.85), size=(26.67, 34.29)
+    # Right edge: x=163.83, Bottom edge: y=104.14, Left edge: x=137.16, Top edge: y=69.85
+
     sch.add_sheet_pin(
         sheet_uuid=sheet_uuid,
         name="NET1",
         pin_type="input",
-        position=(163.83, 77.47),
-        rotation=0,
-        justify="right",
+        edge="right",
+        position_along_edge=7.62,  # 77.47 - 69.85 = 7.62
         uuid="adb66f51-2859-4ace-9abe-5e0b55f948be",
     )
 
@@ -37,9 +39,8 @@ def main():
         sheet_uuid=sheet_uuid,
         name="NET2",
         pin_type="input",
-        position=(152.4, 104.14),
-        rotation=270,
-        justify="left",
+        edge="bottom",
+        position_along_edge=15.24,  # 152.4 - 137.16 = 15.24
         uuid="0c836392-4429-40d9-91c2-d87405912244",
     )
 
@@ -47,9 +48,8 @@ def main():
         sheet_uuid=sheet_uuid,
         name="NET3",
         pin_type="input",
-        position=(137.16, 88.9),
-        rotation=180,
-        justify="left",
+        edge="left",
+        position_along_edge=15.24,  # 104.14 - 88.9 = 15.24
         uuid="c166d84a-1fa1-4e90-92b4-f8b6a553b2ad",
     )
 
@@ -57,9 +57,8 @@ def main():
         sheet_uuid=sheet_uuid,
         name="NET4",
         pin_type="input",
-        position=(149.86, 69.85),
-        rotation=90,
-        justify="right",
+        edge="top",
+        position_along_edge=12.7,  # 149.86 - 137.16 = 12.7
         uuid="fe1dfbfa-ad4a-4fc0-96a5-37056490ac1e",
     )
 
