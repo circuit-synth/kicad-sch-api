@@ -350,6 +350,11 @@ class Schematic:
         """Collection of all electrical nets in the schematic."""
         return self._nets
 
+    @property
+    def sheets(self):
+        """Sheet manager for hierarchical sheet operations."""
+        return self._sheet_manager
+
     # Pin positioning methods (delegated to WireManager)
     def get_component_pin_position(self, reference: str, pin_number: str) -> Optional[Point]:
         """
@@ -898,7 +903,7 @@ class Schematic:
             start: Top-left corner position
             end: Bottom-right corner position
             stroke_width: Line width
-            stroke_type: Line type (solid, dashed, etc.)
+            stroke_type: Line type (solid, dash, dash_dot, dash_dot_dot, dot, or default)
             fill_type: Fill type (none, background, etc.)
             stroke_color: Stroke color as (r, g, b, a)
             fill_color: Fill color as (r, g, b, a)
@@ -906,6 +911,14 @@ class Schematic:
         Returns:
             UUID of created rectangle
         """
+        # Validate stroke_type
+        valid_stroke_types = ["solid", "dash", "dash_dot", "dash_dot_dot", "dot", "default"]
+        if stroke_type not in valid_stroke_types:
+            raise ValueError(
+                f"Invalid stroke_type '{stroke_type}'. "
+                f"Must be one of: {', '.join(valid_stroke_types)}"
+            )
+
         # Convert individual parameters to stroke/fill dicts
         stroke = {"width": stroke_width, "type": stroke_type}
         if stroke_color:
