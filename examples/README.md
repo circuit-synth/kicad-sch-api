@@ -101,9 +101,58 @@ python examples/simple_two_resistor_routing.py
 
 ---
 
-### 3. Advanced: Performance & Integration
+### 3. Advanced: Complete Projects & Performance
 
-Master large schematics, performance optimization, and external tool integration.
+Master complete board design, large schematics, and external tool integration.
+
+#### `complete_board_example.py` - Complete ESP32 Development Board
+**What it teaches:**
+- Complete board design from start to finish
+- ESP32-C3 microcontroller integration
+- Power supply design (USB-C + voltage regulator)
+- User interface (buttons, LEDs)
+- Component organization and placement strategy
+- Real-world production-ready schematic
+
+**Run it:**
+```bash
+python examples/complete_board_example.py
+```
+
+**Output:** Creates a full ESP32-C3 development board schematic with USB-C, voltage regulator, microcontroller with decoupling, buttons, and LEDs.
+
+**Use when:** You want to see how to design a complete ESP32-based board.
+
+---
+
+#### `stm32_black_pill_board.py` - STM32F411 Black Pill Board (Phil's Lab)
+**What it teaches:**
+- STM32 microcontroller board design
+- Based on Phil's Lab #65 KiCad tutorial
+- HSE/LSE crystal oscillator circuits
+- SWD programming interface
+- Proper STM32 power and decoupling
+- Professional ARM Cortex-M4 board layout
+
+**Run it:**
+```bash
+python examples/stm32_black_pill_board.py
+```
+
+**Output:** Creates an STM32F411CEU6 "Black Pill" development board with:
+- STM32F411 ARM Cortex-M4 @ 100MHz
+- USB Type-C power and programming
+- 25MHz HSE and 32.768kHz LSE crystals
+- SWD programming interface
+- BOOT0, NRST, and user buttons
+- User LED and GPIO headers
+- All SMD components with proper footprints
+
+**Use when:** You want to learn STM32 board design or follow Phil's Lab tutorials.
+
+**Reference:** [Phil's Lab #65 - KiCad 6 STM32 PCB Design](https://www.youtube.com/watch?v=C7-8nUU6e3E)
+
+---
 
 #### `advanced_usage.py` - Large Schematics & Performance
 **What it teaches:**
@@ -207,6 +256,8 @@ sch.components.bulk_update(
 | Your Goal | Recommended Example | Why |
 |-----------|-------------------|-----|
 | Learn the basics | `basic_usage.py` | Comprehensive introduction |
+| ESP32 board design | `complete_board_example.py` | Real-world ESP32 dev board |
+| STM32 board design | `stm32_black_pill_board.py` | Phil's Lab STM32F411 tutorial |
 | Understand file format | `parser_demo.py` | Low-level format details |
 | Wire components | `pin_to_pin_wiring_demo.py` | Pin connection techniques |
 | Auto-route wires | `simple_two_resistor_routing.py` | Routing algorithms |

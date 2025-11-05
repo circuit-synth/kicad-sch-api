@@ -1,0 +1,505 @@
+# kicad-sch-api - LLM Usage Guide
+
+> Professional Python library for KiCAD schematic manipulation with exact format preservation
+
+## Quick Start
+
+```python
+import kicad_sch_api as ksa
+
+# Create schematic
+sch = ksa.create_schematic("My Circuit")
+
+# Add components
+r1 = sch.components.add("Device:R", "R1", "10k", (100, 100))
+
+# Save
+sch.save("circuit.kicad_sch")
+```
+
+## Core API
+
+### Creating Schematics
+
+```python
+# New schematic
+sch = ksa.create_schematic("Circuit Name")
+
+# Load existing
+sch = ksa.load_schematic("existing.kicad_sch")
+```
+
+### Adding Components
+
+```python
+# Basic component
+component = sch.components.add(
+    lib_id="Device:R",        # KiCAD library:symbol
+    reference="R1",            # Component reference (R1, C1, U1, etc.)
+    value="10k",              # Component value
+    position=(100, 100)        # X, Y position in mm
+)
+
+# With full properties
+component = sch.components.add(
+    lib_id="Device:C",
+    reference="C1",
+    value="100nF",
+    position=(150, 100),
+    footprint="Capacitor_SMD:C_0603_1608Metric",
+    datasheet="~",
+    description="Decoupling capacitor"
+)
+
+# Set additional properties
+component.set_property("Voltage", "50V")
+component.set_property("Tolerance", "10%")
+component.set_property("MPN", "CL10B104KB8NNNC")
+```
+
+### Common KiCAD Library Components
+
+```python
+# Passives
+"Device:R"           # Resistor
+"Device:C"           # Capacitor
+"Device:L"           # Inductor
+"Device:D"           # Diode
+"Device:LED"         # LED
+
+# ICs
+"Regulator_Linear:AMS1117-3.3"           # 3.3V LDO regulator
+"RF_Module:ESP32-C3-MINI-1"              # ESP32-C3 WiFi module
+"Amplifier_Operational:LM358"            # Dual op-amp
+
+# Connectors
+"Connector:USB_C_Receptacle_USB2.0"      # USB-C connector
+"Connector:Conn_01x02"                   # 2-pin header
+"Connector:Screw_Terminal_01x02"         # Screw terminal
+
+# Switches
+"Switch:SW_Push"                          # Push button
+"Switch:SW_SPDT"                          # SPDT switch
+
+# Power
+"power:+5V"          # Power symbol
+"power:GND"          # Ground symbol
+"power:+3V3"         # 3.3V power
+```
+
+### Standard SMD Footprints
+
+```python
+# Resistors/Capacitors
+"Resistor_SMD:R_0603_1608Metric"
+"Resistor_SMD:R_0805_2012Metric"
+"Capacitor_SMD:C_0603_1608Metric"
+"Capacitor_SMD:C_0805_2012Metric"
+
+# LEDs
+"LED_SMD:LED_0603_1608Metric"
+"LED_SMD:LED_0805_2012Metric"
+
+# ICs
+"Package_TO_SOT_SMD:SOT-223-3_TabPin2"   # AMS1117 regulator
+"Package_DFN_QFN:QFN-32-1EP_5x5mm_P0.5mm"  # Common QFN
+"RF_Module:ESP32-C3-MINI-1"               # ESP32 module
+
+# Buttons
+"Button_Switch_SMD:SW_SPST_TL3342"
+```
+
+### Wiring Components
+
+```python
+# Simple wire between two points
+wire = sch.wires.add(start=(100, 110), end=(150, 110))
+
+# Pin-to-pin wiring (automatic position calculation)
+wire_uuid = sch.add_wire_between_pins("R1", "2", "R2", "1")
+
+# Wire from point to component pin
+wire_uuid = sch.add_wire_to_pin((75, 100), "R1", "1")
+
+# Get component pin position
+pin_pos = sch.get_component_pin_position("R1", "1")
+if pin_pos:
+    print(f"Pin at ({pin_pos.x}, {pin_pos.y})")
+```
+
+### Labels and Text
+
+```python
+# Net label
+sch.add_label("VCC", position=(125, 100))
+sch.add_label("GND", position=(125, 120))
+
+# Hierarchical label (for multi-sheet designs)
+sch.add_hierarchical_label("VCC", label_type="input", position=(50, 100))
+sch.add_hierarchical_label("OUTPUT", label_type="output", position=(250, 100))
+```
+
+### Component Search and Filtering
+
+```python
+# Get component by reference
+r1 = sch.components.get("R1")
+
+# Find all resistors
+resistors = sch.components.filter(lib_id="Device:R")
+
+# Find by pattern
+power_components = sch.components.filter(reference_pattern=r'U[0-9]+')
+
+# Find in area
+components_in_area = sch.components.in_area(50, 50, 200, 200)
+
+# Iterate all components
+for component in sch.components:
+    print(f"{component.reference}: {component.value}")
+```
+
+### Bulk Operations
+
+```python
+# Update multiple components at once
+sch.components.bulk_update(
+    criteria={'lib_id': 'Device:R'},
+    updates={'properties': {'Tolerance': '1%', 'Power': '0.1W'}}
+)
+
+# Update specific components
+resistors = sch.components.filter(lib_id="Device:R")
+for r in resistors:
+    r.set_property("Power", "0.1W")
+```
+
+### Component Removal
+
+```python
+# Remove by reference
+sch.components.remove("R1")
+
+# Remove wire
+sch.remove_wire(wire_uuid)
+
+# Remove label
+sch.remove_label(label_uuid)
+```
+
+### Hierarchical Design
+
+```python
+# Add hierarchical sheet
+power_sheet = sch.add_hierarchical_sheet(
+    name="Power Supply",
+    filename="power.kicad_sch",
+    position=(100, 100),
+    size=(80, 60)
+)
+
+# Add sheet pins (connections to parent sheet)
+power_sheet.add_pin("VIN", pin_type="input", position=(0, 10))
+power_sheet.add_pin("VOUT", pin_type="output", position=(80, 10))
+```
+
+### Validation
+
+```python
+# Validate schematic
+issues = sch.validate()
+
+# Check for errors
+errors = [issue for issue in issues if issue.level.value == "error"]
+if errors:
+    for error in errors:
+        print(f"Error: {error}")
+```
+
+### Configuration
+
+```python
+# Access global configuration
+config = ksa.config
+
+# Customize property positioning
+config.properties.reference_y = -2.0
+config.properties.value_y = 2.0
+
+# Customize tolerances
+config.tolerance.position_tolerance = 0.05
+
+# Grid and spacing
+config.grid.unit_spacing = 10.0
+config.grid.component_spacing = 5.0
+```
+
+## Common Patterns
+
+### Voltage Divider
+
+```python
+sch = ksa.create_schematic("Voltage Divider")
+
+r1 = sch.components.add("Device:R", "R1", "10k", (100, 100),
+                       footprint="Resistor_SMD:R_0603_1608Metric")
+r2 = sch.components.add("Device:R", "R2", "10k", (100, 120),
+                       footprint="Resistor_SMD:R_0603_1608Metric")
+
+# Wire them together
+sch.add_wire_between_pins("R1", "2", "R2", "1")
+
+# Add labels
+sch.add_label("VIN", position=(100, 95))
+sch.add_label("VOUT", position=(100, 110))
+sch.add_label("GND", position=(100, 130))
+
+sch.save("voltage_divider.kicad_sch")
+```
+
+### LED Circuit
+
+```python
+sch = ksa.create_schematic("LED Circuit")
+
+# Add LED and resistor
+led = sch.components.add("Device:LED", "D1", "LED", (100, 100),
+                        footprint="LED_SMD:LED_0603_1608Metric")
+led.set_property("Color", "Red")
+
+resistor = sch.components.add("Device:R", "R1", "330", (100, 110),
+                             footprint="Resistor_SMD:R_0603_1608Metric")
+
+# Wire cathode to resistor
+sch.add_wire_between_pins("D1", "K", "R1", "1")
+
+# Add power labels
+sch.add_label("VCC", position=(100, 95))
+sch.add_label("GND", position=(100, 120))
+
+sch.save("led_circuit.kicad_sch")
+```
+
+### Voltage Regulator
+
+```python
+sch = ksa.create_schematic("3.3V Regulator")
+
+# Add regulator
+reg = sch.components.add(
+    "Regulator_Linear:AMS1117-3.3",
+    "U1", "AMS1117-3.3",
+    (100, 100),
+    footprint="Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+)
+
+# Input capacitor
+c_in = sch.components.add("Device:C", "C1", "10uF", (80, 110),
+                         footprint="Capacitor_SMD:C_0805_2012Metric")
+c_in.set_property("Voltage", "16V")
+
+# Output capacitor
+c_out = sch.components.add("Device:C", "C2", "22uF", (120, 110),
+                          footprint="Capacitor_SMD:C_0805_2012Metric")
+c_out.set_property("Voltage", "10V")
+
+# Add labels
+sch.add_label("VIN", position=(80, 100))
+sch.add_label("3V3", position=(120, 100))
+sch.add_label("GND", position=(100, 120))
+
+sch.save("voltage_regulator.kicad_sch")
+```
+
+### Decoupling Capacitor Network
+
+```python
+sch = ksa.create_schematic("Decoupling Network")
+
+# Add multiple decoupling caps at different positions
+for i, value in enumerate(["100nF", "10uF", "100nF"]):
+    x_pos = 100 + (i * 20)
+    cap = sch.components.add(
+        "Device:C", f"C{i+1}", value,
+        (x_pos, 100),
+        footprint="Capacitor_SMD:C_0603_1608Metric"
+    )
+    cap.set_property("Voltage", "10V")
+
+    # Add power labels
+    sch.add_label("VCC", position=(x_pos, 95))
+    sch.add_label("GND", position=(x_pos, 110))
+
+sch.save("decoupling_network.kicad_sch")
+```
+
+## Best Practices
+
+### Component Placement
+
+```python
+# Left to right: Input → Processing → Output
+# Top to bottom: Power → Signal → Ground
+
+# Power supply on left
+usb = sch.components.add("Connector:USB_C_Receptacle_USB2.0",
+                        "J1", "USB_C", (50, 100))
+
+# Regulator in middle
+reg = sch.components.add("Regulator_Linear:AMS1117-3.3",
+                        "U1", "AMS1117-3.3", (100, 100))
+
+# Load on right
+mcu = sch.components.add("RF_Module:ESP32-C3-MINI-1",
+                        "U2", "ESP32-C3", (200, 100))
+```
+
+### Component Spacing
+
+```python
+# Use consistent spacing
+GRID = 2.54  # mm (0.1 inch)
+COMPONENT_SPACING = 12.7  # mm (0.5 inch)
+
+# Place components on grid
+for i in range(5):
+    sch.components.add(
+        "Device:R", f"R{i+1}", "10k",
+        (100, 100 + i * COMPONENT_SPACING)
+    )
+```
+
+### Footprint Selection
+
+```python
+# Standard footprints for hand soldering
+"Resistor_SMD:R_0805_2012Metric"      # 0805 size
+"Capacitor_SMD:C_0805_2012Metric"
+
+# Smaller footprints for production
+"Resistor_SMD:R_0603_1608Metric"      # 0603 size
+"Capacitor_SMD:C_0603_1608Metric"
+
+# Always specify footprints
+component = sch.components.add(
+    "Device:R", "R1", "10k", (100, 100),
+    footprint="Resistor_SMD:R_0603_1608Metric"  # ✅ Good
+)
+```
+
+### Property Management
+
+```python
+# Set essential properties
+resistor = sch.components.add("Device:R", "R1", "10k", (100, 100))
+resistor.set_property("Power", "0.1W")
+resistor.set_property("Tolerance", "1%")
+resistor.set_property("MPN", "RC0603FR-0710KL")  # Manufacturer part number
+
+capacitor = sch.components.add("Device:C", "C1", "100nF", (150, 100))
+capacitor.set_property("Voltage", "50V")
+capacitor.set_property("Type", "Ceramic X7R")
+capacitor.set_property("MPN", "CL10B104KB8NNNC")
+```
+
+## Error Handling
+
+```python
+# Check if component exists
+component = sch.components.get("R1")
+if component is None:
+    print("Component R1 not found")
+
+# Validate before saving
+issues = sch.validate()
+if issues:
+    for issue in issues:
+        print(f"{issue.level}: {issue.message}")
+
+# Handle wire creation failures
+wire_uuid = sch.add_wire_between_pins("R1", "2", "R999", "1")
+if wire_uuid is None:
+    print("Failed to create wire - invalid component or pin")
+```
+
+## Performance Tips
+
+```python
+# Use bulk operations for multiple updates
+sch.components.bulk_update(
+    criteria={'lib_id': 'Device:R'},
+    updates={'properties': {'Tolerance': '1%'}}
+)
+
+# Filter once, iterate many times
+resistors = sch.components.filter(lib_id="Device:R")
+for r in resistors:
+    r.set_property("Power", "0.1W")
+
+# Symbol caching is automatic - library lookups are cached
+```
+
+## Complete Example
+
+```python
+import kicad_sch_api as ksa
+
+# Create schematic
+sch = ksa.create_schematic("ESP32 Dev Board")
+
+# Power supply section
+usb = sch.components.add(
+    "Connector:USB_C_Receptacle_USB2.0",
+    "J1", "USB_C", (50, 100),
+    footprint="Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12"
+)
+
+reg = sch.components.add(
+    "Regulator_Linear:AMS1117-3.3",
+    "U1", "AMS1117-3.3", (100, 100),
+    footprint="Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+)
+
+c1 = sch.components.add(
+    "Device:C", "C1", "10uF", (80, 110),
+    footprint="Capacitor_SMD:C_0805_2012Metric"
+)
+c1.set_property("Voltage", "16V")
+
+c2 = sch.components.add(
+    "Device:C", "C2", "22uF", (120, 110),
+    footprint="Capacitor_SMD:C_0805_2012Metric"
+)
+c2.set_property("Voltage", "10V")
+
+# Microcontroller
+esp32 = sch.components.add(
+    "RF_Module:ESP32-C3-MINI-1",
+    "U2", "ESP32-C3", (200, 100),
+    footprint="RF_Module:ESP32-C3-MINI-1"
+)
+
+# Add labels
+sch.add_label("VBUS", position=(70, 100))
+sch.add_label("3V3", position=(130, 100))
+sch.add_label("GND", position=(100, 120))
+
+# Validate and save
+issues = sch.validate()
+if not any(i.level.value == "error" for i in issues):
+    sch.save("esp32_dev_board.kicad_sch")
+    print("✅ Schematic created successfully")
+else:
+    print("❌ Validation errors found")
+```
+
+## See Also
+
+- Examples: `examples/` directory
+- API Reference: https://kicad-sch-api.readthedocs.io/
+- MCP Server: https://github.com/circuit-synth/mcp-kicad-sch-api
+- KiCAD Libraries: https://kicad.github.io/symbols/
+
+## Version
+
+This guide is for kicad-sch-api v0.4.5+

@@ -65,10 +65,6 @@ This document lists known limitations and future improvements for the kicad-sch-
 
 ---
 
-## Test Coverage Gaps
-
-See [TEST_COVERAGE_GAPS.md](TEST_COVERAGE_GAPS.md) for areas lacking unit test coverage.
-
 ---
 
 ## How to Contribute
