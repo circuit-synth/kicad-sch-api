@@ -66,14 +66,14 @@ def get_component_pin_position(component: SchematicSymbol, pin_number: str) -> O
 
         # Look for pin in symbol definition
         pins_found = []
-        for pin_def in symbol_def.get("pins", []):
-            pins_found.append(pin_def.get("number", "unknown"))
-            if pin_def.get("number") == pin_number:
+        for pin_def in symbol_def.pins:
+            pins_found.append(pin_def.number)
+            if pin_def.number == pin_number:
                 logger.info(f"  Found pin {pin_number} in symbol definition")
 
                 # Get pin position from definition
-                pin_x = pin_def.get("x", 0)
-                pin_y = pin_def.get("y", 0)
+                pin_x = pin_def.position.x
+                pin_y = pin_def.position.y
                 logger.info(f"  Symbol pin position: ({pin_x}, {pin_y})")
 
                 # Apply component transformations
@@ -127,10 +127,10 @@ def list_component_pins(component: SchematicSymbol) -> List[Tuple[str, Point]]:
             symbol_def = symbol_cache.get_symbol(component.lib_id)
 
             if symbol_def:
-                for pin_def in symbol_def.get("pins", []):
-                    pin_number = pin_def.get("number")
-                    pin_x = pin_def.get("x", 0)
-                    pin_y = pin_def.get("y", 0)
+                for pin_def in symbol_def.pins:
+                    pin_number = pin_def.number
+                    pin_x = pin_def.position.x
+                    pin_y = pin_def.position.y
 
                     absolute_pos = apply_transformation(
                         (pin_x, pin_y),

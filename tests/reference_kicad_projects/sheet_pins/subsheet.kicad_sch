@@ -1,0 +1,39 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "b33a843c-f743-41ef-b3a6-7548b872e53b")
+	(paper "A4")
+	(title_block
+		(title "SubSheet")
+	)
+	(lib_symbols)
+	(hierarchical_label "INPUT"
+		(shape input)
+		(at 100 100 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "942b4a72-6e4f-42ca-8f7d-3a1d6cb34365")
+	)
+	(hierarchical_label "OUTPUT"
+		(shape input)
+		(at 100 120 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "4ed585e5-c325-4084-b696-f07f17494f1b")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
