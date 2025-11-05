@@ -157,12 +157,77 @@ uv run pytest -m "validation" -v  # Error handling and validation
 4. **Python Implementation**: Write Python logic to generate the same output
 5. **Exact Format Validation**: Ensure Python output matches manual KiCAD output byte-perfectly
 
-**Interactive Testing Steps:**
-1. Claude creates blank schematic and opens it in KiCAD
-2. User manually edits schematic with required test elements
-3. Claude analyzes the edited schematic as reference format
-4. Claude creates unit test that generates identical output
-5. Test validates both functionality and exact KiCAD format compliance
+### Interactive Reference Testing Strategy ⭐
+**This is the PROVEN strategy from pin rotation (PR #91) - USE THIS!**
+
+This collaborative approach ensures our API generates exact KiCad-compatible output:
+
+#### Step 1: Claude Creates Blank Schematic
+```python
+# Claude creates blank reference schematic
+import kicad_sch_api as ksa
+sch = ksa.create_schematic("Reference Test")
+sch.save("tests/reference_kicad_projects/feature_name/test.kicad_sch")
+```
+```bash
+# Claude opens it for user
+open tests/reference_kicad_projects/feature_name/test.kicad_sch
+```
+
+#### Step 2: User Manually Adds Elements in KiCad
+- User adds the element(s) being tested (label, junction, etc.)
+- User positions elements, sets properties
+- User saves schematic (Ctrl+S)
+- User tells Claude: "done" or "saved"
+
+#### Step 3: Claude Analyzes KiCad Format
+```python
+# Claude reads the manually created reference
+sch = ksa.Schematic.load("tests/reference_kicad_projects/feature_name/test.kicad_sch")
+
+# Extract exact positions, properties, format
+for element in sch.labels:  # or junctions, etc.
+    print(f"Position: {element.position}")
+    print(f"Properties: {element.properties}")
+    # Understand exact KiCad S-expression format
+```
+
+#### Step 4: Claude Creates Unit Tests
+```python
+class TestFeature:
+    def test_feature_creation(self, schematic):
+        """Test creating feature programmatically."""
+        element = schematic.add_feature(...)
+        assert element.property == expected_value
+
+    def test_feature_matches_kicad_reference(self):
+        """Verify against manually created KiCad reference."""
+        sch = ksa.Schematic.load("tests/reference_kicad_projects/feature_name/test.kicad_sch")
+        element = get_element(sch)
+
+        # Verify exact positions match KiCad
+        assert element.position.x == expected_x
+        assert element.position.y == expected_y
+```
+
+#### Step 5: Verify Exact Format Match
+- Run tests: `uv run pytest tests/unit/test_feature.py -v`
+- Run reference tests: `uv run pytest tests/reference_tests/test_feature_reference.py -v`
+- Verify outputs match KiCad exactly
+
+#### Success Example: Pin Rotation (PR #91)
+This strategy was used to implement pin position rotation transformation:
+- 4 reference schematics created (0°, 90°, 180°, 270°)
+- 19 tests created (11 unit + 8 reference)
+- All tests verified against real KiCad wire endpoints
+- 100% format compatibility achieved
+
+**Key Benefits:**
+- ✅ Ensures exact KiCad compatibility (not guessing format)
+- ✅ Reference schematics serve as regression tests
+- ✅ User validation confirms correctness
+- ✅ Fast iteration cycle (create → test → verify)
+- ✅ Documents expected behavior with real examples
 
 ### Debugging Pattern
 **Standard workflow for implementing new features:**
