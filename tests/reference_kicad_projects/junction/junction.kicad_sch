@@ -1,0 +1,43 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "6868a487-26d4-457d-ba91-be052248a17a")
+	(paper "A4")
+	(title_block
+		(title "Junction Reference")
+	)
+	(lib_symbols)
+	(wire
+		(pts
+			(xy 90 100) (xy 110 100)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "02377aa7-ddf2-4991-8f1d-bd54a75e5462")
+	)
+	(wire
+		(pts
+			(xy 100 90) (xy 100 110)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cca906e1-1900-4c08-9b5a-ad12c37c2c32")
+	)
+	(junction
+		(at 100 100)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "8297c160-579b-43b6-8257-c39da587ce36")
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
