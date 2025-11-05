@@ -382,21 +382,43 @@ def get_component_bounding_box(
     # Calculate symbol bounding box
     symbol_bbox = SymbolBoundingBoxCalculator.calculate_bounding_box(symbol, include_properties)
 
-    # Transform to world coordinates
-    # TODO: Handle component rotation in the future
-    # NOTE: Currently assumes 0° rotation. For rotated components, bounding box
-    # would need to be recalculated after applying rotation matrix. This is a
-    # known limitation but doesn't affect most use cases since components are
-    # typically placed without rotation, and routing avoids components regardless.
-    # Priority: LOW - Would improve accuracy for rotated component placement validation
+    # Transform to world coordinates with rotation
+    # Apply rotation matrix to bounding box corners, then find new min/max
+    import math
+
+    angle_rad = math.radians(component.rotation)
+    cos_a = math.cos(angle_rad)
+    sin_a = math.sin(angle_rad)
+
+    # Get all 4 corners of the symbol bounding box
+    corners = [
+        (symbol_bbox.min_x, symbol_bbox.min_y),  # Bottom-left
+        (symbol_bbox.max_x, symbol_bbox.min_y),  # Bottom-right
+        (symbol_bbox.max_x, symbol_bbox.max_y),  # Top-right
+        (symbol_bbox.min_x, symbol_bbox.max_y),  # Top-left
+    ]
+
+    # Rotate each corner using standard 2D rotation matrix
+    rotated_corners = []
+    for x, y in corners:
+        rotated_x = x * cos_a - y * sin_a
+        rotated_y = x * sin_a + y * cos_a
+        rotated_corners.append((rotated_x, rotated_y))
+
+    # Find min/max of rotated corners
+    rotated_xs = [x for x, y in rotated_corners]
+    rotated_ys = [y for x, y in rotated_corners]
+
     world_bbox = BoundingBox(
-        component.position.x + symbol_bbox.min_x,
-        component.position.y + symbol_bbox.min_y,
-        component.position.x + symbol_bbox.max_x,
-        component.position.y + symbol_bbox.max_y,
+        component.position.x + min(rotated_xs),
+        component.position.y + min(rotated_ys),
+        component.position.x + max(rotated_xs),
+        component.position.y + max(rotated_ys),
     )
 
-    logger.debug(f"Component {component.reference} world bbox: {world_bbox}")
+    logger.debug(
+        f"Component {component.reference} at {component.rotation}° world bbox: {world_bbox}"
+    )
     return world_bbox
 
 
