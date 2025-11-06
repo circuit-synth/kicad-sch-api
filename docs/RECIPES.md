@@ -302,7 +302,7 @@ for i in range(len(components) - 1):
     # Connect output of current to input of next
     sch.add_wire_between_pins(current, "2", next_comp, "1")
 
-# Create a bus connection
+# Connect multiple components to common rail
 resistors = ["R1", "R2", "R3", "R4"]
 for r in resistors:
     # Connect all resistor pin 1's to VCC
