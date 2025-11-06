@@ -164,6 +164,23 @@ Next steps:
 - Decoupling networks
 - Pull-up/pull-down resistors
 
+## Hierarchical Schematics
+
+For complex designs with multiple subsystems, I can create hierarchical schematics:
+
+```bash
+/create-schematic "STM32 development board with separate sheets for power, MCU, USB, and peripherals"
+```
+
+**This will create:**
+- Main schematic with hierarchical sheet symbols
+- Separate schematic files for each subsystem
+- Proper hierarchical connections using sheet pins
+
+**Important**: When creating hierarchical schematics, the code automatically uses `set_hierarchy_context()` to ensure component references display correctly in KiCad.
+
+See `examples/stm32g431_simple.py` for a complete hierarchical design example.
+
 ## Limitations
 
 - Cannot design analog circuits requiring specific tuning

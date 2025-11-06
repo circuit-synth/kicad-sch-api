@@ -106,7 +106,7 @@ class Schematic:
             SchematicSymbol(**comp) if isinstance(comp, dict) else comp
             for comp in self._data.get("components", [])
         ]
-        self._components = ComponentCollection(component_symbols)
+        self._components = ComponentCollection(component_symbols, parent_schematic=self)
 
         # Initialize wire collection
         wire_data = self._data.get("wires", [])
@@ -167,6 +167,11 @@ class Schematic:
         # Performance tracking
         self._operation_count = 0
         self._total_operation_time = 0.0
+
+        # Hierarchical design context (for child schematics)
+        self._parent_uuid: Optional[str] = None
+        self._sheet_uuid: Optional[str] = None
+        self._hierarchy_path: Optional[str] = None
 
         logger.debug(
             f"Schematic initialized with {len(self._components)} components, {len(self._wires)} wires, "
@@ -370,6 +375,52 @@ class Schematic:
         - Signal tracing through hierarchy
         """
         return self._hierarchy_manager
+
+    def set_hierarchy_context(self, parent_uuid: str, sheet_uuid: str) -> None:
+        """
+        Set hierarchical context for this schematic (for child schematics in hierarchical designs).
+
+        This method configures a child schematic to be part of a hierarchical design.
+        Components added after this call will automatically have the correct hierarchical
+        instance path for proper annotation in KiCad.
+
+        Args:
+            parent_uuid: UUID of the parent schematic
+            sheet_uuid: UUID of the sheet instance in the parent schematic
+
+        Example:
+            >>> # Create parent schematic
+            >>> main = ksa.create_schematic("MyProject")
+            >>> parent_uuid = main.uuid
+            >>>
+            >>> # Add sheet to parent and get its UUID
+            >>> sheet_uuid = main.sheets.add_sheet(
+            ...     name="Power Supply",
+            ...     filename="power.kicad_sch",
+            ...     position=(50, 50),
+            ...     size=(100, 100),
+            ...     project_name="MyProject"
+            ... )
+            >>>
+            >>> # Create child schematic with hierarchy context
+            >>> power = ksa.create_schematic("MyProject")
+            >>> power.set_hierarchy_context(parent_uuid, sheet_uuid)
+            >>>
+            >>> # Components added now will have correct hierarchical path
+            >>> vreg = power.components.add('Device:R', 'U1', 'AMS1117-3.3')
+
+        Note:
+            - This must be called BEFORE adding components to the child schematic
+            - Both parent and child schematics must use the same project name
+            - The hierarchical path will be: /{parent_uuid}/{sheet_uuid}
+        """
+        self._parent_uuid = parent_uuid
+        self._sheet_uuid = sheet_uuid
+        self._hierarchy_path = f"/{parent_uuid}/{sheet_uuid}"
+
+        logger.info(
+            f"Set hierarchy context: parent={parent_uuid}, sheet={sheet_uuid}, path={self._hierarchy_path}"
+        )
 
     # Pin positioning methods (delegated to WireManager)
     def get_component_pin_position(self, reference: str, pin_number: str) -> Optional[Point]:

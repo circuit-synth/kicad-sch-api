@@ -2,11 +2,234 @@
 
 **Implementation Date:** 2025-11-05
 **Issue:** #37 - Advanced hierarchy and sheet management (2.7)
+**Issue:** #100 - Hierarchical sheet component references
 **Status:** ✅ Complete
 
 ## Overview
 
-The `HierarchyManager` provides comprehensive tools for managing complex hierarchical KiCAD schematic designs, addressing limitations in basic hierarchy support.
+This document covers two aspects of hierarchical schematic management:
+
+1. **Creating Hierarchical Schematics** - How to build hierarchical designs with proper component references
+2. **Analyzing Hierarchical Schematics** - How to analyze existing hierarchical designs
+
+---
+
+## Part 1: Creating Hierarchical Schematics
+
+### Component Reference Problem (Issue #100)
+
+When creating hierarchical schematics, components in child sheets must have correct hierarchical instance paths for KiCad to properly assign reference designators. Without proper paths, KiCad shows "?" instead of "C1", "R1", etc.
+
+### Solution: `set_hierarchy_context()`
+
+Use the `set_hierarchy_context()` method to configure child schematics with proper hierarchical paths.
+
+### Quick Start Example
+
+```python
+import kicad_sch_api as ksa
+
+# 1. Create parent schematic
+main = ksa.create_schematic("MyProject")
+parent_uuid = main.uuid
+
+# 2. Add sheet to parent
+power_sheet_uuid = main.sheets.add_sheet(
+    name="Power Supply",
+    filename="power.kicad_sch",
+    position=(50, 50),
+    size=(100, 100),
+    project_name="MyProject"  # MUST match parent project name
+)
+
+# 3. Add sheet pins
+main.sheets.add_sheet_pin(power_sheet_uuid, "VIN", "input", "left", 5)
+main.sheets.add_sheet_pin(power_sheet_uuid, "+3.3V", "output", "right", 5)
+
+# 4. Create child schematic with hierarchy context
+power = ksa.create_schematic("MyProject")  # SAME project name
+power.set_hierarchy_context(parent_uuid, power_sheet_uuid)  # KEY STEP!
+
+# 5. Add components - they automatically get correct hierarchical paths
+vreg = power.components.add(
+    'Regulator_Linear:AMS1117-3.3',
+    'U1',
+    'AMS1117-3.3',
+    position=(127, 101.6)
+)
+# Component instance path: /parent_uuid/power_sheet_uuid (CORRECT!)
+
+# 6. Save both schematics
+main.save("main.kicad_sch")
+power.save("power.kicad_sch")
+```
+
+### Complete Hierarchical Design Pattern
+
+```python
+import kicad_sch_api as ksa
+from pathlib import Path
+
+# Project configuration
+PROJECT_NAME = "STM32_Board"
+output_dir = Path("output")
+output_dir.mkdir(exist_ok=True)
+
+# ===== STEP 1: Create Main Schematic =====
+main = ksa.create_schematic(PROJECT_NAME)
+parent_uuid = main.uuid  # Save for child schematics
+
+# ===== STEP 2: Add Hierarchical Sheets =====
+
+# Power supply sheet
+power_sheet_uuid = main.sheets.add_sheet(
+    name="Power Supply",
+    filename="power.kicad_sch",
+    position=(50, 50),
+    size=(100, 80),
+    project_name=PROJECT_NAME
+)
+main.sheets.add_sheet_pin(power_sheet_uuid, "VIN", "input", "left", 5)
+main.sheets.add_sheet_pin(power_sheet_uuid, "+3.3V", "output", "right", 5)
+main.sheets.add_sheet_pin(power_sheet_uuid, "GND", "passive", "bottom", 10)
+
+# MCU sheet
+mcu_sheet_uuid = main.sheets.add_sheet(
+    name="Microcontroller",
+    filename="mcu.kicad_sch",
+    position=(175, 50),
+    size=(100, 80),
+    project_name=PROJECT_NAME
+)
+main.sheets.add_sheet_pin(mcu_sheet_uuid, "+3.3V", "input", "left", 5)
+main.sheets.add_sheet_pin(mcu_sheet_uuid, "GND", "passive", "bottom", 10)
+
+# Add labels for connections
+main.add_label("+3.3V", position=(155, 55))
+main.add_label("GND", position=(100, 140))
+
+# Save main schematic
+main.save(str(output_dir / f"{PROJECT_NAME}.kicad_sch"))
+
+# ===== STEP 3: Create Child Schematics with Hierarchy Context =====
+
+# Power supply child schematic
+power = ksa.create_schematic(PROJECT_NAME)
+power.set_hierarchy_context(parent_uuid, power_sheet_uuid)  # Set context!
+
+vreg = power.components.add(
+    'Regulator_Linear:AMS1117-3.3',
+    'U1',
+    'AMS1117-3.3',
+    position=(127, 101.6)
+)
+vreg.footprint = 'Package_TO_SOT_SMD:SOT-223-3_TabPin2'
+
+c_in = power.components.add('Device:C', 'C1', '10µF', position=(101.6, 101.6))
+c_out = power.components.add('Device:C', 'C2', '10µF', position=(152.4, 101.6))
+
+power.add_label("VIN", position=(76.2, 101.6))
+power.add_label("+3.3V", position=(177.8, 101.6))
+power.add_label("GND", position=(127, 127))
+
+power.save(str(output_dir / "power.kicad_sch"))
+
+# MCU child schematic
+mcu_sch = ksa.create_schematic(PROJECT_NAME)
+mcu_sch.set_hierarchy_context(parent_uuid, mcu_sheet_uuid)  # Set context!
+
+mcu = mcu_sch.components.add(
+    'MCU_ST_STM32G4:STM32G431R_6-8-B_Tx',
+    'U2',
+    'STM32G431RBT6',
+    position=(127, 101.6)
+)
+mcu.footprint = 'Package_QFP:LQFP-64_10x10mm_P0.5mm'
+
+# Add decoupling caps
+for i, x_pos in enumerate([101.6, 152.4], start=3):
+    cap = mcu_sch.components.add('Device:C', f'C{i}', '100nF', position=(x_pos, 76.2))
+    cap.footprint = 'Capacitor_SMD:C_0603_1608Metric'
+
+mcu_sch.add_label("+3.3V", position=(76.2, 63.5))
+mcu_sch.add_label("GND", position=(127, 152.4))
+
+mcu_sch.save(str(output_dir / "mcu.kicad_sch"))
+
+print(f"✓ Hierarchical schematic created in {output_dir}/")
+print(f"  - {PROJECT_NAME}.kicad_sch (main)")
+print(f"  - power.kicad_sch (child)")
+print(f"  - mcu.kicad_sch (child)")
+```
+
+### Critical Requirements
+
+1. **Same Project Name**: All schematics (parent and children) MUST use the same project name
+   ```python
+   main = ksa.create_schematic("MyProject")
+   child = ksa.create_schematic("MyProject")  # SAME name!
+   ```
+
+2. **Call `set_hierarchy_context()` BEFORE Adding Components**:
+   ```python
+   child = ksa.create_schematic("MyProject")
+   child.set_hierarchy_context(parent_uuid, sheet_uuid)  # Do this FIRST
+   child.components.add(...)  # Then add components
+   ```
+
+3. **Save Parent UUID Early**:
+   ```python
+   main = ksa.create_schematic("MyProject")
+   parent_uuid = main.uuid  # Save this immediately
+   ```
+
+4. **Pass `project_name` to `add_sheet()`**:
+   ```python
+   sheet_uuid = main.sheets.add_sheet(
+       name="Child",
+       filename="child.kicad_sch",
+       position=(50, 50),
+       size=(100, 80),
+       project_name="MyProject"  # Required!
+   )
+   ```
+
+### What Happens Internally
+
+When you call `set_hierarchy_context()`:
+
+1. The schematic stores the parent UUID and sheet UUID
+2. The hierarchical path is computed: `/{parent_uuid}/{sheet_uuid}`
+3. When components are added, this path is automatically set in their instance data
+4. KiCad uses this path to properly annotate components
+
+**Without `set_hierarchy_context()`:**
+- Component path: `/child_uuid` ❌ WRONG
+- KiCad shows: "C?" instead of "C1"
+
+**With `set_hierarchy_context()`:**
+- Component path: `/parent_uuid/sheet_uuid` ✅ CORRECT
+- KiCad shows: "C1", "C2", "R1" (proper references)
+
+### Real-World Example
+
+See `examples/stm32g431_simple.py` for a complete working example with:
+- Main schematic with 4 hierarchical sheets
+- Power supply sheet (voltage regulator)
+- MCU sheet (STM32 microcontroller)
+- USB sheet (USB-C connector)
+- UI sheet (buttons, LEDs, debug header)
+
+Run it:
+```bash
+python examples/stm32g431_simple.py
+```
+
+---
+
+## Part 2: Analyzing Hierarchical Schematics
+
+The `HierarchyManager` provides comprehensive tools for analyzing existing hierarchical KiCAD schematic designs.
 
 ## Features Implemented
 
