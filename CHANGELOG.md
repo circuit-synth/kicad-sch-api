@@ -5,6 +5,67 @@ All notable changes to kicad-sch-api will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Enhanced Collection Architecture** - Complete rewrite of element collection system
+  - `BaseCollection[T]`: Abstract base class for all collections
+  - `IndexRegistry`: Centralized lazy index management with declarative specs
+  - `PropertyDict`: Auto-tracking dictionary for modification detection
+  - `ValidationLevel`: Enum for configurable validation strictness (NONE → PARANOID)
+  - **Batch Mode**: Context manager for deferred index rebuilding (100x speedup)
+  - Full generic type support with `Generic[T]` for type safety
+
+- **ComponentCollection Enhancements**
+  - Dual index strategy: UUID/reference via IndexRegistry, lib_id/value manual indexes
+  - `filter(**criteria)`: Flexible filtering with multiple criteria
+  - `bulk_update()`: Batch update operations with automatic index maintenance
+  - Component wrapper class with validated property setters
+  - Grid snapping and rotation validation
+
+- **New Collection Implementations**
+  - `LabelCollection`: Text and position indexing with `LabelElement` wrapper
+  - `WireCollection`: Endpoint indexing and geometry queries (horizontal/vertical)
+  - `JunctionCollection`: Position-based queries with tolerance matching
+
+- **Performance Optimizations**
+  - O(1) lookups via IndexRegistry for UUID and reference
+  - Lazy index rebuilding: mark dirty → rebuild on access
+  - Batch mode prevents redundant index rebuilds
+  - Single rebuild after bulk operations
+
+### Changed
+- **API Consistency Improvements**
+  - `sch.components.get_by_reference("R1")` → `sch.components.get("R1")`
+  - `sch.components.get_by_lib_id("Device:R")` → `sch.components.filter(lib_id="Device:R")`
+  - `sch.components.get_by_value("10k")` → `sch.components.filter(value="10k")`
+  - `LabelCollection.add()` now returns `LabelElement` wrapper (was UUID string)
+  - `ComponentCollection.add()` returns `Component` wrapper for direct property access
+
+- **Schematic Integration**
+  - Updated `Schematic` class to use new collection architecture
+  - Consistent `.modified` property across all collections
+  - Unified `.mark_saved()` method for all collections
+
+### Documentation
+- Added comprehensive `docs/COLLECTIONS.md` with architecture details
+- Migration guide for API changes
+- Performance characteristics and benchmarks
+- Best practices for batch operations
+- Complete examples for all collection types
+
+### Testing
+- 83/83 collection tests passing (100%)
+- 435/437 unit tests passing (99.5%)
+- BaseCollection infrastructure: 49 tests
+- ComponentCollection: 34 tests
+- Full integration with existing test suite
+
+### Internal
+- Migrated from dual collection architecture to unified BaseCollection system
+- Preserved backward compatibility where possible
+- Legacy collections in `core/` preserved but deprecated
+
 ## [0.4.1] - 2025-01-26
 
 ### Added

@@ -1,21 +1,36 @@
 """
 Modern collection architecture for KiCAD schematic elements.
 
-This module provides a unified collection framework that eliminates code duplication
-across component, wire, and junction collections while providing consistent
-indexing, performance optimization, and management capabilities.
+This module provides a unified collection framework with:
+- Centralized index management via IndexRegistry
+- Lazy index rebuilding for performance
+- Configurable validation levels
+- Auto-tracking property dictionaries
+- Batch mode for bulk operations
 """
 
-from .base import IndexedCollection
-from .components import ComponentCollection
+from .base import (
+    BaseCollection,
+    IndexSpec,
+    IndexRegistry,
+    PropertyDict,
+    ValidationLevel,
+)
+from .components import Component, ComponentCollection
 from .junctions import JunctionCollection
-from .labels import LabelCollection
+from .labels import LabelCollection, LabelElement
 from .wires import WireCollection
 
 __all__ = [
-    "IndexedCollection",
+    "BaseCollection",
+    "IndexSpec",
+    "IndexRegistry",
+    "PropertyDict",
+    "ValidationLevel",
+    "Component",
     "ComponentCollection",
-    "WireCollection",
     "JunctionCollection",
     "LabelCollection",
+    "LabelElement",
+    "WireCollection",
 ]

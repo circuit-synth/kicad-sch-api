@@ -1,6 +1,6 @@
 """Core kicad-sch-api functionality."""
 
-from .components import Component, ComponentCollection
+from ..collections import Component, ComponentCollection
 from .formatter import ExactFormatter
 from .parser import SExpressionParser
 from .schematic import Schematic, create_schematic, load_schematic

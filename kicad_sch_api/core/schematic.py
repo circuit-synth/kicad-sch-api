@@ -14,13 +14,17 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import sexpdata
 
+from ..collections import (
+    ComponentCollection,
+    JunctionCollection,
+    LabelCollection,
+    LabelElement,
+    WireCollection,
+)
 from ..library.cache import get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
-from .components import ComponentCollection
 from .factories import ElementFactory
 from .formatter import ExactFormatter
-from .junctions import JunctionCollection
-from .labels import LabelCollection
 from .managers import (
     FileIOManager,
     FormatSyncManager,
@@ -53,7 +57,6 @@ from .types import (
     WireType,
     point_from_dict_or_tuple,
 )
-from .wires import WireCollection
 
 logger = logging.getLogger(__name__)
 
@@ -321,12 +324,12 @@ class Schematic:
         """Whether schematic has been modified since last save."""
         return (
             self._modified
-            or self._components._modified
-            or self._wires._modified
-            or self._junctions._modified
+            or self._components.modified
+            or self._wires.modified
+            or self._junctions.modified
             or self._texts._modified
-            or self._labels._modified
-            or self._hierarchical_labels._modified
+            or self._labels.modified
+            or self._hierarchical_labels.modified
             or self._no_connects._modified
             or self._nets._modified
             or self._format_sync_manager.is_dirty()
@@ -548,7 +551,11 @@ class Schematic:
 
         # Update state
         self._modified = False
-        self._components._modified = False
+        self._components.mark_saved()
+        self._wires.mark_saved()
+        self._junctions.mark_saved()
+        self._labels.mark_saved()
+        self._hierarchical_labels.mark_saved()
         self._format_sync_manager.clear_dirty_flags()
         self._last_save_time = time.time()
 
@@ -725,7 +732,7 @@ class Schematic:
         # Use the new labels collection instead of manager
         if size is None:
             size = 1.27  # Default size
-        label = self._labels.add(text, position, rotation=rotation, size=size, label_uuid=uuid)
+        label = self._labels.add(text, position, rotation=rotation, size=size, uuid=uuid)
         self._sync_labels_to_data()  # Sync immediately
         self._format_sync_manager.mark_dirty("label", "add", {"uuid": label.uuid})
         self._modified = True
