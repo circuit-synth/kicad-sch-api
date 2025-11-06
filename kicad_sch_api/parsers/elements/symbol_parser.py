@@ -39,6 +39,7 @@ class SymbolParser(BaseElementParser):
                 "pins": [],
                 "in_bom": True,
                 "on_board": True,
+                "instances": [],
             }
 
             for sub_item in item[1:]:
@@ -89,6 +90,11 @@ class SymbolParser(BaseElementParser):
                         sub_item[1] if len(sub_item) > 1 else None,
                         default=True
                     )
+                elif element_type == "instances":
+                    # Parse instances section
+                    instances = self._parse_instances(sub_item)
+                    if instances:
+                        symbol_data["instances"] = instances
 
             return symbol_data
 
@@ -106,6 +112,67 @@ class SymbolParser(BaseElementParser):
             "name": item[1] if len(item) > 1 else None,
             "value": item[2] if len(item) > 2 else None,
         }
+
+    def _parse_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
+        """
+        Parse instances section from S-expression.
+
+        Format:
+        (instances
+            (project "project_name"
+                (path "/root_uuid/sheet_uuid"
+                    (reference "R1")
+                    (unit 1))))
+        """
+        from ...core.types import SymbolInstance
+
+        instances = []
+
+        for sub_item in item[1:]:
+            if not isinstance(sub_item, list) or len(sub_item) == 0:
+                continue
+
+            element_type = str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
+
+            if element_type == "project":
+                # Parse project instance
+                project = sub_item[1] if len(sub_item) > 1 else None
+
+                # Find path section within project
+                for project_sub in sub_item[2:]:
+                    if not isinstance(project_sub, list) or len(project_sub) == 0:
+                        continue
+
+                    path_type = str(project_sub[0]) if isinstance(project_sub[0], sexpdata.Symbol) else None
+
+                    if path_type == "path":
+                        # Extract path value
+                        path = project_sub[1] if len(project_sub) > 1 else "/"
+                        reference = None
+                        unit = 1
+
+                        # Parse reference and unit from path subsections
+                        for path_sub in project_sub[2:]:
+                            if not isinstance(path_sub, list) or len(path_sub) == 0:
+                                continue
+
+                            path_sub_type = str(path_sub[0]) if isinstance(path_sub[0], sexpdata.Symbol) else None
+
+                            if path_sub_type == "reference":
+                                reference = path_sub[1] if len(path_sub) > 1 else None
+                            elif path_sub_type == "unit":
+                                unit = int(path_sub[1]) if len(path_sub) > 1 else 1
+
+                        # Create instance
+                        if path and reference:
+                            instance = SymbolInstance(
+                                path=path,
+                                reference=reference,
+                                unit=unit
+                            )
+                            instances.append(instance)
+
+        return instances
 
 
     def _symbol_to_sexp(self, symbol_data: Dict[str, Any], schematic_uuid: str = None) -> List[Any]:

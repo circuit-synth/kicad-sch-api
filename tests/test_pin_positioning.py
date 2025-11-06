@@ -51,10 +51,11 @@ class TestPinPositioning:
         assert pin1_pos != pin2_pos, "Pin 1 and Pin 2 should be at different positions"
 
         # For 0° rotation, Device:R has vertical pins: Pin 1 above Pin 2
+        # In KiCad schematic space (inverted Y-axis), lower Y = visually higher (top)
         assert abs(pin1_pos.x - pin2_pos.x) < 0.1, "Pins should be at same X level for 0° rotation"
         assert (
-            pin1_pos.y > pin2_pos.y
-        ), "Pin 1 should be above Pin 2 for 0° rotation (higher Y in KiCad)"
+            pin1_pos.y < pin2_pos.y
+        ), "Pin 1 should be above Pin 2 for 0° rotation (lower Y = visually higher)"
 
     def test_get_component_pin_position_with_rotation(self):
         """Test pin position calculation with component rotation."""

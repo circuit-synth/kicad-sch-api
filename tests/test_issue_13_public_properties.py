@@ -6,7 +6,7 @@ Tests all new public collection properties and their APIs.
 
 import pytest
 
-from kicad_sch_api.core.labels import LabelCollection, LabelElement
+from kicad_sch_api.collections.labels import LabelCollection, LabelElement
 from kicad_sch_api.core.nets import NetCollection, NetElement
 from kicad_sch_api.core.no_connects import NoConnectCollection, NoConnectElement
 from kicad_sch_api.core.schematic import Schematic
@@ -158,7 +158,7 @@ class TestLabelCollection:
         sch.labels.add("VCC", position=(100, 100))
         sch.labels.add("GND", position=(150, 150))
 
-        found = sch.labels.find_by_text("VCC")
+        found = sch.labels.get_by_text("VCC")
         assert len(found) == 1
         assert found[0].text == "VCC"
 
@@ -188,7 +188,7 @@ class TestLabelCollection:
         label.text = "NEW"
         assert label.text == "NEW"
 
-        found = sch.labels.find_by_text("NEW")
+        found = sch.labels.get_by_text("NEW")
         assert len(found) == 1
 
     def test_hierarchical_labels_property(self):

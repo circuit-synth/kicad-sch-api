@@ -59,7 +59,7 @@ class TestPinToPinWiring:
         assert wire_uuid in [wire.uuid for wire in sch.wires], "Wire should be in collection"
 
         # Verify wire endpoints
-        wire = sch.wires[wire_uuid]
+        wire = sch.wires.get(wire_uuid)
         assert len(wire.points) == 2, "Wire should have exactly 2 points"
 
         # First point should be start point
@@ -101,7 +101,7 @@ class TestPinToPinWiring:
 
         # Verify wire exists
         assert len(sch.wires) == 1, "Should have one wire"
-        wire = sch.wires[wire_uuid]
+        wire = sch.wires.get(wire_uuid)
         assert len(wire.points) == 2, "Wire should have exactly 2 points"
 
         # Verify endpoints match pin positions
@@ -174,6 +174,6 @@ class TestPinToPinWiring:
         assert wire_uuid is not None, "Should create wire with tuple coordinates"
 
         # Verify wire exists and has correct start point
-        wire = sch.wires[wire_uuid]
+        wire = sch.wires.get(wire_uuid)
         assert wire.points[0].x == 75, "Start X coordinate should match tuple"
         assert wire.points[0].y == 125, "Start Y coordinate should match tuple"
