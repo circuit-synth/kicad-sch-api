@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "kicad-sch-api": {
+      "command": "uv",
+      "args": ["run", "kicad-sch-mcp"]
+    }
+  }
+}
