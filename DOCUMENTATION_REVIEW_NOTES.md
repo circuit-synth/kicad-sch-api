@@ -349,7 +349,6 @@ def _process_global_labels(self, schematic):
 | ADR.md | 187 | Current | Architecture Decision Records |
 | API_REFERENCE.md | 758 | Current | Comprehensive API reference |
 | ARCHITECTURE.md | 522 | Current | Architecture documentation |
-| BUS_RESEARCH.md | 224 | New (untracked) | Bus implementation research |
 | CONNECTIVITY_IMPLEMENTATION_PLAN.md | 306 | Current | Connectivity planning |
 | ERC_ERD.md | 620 | Current | ERC Entity Relationship Diagram |
 | ERC_PRD.md | 571 | Current | ERC Product Requirements |
@@ -466,11 +465,6 @@ See comprehensive documentation at [docs/](./docs/)
 - **Partial Implementation**: ERC validators have incomplete features (see 5 TODOs in validators.py)
 - Net tracing, pin type checking, and power net detection are placeholders
 - Core functionality works, advanced validation features coming soon
-
-### Bus Support
-- Bus wire routing is supported
-- Bus member expansion and individual wire extraction under development
-- See [docs/BUS_RESEARCH.md](docs/BUS_RESEARCH.md)
 
 ### Performance
 - Large schematics (>1000 components) may experience slower connectivity analysis
