@@ -6,22 +6,21 @@ ensuring consistent serialization and validation across all endpoints.
 """
 
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PointModel(BaseModel):
     """2D point coordinates."""
 
-    x: float = Field(..., description="X coordinate in mm")
-    y: float = Field(..., description="Y coordinate in mm")
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {"x": 100.0, "y": 100.0},
             "description": "Position in KiCAD schematic coordinates",
         }
+    )
+
+    x: float = Field(..., description="X coordinate in mm")
+    y: float = Field(..., description="Y coordinate in mm")
 
 
 class PinInfoOutput(BaseModel):
@@ -31,6 +30,21 @@ class PinInfoOutput(BaseModel):
     Provides comprehensive pin metadata including position, electrical type,
     graphical representation, and unique identification.
     """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "number": "1",
+                "name": "~",
+                "position": {"x": 100.33, "y": 104.14},
+                "electrical_type": "passive",
+                "shape": "line",
+                "length": 2.54,
+                "orientation": 0.0,
+                "uuid": "1f8ab1be-1ad8-469d-8ba9-667910bdee9e:1",
+            }
+        }
+    )
 
     number: str = Field(
         ...,
@@ -73,22 +87,6 @@ class PinInfoOutput(BaseModel):
         examples=["1f8ab1be-1ad8-469d-8ba9-667910bdee9e:1"],
     )
 
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
-            "example": {
-                "number": "1",
-                "name": "~",
-                "position": {"x": 100.33, "y": 104.14},
-                "electrical_type": "passive",
-                "shape": "line",
-                "length": 2.54,
-                "orientation": 0.0,
-                "uuid": "1f8ab1be-1ad8-469d-8ba9-667910bdee9e:1",
-            }
-        }
-
 
 class ComponentPinsOutput(BaseModel):
     """
@@ -97,39 +95,8 @@ class ComponentPinsOutput(BaseModel):
     Returns all pins for a specified component with complete metadata.
     """
 
-    reference: str = Field(
-        ...,
-        description="Component reference designator (e.g., 'R1', 'U2', 'C1')",
-        examples=["R1", "U2", "C1"],
-    )
-    lib_id: str = Field(
-        ...,
-        description="Library identifier (e.g., 'Device:R', 'Amplifier_Operational:TL072')",
-        examples=["Device:R", "Amplifier_Operational:TL072", "LED:LED"],
-    )
-    pins: List[PinInfoOutput] = Field(
-        ...,
-        description="List of all pins for this component with complete metadata",
-        min_items=1,
-    )
-    pin_count: int = Field(
-        ...,
-        description="Total number of pins",
-        examples=[2, 8, 14, 48],
-    )
-    success: bool = Field(
-        default=True,
-        description="Whether the operation was successful",
-    )
-    message: Optional[str] = Field(
-        default=None,
-        description="Optional message or error description",
-    )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "reference": "R1",
                 "lib_id": "Device:R",
@@ -159,10 +126,49 @@ class ComponentPinsOutput(BaseModel):
                 "success": True,
             }
         }
+    )
+
+    reference: str = Field(
+        ...,
+        description="Component reference designator (e.g., 'R1', 'U2', 'C1')",
+        examples=["R1", "U2", "C1"],
+    )
+    lib_id: str = Field(
+        ...,
+        description="Library identifier (e.g., 'Device:R', 'Amplifier_Operational:TL072')",
+        examples=["Device:R", "Amplifier_Operational:TL072", "LED:LED"],
+    )
+    pins: List[PinInfoOutput] = Field(
+        ...,
+        description="List of all pins for this component with complete metadata",
+    )
+    pin_count: int = Field(
+        ...,
+        description="Total number of pins",
+        examples=[2, 8, 14, 48],
+    )
+    success: bool = Field(
+        default=True,
+        description="Whether the operation was successful",
+    )
+    message: Optional[str] = Field(
+        default=None,
+        description="Optional message or error description",
+    )
 
 
 class ErrorOutput(BaseModel):
     """Standard error response model."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": False,
+                "error": "COMPONENT_NOT_FOUND",
+                "message": "Component 'R999' not found in schematic",
+            }
+        }
+    )
 
     success: bool = Field(
         default=False,
@@ -177,14 +183,3 @@ class ErrorOutput(BaseModel):
         ...,
         description="Detailed error message",
     )
-
-    class Config:
-        """Pydantic configuration."""
-
-        json_schema_extra = {
-            "example": {
-                "success": False,
-                "error": "COMPONENT_NOT_FOUND",
-                "message": "Component 'R999' not found in schematic",
-            }
-        }
