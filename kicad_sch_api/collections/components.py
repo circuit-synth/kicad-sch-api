@@ -1,29 +1,31 @@
 """
-Component collection with specialized indexing and component-specific operations.
+Enhanced component management with IndexRegistry integration.
 
-Extends the base IndexedCollection to provide component-specific features like
-reference indexing, lib_id grouping, and automatic reference generation.
+This module provides the Component wrapper and ComponentCollection using the new
+BaseCollection infrastructure with centralized index management, lazy rebuilding,
+and batch mode support.
 """
 
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
-from ..core.exceptions import LibraryError
-from ..core.types import Point, SchematicSymbol
-from ..library.cache import get_symbol_cache
-from ..utils.validation import SchematicValidator, ValidationError
-from .base import IndexedCollection
+from ..core.ic_manager import ICManager
+from ..core.types import Point, SchematicPin, SchematicSymbol
+from ..library.cache import SymbolDefinition, get_symbol_cache
+from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
+from .base import BaseCollection, IndexSpec, ValidationLevel
 
 logger = logging.getLogger(__name__)
 
 
 class Component:
     """
-    Enhanced wrapper for schematic components with modern API.
+    Enhanced wrapper for schematic components.
 
     Provides intuitive access to component properties, pins, and operations
-    while maintaining exact format preservation for professional use.
+    while maintaining exact format preservation. All property modifications
+    automatically notify the parent collection for tracking.
     """
 
     def __init__(self, symbol_data: SchematicSymbol, parent_collection: "ComponentCollection"):
@@ -32,30 +34,39 @@ class Component:
 
         Args:
             symbol_data: Underlying symbol data
-            parent_collection: Parent collection for updates
+            parent_collection: Parent collection for modification tracking
         """
         self._data = symbol_data
         self._collection = parent_collection
         self._validator = SchematicValidator()
 
+    # Core properties with validation
     @property
     def uuid(self) -> str:
-        """Component UUID."""
+        """Component UUID (read-only)."""
         return self._data.uuid
 
     @property
     def reference(self) -> str:
-        """Component reference (e.g., 'R1')."""
+        """Component reference designator (e.g., 'R1', 'U2')."""
         return self._data.reference
 
     @reference.setter
     def reference(self, value: str):
-        """Set component reference with validation."""
+        """
+        Set component reference with validation and duplicate checking.
+
+        Args:
+            value: New reference designator
+
+        Raises:
+            ValidationError: If reference format is invalid or already exists
+        """
         if not self._validator.validate_reference(value):
             raise ValidationError(f"Invalid reference format: {value}")
 
         # Check for duplicates in parent collection
-        if self._collection.get_by_reference(value) is not None:
+        if self._collection.get(value) is not None:
             raise ValidationError(f"Reference {value} already exists")
 
         old_ref = self._data.reference
@@ -66,28 +77,41 @@ class Component:
 
     @property
     def value(self) -> str:
-        """Component value (e.g., '10k')."""
+        """Component value (e.g., '10k', '100nF')."""
         return self._data.value
 
     @value.setter
     def value(self, value: str):
         """Set component value."""
+        old_value = self._data.value
         self._data.value = value
+        self._collection._update_value_index(self, old_value, value)
         self._collection._mark_modified()
 
     @property
-    def lib_id(self) -> str:
-        """Component library ID (e.g., 'Device:R')."""
-        return self._data.lib_id
+    def footprint(self) -> Optional[str]:
+        """Component footprint (e.g., 'Resistor_SMD:R_0603_1608Metric')."""
+        return self._data.footprint
+
+    @footprint.setter
+    def footprint(self, value: Optional[str]):
+        """Set component footprint."""
+        self._data.footprint = value
+        self._collection._mark_modified()
 
     @property
     def position(self) -> Point:
-        """Component position."""
+        """Component position in schematic (mm)."""
         return self._data.position
 
     @position.setter
     def position(self, value: Union[Point, Tuple[float, float]]):
-        """Set component position."""
+        """
+        Set component position.
+
+        Args:
+            value: Position as Point or (x, y) tuple
+        """
         if isinstance(value, tuple):
             value = Point(value[0], value[1])
         self._data.position = value
@@ -95,25 +119,26 @@ class Component:
 
     @property
     def rotation(self) -> float:
-        """Component rotation in degrees."""
+        """Component rotation in degrees (0, 90, 180, or 270)."""
         return self._data.rotation
 
     @rotation.setter
     def rotation(self, value: float):
-        """Set component rotation (must be 0, 90, 180, or 270 degrees).
+        """
+        Set component rotation.
 
-        KiCad only supports these four rotation angles for components.
+        KiCad only supports 0, 90, 180, or 270 degree rotations.
 
         Args:
-            value: Rotation angle in degrees (0, 90, 180, or 270)
+            value: Rotation angle in degrees
 
         Raises:
             ValueError: If rotation is not 0, 90, 180, or 270
         """
         # Normalize rotation to 0-360 range
-        normalized = value % 360
+        normalized = float(value) % 360
 
-        # KiCad only accepts 0, 90, 180, or 270 degrees
+        # KiCad only accepts specific angles
         VALID_ROTATIONS = {0, 90, 180, 270}
         if normalized not in VALID_ROTATIONS:
             raise ValueError(
@@ -126,105 +151,324 @@ class Component:
         self._collection._mark_modified()
 
     @property
-    def footprint(self) -> Optional[str]:
-        """Component footprint."""
-        return self._data.footprint
+    def lib_id(self) -> str:
+        """Library identifier (e.g., 'Device:R')."""
+        return self._data.lib_id
 
-    @footprint.setter
-    def footprint(self, value: Optional[str]):
-        """Set component footprint."""
-        self._data.footprint = value
-        self._collection._mark_modified()
+    @property
+    def library(self) -> str:
+        """Library name (e.g., 'Device' from 'Device:R')."""
+        return self._data.library
 
-    def get_property(self, name: str) -> Optional[str]:
-        """Get component property value."""
-        return self._data.properties.get(name)
+    @property
+    def symbol_name(self) -> str:
+        """Symbol name within library (e.g., 'R' from 'Device:R')."""
+        return self._data.symbol_name
 
-    def set_property(self, name: str, value: str) -> None:
-        """Set component property value."""
-        self._data.properties[name] = value
-        self._collection._mark_modified()
+    # Properties dictionary
+    @property
+    def properties(self) -> Dict[str, str]:
+        """Dictionary of all component properties."""
+        return self._data.properties
 
-    def rotate(self, angle: float) -> None:
+    def get_property(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """
-        Rotate component by angle.
+        Get property value by name.
 
         Args:
-            angle: Rotation angle in degrees (added to current rotation)
+            name: Property name
+            default: Default value if property doesn't exist
+
+        Returns:
+            Property value or default
+        """
+        return self._data.properties.get(name, default)
+
+    def set_property(self, name: str, value: str):
+        """
+        Set property value with validation.
+
+        Args:
+            name: Property name
+            value: Property value
+
+        Raises:
+            ValidationError: If name or value are not strings
+        """
+        if not isinstance(name, str) or not isinstance(value, str):
+            raise ValidationError("Property name and value must be strings")
+
+        self._data.properties[name] = value
+        self._collection._mark_modified()
+        logger.debug(f"Set property {self.reference}.{name} = {value}")
+
+    def remove_property(self, name: str) -> bool:
+        """
+        Remove property by name.
+
+        Args:
+            name: Property name to remove
+
+        Returns:
+            True if property was removed, False if it didn't exist
+        """
+        if name in self._data.properties:
+            del self._data.properties[name]
+            self._collection._mark_modified()
+            return True
+        return False
+
+    # Pin access
+    @property
+    def pins(self) -> List[SchematicPin]:
+        """List of component pins."""
+        return self._data.pins
+
+    def get_pin(self, pin_number: str) -> Optional[SchematicPin]:
+        """
+        Get pin by number.
+
+        Args:
+            pin_number: Pin number to find
+
+        Returns:
+            SchematicPin if found, None otherwise
+        """
+        return self._data.get_pin(pin_number)
+
+    def get_pin_position(self, pin_number: str) -> Optional[Point]:
+        """
+        Get absolute position of a pin.
+
+        Calculates the pin position accounting for component position,
+        rotation, and mirroring.
+
+        Args:
+            pin_number: Pin number to find position for
+
+        Returns:
+            Absolute pin position in schematic coordinates, or None if pin not found
+        """
+        return self._data.get_pin_position(pin_number)
+
+    # Component state flags
+    @property
+    def in_bom(self) -> bool:
+        """Whether component appears in bill of materials."""
+        return self._data.in_bom
+
+    @in_bom.setter
+    def in_bom(self, value: bool):
+        """Set BOM inclusion flag."""
+        self._data.in_bom = bool(value)
+        self._collection._mark_modified()
+
+    @property
+    def on_board(self) -> bool:
+        """Whether component appears on PCB."""
+        return self._data.on_board
+
+    @on_board.setter
+    def on_board(self, value: bool):
+        """Set board inclusion flag."""
+        self._data.on_board = bool(value)
+        self._collection._mark_modified()
+
+    # Utility methods
+    def move(self, x: float, y: float):
+        """
+        Move component to absolute position.
+
+        Args:
+            x: X coordinate in mm
+            y: Y coordinate in mm
+        """
+        self.position = Point(x, y)
+
+    def translate(self, dx: float, dy: float):
+        """
+        Translate component by offset.
+
+        Args:
+            dx: X offset in mm
+            dy: Y offset in mm
+        """
+        current = self.position
+        self.position = Point(current.x + dx, current.y + dy)
+
+    def rotate(self, angle: float):
+        """
+        Rotate component by angle (cumulative).
+
+        Args:
+            angle: Rotation angle in degrees (will be normalized to 0/90/180/270)
         """
         self.rotation = (self.rotation + angle) % 360
 
+    def copy_properties_from(self, other: "Component"):
+        """
+        Copy all properties from another component.
+
+        Args:
+            other: Component to copy properties from
+        """
+        for name, value in other.properties.items():
+            self.set_property(name, value)
+
+    def get_symbol_definition(self) -> Optional[SymbolDefinition]:
+        """
+        Get the symbol definition from library cache.
+
+        Returns:
+            SymbolDefinition if found, None otherwise
+        """
+        cache = get_symbol_cache()
+        return cache.get_symbol(self.lib_id)
+
+    def update_from_library(self) -> bool:
+        """
+        Update component pins and metadata from library definition.
+
+        Returns:
+            True if update successful, False if symbol not found
+        """
+        symbol_def = self.get_symbol_definition()
+        if not symbol_def:
+            return False
+
+        # Update pins
+        self._data.pins = symbol_def.pins.copy()
+
+        # Warn if reference prefix doesn't match
+        if not self.reference.startswith(symbol_def.reference_prefix):
+            logger.warning(
+                f"Reference {self.reference} doesn't match expected prefix {symbol_def.reference_prefix}"
+            )
+
+        self._collection._mark_modified()
+        return True
+
+    def validate(self) -> List[ValidationIssue]:
+        """
+        Validate this component.
+
+        Returns:
+            List of validation issues (empty if valid)
+        """
+        return self._validator.validate_component(self._data.__dict__)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert component to dictionary representation.
+
+        Returns:
+            Dictionary with component data
+        """
+        return {
+            "reference": self.reference,
+            "lib_id": self.lib_id,
+            "value": self.value,
+            "footprint": self.footprint,
+            "position": {"x": self.position.x, "y": self.position.y},
+            "rotation": self.rotation,
+            "properties": self.properties.copy(),
+            "in_bom": self.in_bom,
+            "on_board": self.on_board,
+            "pin_count": len(self.pins),
+        }
+
+    def __str__(self) -> str:
+        """String representation for display."""
+        return f"<Component {self.reference}: {self.lib_id} = '{self.value}' @ {self.position}>"
+
     def __repr__(self) -> str:
-        """Detailed representation."""
+        """Detailed representation for debugging."""
         return (
             f"Component(ref='{self.reference}', lib_id='{self.lib_id}', "
             f"value='{self.value}', pos={self.position}, rotation={self.rotation})"
         )
 
 
-class ComponentCollection(IndexedCollection[Component]):
+class ComponentCollection(BaseCollection[Component]):
     """
-    Collection class for efficient component management.
+    Collection class for efficient component management using IndexRegistry.
 
-    Extends IndexedCollection with component-specific features:
-    - Reference-based indexing for fast component lookup
-    - Lib_id grouping for filtering by component type
-    - Value indexing for filtering by component value
-    - Automatic reference generation
-    - Component validation and conflict detection
+    Provides fast lookup, filtering, and bulk operations with lazy index rebuilding
+    and batch mode support. Uses centralized IndexRegistry for managing all indexes
+    (UUID, reference, lib_id, value).
     """
 
-    def __init__(self, components: Optional[List[SchematicSymbol]] = None):
+    def __init__(
+        self,
+        components: Optional[List[SchematicSymbol]] = None,
+        parent_schematic=None,
+        validation_level: ValidationLevel = ValidationLevel.NORMAL,
+    ):
         """
         Initialize component collection.
 
         Args:
             components: Initial list of component data
+            parent_schematic: Reference to parent Schematic (for hierarchy context)
+            validation_level: Validation level for operations
         """
-        self._reference_index: Dict[str, Component] = {}
+        # Initialize base collection with validation level
+        super().__init__(validation_level=validation_level)
+
+        # Store parent schematic reference for hierarchy context
+        self._parent_schematic = parent_schematic
+
+        # Manual indexes for special cases not handled by IndexRegistry
+        # (These are maintained separately for complex operations)
         self._lib_id_index: Dict[str, List[Component]] = {}
         self._value_index: Dict[str, List[Component]] = {}
 
-        # Initialize base collection
-        wrapped_components = []
+        # Add initial components
         if components:
-            wrapped_components = [Component(comp_data, self) for comp_data in components]
+            with self.batch_mode():
+                for comp_data in components:
+                    component = Component(comp_data, self)
+                    super().add(component)
+                    self._add_to_manual_indexes(component)
 
-        super().__init__(wrapped_components)
+        logger.debug(f"ComponentCollection initialized with {len(self)} components")
 
-    # Abstract method implementations
+    # BaseCollection abstract method implementations
     def _get_item_uuid(self, item: Component) -> str:
         """Extract UUID from component."""
         return item.uuid
 
     def _create_item(self, **kwargs) -> Component:
-        """Create a new component with given parameters."""
-        # This will be called by add() methods in subclasses
-        raise NotImplementedError("Use add() method instead")
+        """
+        Create a new component (not typically used directly).
 
-    def _build_additional_indexes(self) -> None:
-        """Build component-specific indexes."""
-        # Clear existing indexes
-        self._reference_index.clear()
-        self._lib_id_index.clear()
-        self._value_index.clear()
+        Use add() method instead for proper component creation.
+        """
+        raise NotImplementedError("Use add() method to create components")
 
-        # Rebuild indexes from current items
-        for component in self._items:
-            # Reference index
-            self._reference_index[component.reference] = component
+    def _get_index_specs(self) -> List[IndexSpec]:
+        """
+        Get index specifications for component collection.
 
-            # Lib_id index
-            if component.lib_id not in self._lib_id_index:
-                self._lib_id_index[component.lib_id] = []
-            self._lib_id_index[component.lib_id].append(component)
+        Returns:
+            List of IndexSpec for UUID and reference indexes
+        """
+        return [
+            IndexSpec(
+                name="uuid",
+                key_func=lambda c: c.uuid,
+                unique=True,
+                description="UUID index for fast lookups",
+            ),
+            IndexSpec(
+                name="reference",
+                key_func=lambda c: c.reference,
+                unique=True,
+                description="Reference designator index (R1, U2, etc.)",
+            ),
+        ]
 
-            # Value index
-            if component.value not in self._value_index:
-                self._value_index[component.value] = []
-            self._value_index[component.value].append(component)
-
-    # Component-specific methods
+    # Component-specific add method
     def add(
         self,
         lib_id: str,
@@ -256,7 +500,7 @@ class ComponentCollection(IndexedCollection[Component]):
 
         Raises:
             ValidationError: If component data is invalid
-            LibraryError: If the KiCAD symbol library is not found
+            LibraryError: If symbol library not found
         """
         # Validate lib_id
         validator = SchematicValidator()
@@ -273,7 +517,7 @@ class ComponentCollection(IndexedCollection[Component]):
 
         # Check for duplicate reference
         self._ensure_indexes_current()
-        if reference in self._reference_index:
+        if self._index_registry.has_key("reference", reference):
             raise ValidationError(f"Reference {reference} already exists")
 
         # Set default position if not provided
@@ -288,14 +532,12 @@ class ComponentCollection(IndexedCollection[Component]):
         snapped_pos = snap_to_grid((position.x, position.y), grid_size=1.27)
         position = Point(snapped_pos[0], snapped_pos[1])
 
-        # Generate UUID if not provided
-        if component_uuid is None:
-            component_uuid = str(uuid.uuid4())
+        logger.debug(
+            f"Component {reference} position snapped to grid: ({position.x:.3f}, {position.y:.3f})"
+        )
 
         # Normalize and validate rotation
         rotation = rotation % 360
-
-        # KiCad only accepts 0, 90, 180, or 270 degrees
         VALID_ROTATIONS = {0, 90, 180, 270}
         if rotation not in VALID_ROTATIONS:
             raise ValidationError(
@@ -303,178 +545,125 @@ class ComponentCollection(IndexedCollection[Component]):
                 f"Got {rotation}°. KiCad does not support arbitrary rotation angles."
             )
 
-        # Create SchematicSymbol data
-        symbol_data = SchematicSymbol(
-            uuid=component_uuid,
+        # Add hierarchy_path if parent schematic has hierarchy context
+        if self._parent_schematic and hasattr(self._parent_schematic, "_hierarchy_path"):
+            if self._parent_schematic._hierarchy_path:
+                properties = dict(properties)
+                properties["hierarchy_path"] = self._parent_schematic._hierarchy_path
+                logger.debug(
+                    f"Setting hierarchy_path for component {reference}: "
+                    f"{self._parent_schematic._hierarchy_path}"
+                )
+
+        # Create component data
+        component_data = SchematicSymbol(
+            uuid=component_uuid if component_uuid else str(uuid.uuid4()),
             lib_id=lib_id,
+            position=position,
             reference=reference,
             value=value,
-            position=position,
-            rotation=rotation,
-            unit=unit,
-            in_bom=True,
-            on_board=True,
             footprint=footprint,
-            properties=properties.copy(),
+            unit=unit,
+            rotation=rotation,
+            properties=properties,
         )
 
         # Get symbol definition and update pins
+        from ..core.exceptions import LibraryError
+
         symbol_cache = get_symbol_cache()
         symbol_def = symbol_cache.get_symbol(lib_id)
         if not symbol_def:
-            # Provide helpful error message with library name
             library_name = lib_id.split(":")[0] if ":" in lib_id else "unknown"
             raise LibraryError(
                 f"Symbol '{lib_id}' not found in KiCAD libraries. "
                 f"Please verify the library name '{library_name}' and symbol name are correct. "
                 f"Common libraries include: Device, Connector_Generic, Regulator_Linear, RF_Module",
                 field="lib_id",
-                value=lib_id
+                value=lib_id,
             )
-        symbol_data.pins = symbol_def.pins.copy()
+        component_data.pins = symbol_def.pins.copy()
 
         # Create component wrapper
-        component = Component(symbol_data, self)
+        component = Component(component_data, self)
 
-        # Add to collection using base class method
-        return super().add(component)
+        # Add to collection (includes IndexRegistry)
+        super().add(component)
 
-    def get_by_reference(self, reference: str) -> Optional[Component]:
+        # Add to manual indexes (lib_id, value)
+        self._add_to_manual_indexes(component)
+
+        logger.info(f"Added component: {reference} ({lib_id})")
+        return component
+
+
+    def add_ic(
+        self,
+        lib_id: str,
+        reference_prefix: str,
+        position: Optional[Union[Point, Tuple[float, float]]] = None,
+        value: str = "",
+        footprint: Optional[str] = None,
+        layout_style: str = "vertical",
+        **properties,
+    ) -> ICManager:
         """
-        Get component by reference.
+        Add a multi-unit IC with automatic unit placement.
 
         Args:
-            reference: Component reference to find
+            lib_id: Library identifier for the IC (e.g., "74xx:7400")
+            reference_prefix: Base reference (e.g., "U1" → U1A, U1B, etc.)
+            position: Base position for auto-layout (auto-placed if None)
+            value: IC value (defaults to symbol name)
+            footprint: IC footprint
+            layout_style: Layout algorithm ("vertical", "grid", "functional")
+            **properties: Common properties for all units
 
         Returns:
-            Component if found, None otherwise
+            ICManager object for position overrides and management
+
+        Example:
+            ic = sch.components.add_ic("74xx:7400", "U1", position=(100, 100))
+            ic.place_unit(1, position=(150, 80))  # Override Gate A position
         """
-        self._ensure_indexes_current()
-        return self._reference_index.get(reference)
+        # Set default position if not provided
+        if position is None:
+            position = self._find_available_position()
+        elif isinstance(position, tuple):
+            position = Point(position[0], position[1])
 
-    def get_by_lib_id(self, lib_id: str) -> List[Component]:
-        """
-        Get all components with a specific lib_id.
+        # Set default value to symbol name if not provided
+        if not value:
+            value = lib_id.split(":")[-1]  # "74xx:7400" → "7400"
 
-        Args:
-            lib_id: Library ID to search for
+        # Create IC manager for this multi-unit component
+        ic_manager = ICManager(lib_id, reference_prefix, position, self)
 
-        Returns:
-            List of matching components
-        """
-        self._ensure_indexes_current()
-        return self._lib_id_index.get(lib_id, []).copy()
+        # Generate all unit components
+        unit_components = ic_manager.generate_components(
+            value=value, footprint=footprint, properties=properties
+        )
 
-    def get_by_value(self, value: str) -> List[Component]:
-        """
-        Get all components with a specific value.
+        # Add all units to the collection using batch mode for performance
+        with self.batch_mode():
+            for component_data in unit_components:
+                component = Component(component_data, self)
+                super().add(component)
+                self._add_to_manual_indexes(component)
 
-        Args:
-            value: Component value to search for
+        logger.info(
+            f"Added multi-unit IC: {reference_prefix} ({lib_id}) with {len(unit_components)} units"
+        )
 
-        Returns:
-            List of matching components
-        """
-        self._ensure_indexes_current()
-        return self._value_index.get(value, []).copy()
+        return ic_manager
 
-    def _generate_reference(self, lib_id: str) -> str:
-        """
-        Generate a unique reference for a component.
-
-        Args:
-            lib_id: Library ID to generate reference for
-
-        Returns:
-            Unique reference string
-        """
-        # Extract base reference from lib_id
-        if ":" in lib_id:
-            base_ref = lib_id.split(":")[-1]
-        else:
-            base_ref = lib_id
-
-        # Map common component types to standard prefixes
-        ref_prefixes = {
-            "R": "R",
-            "Resistor": "R",
-            "C": "C",
-            "Capacitor": "C",
-            "L": "L",
-            "Inductor": "L",
-            "D": "D",
-            "Diode": "D",
-            "Q": "Q",
-            "Transistor": "Q",
-            "U": "U",
-            "IC": "U",
-            "Amplifier": "U",
-            "J": "J",
-            "Connector": "J",
-            "SW": "SW",
-            "Switch": "SW",
-            "F": "F",
-            "Fuse": "F",
-            "TP": "TP",
-            "TestPoint": "TP",
-        }
-
-        prefix = ref_prefixes.get(base_ref, "U")
-
-        # Ensure indexes are current before checking
-        self._ensure_indexes_current()
-
-        # Find next available number
-        counter = 1
-        while f"{prefix}{counter}" in self._reference_index:
-            counter += 1
-
-        return f"{prefix}{counter}"
-
-    def _find_available_position(self) -> Point:
-        """
-        Find an available position for a new component.
-
-        Returns:
-            Available position point
-        """
-        # Start at a reasonable position and check for conflicts
-        base_x, base_y = 100.0, 100.0
-        spacing = 25.4  # 1 inch spacing
-
-        # Check existing positions to avoid overlap
-        used_positions = {(comp.position.x, comp.position.y) for comp in self._items}
-
-        # Find first available position in a grid pattern
-        for row in range(10):  # Check up to 10 rows
-            for col in range(10):  # Check up to 10 columns
-                x = base_x + col * spacing
-                y = base_y + row * spacing
-                if (x, y) not in used_positions:
-                    return Point(x, y)
-
-        # Fallback to random position if grid is full
-        return Point(base_x + len(self._items) * spacing, base_y)
-
-    def _update_reference_index(self, old_reference: str, new_reference: str) -> None:
-        """
-        Update reference index when component reference changes.
-
-        Args:
-            old_reference: Previous reference
-            new_reference: New reference
-        """
-        if old_reference in self._reference_index:
-            component = self._reference_index.pop(old_reference)
-            self._reference_index[new_reference] = component
-
-    # Component removal methods
+    # Remove operations
     def remove(self, reference: str) -> bool:
         """
-        Remove a component by reference.
+        Remove component by reference designator.
 
         Args:
-            reference: Component reference to remove (e.g., 'R1')
+            reference: Component reference to remove (e.g., "R1")
 
         Returns:
             True if component was removed, False if not found
@@ -483,21 +672,29 @@ class ComponentCollection(IndexedCollection[Component]):
             TypeError: If reference is not a string
         """
         if not isinstance(reference, str):
-            raise TypeError("reference must be a string")
+            raise TypeError(f"reference must be a string, not {type(reference).__name__}")
 
         self._ensure_indexes_current()
 
-        # Get component by reference
-        component = self.get_by_reference(reference)
-        if component is None:
+        # Get component from reference index
+        ref_idx = self._index_registry.get("reference", reference)
+        if ref_idx is None:
             return False
 
-        # Remove using base class method with UUID
-        return super().remove(component.uuid)
+        component = self._items[ref_idx]
+
+        # Remove from manual indexes
+        self._remove_from_manual_indexes(component)
+
+        # Remove from base collection (UUID index)
+        super().remove(component.uuid)
+
+        logger.info(f"Removed component: {reference}")
+        return True
 
     def remove_by_uuid(self, component_uuid: str) -> bool:
         """
-        Remove a component by UUID.
+        Remove component by UUID.
 
         Args:
             component_uuid: Component UUID to remove
@@ -506,19 +703,31 @@ class ComponentCollection(IndexedCollection[Component]):
             True if component was removed, False if not found
 
         Raises:
-            TypeError: If component_uuid is not a string
+            TypeError: If UUID is not a string
         """
         if not isinstance(component_uuid, str):
-            raise TypeError("component_uuid must be a string")
+            raise TypeError(f"component_uuid must be a string, not {type(component_uuid).__name__}")
 
-        return super().remove(component_uuid)
+        # Get component from UUID index
+        component = self.get_by_uuid(component_uuid)
+        if not component:
+            return False
+
+        # Remove from manual indexes
+        self._remove_from_manual_indexes(component)
+
+        # Remove from base collection
+        super().remove(component_uuid)
+
+        logger.info(f"Removed component by UUID: {component_uuid}")
+        return True
 
     def remove_component(self, component: Component) -> bool:
         """
-        Remove a component by component object.
+        Remove component by component object.
 
         Args:
-            component: Component instance to remove
+            component: Component object to remove
 
         Returns:
             True if component was removed, False if not found
@@ -527,31 +736,434 @@ class ComponentCollection(IndexedCollection[Component]):
             TypeError: If component is not a Component instance
         """
         if not isinstance(component, Component):
-            raise TypeError("component must be a Component instance")
+            raise TypeError(
+                f"component must be a Component instance, not {type(component).__name__}"
+            )
 
-        return super().remove(component.uuid)
+        # Check if component exists
+        if component.uuid not in self:
+            return False
 
-    # Bulk operations for performance
-    def bulk_update(self, criteria: Dict[str, Any], updates: Dict[str, Any]) -> int:
+        # Remove from manual indexes
+        self._remove_from_manual_indexes(component)
+
+        # Remove from base collection
+        super().remove(component.uuid)
+
+        logger.info(f"Removed component: {component.reference}")
+        return True
+
+    # Lookup methods
+    def get(self, reference: str) -> Optional[Component]:
         """
-        Perform bulk update on components matching criteria.
+        Get component by reference designator.
 
         Args:
-            criteria: Criteria for selecting components
-            updates: Updates to apply
+            reference: Component reference (e.g., "R1")
+
+        Returns:
+            Component if found, None otherwise
+        """
+        self._ensure_indexes_current()
+        ref_idx = self._index_registry.get("reference", reference)
+        if ref_idx is not None:
+            return self._items[ref_idx]
+        return None
+
+    def get_by_uuid(self, component_uuid: str) -> Optional[Component]:
+        """
+        Get component by UUID.
+
+        Args:
+            component_uuid: Component UUID
+
+        Returns:
+            Component if found, None otherwise
+        """
+        return super().get(component_uuid)
+
+    # Filter and search methods
+    def filter(self, **criteria) -> List[Component]:
+        """
+        Filter components by various criteria.
+
+        Supported criteria:
+            lib_id: Filter by library ID (exact match)
+            value: Filter by value (exact match)
+            value_pattern: Filter by value pattern (contains)
+            reference_pattern: Filter by reference pattern (regex)
+            footprint: Filter by footprint (exact match)
+            in_area: Filter by area (tuple of (x1, y1, x2, y2))
+            has_property: Filter components that have a specific property
+
+        Args:
+            **criteria: Filter criteria
+
+        Returns:
+            List of matching components
+        """
+        results = list(self._items)
+
+        # Apply filters
+        if "lib_id" in criteria:
+            lib_id = criteria["lib_id"]
+            results = [c for c in results if c.lib_id == lib_id]
+
+        if "value" in criteria:
+            value = criteria["value"]
+            results = [c for c in results if c.value == value]
+
+        if "value_pattern" in criteria:
+            pattern = criteria["value_pattern"].lower()
+            results = [c for c in results if pattern in c.value.lower()]
+
+        if "reference_pattern" in criteria:
+            import re
+
+            pattern = re.compile(criteria["reference_pattern"])
+            results = [c for c in results if pattern.match(c.reference)]
+
+        if "footprint" in criteria:
+            footprint = criteria["footprint"]
+            results = [c for c in results if c.footprint == footprint]
+
+        if "in_area" in criteria:
+            x1, y1, x2, y2 = criteria["in_area"]
+            results = [c for c in results if x1 <= c.position.x <= x2 and y1 <= c.position.y <= y2]
+
+        if "has_property" in criteria:
+            prop_name = criteria["has_property"]
+            results = [c for c in results if prop_name in c.properties]
+
+        return results
+
+    def filter_by_type(self, component_type: str) -> List[Component]:
+        """
+        Filter components by type prefix.
+
+        Args:
+            component_type: Type prefix (e.g., 'R' for resistors, 'C' for capacitors)
+
+        Returns:
+            List of matching components
+        """
+        return [
+            c for c in self._items if c.symbol_name.upper().startswith(component_type.upper())
+        ]
+
+    def in_area(self, x1: float, y1: float, x2: float, y2: float) -> List[Component]:
+        """
+        Get components within rectangular area.
+
+        Args:
+            x1, y1: Top-left corner
+            x2, y2: Bottom-right corner
+
+        Returns:
+            List of components in area
+        """
+        return self.filter(in_area=(x1, y1, x2, y2))
+
+    def near_point(
+        self, point: Union[Point, Tuple[float, float]], radius: float
+    ) -> List[Component]:
+        """
+        Get components within radius of a point.
+
+        Args:
+            point: Center point (Point or (x, y) tuple)
+            radius: Search radius in mm
+
+        Returns:
+            List of components within radius
+        """
+        if isinstance(point, tuple):
+            point = Point(point[0], point[1])
+
+        results = []
+        for component in self._items:
+            if component.position.distance_to(point) <= radius:
+                results.append(component)
+        return results
+
+    # Bulk operations
+    def bulk_update(self, criteria: Dict[str, Any], updates: Dict[str, Any]) -> int:
+        """
+        Update multiple components matching criteria.
+
+        Args:
+            criteria: Filter criteria (same as filter method)
+            updates: Dictionary of property updates
 
         Returns:
             Number of components updated
+
+        Example:
+            # Update all 10k resistors to 1% tolerance
+            count = sch.components.bulk_update(
+                criteria={'value': '10k'},
+                updates={'properties': {'Tolerance': '1%'}}
+            )
         """
-        matching_components = self.filter(**criteria)
+        matching = self.filter(**criteria)
 
-        for component in matching_components:
-            for attr, value in updates.items():
-                if hasattr(component, attr):
-                    setattr(component, attr, value)
+        for component in matching:
+            for key, value in updates.items():
+                if key == "properties" and isinstance(value, dict):
+                    # Handle properties dictionary specially
+                    for prop_name, prop_value in value.items():
+                        component.set_property(prop_name, str(prop_value))
+                elif hasattr(component, key) and key not in ["properties"]:
+                    setattr(component, key, value)
+                else:
+                    # Add as custom property
+                    component.set_property(key, str(value))
 
-        self._mark_modified()
-        self._mark_indexes_dirty()
+        if matching:
+            self._mark_modified()
 
-        logger.info(f"Bulk updated {len(matching_components)} components")
-        return len(matching_components)
+        logger.info(f"Bulk updated {len(matching)} components")
+        return len(matching)
+
+    # Sorting
+    def sort_by_reference(self):
+        """Sort components by reference designator (in-place)."""
+        self._items.sort(key=lambda c: c.reference)
+        self._index_registry.mark_dirty()
+
+    def sort_by_position(self, by_x: bool = True):
+        """
+        Sort components by position (in-place).
+
+        Args:
+            by_x: If True, sort by X then Y; if False, sort by Y then X
+        """
+        if by_x:
+            self._items.sort(key=lambda c: (c.position.x, c.position.y))
+        else:
+            self._items.sort(key=lambda c: (c.position.y, c.position.x))
+        self._index_registry.mark_dirty()
+
+    # Validation
+    def validate_all(self) -> List[ValidationIssue]:
+        """
+        Validate all components in collection.
+
+        Returns:
+            List of validation issues found
+        """
+        all_issues = []
+        validator = SchematicValidator()
+
+        # Validate individual components
+        for component in self._items:
+            issues = component.validate()
+            all_issues.extend(issues)
+
+        # Validate collection-level rules (e.g., duplicate references)
+        self._ensure_indexes_current()
+        references = [c.reference for c in self._items]
+        if len(references) != len(set(references)):
+            # Find duplicates
+            seen = set()
+            duplicates = set()
+            for ref in references:
+                if ref in seen:
+                    duplicates.add(ref)
+                seen.add(ref)
+
+            for ref in duplicates:
+                all_issues.append(
+                    ValidationIssue(
+                        category="reference", message=f"Duplicate reference: {ref}", level="error"
+                    )
+                )
+
+        return all_issues
+
+    # Statistics
+    def get_statistics(self) -> Dict[str, Any]:
+        """
+        Get collection statistics.
+
+        Returns:
+            Dictionary with component statistics
+        """
+        lib_counts = {}
+        value_counts = {}
+
+        for component in self._items:
+            # Count by library
+            lib = component.library
+            lib_counts[lib] = lib_counts.get(lib, 0) + 1
+
+            # Count by value
+            value = component.value
+            if value:
+                value_counts[value] = value_counts.get(value, 0) + 1
+
+        # Get base statistics and extend
+        base_stats = super().get_statistics()
+        base_stats.update(
+            {
+                "unique_references": len(self._items),  # After rebuild, should equal item_count
+                "libraries_used": len(lib_counts),
+                "library_breakdown": lib_counts,
+                "most_common_values": sorted(
+                    value_counts.items(), key=lambda x: x[1], reverse=True
+                )[:10],
+            }
+        )
+
+        return base_stats
+
+    # Collection interface
+    def __getitem__(self, key: Union[int, str]) -> Component:
+        """
+        Get component by index, UUID, or reference.
+
+        Args:
+            key: Integer index, UUID string, or reference string
+
+        Returns:
+            Component at the specified location
+
+        Raises:
+            KeyError: If UUID or reference not found
+            IndexError: If index out of range
+            TypeError: If key is invalid type
+        """
+        if isinstance(key, int):
+            # Integer index
+            return self._items[key]
+        elif isinstance(key, str):
+            # Try reference first (most common)
+            component = self.get(key)
+            if component is not None:
+                return component
+
+            # Try UUID
+            component = self.get_by_uuid(key)
+            if component is not None:
+                return component
+
+            raise KeyError(f"Component not found: {key}")
+        else:
+            raise TypeError(f"Invalid key type: {type(key).__name__}")
+
+    def __contains__(self, item: Union[str, Component]) -> bool:
+        """
+        Check if reference, UUID, or component exists in collection.
+
+        Args:
+            item: Reference string, UUID string, or Component instance
+
+        Returns:
+            True if item exists, False otherwise
+        """
+        if isinstance(item, str):
+            # Check reference or UUID
+            return self.get(item) is not None or self.get_by_uuid(item) is not None
+        elif isinstance(item, Component):
+            # Check by UUID
+            return item.uuid in self
+        else:
+            return False
+
+    # Internal helper methods
+    def _add_to_manual_indexes(self, component: Component):
+        """Add component to manual indexes (lib_id, value)."""
+        # Add to lib_id index (non-unique)
+        lib_id = component.lib_id
+        if lib_id not in self._lib_id_index:
+            self._lib_id_index[lib_id] = []
+        self._lib_id_index[lib_id].append(component)
+
+        # Add to value index (non-unique)
+        value = component.value
+        if value:
+            if value not in self._value_index:
+                self._value_index[value] = []
+            self._value_index[value].append(component)
+
+    def _remove_from_manual_indexes(self, component: Component):
+        """Remove component from manual indexes (lib_id, value)."""
+        # Remove from lib_id index
+        lib_id = component.lib_id
+        if lib_id in self._lib_id_index:
+            self._lib_id_index[lib_id].remove(component)
+            if not self._lib_id_index[lib_id]:
+                del self._lib_id_index[lib_id]
+
+        # Remove from value index
+        value = component.value
+        if value and value in self._value_index:
+            self._value_index[value].remove(component)
+            if not self._value_index[value]:
+                del self._value_index[value]
+
+    def _update_reference_index(self, old_ref: str, new_ref: str):
+        """
+        Update reference index when component reference changes.
+
+        This marks the index as dirty so it will be rebuilt with the new reference.
+        """
+        self._index_registry.mark_dirty()
+        logger.debug(f"Reference index marked dirty: {old_ref} -> {new_ref}")
+
+    def _update_value_index(self, component: Component, old_value: str, new_value: str):
+        """Update value index when component value changes."""
+        # Remove from old value
+        if old_value and old_value in self._value_index:
+            self._value_index[old_value].remove(component)
+            if not self._value_index[old_value]:
+                del self._value_index[old_value]
+
+        # Add to new value
+        if new_value:
+            if new_value not in self._value_index:
+                self._value_index[new_value] = []
+            self._value_index[new_value].append(component)
+
+    def _generate_reference(self, lib_id: str) -> str:
+        """
+        Generate unique reference for component.
+
+        Args:
+            lib_id: Library identifier to determine prefix
+
+        Returns:
+            Generated reference (e.g., "R1", "U2")
+        """
+        # Get reference prefix from symbol definition
+        symbol_cache = get_symbol_cache()
+        symbol_def = symbol_cache.get_symbol(lib_id)
+        prefix = symbol_def.reference_prefix if symbol_def else "U"
+
+        # Ensure indexes are current
+        self._ensure_indexes_current()
+
+        # Find next available number
+        counter = 1
+        while self._index_registry.has_key("reference", f"{prefix}{counter}"):
+            counter += 1
+
+        return f"{prefix}{counter}"
+
+    def _find_available_position(self) -> Point:
+        """
+        Find an available position for automatic placement.
+
+        Uses simple grid layout algorithm.
+
+        Returns:
+            Point for component placement
+        """
+        # Simple grid placement - could be enhanced with collision detection
+        grid_size = 10.0  # 10mm grid
+        max_per_row = 10
+
+        row = len(self._items) // max_per_row
+        col = len(self._items) % max_per_row
+
+        return Point(col * grid_size, row * grid_size)
