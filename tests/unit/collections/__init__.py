@@ -1,1 +1,1 @@
-# Collection unit tests package
+"""Unit tests for collections module."""
