@@ -322,11 +322,6 @@ uv run mypy kicad_sch_api/
 - Net tracing, pin type checking, and power net detection are in development
 - Core functionality works, advanced validation features coming soon
 
-### Bus Support
-- Bus wire routing is supported
-- Bus member expansion and individual wire extraction under development
-- See [docs/BUS_RESEARCH.md](docs/BUS_RESEARCH.md) for status
-
 ### Performance
 - Large schematics (>1000 components) may experience slower connectivity analysis
 - Symbol cache helps, but first analysis can take time
