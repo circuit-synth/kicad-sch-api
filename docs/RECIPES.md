@@ -8,8 +8,10 @@ This guide shows solutions to common tasks with kicad-sch-api.
 2. [Component Management](#component-management)
 3. [Wiring and Connectivity](#wiring-and-connectivity)
 4. [Circuit Analysis](#circuit-analysis)
-5. [Batch Operations](#batch-operations)
-6. [Advanced Patterns](#advanced-patterns)
+5. [Connectivity Analysis](#connectivity-analysis) ⭐ NEW
+6. [Hierarchy Management](#hierarchy-management) ⭐ NEW
+7. [Batch Operations](#batch-operations)
+8. [Advanced Patterns](#advanced-patterns)
 
 ---
 
@@ -300,7 +302,7 @@ for i in range(len(components) - 1):
     # Connect output of current to input of next
     sch.add_wire_between_pins(current, "2", next_comp, "1")
 
-# Create a bus connection
+# Connect multiple components to common rail
 resistors = ["R1", "R2", "R3", "R4"]
 for r in resistors:
     # Connect all resistor pin 1's to VCC
@@ -463,6 +465,336 @@ for comp_type, count in sorted(stats['by_type'].items()):
 print("\nBy library:")
 for lib, count in sorted(stats['by_library'].items()):
     print(f"  {lib}: {count}")
+```
+
+---
+
+## Connectivity Analysis
+
+**NEW in v0.5.0** - Electrical connectivity patterns.
+
+### Recipe 13: Check if Components are Connected
+
+```python
+def check_connection(sch, ref1, pin1, ref2, pin2):
+    """Check if two component pins are electrically connected."""
+    if sch.are_pins_connected(ref1, pin1, ref2, pin2):
+        print(f"{ref1}.{pin1} is connected to {ref2}.{pin2}")
+
+        # Get the net they're on
+        net = sch.get_net_for_pin(ref1, pin1)
+        if net:
+            print(f"  Net name: {net.name}")
+            print(f"  Total pins on net: {len(net.pins)}")
+    else:
+        print(f"{ref1}.{pin1} is NOT connected to {ref2}.{pin2}")
+
+# Example usage
+check_connection(sch, "R1", "2", "R2", "1")
+```
+
+### Recipe 14: Find All Components on the Same Net
+
+```python
+def get_components_on_net(sch, component_ref, pin_number):
+    """Get all components connected to a specific pin."""
+    net = sch.get_net_for_pin(component_ref, pin_number)
+    if not net:
+        return []
+
+    # Get unique component references (excluding power symbols)
+    components = set()
+    for pin in net.pins:
+        if not pin.reference.startswith("#PWR"):
+            components.add(pin.reference)
+
+    return sorted(components)
+
+# Find all components on VCC net
+vcc_components = get_components_on_net(sch, "U1", "VCC")
+print(f"Components powered by VCC: {', '.join(vcc_components)}")
+```
+
+### Recipe 15: Trace Power Rail Distribution
+
+```python
+def trace_power_rail(sch, power_net_name):
+    """Trace all components connected to a power rail."""
+    power_consumers = []
+
+    for component in sch.components:
+        # Skip power symbols themselves
+        if component.reference.startswith("#PWR"):
+            continue
+
+        # Check each pin
+        for pin_num, pin_pos in sch.list_component_pins(component.reference):
+            net = sch.get_net_for_pin(component.reference, pin_num)
+            if net and net.name == power_net_name:
+                power_consumers.append({
+                    'component': component.reference,
+                    'pin': pin_num,
+                    'value': component.value
+                })
+
+    return power_consumers
+
+# Trace VCC distribution
+vcc_consumers = trace_power_rail(sch, "VCC")
+print(f"Components using VCC:")
+for consumer in vcc_consumers:
+    print(f"  {consumer['component']}.{consumer['pin']} ({consumer['value']})")
+```
+
+### Recipe 16: Validate Circuit Connectivity
+
+```python
+def validate_circuit_connectivity(sch, required_connections):
+    """Validate that required connections exist."""
+    errors = []
+
+    for conn in required_connections:
+        ref1, pin1, ref2, pin2 = conn
+        if not sch.are_pins_connected(ref1, pin1, ref2, pin2):
+            errors.append(f"Missing connection: {ref1}.{pin1} → {ref2}.{pin2}")
+
+    return errors
+
+# Define required connections
+required = [
+    ("R1", "2", "LED1", "1"),
+    ("LED1", "2", "GND", "1"),
+    ("U1", "VCC", "C1", "1"),
+]
+
+errors = validate_circuit_connectivity(sch, required)
+if errors:
+    print("Connectivity errors found:")
+    for error in errors:
+        print(f"  ❌ {error}")
+else:
+    print("✅ All required connections verified!")
+```
+
+### Recipe 17: Find Floating Nets
+
+```python
+def find_floating_nets(sch):
+    """Find nets with only one connection (potential errors)."""
+    floating = []
+
+    # Build set of all nets
+    all_nets = set()
+    for component in sch.components:
+        for pin_num, pin_pos in sch.list_component_pins(component.reference):
+            net = sch.get_net_for_pin(component.reference, pin_num)
+            if net:
+                all_nets.add(net.name)
+
+    # Check each net
+    for net_name in all_nets:
+        # Find first pin on this net
+        for component in sch.components:
+            for pin_num, pin_pos in sch.list_component_pins(component.reference):
+                net = sch.get_net_for_pin(component.reference, pin_num)
+                if net and net.name == net_name:
+                    if len(net.pins) == 1:
+                        floating.append({
+                            'net': net_name,
+                            'pin': f"{component.reference}.{pin_num}"
+                        })
+                    break
+            if floating and floating[-1]['net'] == net_name:
+                break
+
+    return floating
+
+# Find potential errors
+floating_nets = find_floating_nets(sch)
+if floating_nets:
+    print("⚠️  Floating nets found:")
+    for item in floating_nets:
+        print(f"  {item['net']}: Only connected to {item['pin']}")
+```
+
+---
+
+## Hierarchy Management
+
+**NEW in v0.5.0** - Multi-sheet schematic patterns.
+
+### Recipe 18: Validate Hierarchical Design
+
+```python
+from pathlib import Path
+
+def validate_hierarchy(sch, schematic_path):
+    """Validate all hierarchical sheet connections."""
+    # Build hierarchy tree
+    tree = sch.hierarchy.build_hierarchy_tree(sch, Path(schematic_path))
+
+    # Check for reused sheets
+    reused = sch.hierarchy.find_reused_sheets()
+    if reused:
+        print(f"✅ Found {len(reused)} reused sheets:")
+        for filename, instances in reused.items():
+            print(f"  {filename}: used {len(instances)} times")
+
+    # Validate sheet pins
+    connections = sch.hierarchy.validate_sheet_pins()
+    errors = sch.hierarchy.get_validation_errors()
+
+    if errors:
+        print("\n❌ Validation errors:")
+        for error in errors:
+            print(f"  {error['pin_name']}: {error['error']}")
+        return False
+    else:
+        print("\n✅ All sheet connections valid!")
+        return True
+
+# Validate design
+validate_hierarchy(sch, "my_project.kicad_sch")
+```
+
+### Recipe 19: Flatten Hierarchical Design for Analysis
+
+```python
+def flatten_and_analyze(sch, schematic_path):
+    """Flatten hierarchy and analyze full design."""
+    # Build tree first
+    tree = sch.hierarchy.build_hierarchy_tree(sch, Path(schematic_path))
+
+    # Flatten with prefixed references
+    flattened = sch.hierarchy.flatten_hierarchy(prefix_references=True)
+
+    print(f"Flattened design statistics:")
+    print(f"  Total components: {len(flattened['components'])}")
+    print(f"  Total wires: {len(flattened['wires'])}")
+    print(f"  Total labels: {len(flattened['labels'])}")
+
+    # Show hierarchy map
+    print(f"\nComponent locations:")
+    for ref, path in flattened['hierarchy_map'].items():
+        sheet_name = "Root" if path == "/" else path.split("/")[-2]
+        print(f"  {ref}: {sheet_name}")
+
+    return flattened
+
+# Flatten and analyze
+flattened = flatten_and_analyze(sch, "my_project.kicad_sch")
+```
+
+### Recipe 20: Trace Signal Through Hierarchy
+
+```python
+def trace_signal_through_sheets(sch, signal_name, schematic_path):
+    """Trace a signal's path through hierarchical sheets."""
+    # Build tree
+    tree = sch.hierarchy.build_hierarchy_tree(sch, Path(schematic_path))
+
+    # Trace signal
+    paths = sch.hierarchy.trace_signal_path(signal_name)
+
+    print(f"Signal '{signal_name}' trace:")
+    for i, path in enumerate(paths, 1):
+        print(f"\n  Path {i}:")
+        print(f"    Start: {path.start_path}")
+        print(f"    End: {path.end_path}")
+        print(f"    Sheet crossings: {path.sheet_crossings}")
+
+        if path.connections:
+            print(f"    Connection points:")
+            for conn in path.connections:
+                print(f"      - {conn}")
+
+    return paths
+
+# Trace VCC through design
+paths = trace_signal_through_sheets(sch, "VCC", "my_project.kicad_sch")
+```
+
+### Recipe 21: Visualize Hierarchy with Stats
+
+```python
+def show_hierarchy_statistics(sch, schematic_path):
+    """Show hierarchy tree with component counts."""
+    # Build tree
+    tree = sch.hierarchy.build_hierarchy_tree(sch, Path(schematic_path))
+
+    # Get visualization
+    viz = sch.hierarchy.visualize_hierarchy(include_stats=True)
+    print(viz)
+
+    # Additional statistics
+    def count_tree_nodes(node):
+        """Recursively count nodes."""
+        count = 1
+        for child in node.children:
+            count += count_tree_nodes(child)
+        return count
+
+    total_sheets = count_tree_nodes(tree)
+    reused = sch.hierarchy.find_reused_sheets()
+
+    print(f"\nHierarchy Statistics:")
+    print(f"  Total sheets: {total_sheets}")
+    print(f"  Reused sheets: {len(reused)}")
+    print(f"  Max depth: {max(node.get_depth() for node in get_all_nodes(tree))}")
+
+    return tree
+
+def get_all_nodes(node):
+    """Get all nodes in tree."""
+    nodes = [node]
+    for child in node.children:
+        nodes.extend(get_all_nodes(child))
+    return nodes
+
+# Show hierarchy
+tree = show_hierarchy_statistics(sch, "my_project.kicad_sch")
+```
+
+### Recipe 22: Generate Hierarchy Report
+
+```python
+def generate_hierarchy_report(sch, schematic_path, output_file):
+    """Generate detailed hierarchy report."""
+    tree = sch.hierarchy.build_hierarchy_tree(sch, Path(schematic_path))
+
+    with open(output_file, 'w') as f:
+        f.write("# Hierarchical Design Report\n\n")
+
+        # Tree visualization
+        f.write("## Hierarchy Tree\n\n")
+        f.write("```\n")
+        f.write(sch.hierarchy.visualize_hierarchy(include_stats=True))
+        f.write("\n```\n\n")
+
+        # Reused sheets
+        reused = sch.hierarchy.find_reused_sheets()
+        if reused:
+            f.write("## Reused Sheets\n\n")
+            for filename, instances in reused.items():
+                f.write(f"### {filename} ({len(instances)} instances)\n\n")
+                for inst in instances:
+                    f.write(f"- Path: `{inst.path}`\n")
+                    f.write(f"  Pins: {len(inst.sheet_pins)}\n")
+                f.write("\n")
+
+        # Validation errors
+        errors = sch.hierarchy.get_validation_errors()
+        if errors:
+            f.write("## Validation Errors\n\n")
+            for error in errors:
+                f.write(f"- **{error['pin_name']}**: {error['error']}\n")
+        else:
+            f.write("## Validation\n\n✅ All connections validated successfully.\n")
+
+    print(f"Report generated: {output_file}")
+
+# Generate report
+generate_hierarchy_report(sch, "my_project.kicad_sch", "hierarchy_report.md")
 ```
 
 ---
