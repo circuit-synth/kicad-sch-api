@@ -1167,3 +1167,13 @@ class ComponentCollection(BaseCollection[Component]):
         col = len(self._items) % max_per_row
 
         return Point(col * grid_size, row * grid_size)
+
+    # Compatibility methods for legacy Schematic integration
+    @property
+    def modified(self) -> bool:
+        """Check if collection has been modified (compatibility)."""
+        return self.is_modified
+
+    def mark_saved(self) -> None:
+        """Mark collection as saved (reset modified flag)."""
+        self.mark_clean()
