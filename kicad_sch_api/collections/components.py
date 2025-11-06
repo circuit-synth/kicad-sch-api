@@ -886,6 +886,163 @@ class ComponentCollection(BaseCollection[Component]):
                 results.append(component)
         return results
 
+    def find_pins_by_name(
+        self, reference: str, name_pattern: str, case_sensitive: bool = False
+    ) -> Optional[List[str]]:
+        """
+        Find pin numbers matching a name pattern.
+
+        Supports both exact matches and wildcard patterns (e.g., "CLK*", "*IN*").
+        By default, matching is case-insensitive for maximum flexibility.
+
+        Args:
+            reference: Component reference designator (e.g., "R1", "U2")
+            name_pattern: Name pattern to search for (e.g., "VCC", "CLK", "OUT", "CLK*", "*IN*")
+            case_sensitive: If False (default), matching is case-insensitive
+
+        Returns:
+            List of matching pin numbers (e.g., ["1", "2"]), or None if component not found
+
+        Raises:
+            ValueError: If name_pattern is empty
+
+        Example:
+            # Find all clock pins
+            pins = sch.components.find_pins_by_name("U1", "CLK*")
+            # Returns: ["5", "10"] (whatever the clock pins are numbered)
+
+            # Find power pins
+            pins = sch.components.find_pins_by_name("U1", "VCC")
+            # Returns: ["1", "20"] for a common IC
+        """
+        import fnmatch
+
+        logger.debug(f"[PIN_DISCOVERY] find_pins_by_name() called for {reference}")
+        logger.debug(f"[PIN_DISCOVERY]   Pattern: '{name_pattern}' (case_sensitive={case_sensitive})")
+
+        if not name_pattern:
+            raise ValueError("name_pattern cannot be empty")
+
+        # Step 1: Get component
+        component = self.get(reference)
+        if not component:
+            logger.warning(f"[PIN_DISCOVERY] Component not found: {reference}")
+            return None
+
+        logger.debug(f"[PIN_DISCOVERY] Found component {reference} ({component.lib_id})")
+
+        # Step 2: Get symbol definition
+        symbol_def = component.get_symbol_definition()
+        if not symbol_def:
+            logger.warning(
+                f"[PIN_DISCOVERY] Symbol definition not found for {reference} ({component.lib_id})"
+            )
+            return None
+
+        logger.debug(
+            f"[PIN_DISCOVERY] Symbol has {len(symbol_def.pins)} total pins to search"
+        )
+
+        # Step 3: Match pins by name
+        matching_pins = []
+        search_pattern = name_pattern if case_sensitive else name_pattern.lower()
+
+        for pin in symbol_def.pins:
+            pin_name = pin.name if case_sensitive else pin.name.lower()
+
+            # Use fnmatch for wildcard matching
+            if fnmatch.fnmatch(pin_name, search_pattern):
+                logger.debug(
+                    f"[PIN_DISCOVERY]   Pin {pin.number} ({pin.name}) matches pattern '{name_pattern}'"
+                )
+                matching_pins.append(pin.number)
+
+        logger.info(
+            f"[PIN_DISCOVERY] Found {len(matching_pins)} pins matching '{name_pattern}' "
+            f"in {reference}: {matching_pins}"
+        )
+        return matching_pins
+
+    def find_pins_by_type(
+        self, reference: str, pin_type: Union[str, "PinType"]
+    ) -> Optional[List[str]]:
+        """
+        Find pin numbers by electrical type.
+
+        Returns all pins of a specific electrical type (e.g., all inputs, all power pins).
+
+        Args:
+            reference: Component reference designator (e.g., "R1", "U2")
+            pin_type: Electrical type filter. Can be:
+                     - String: "input", "output", "passive", "power_in", "power_out", etc.
+                     - PinType enum value
+
+        Returns:
+            List of matching pin numbers, or None if component not found
+
+        Example:
+            # Find all input pins
+            pins = sch.components.find_pins_by_type("U1", "input")
+            # Returns: ["1", "2", "3"]
+
+            # Find all power pins
+            pins = sch.components.find_pins_by_type("U1", "power_in")
+            # Returns: ["20", "40"] for a common IC
+        """
+        from ..core.types import PinType
+
+        logger.debug(f"[PIN_DISCOVERY] find_pins_by_type() called for {reference}")
+
+        # Normalize pin_type to PinType enum
+        if isinstance(pin_type, str):
+            try:
+                pin_type_enum = PinType(pin_type)
+                logger.debug(f"[PIN_DISCOVERY]   Type filter: {pin_type}")
+            except ValueError:
+                logger.error(f"[PIN_DISCOVERY] Invalid pin type: {pin_type}")
+                raise ValueError(
+                    f"Invalid pin type: {pin_type}. "
+                    f"Must be one of: {', '.join(pt.value for pt in PinType)}"
+                )
+        else:
+            pin_type_enum = pin_type
+            logger.debug(f"[PIN_DISCOVERY]   Type filter: {pin_type_enum.value}")
+
+        # Step 1: Get component
+        component = self.get(reference)
+        if not component:
+            logger.warning(f"[PIN_DISCOVERY] Component not found: {reference}")
+            return None
+
+        logger.debug(f"[PIN_DISCOVERY] Found component {reference} ({component.lib_id})")
+
+        # Step 2: Get symbol definition
+        symbol_def = component.get_symbol_definition()
+        if not symbol_def:
+            logger.warning(
+                f"[PIN_DISCOVERY] Symbol definition not found for {reference} ({component.lib_id})"
+            )
+            return None
+
+        logger.debug(
+            f"[PIN_DISCOVERY] Symbol has {len(symbol_def.pins)} total pins to filter"
+        )
+
+        # Step 3: Filter pins by type
+        matching_pins = []
+        for pin in symbol_def.pins:
+            if pin.pin_type == pin_type_enum:
+                logger.debug(
+                    f"[PIN_DISCOVERY]   Pin {pin.number} ({pin.name}) is type {pin_type_enum.value}"
+                )
+                matching_pins.append(pin.number)
+
+        logger.info(
+            f"[PIN_DISCOVERY] Found {len(matching_pins)} pins of type '{pin_type_enum.value}' "
+            f"in {reference}: {matching_pins}"
+        )
+        return matching_pins
+
     def get_pins_info(self, reference: str) -> Optional[List[PinInfo]]:
         """
         Get comprehensive pin information for a component.
