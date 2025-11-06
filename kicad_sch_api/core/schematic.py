@@ -732,7 +732,7 @@ class Schematic:
         # Use the new labels collection instead of manager
         if size is None:
             size = 1.27  # Default size
-        label = self._labels.add(text, position, rotation=rotation, size=size, label_uuid=uuid)
+        label = self._labels.add(text, position, rotation=rotation, size=size, uuid=uuid)
         self._sync_labels_to_data()  # Sync immediately
         self._format_sync_manager.mark_dirty("label", "add", {"uuid": label.uuid})
         self._modified = True

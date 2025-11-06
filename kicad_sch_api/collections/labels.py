@@ -255,7 +255,7 @@ class LabelCollection(BaseCollection[LabelElement]):
         rotation: float = 0.0,
         size: float = 1.27,
         uuid: Optional[str] = None,
-    ) -> str:
+    ) -> LabelElement:
         """
         Add a label to the collection.
 
@@ -267,7 +267,7 @@ class LabelCollection(BaseCollection[LabelElement]):
             uuid: Optional UUID (auto-generated if not provided)
 
         Returns:
-            UUID of the created label
+            LabelElement wrapper for the created label
 
         Raises:
             ValueError: If UUID already exists or text is empty
@@ -308,7 +308,7 @@ class LabelCollection(BaseCollection[LabelElement]):
         self._add_to_text_index(label_element)
 
         logger.debug(f"Added label '{text}' at {position}, UUID={uuid}")
-        return uuid
+        return label_element
 
     # Remove operation (override to update text index)
     def remove(self, uuid: str) -> bool:
