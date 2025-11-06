@@ -17,11 +17,9 @@ from .base import (
     ValidationLevel,
 )
 from .components import Component, ComponentCollection
-
-# Other collections to be implemented
-# from .junctions import JunctionCollection
-# from .labels import LabelCollection
-# from .wires import WireCollection
+from .junctions import JunctionCollection
+from .labels import LabelCollection, LabelElement
+from .wires import WireCollection
 
 __all__ = [
     "BaseCollection",
@@ -31,7 +29,8 @@ __all__ = [
     "ValidationLevel",
     "Component",
     "ComponentCollection",
-    # "WireCollection",
-    # "JunctionCollection",
-    # "LabelCollection",
+    "JunctionCollection",
+    "LabelCollection",
+    "LabelElement",
+    "WireCollection",
 ]
