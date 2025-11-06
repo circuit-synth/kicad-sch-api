@@ -312,6 +312,28 @@ uv run mypy kicad_sch_api/
 
 **📖 See [Why Use This Library](docs/WHY_USE_THIS_LIBRARY.md) for detailed comparison**
 
+## ⚠️ Known Limitations
+
+### Connectivity Analysis
+- **Global Labels**: Explicit global label connections not yet fully implemented (power symbols like VCC/GND work correctly)
+
+### ERC (Electrical Rule Check)
+- **Partial Implementation**: ERC validators have incomplete features
+- Net tracing, pin type checking, and power net detection are in development
+- Core functionality works, advanced validation features coming soon
+
+### Bus Support
+- Bus wire routing is supported
+- Bus member expansion and individual wire extraction under development
+- See [docs/BUS_RESEARCH.md](docs/BUS_RESEARCH.md) for status
+
+### Performance
+- Large schematics (>1000 components) may experience slower connectivity analysis
+- Symbol cache helps, but first analysis can take time
+- Optimization ongoing
+
+**Report issues**: https://github.com/circuit-synth/kicad-sch-api/issues
+
 ## 📖 Documentation
 
 Full documentation is available in the **[docs/](docs/)** directory:

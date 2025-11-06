@@ -266,6 +266,116 @@ if pin_pos:
     print(f"R1 pin 1 is at ({pin_pos.x}, {pin_pos.y})")
 ```
 
+## Analyzing Connectivity ⭐ NEW
+
+**NEW in v0.5.0** - Check electrical connectivity between components.
+
+### Basic Connectivity Check
+
+```python
+# Check if two pins are connected
+if sch.are_pins_connected("R1", "2", "R2", "1"):
+    print("R1 pin 2 and R2 pin 1 are electrically connected!")
+```
+
+### Get Net Information
+
+```python
+# Get the electrical net for a pin
+net = sch.get_net_for_pin("R1", "2")
+if net:
+    print(f"Net name: {net.name}")
+    print(f"Components on this net:")
+    for pin in net.pins:
+        print(f"  - {pin.reference}.{pin.pin_number}")
+```
+
+### Find Connected Pins
+
+```python
+# Get all pins connected to a specific pin
+connected = sch.get_connected_pins("R1", "2")
+for ref, pin_num in connected:
+    print(f"Connected: {ref}.{pin_num}")
+```
+
+**What connectivity traces:**
+- Direct wire connections
+- Connections through junctions
+- Local labels (same sheet)
+- Global labels (cross-sheet)
+- Power symbols (VCC, GND)
+- Hierarchical connections
+
+**Performance Note:** First connectivity query builds the graph (can be slow on large schematics). Subsequent queries use cached results until schematic changes.
+
+**📖 See [API Reference - Connectivity](API_REFERENCE.md#connectivity-analysis) for complete documentation**
+
+## Working with Hierarchical Designs ⭐ NEW
+
+**NEW in v0.5.0** - Manage multi-sheet schematics.
+
+### Build Hierarchy Tree
+
+```python
+from pathlib import Path
+
+# Build tree of all sheets
+schematic_path = Path("my_project.kicad_sch")
+tree = sch.hierarchy.build_hierarchy_tree(sch, schematic_path)
+
+# Explore structure
+print(f"Root: {tree.name}")
+for child in tree.children:
+    print(f"  Child sheet: {child.name} ({child.filename})")
+```
+
+### Find Reused Sheets
+
+```python
+# Find sheets used multiple times
+reused = sch.hierarchy.find_reused_sheets()
+for filename, instances in reused.items():
+    print(f"{filename} is used {len(instances)} times")
+```
+
+### Validate Sheet Connections
+
+```python
+# Validate sheet pins match hierarchical labels
+connections = sch.hierarchy.validate_sheet_pins()
+errors = sch.hierarchy.get_validation_errors()
+
+if errors:
+    print("Validation errors found:")
+    for error in errors:
+        print(f"  {error['pin_name']}: {error['error']}")
+```
+
+### Trace Signals Through Hierarchy
+
+```python
+# Trace VCC through all sheets
+paths = sch.hierarchy.trace_signal_path("VCC")
+for path in paths:
+    print(f"Signal crosses {path.sheet_crossings} sheet boundaries")
+```
+
+### Visualize Hierarchy
+
+```python
+# Print hierarchy tree
+viz = sch.hierarchy.visualize_hierarchy(include_stats=True)
+print(viz)
+
+# Output:
+# ├── Main Board (5 components, 8 wires)
+# │   ├── PowerSupply [power.kicad_sch] (3 components)
+# │   └── MCU [mcu.kicad_sch] (12 components)
+```
+
+**📖 See [Hierarchy Features Guide](HIERARCHY_FEATURES.md) for complete hierarchy documentation**
+
 ## Next Steps
 
 Now that you understand the basics:

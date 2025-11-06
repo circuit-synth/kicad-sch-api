@@ -1,0 +1,21 @@
+(kicad_sch
+  (version 20231120)
+  (generator "eeschema")
+  (generator_version "8.0")
+  (uuid "12345678-1234-5678-1234-567812345678")
+  (paper "A4")
+  (title_block
+    (title "01_simple_vector_bus")
+    (date "2025-11-05")
+    (rev "1")
+    (company "Circuit-Synth")
+    (comment 1 "Reference schematic for bus system implementation")
+  )
+  (lib_symbols)
+  (symbol_instances)
+  (sheet_instances
+    (path "/"
+      (page "1")
+    )
+  )
+)
