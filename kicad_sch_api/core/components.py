@@ -295,12 +295,13 @@ class ComponentCollection(BaseCollection[Component]):
     Optimized for schematics with hundreds or thousands of components.
     """
 
-    def __init__(self, components: List[SchematicSymbol] = None):
+    def __init__(self, components: List[SchematicSymbol] = None, parent_schematic=None):
         """
         Initialize component collection.
 
         Args:
             components: Initial list of component data
+            parent_schematic: Reference to parent Schematic object (for hierarchy context)
         """
         # Initialize base collection
         super().__init__([], collection_name="components")
@@ -309,6 +310,9 @@ class ComponentCollection(BaseCollection[Component]):
         self._reference_index: Dict[str, Component] = {}
         self._lib_id_index: Dict[str, List[Component]] = {}
         self._value_index: Dict[str, List[Component]] = {}
+
+        # Store reference to parent schematic for hierarchy context
+        self._parent_schematic = parent_schematic
 
         # Add initial components
         if components:
@@ -391,6 +395,17 @@ class ComponentCollection(BaseCollection[Component]):
                 f"Component rotation must be 0, 90, 180, or 270 degrees. "
                 f"Got {rotation}°. KiCad does not support arbitrary rotation angles."
             )
+
+        # Check if parent schematic has hierarchy context set
+        # If so, add hierarchy_path to properties for proper KiCad instance paths
+        if self._parent_schematic and hasattr(self._parent_schematic, '_hierarchy_path'):
+            if self._parent_schematic._hierarchy_path:
+                properties = dict(properties)  # Make a copy to avoid modifying caller's dict
+                properties['hierarchy_path'] = self._parent_schematic._hierarchy_path
+                logger.debug(
+                    f"Setting hierarchy_path for component {reference}: "
+                    f"{self._parent_schematic._hierarchy_path}"
+                )
 
         # Create component data
         component_data = SchematicSymbol(

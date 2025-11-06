@@ -259,6 +259,64 @@ ksa.config.tolerance.position_tolerance = 0.05  # Tighter matching
 sch.save()
 ```
 
+## Creating Hierarchical Schematics (Issue #100)
+
+**CRITICAL**: For hierarchical designs, child schematics MUST have proper hierarchy context set using `set_hierarchy_context()` or component references will show as "?" in KiCad.
+
+### Quick Example
+
+```python
+import kicad_sch_api as ksa
+
+# 1. Create parent schematic
+main = ksa.create_schematic("MyProject")
+parent_uuid = main.uuid
+
+# 2. Add hierarchical sheet
+power_sheet_uuid = main.sheets.add_sheet(
+    name="Power Supply",
+    filename="power.kicad_sch",
+    position=(50, 50),
+    size=(100, 100),
+    project_name="MyProject"  # MUST match parent project name!
+)
+
+# 3. Create child schematic with hierarchy context
+power = ksa.create_schematic("MyProject")  # SAME project name!
+power.set_hierarchy_context(parent_uuid, power_sheet_uuid)  # CRITICAL!
+
+# 4. Now components get correct hierarchical paths automatically
+vreg = power.components.add('Regulator_Linear:AMS1117-3.3', 'U1', 'AMS1117-3.3')
+# Component path will be: /parent_uuid/power_sheet_uuid (CORRECT!)
+
+# 5. Save both schematics
+main.save("main.kicad_sch")
+power.save("power.kicad_sch")
+```
+
+### Critical Requirements for Hierarchical Schematics
+
+1. **Same Project Name**: All schematics (parent + children) MUST use identical project names
+2. **Call `set_hierarchy_context()` BEFORE adding components**
+3. **Pass `project_name` parameter to `add_sheet()`**
+4. **Save parent UUID early** for use when creating children
+
+### Without vs With Hierarchy Context
+
+**❌ Without `set_hierarchy_context()`:**
+- Component instance path: `/child_uuid` (WRONG)
+- KiCad displays: "C?", "R?", "U?" instead of proper references
+- Components cannot be annotated
+
+**✅ With `set_hierarchy_context()`:**
+- Component instance path: `/parent_uuid/sheet_uuid` (CORRECT)
+- KiCad displays: "C1", "C2", "R1", "U1" (proper references)
+- Components annotate correctly
+
+### Complete Example
+
+See **`docs/HIERARCHY_FEATURES.md`** for comprehensive hierarchical schematic documentation and **`examples/stm32g431_simple.py`** for a complete working example.
+
 ## Testing Strategy & Format Preservation
 
 **CRITICAL**: This project's core differentiator is exact format preservation. Always verify output matches KiCAD exactly.
