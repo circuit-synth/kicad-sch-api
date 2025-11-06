@@ -16,12 +16,12 @@ from .base import (
     PropertyDict,
     ValidationLevel,
 )
+from .junctions import JunctionCollection
+from .labels import LabelCollection, LabelElement
+from .wires import WireCollection
 
-# Import concrete collections when they're implemented
-# from .components import ComponentCollection
-# from .junctions import JunctionCollection
-# from .labels import LabelCollection
-# from .wires import WireCollection
+# Component collection from components worktree (when merged)
+# from .components import Component, ComponentCollection
 
 __all__ = [
     "BaseCollection",
@@ -29,8 +29,10 @@ __all__ = [
     "IndexRegistry",
     "PropertyDict",
     "ValidationLevel",
+    "JunctionCollection",
+    "LabelCollection",
+    "LabelElement",
+    "WireCollection",
+    # "Component",
     # "ComponentCollection",
-    # "WireCollection",
-    # "JunctionCollection",
-    # "LabelCollection",
 ]
