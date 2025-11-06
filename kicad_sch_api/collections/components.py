@@ -11,7 +11,7 @@ import uuid
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..core.ic_manager import ICManager
-from ..core.types import Point, SchematicPin, SchematicSymbol
+from ..core.types import Point, PinInfo, SchematicPin, SchematicSymbol
 from ..library.cache import SymbolDefinition, get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
 from .base import BaseCollection, IndexSpec, ValidationLevel
@@ -885,6 +885,106 @@ class ComponentCollection(BaseCollection[Component]):
             if component.position.distance_to(point) <= radius:
                 results.append(component)
         return results
+
+    def get_pins_info(self, reference: str) -> Optional[List[PinInfo]]:
+        """
+        Get comprehensive pin information for a component.
+
+        Returns all pins for the specified component with complete metadata
+        including electrical type, shape, absolute position (accounting for
+        rotation and mirroring), and orientation.
+
+        Args:
+            reference: Component reference designator (e.g., "R1", "U2")
+
+        Returns:
+            List of PinInfo objects with complete pin metadata, or None if component not found
+
+        Raises:
+            LibraryError: If component's symbol library is not available
+
+        Example:
+            pins = sch.components.get_pins_info("U1")
+            if pins:
+                for pin in pins:
+                    print(f"Pin {pin.number}: {pin.name} @ {pin.position}")
+                    print(f"  Electrical type: {pin.electrical_type.value}")
+                    print(f"  Shape: {pin.shape.value}")
+        """
+        logger.debug(f"[PIN_DISCOVERY] get_pins_info() called for reference: {reference}")
+
+        # Step 1: Find the component
+        component = self.get(reference)
+        if not component:
+            logger.warning(f"[PIN_DISCOVERY] Component not found: {reference}")
+            return None
+
+        logger.debug(f"[PIN_DISCOVERY] Found component {reference} ({component.lib_id})")
+
+        # Step 2: Get symbol definition from library cache
+        symbol_def = component.get_symbol_definition()
+        if not symbol_def:
+            from ..core.exceptions import LibraryError
+
+            lib_id = component.lib_id
+            logger.error(
+                f"[PIN_DISCOVERY] Symbol library not found for component {reference}: {lib_id}"
+            )
+            raise LibraryError(
+                f"Symbol '{lib_id}' not found in KiCAD libraries. "
+                f"Please verify the library name and symbol name are correct.",
+                field="lib_id",
+                value=lib_id,
+            )
+
+        logger.debug(
+            f"[PIN_DISCOVERY] Retrieved symbol definition for {reference}: "
+            f"{len(symbol_def.pins)} pins"
+        )
+
+        # Step 3: Build PinInfo list with absolute positions
+        pins_info = []
+        for pin in symbol_def.pins:
+            logger.debug(
+                f"[PIN_DISCOVERY] Processing pin {pin.number} ({pin.name}) "
+                f"in local coords: {pin.position}"
+            )
+
+            # Get absolute position accounting for component rotation
+            absolute_position = component.get_pin_position(pin.number)
+            if not absolute_position:
+                logger.warning(
+                    f"[PIN_DISCOVERY] Could not calculate position for pin {pin.number} on {reference}"
+                )
+                continue
+
+            logger.debug(
+                f"[PIN_DISCOVERY] Pin {pin.number} absolute position: {absolute_position}"
+            )
+
+            # Create PinInfo with absolute position
+            pin_info = PinInfo(
+                number=pin.number,
+                name=pin.name,
+                position=absolute_position,
+                electrical_type=pin.pin_type,
+                shape=pin.pin_shape,
+                length=pin.length,
+                orientation=pin.rotation,  # Note: pin rotation in symbol space
+                uuid=f"{component.uuid}:{pin.number}",  # Composite UUID
+            )
+
+            logger.debug(
+                f"[PIN_DISCOVERY] Created PinInfo for pin {pin.number}: "
+                f"type={pin_info.electrical_type.value}, shape={pin_info.shape.value}"
+            )
+
+            pins_info.append(pin_info)
+
+        logger.info(
+            f"[PIN_DISCOVERY] Successfully retrieved {len(pins_info)} pins for {reference}"
+        )
+        return pins_info
 
     # Bulk operations
     def bulk_update(self, criteria: Dict[str, Any], updates: Dict[str, Any]) -> int:

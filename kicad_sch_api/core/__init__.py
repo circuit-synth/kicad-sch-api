@@ -4,7 +4,7 @@ from ..collections import Component, ComponentCollection
 from .formatter import ExactFormatter
 from .parser import SExpressionParser
 from .schematic import Schematic, create_schematic, load_schematic
-from .types import Junction, Label, Net, Point, SchematicSymbol, Wire
+from .types import Junction, Label, Net, PinInfo, Point, SchematicSymbol, Wire
 # Exception hierarchy
 from .exceptions import (
     KiCadSchError,
@@ -34,6 +34,7 @@ __all__ = [
     "Junction",
     "Label",
     "Net",
+    "PinInfo",
     "SExpressionParser",
     "ExactFormatter",
     "load_schematic",

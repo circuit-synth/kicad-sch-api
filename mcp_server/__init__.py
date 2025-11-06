@@ -14,9 +14,19 @@ from mcp_server.utils import (
     configure_mcp_logging,
     get_mcp_logger,
 )
+from mcp_server.models import (
+    PointModel,
+    PinInfoOutput,
+    ComponentPinsOutput,
+    ErrorOutput,
+)
 
 __version__ = "0.1.0"
 __all__ = [
     "configure_mcp_logging",
     "get_mcp_logger",
+    "PointModel",
+    "PinInfoOutput",
+    "ComponentPinsOutput",
+    "ErrorOutput",
 ]
