@@ -9,8 +9,6 @@
 ### Version Information
 - **Current Version**: 0.4.5
 - **Target Version**: 0.5.0 (connectivity is significant feature)
-- **Last CHANGELOG Entry**: 0.4.1 (2025-01-26)
-- **Missing Versions**: 0.4.2, 0.4.3, 0.4.4, 0.4.5
 
 ### Recent PRs Not Documented
 - **PR #96**: Advanced hierarchy and sheet management (resolves #37)
@@ -453,69 +451,7 @@ See comprehensive documentation at [docs/](./docs/)
 
 ---
 
-### Priority 2: CHANGELOG Update (HIGH PRIORITY)
-
-**Current Problem**: Last entry is 0.4.1, now at 0.4.5, targeting 0.5.0
-
-**Required Entry** (0.5.0):
-
-```markdown
-## [0.5.0] - 2025-11-05
-
-### Added
-- **Connectivity Analysis API** (PR #97, #64)
-  - `sch.are_pins_connected(ref1, pin1, ref2, pin2)` - Check pin connectivity
-  - `sch.get_net_for_pin(ref, pin)` - Get net information for pin
-  - `sch.get_connected_pins(ref, pin)` - List all connected pins
-  - Full hierarchical connectivity tracing
-  - Automatic cache invalidation on schematic changes
-
-- **Advanced Hierarchy Management** (PR #96, #37)
-  - `sch.hierarchy.build_hierarchy_tree()` - Build hierarchy tree
-  - `sch.hierarchy.find_reused_sheets()` - Track sheet reuse
-  - `sch.hierarchy.validate_sheet_pins()` - Validate pin connections
-  - `sch.hierarchy.flatten_hierarchy()` - Flatten to single level
-  - `sch.hierarchy.trace_signal_path()` - Trace signals through hierarchy
-  - `sch.hierarchy.visualize_hierarchy()` - Tree visualization
-  - See [docs/HIERARCHY_FEATURES.md](docs/HIERARCHY_FEATURES.md) for details
-
-- **Label API Examples** (PR #98, #59)
-  - Expanded label API documentation in llm.txt
-  - Examples for all label types (local, global, hierarchical)
-
-### Improved
-- **Sheet Pin Positioning** (PR #95)
-  - Edge-based positioning with automatic rotation/justification
-  - Better alignment with KiCAD conventions
-
-- **Coordinate System Documentation** (PR #94)
-  - Critical Y-axis inversion documentation in CLAUDE.md
-  - Explains symbol space vs schematic space transformation
-
-### Fixed
-- **Pin Rotation** (#62) - RESOLVED
-  - Fixed pin position calculations at all rotations (0°, 90°, 180°, 270°)
-  - All pin rotation tests passing
-
-### Documentation
-- Added docs/HIERARCHY_FEATURES.md (423 lines)
-- Updated CLAUDE.md with critical coordinate system information
-- Expanded llm.txt with comprehensive label examples
-
-### Breaking Changes
-None - all changes are additions to the API
-
-### Migration Guide
-No migration needed - all existing code continues to work
-```
-
-**Missing Versions** (0.4.2 - 0.4.5):
-- Need to determine what was in these versions
-- May just note "Internal releases - see commit history"
-
----
-
-### Priority 3: Known Limitations Section (MEDIUM PRIORITY)
+### Priority 2: Known Limitations Section (MEDIUM PRIORITY)
 
 **Add to README** (near end, before Contributing):
 
@@ -548,7 +484,7 @@ Report issues: https://github.com/[your-repo]/issues
 
 ---
 
-### Priority 4: Update API_REFERENCE.md (MEDIUM PRIORITY)
+### Priority 3: Update API_REFERENCE.md (MEDIUM PRIORITY)
 
 **Add sections for new features**:
 
@@ -573,7 +509,7 @@ Report issues: https://github.com/[your-repo]/issues
 
 ---
 
-### Priority 5: Update GETTING_STARTED.md (LOW PRIORITY)
+### Priority 4: Update GETTING_STARTED.md (LOW PRIORITY)
 
 **Add section**: "Analyzing Connectivity"
 - Show basic connectivity check example
@@ -588,7 +524,7 @@ Report issues: https://github.com/[your-repo]/issues
 
 ---
 
-### Priority 6: Update RECIPES.md (LOW PRIORITY)
+### Priority 5: Update RECIPES.md (LOW PRIORITY)
 
 **Add recipes**:
 1. "Check if two components are connected"
@@ -601,7 +537,7 @@ Report issues: https://github.com/[your-repo]/issues
 
 ---
 
-### Priority 7: Version Number Update
+### Priority 6: Version Number Update
 
 **Files to update**:
 1. `pyproject.toml` - version = "0.5.0"
@@ -627,34 +563,30 @@ grep -r "0\.4\.[0-9]" --include="*.py" --include="*.toml" kicad_sch_api/
 ### ❌ Issues Found
 1. **README Too Long**: 518 lines - should be ~250-300 lines
 2. **README Outdated**: Missing hierarchy features, outdated version tags
-3. **CHANGELOG Gap**: Missing 0.4.2-0.4.5, need 0.5.0 entry
-4. **Known Limitations**: Issue #62 should be removed (fixed)
-5. **Discoverability**: Excellent docs/ content not linked from README
-6. **TODOs**: 6 TODOs (mostly ERC validators, low priority)
+3. **Known Limitations**: Issue #62 should be removed (fixed)
+4. **Discoverability**: Excellent docs/ content not linked from README
+5. **TODOs**: 6 TODOs (mostly ERC validators, low priority)
 
 ### 🎯 Priority Actions
 1. **HIGH**: Streamline README.md (518 → ~250 lines)
-2. **HIGH**: Add CHANGELOG entry for 0.5.0
-3. **HIGH**: Add hierarchy section to README with link to docs
-4. **MEDIUM**: Add Known Limitations section
-5. **MEDIUM**: Update API_REFERENCE.md with new features
-6. **LOW**: Update GETTING_STARTED.md
-7. **LOW**: Update RECIPES.md
+2. **HIGH**: Add hierarchy section to README with link to docs
+3. **MEDIUM**: Add Known Limitations section
+4. **MEDIUM**: Update API_REFERENCE.md with new features
+5. **LOW**: Update GETTING_STARTED.md
+6. **LOW**: Update RECIPES.md
 
 ### 📊 Estimated Effort
 - README streamlining: 2-3 hours
-- CHANGELOG entry: 30 minutes
 - API_REFERENCE update: 1-2 hours
 - GETTING_STARTED update: 1 hour
 - RECIPES update: 1 hour
-- **Total**: ~6-8 hours
+- **Total**: ~5-7 hours
 
 ### 🚀 Release Readiness
 **Ready for 0.5.0 release after**:
 1. README streamlined
-2. CHANGELOG updated
-3. Version numbers updated
-4. Known Limitations section added
+2. Version numbers updated
+3. Known Limitations section added
 
 **Code is production-ready** - no bugs found, excellent test coverage
 
