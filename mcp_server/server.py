@@ -21,6 +21,7 @@ from mcp_server.tools.pin_discovery import (
     get_current_schematic,
     set_current_schematic,
 )
+from mcp_server.tools.component_tools import add_component
 
 
 # Configure logging
@@ -272,6 +273,12 @@ async def get_schematic_info() -> dict:
 mcp.tool()(get_component_pins)
 mcp.tool()(find_pins_by_name)
 mcp.tool()(find_pins_by_type)
+
+
+# ========== Register Component Management Tools ==========
+
+# Register the component management tools from component_tools.py
+mcp.tool()(add_component)
 
 
 # ========== Server Entry Point ==========

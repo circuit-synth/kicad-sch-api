@@ -157,6 +157,73 @@ class ComponentPinsOutput(BaseModel):
     )
 
 
+class ComponentInfoOutput(BaseModel):
+    """
+    Component information output model.
+
+    Provides comprehensive component metadata including position, properties,
+    and unique identification.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "reference": "R1",
+                "lib_id": "Device:R",
+                "value": "10k",
+                "position": {"x": 100.0, "y": 100.0},
+                "rotation": 0.0,
+                "footprint": "Resistor_SMD:R_0603_1608Metric",
+                "uuid": "1f8ab1be-1ad8-469d-8ba9-667910bdee9e",
+                "success": True,
+            }
+        }
+    )
+
+    reference: str = Field(
+        ...,
+        description="Component reference designator (e.g., 'R1', 'U2', 'C1')",
+        examples=["R1", "U2", "C1"],
+    )
+    lib_id: str = Field(
+        ...,
+        description="Library identifier (e.g., 'Device:R', 'Amplifier_Operational:TL072')",
+        examples=["Device:R", "Amplifier_Operational:TL072", "LED:LED"],
+    )
+    value: str = Field(
+        ...,
+        description="Component value or part description",
+        examples=["10k", "100nF", "TL072"],
+    )
+    position: PointModel = Field(
+        ...,
+        description="Component position in schematic coordinates (mm)",
+    )
+    rotation: float = Field(
+        ...,
+        description="Component rotation in degrees (0, 90, 180, or 270)",
+        examples=[0.0, 90.0, 180.0, 270.0],
+    )
+    footprint: Optional[str] = Field(
+        default=None,
+        description="PCB footprint identifier",
+        examples=["Resistor_SMD:R_0603_1608Metric", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"],
+    )
+    uuid: str = Field(
+        ...,
+        description="Unique identifier for this component instance",
+        examples=["1f8ab1be-1ad8-469d-8ba9-667910bdee9e"],
+    )
+    success: bool = Field(
+        default=True,
+        description="Whether the operation was successful",
+    )
+    message: Optional[str] = Field(
+        default=None,
+        description="Optional message or error description",
+    )
+
+
 class ErrorOutput(BaseModel):
     """Standard error response model."""
 

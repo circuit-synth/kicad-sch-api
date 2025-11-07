@@ -18,6 +18,7 @@ from mcp_server.tools.pin_discovery import (
     set_current_schematic,
     get_current_schematic,
 )
+from mcp_server.tools.component_tools import add_component
 
 
 logger = logging.getLogger(__name__)
@@ -367,6 +368,196 @@ class TestMCPCompleteWorkflow:
 
         assert r1_pins.success is True
         assert r2_pins.success is True
+
+
+class TestMCPAddComponent:
+    """Test add_component MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("ComponentTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_component_basic(self, setup_schematic):
+        """Test basic component addition."""
+        sch = setup_schematic
+
+        # Add component via MCP tool
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+        )
+
+        # Verify success
+        assert result.success is True
+        assert result.reference == "R1"
+        assert result.lib_id == "Device:R"
+        assert result.value == "10k"
+        # Position is grid-snapped (KiCAD's 1.27mm grid)
+        assert abs(result.position.x - 100.0) < 0.5
+        assert abs(result.position.y - 100.0) < 0.5
+        assert result.rotation == 0.0
+
+        # Verify component exists in schematic
+        comp = sch.components.get("R1")
+        assert comp is not None
+        assert comp.value == "10k"
+
+    @pytest.mark.asyncio
+    async def test_add_component_auto_reference(self, setup_schematic):
+        """Test component addition with auto-generated reference."""
+        sch = setup_schematic
+
+        # Add component without reference (should auto-generate)
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            position=(100.0, 100.0),
+        )
+
+        # Should succeed with auto-generated reference
+        assert result.success is True
+        # Reference should be auto-generated (format depends on library)
+        assert result.reference is not None
+        assert len(result.reference) > 0
+
+        # Verify component exists
+        comp = sch.components.get(result.reference)
+        assert comp is not None
+        assert comp.lib_id == "Device:R"
+
+    @pytest.mark.asyncio
+    async def test_add_component_with_footprint(self, setup_schematic):
+        """Test component addition with footprint."""
+        sch = setup_schematic
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+            footprint="Resistor_SMD:R_0603_1608Metric",
+        )
+
+        assert result.success is True
+        assert result.footprint == "Resistor_SMD:R_0603_1608Metric"
+
+        # Verify footprint in schematic
+        comp = sch.components.get("R1")
+        assert comp.footprint == "Resistor_SMD:R_0603_1608Metric"
+
+    @pytest.mark.asyncio
+    async def test_add_component_with_rotation(self, setup_schematic):
+        """Test component addition with rotation."""
+        sch = setup_schematic
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+            rotation=90.0,
+        )
+
+        assert result.success is True
+        assert result.rotation == 90.0
+
+        # Verify rotation in schematic
+        comp = sch.components.get("R1")
+        assert comp.rotation == 90.0
+
+    @pytest.mark.asyncio
+    async def test_add_component_invalid_rotation(self, setup_schematic):
+        """Test error with invalid rotation."""
+        sch = setup_schematic
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+            rotation=45.0,  # Invalid - must be 0, 90, 180, or 270
+        )
+
+        # Should fail with validation error
+        assert result.success is False
+        assert result.error == "VALIDATION_ERROR"
+
+    @pytest.mark.asyncio
+    async def test_add_component_no_schematic(self):
+        """Test error when no schematic is loaded."""
+        set_current_schematic(None)
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+        )
+
+        # Should fail with no schematic error
+        assert result.success is False
+        assert result.error == "NO_SCHEMATIC_LOADED"
+
+    @pytest.mark.asyncio
+    async def test_add_multiple_components(self, setup_schematic):
+        """Test adding multiple components."""
+        sch = setup_schematic
+
+        # Add multiple components
+        r1 = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+        )
+
+        r2 = await add_component(
+            lib_id="Device:R",
+            value="20k",
+            reference="R2",
+            position=(150.0, 100.0),
+        )
+
+        c1 = await add_component(
+            lib_id="Device:C",
+            value="100nF",
+            reference="C1",
+            position=(200.0, 100.0),
+        )
+
+        # All should succeed
+        assert r1.success is True
+        assert r2.success is True
+        assert c1.success is True
+
+        # Verify all exist in schematic
+        assert sch.components.get("R1") is not None
+        assert sch.components.get("R2") is not None
+        assert sch.components.get("C1") is not None
+
+    @pytest.mark.asyncio
+    async def test_add_component_auto_position(self, setup_schematic):
+        """Test component addition with auto-positioning."""
+        sch = setup_schematic
+
+        # Add component without position (should auto-place)
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+        )
+
+        assert result.success is True
+        # Position should be set (auto-placed)
+        assert result.position.x is not None
+        assert result.position.y is not None
 
 
 class TestMCPPerformance:

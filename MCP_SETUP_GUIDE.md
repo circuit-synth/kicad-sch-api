@@ -60,18 +60,27 @@ Once approved, ask Claude:
 
 > "What MCP tools do you have available?"
 
-You should see 7 tools:
-- `get_component_pins`
-- `find_pins_by_name`
-- `find_pins_by_type`
-- `create_schematic`
-- `load_schematic`
-- `save_schematic`
-- `get_schematic_info`
+You should see 8 tools:
+
+**Schematic Management:**
+- `create_schematic` - Create new blank schematics
+- `load_schematic` - Load existing .kicad_sch files
+- `save_schematic` - Save schematics to disk
+- `get_schematic_info` - Query schematic metadata
+
+**Component Management:**
+- `add_component` - Add components to the schematic
+
+**Pin Discovery:**
+- `get_component_pins` - Get comprehensive pin information
+- `find_pins_by_name` - Find pins by name pattern (wildcards supported)
+- `find_pins_by_type` - Find pins by electrical type
 
 ## Example Usage
 
 Once configured, you can ask Claude to:
+
+### Example 1: Create circuit with components
 
 ```
 Create a new schematic called "TestCircuit" and add a 10k resistor at position (100, 100), then get its pin information.
@@ -79,8 +88,20 @@ Create a new schematic called "TestCircuit" and add a 10k resistor at position (
 
 Claude will use the MCP tools to:
 1. Call `create_schematic("TestCircuit")`
-2. Add the component via the library API
+2. Call `add_component(lib_id="Device:R", value="10k", reference="R1", position=(100, 100))`
 3. Call `get_component_pins("R1")` to retrieve pin data
+
+### Example 2: Build a voltage divider
+
+```
+Create a voltage divider circuit with R1=10k and R2=1k.
+```
+
+Claude will:
+1. Create a schematic
+2. Add two resistors using `add_component`
+3. Position them vertically
+4. Save the schematic
 
 ## Troubleshooting
 
@@ -122,10 +143,24 @@ Look for errors related to kicad-sch-api startup.
 
 Once set up, you can ask Claude to:
 
+### Component Management
+- **Add components**: "Add a 10k resistor at position (100, 100) with reference R1"
+- **Add with footprint**: "Add a 100nF capacitor with footprint C_0603_1608Metric"
+- **Auto-reference**: "Add a resistor and let the system auto-generate the reference"
+- **Rotated components**: "Add an IC rotated 90 degrees"
+
+### Circuit Building
 - **Create circuits**: "Create a voltage divider with two 10k resistors"
+- **Build filters**: "Create an RC low-pass filter with R=10k and C=100nF"
+- **LED circuits**: "Add a red LED with 220 ohm current limiting resistor"
+
+### Analysis & Discovery
 - **Analyze schematics**: "Load my schematic and tell me about the components"
 - **Find pins**: "Find all the power input pins in component U1"
 - **Discover pins by pattern**: "Find all pins with CLK in the name"
+
+### File Operations
 - **Save work**: "Save this schematic to ~/Desktop/my_circuit.kicad_sch"
+- **Load circuits**: "Load the schematic at ~/Desktop/existing.kicad_sch"
 
 The MCP server gives Claude full access to create and manipulate KiCAD schematics!

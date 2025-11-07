@@ -26,13 +26,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `save_schematic`: Save schematics to disk with optional path
   - `get_schematic_info`: Query metadata about loaded schematic
 
+- **Component Management MCP Tools** (`mcp_server/tools/component_tools.py`)
+  - `add_component`: Add components to schematics with comprehensive options
+    - Auto-reference generation if not specified
+    - Auto-positioning if position not provided
+    - Rotation support (0, 90, 180, 270 degrees)
+    - Footprint specification
+    - Full validation and error handling
+
 - **Pydantic Models** (`mcp_server/models.py`)
   - Type-safe data models for all MCP responses
-  - `PointModel`, `PinInfoOutput`, `ComponentPinsOutput`, `ErrorOutput`
+  - `PointModel`, `PinInfoOutput`, `ComponentPinsOutput`, `ComponentInfoOutput`, `ErrorOutput`
   - Updated to Pydantic v2 standards (ConfigDict)
+  - Comprehensive field validation and examples
 
 - **MCP Server Testing**
-  - 19 comprehensive integration tests (all passing)
+  - 27 comprehensive integration tests (all passing)
+  - Added 8 tests for `add_component` tool
   - End-to-end workflow tests
   - Performance validation (<50ms response times)
   - Error handling coverage for all failure modes
