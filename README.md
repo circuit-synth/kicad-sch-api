@@ -306,21 +306,63 @@ With the MCP server, AI agents can now:
 - **Analyze circuits**: List components, filter by criteria, discover pin information
 - **Build any circuit**: Voltage dividers, filters, LED circuits, power supplies, and more!
 
-### Example: Building a Complete Circuit via MCP
+### Example: Building Complete Circuits via MCP
 
+#### Voltage Divider (Verified Working ✅)
+
+**Natural Language Request**:
 ```
-"Create a voltage divider with R1=10k and R2=1k, fully wired with VCC and GND labels"
+"Create a voltage divider with R1=10k and R2=20k, fully wired with VCC and GND labels"
 ```
 
-The AI agent will:
-1. Create a new schematic
-2. Add R1 and R2 using `add_component`
-3. Wire them together using `add_wire`
-4. Add VCC and GND labels using `add_label`
-5. Add junction at the connection point
-6. Save the complete, functional circuit
+**The AI agent executes**:
+1. `create_schematic(name="Voltage Divider")` - Create new schematic
+2. `add_component(lib_id="Device:R", reference="R1", value="10k", position=(127.0, 76.2))` - Add R1
+3. `add_component(lib_id="Device:R", reference="R2", value="20k", position=(127.0, 95.25))` - Add R2
+4. `get_component_pins("R1")` - Get R1 pin positions
+5. `get_component_pins("R2")` - Get R2 pin positions
+6. `add_wire(start=(127.0, 72.39), end=(127.0, 66.04))` - VCC to R1
+7. `add_wire(start=(127.0, 80.01), end=(127.0, 91.44))` - R1 to R2
+8. `add_wire(start=(127.0, 99.06), end=(127.0, 105.41))` - R2 to GND
+9. `add_label(text="VCC", position=(129.54, 66.04))` - Add VCC label
+10. `add_label(text="VOUT", position=(129.54, 85.725))` - Add output label
+11. `add_label(text="GND", position=(129.54, 105.41))` - Add GND label
+12. `add_junction(position=(127.0, 85.725))` - Add junction at tap point
+13. `save_schematic(file_path="voltage_divider.kicad_sch")` - Save to disk
 
-**Result**: A fully functional KiCAD schematic that opens perfectly in KiCAD!
+**Result**: ✅ Fully functional KiCAD schematic verified to open perfectly in KiCAD!
+
+#### LED Circuit with Current Limiting
+
+**Natural Language Request**:
+```
+"Create an LED circuit with 220Ω current limiting resistor"
+```
+
+**The AI agent will**:
+- Add LED and 220Ω resistor components
+- Wire VCC → resistor → LED → GND
+- Add appropriate net labels
+- Save the complete circuit
+
+**Result**: Ready-to-use LED driver circuit schematic!
+
+#### RC Low-Pass Filter
+
+**Natural Language Request**:
+```
+"Create an RC low-pass filter with R=10k, C=100nF"
+```
+
+**The AI agent will**:
+- Add resistor (10k) and capacitor (100nF)
+- Wire input → R → C → output
+- Add GND connection to capacitor
+- Label INPUT, OUTPUT, and GND nets
+- Add junction at output tap
+- Save filter schematic
+
+**Result**: Complete filter circuit with proper connectivity!
 
 ### Claude Desktop Integration
 
@@ -339,6 +381,11 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 ```
 
 AI agents can now create, modify, and analyze KiCAD schematics programmatically!
+
+**📖 Complete Documentation**:
+- **[MCP Setup Guide](MCP_SETUP_GUIDE.md)** - Installation, configuration, and troubleshooting
+- **[MCP Examples](docs/MCP_EXAMPLES.md)** - Comprehensive usage examples and patterns
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
 
 ## 🏗️ Architecture
 

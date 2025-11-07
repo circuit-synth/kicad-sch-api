@@ -69,6 +69,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Performance validation (<50ms response times)
   - Error handling coverage for all failure modes
 
+- **MCP Documentation** - Comprehensive documentation for MCP server
+  - Enhanced `MCP_SETUP_GUIDE.md` with detailed tool reference
+  - Created `docs/MCP_EXAMPLES.md` with complete usage examples
+    - Basic component operations
+    - Complete circuit examples (voltage divider, LED circuit, RC filter)
+    - Advanced pin discovery patterns
+    - Batch operations and common patterns
+    - Troubleshooting guide
+  - Updated `README.md` with verified working examples
+  - Common library IDs reference
+  - KiCAD coordinate system explanation
+  - Grid alignment best practices
+
 ### Changed
 - **Dependencies**
   - Added `mcp>=1.10.0` (Model Context Protocol SDK)
