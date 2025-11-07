@@ -32,6 +32,7 @@ from mcp_server.tools.connectivity_tools import (
     add_wire,
     add_label,
     add_junction,
+    connect_components,
 )
 
 
@@ -302,6 +303,7 @@ mcp.tool()(filter_components)
 mcp.tool()(add_wire)
 mcp.tool()(add_label)
 mcp.tool()(add_junction)
+mcp.tool()(connect_components)
 
 
 # ========== Server Entry Point ==========

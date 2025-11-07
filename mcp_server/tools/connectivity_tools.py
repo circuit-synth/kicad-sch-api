@@ -18,6 +18,7 @@ else:
 
 import kicad_sch_api as ksa
 from kicad_sch_api.core.types import WireType
+from kicad_sch_api.geometry import create_orthogonal_routing, CornerDirection
 from mcp_server.models import PointModel
 
 
@@ -280,4 +281,252 @@ async def add_junction(
             "success": False,
             "error": "INTERNAL_ERROR",
             "message": f"Unexpected error adding junction: {str(e)}",
+        }
+
+
+async def connect_components(
+    from_component: str,
+    from_pin: str,
+    to_component: str,
+    to_pin: str,
+    corner_direction: str = "auto",
+    add_label: Optional[str] = None,
+    add_junction: bool = True,
+    ctx: Optional[Context] = None,
+) -> dict:
+    """
+    Connect two component pins with automatic orthogonal routing.
+
+    Uses Manhattan-style (orthogonal) routing to create L-shaped or direct wire
+    paths between component pins. Automatically calculates pin positions and
+    generates appropriate wire segments with optional junctions and labels.
+
+    Args:
+        from_component: Source component reference (e.g., "R1")
+        from_pin: Source pin number (e.g., "2")
+        to_component: Destination component reference (e.g., "R2")
+        to_pin: Destination pin number (e.g., "1")
+        corner_direction: Routing direction preference:
+            - "auto": Smart heuristic (horizontal if dx >= dy, else vertical)
+            - "horizontal_first": Route horizontally then vertically
+            - "vertical_first": Route vertically then horizontally
+        add_label: Optional net label text to add at start of routing
+        add_junction: Whether to add junction at L-shaped corners (default: True)
+        ctx: MCP context for progress reporting (optional)
+
+    Returns:
+        Dictionary with success status and connection information including:
+        - from/to component and pin details with positions
+        - routing type (direct or L-shaped)
+        - segments list with start/end positions
+        - wire_uuids list
+        - junction_uuid (if junction was added)
+        - label_uuid (if label was added)
+
+    Examples:
+        >>> # Simple connection with auto routing
+        >>> result = await connect_components("R1", "2", "R2", "1")
+
+        >>> # With label and horizontal-first routing
+        >>> result = await connect_components(
+        ...     "R1", "2", "R2", "1",
+        ...     corner_direction="horizontal_first",
+        ...     add_label="VCC"
+        ... )
+
+        >>> # Vertical-first without junction
+        >>> result = await connect_components(
+        ...     "R1", "1", "C1", "1",
+        ...     corner_direction="vertical_first",
+        ...     add_junction=False
+        ... )
+    """
+    logger.info(
+        f"[MCP] connect_components called: {from_component}:{from_pin} -> "
+        f"{to_component}:{to_pin}, direction={corner_direction}"
+    )
+
+    if ctx:
+        await ctx.report_progress(0, 100, "Connecting components")
+
+    # Check if schematic is loaded
+    schematic = get_current_schematic()
+    if schematic is None:
+        logger.error("[MCP] No schematic loaded")
+        return {
+            "success": False,
+            "error": "NO_SCHEMATIC_LOADED",
+            "message": "No schematic is currently loaded",
+        }
+
+    try:
+        if ctx:
+            await ctx.report_progress(10, 100, "Looking up components")
+
+        # Get components
+        try:
+            from_comp = schematic.components.get(from_component)
+            to_comp = schematic.components.get(to_component)
+        except KeyError as e:
+            logger.error(f"[MCP] Component not found: {e}")
+            return {
+                "success": False,
+                "error": "COMPONENT_NOT_FOUND",
+                "message": f"Component not found: {str(e)}",
+            }
+
+        if ctx:
+            await ctx.report_progress(30, 100, "Getting pin positions")
+
+        # Get pin positions
+        from_pins = schematic.components.get_pins_info(from_component)
+        to_pins = schematic.components.get_pins_info(to_component)
+
+        # Check if pin info was successfully retrieved
+        if from_pins is None:
+            logger.error(f"[MCP] Could not get pins for {from_component}")
+            return {
+                "success": False,
+                "error": "PIN_INFO_ERROR",
+                "message": f"Could not get pin information for component {from_component}",
+            }
+
+        if to_pins is None:
+            logger.error(f"[MCP] Could not get pins for {to_component}")
+            return {
+                "success": False,
+                "error": "PIN_INFO_ERROR",
+                "message": f"Could not get pin information for component {to_component}",
+            }
+
+        from_pin_obj = next((p for p in from_pins if p.number == from_pin), None)
+        to_pin_obj = next((p for p in to_pins if p.number == to_pin), None)
+
+        if not from_pin_obj:
+            logger.error(f"[MCP] Pin {from_pin} not found on {from_component}")
+            return {
+                "success": False,
+                "error": "PIN_NOT_FOUND",
+                "message": f"Pin {from_pin} not found on component {from_component}",
+            }
+
+        if not to_pin_obj:
+            logger.error(f"[MCP] Pin {to_pin} not found on {to_component}")
+            return {
+                "success": False,
+                "error": "PIN_NOT_FOUND",
+                "message": f"Pin {to_pin} not found on component {to_component}",
+            }
+
+        if ctx:
+            await ctx.report_progress(50, 100, "Calculating routing")
+
+        # Parse corner direction
+        try:
+            if corner_direction.upper() == "AUTO":
+                direction = CornerDirection.AUTO
+            elif corner_direction.upper() == "HORIZONTAL_FIRST":
+                direction = CornerDirection.HORIZONTAL_FIRST
+            elif corner_direction.upper() == "VERTICAL_FIRST":
+                direction = CornerDirection.VERTICAL_FIRST
+            else:
+                logger.warning(f"[MCP] Invalid corner direction: {corner_direction}, using AUTO")
+                direction = CornerDirection.AUTO
+        except Exception:
+            logger.warning(f"[MCP] Error parsing corner direction, using AUTO")
+            direction = CornerDirection.AUTO
+
+        # Create orthogonal routing
+        routing_result = create_orthogonal_routing(
+            from_pin_obj.position,
+            to_pin_obj.position,
+            corner_direction=direction
+        )
+
+        logger.info(
+            f"[MCP] Routing calculated: {len(routing_result.segments)} segments, "
+            f"direct={routing_result.is_direct}, corner={routing_result.corner}"
+        )
+
+        if ctx:
+            await ctx.report_progress(70, 100, "Adding wires")
+
+        # Add wire segments
+        wire_uuids = []
+        for start, end in routing_result.segments:
+            wire_uuid = schematic.wires.add(start=start, end=end)
+            wire_uuids.append(wire_uuid)
+
+        # Add junction at corner if requested and routing is L-shaped
+        junction_uuid = None
+        if add_junction and routing_result.corner and not routing_result.is_direct:
+            if ctx:
+                await ctx.report_progress(80, 100, "Adding junction at corner")
+
+            junction_uuid = schematic.junctions.add(
+                position=(routing_result.corner.x, routing_result.corner.y)
+            )
+            logger.info(f"[MCP] Added junction at corner: {junction_uuid}")
+
+        # Add label if requested
+        label_uuid = None
+        if add_label:
+            if ctx:
+                await ctx.report_progress(90, 100, f"Adding label {add_label}")
+
+            label = schematic.labels.add(
+                text=add_label,
+                position=(from_pin_obj.position.x, from_pin_obj.position.y),
+            )
+            label_uuid = str(label.uuid)
+            logger.info(f"[MCP] Added label '{add_label}': {label_uuid}")
+
+        if ctx:
+            await ctx.report_progress(100, 100, "Complete: components connected")
+
+        logger.info(
+            f"[MCP] Successfully connected {from_component}:{from_pin} to "
+            f"{to_component}:{to_pin} with {len(wire_uuids)} wires"
+        )
+
+        return {
+            "success": True,
+            "from": {
+                "component": from_component,
+                "pin": from_pin,
+                "position": {"x": from_pin_obj.position.x, "y": from_pin_obj.position.y}
+            },
+            "to": {
+                "component": to_component,
+                "pin": to_pin,
+                "position": {"x": to_pin_obj.position.x, "y": to_pin_obj.position.y}
+            },
+            "routing": {
+                "type": "direct" if routing_result.is_direct else "l_shaped",
+                "segments": len(routing_result.segments),
+                "corner": {
+                    "x": routing_result.corner.x,
+                    "y": routing_result.corner.y
+                } if routing_result.corner else None,
+            },
+            "segments": [
+                {
+                    "start": {"x": s.x, "y": s.y},
+                    "end": {"x": e.x, "y": e.y}
+                }
+                for s, e in routing_result.segments
+            ],
+            "wire_uuids": wire_uuids,
+            "junction_uuid": junction_uuid,
+            "label_uuid": label_uuid,
+            "message": f"Connected {from_component}:{from_pin} to {to_component}:{to_pin} "
+                      f"with {len(wire_uuids)} wire segment(s)"
+        }
+
+    except Exception as e:
+        logger.error(f"[MCP] Unexpected error: {e}", exc_info=True)
+        return {
+            "success": False,
+            "error": "INTERNAL_ERROR",
+            "message": f"Unexpected error connecting components: {str(e)}",
         }

@@ -49,6 +49,17 @@ Solutions to common tasks.
 - Batch operations (test generation, parameter sweeps)
 - Advanced patterns (templates, configuration-driven)
 
+### Orthogonal Routing
+Automatic wire routing with Manhattan-style paths.
+
+**[ORTHOGONAL_ROUTING.md](ORTHOGONAL_ROUTING.md)** - Wire routing guide
+- Overview of orthogonal (Manhattan) routing
+- Direction modes (AUTO, HORIZONTAL_FIRST, VERTICAL_FIRST)
+- KiCAD Y-axis inversion explained
+- Practical examples (voltage dividers, filter chains, power distribution)
+- Integration with MCP servers
+- Best practices and troubleshooting
+
 ### Architecture
 Understand how the library works internally.
 
@@ -88,6 +99,12 @@ Understand how the library works internally.
 1. Install [mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)
 2. Use with Claude Code or compatible AI agents
 3. Reference [API_REFERENCE.md](API_REFERENCE.md) for operations
+
+#### Use Automatic Wire Routing
+1. Read [ORTHOGONAL_ROUTING.md](ORTHOGONAL_ROUTING.md) for routing guide
+2. Use `create_orthogonal_routing()` for Manhattan-style routing
+3. Choose appropriate direction mode for your circuit
+4. Integrate with MCP server for AI-powered routing
 
 #### Understand the Codebase
 1. Read [ARCHITECTURE.md](ARCHITECTURE.md) for overview
@@ -188,9 +205,13 @@ Found an issue or want to improve documentation?
 
 ## 🔄 Documentation Updates
 
-This documentation is actively maintained. Last major update: October 2025
+This documentation is actively maintained. Last major update: November 2025
 
 **Changelog:**
+- Nov 2025: Added orthogonal routing documentation
+  - ORTHOGONAL_ROUTING.md: Complete guide to automatic wire routing
+  - Integration tests and examples for routing
+  - Y-axis inversion explained with practical examples
 - Oct 2025: Initial comprehensive documentation created
   - GETTING_STARTED.md: Complete beginner guide
   - WHY_USE_THIS_LIBRARY.md: Value proposition and comparisons
