@@ -865,6 +865,7 @@ version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
+    { name = "jinja2" },
     { name = "mcp" },
     { name = "pydantic" },
     { name = "sexpdata" },
@@ -902,6 +903,7 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=0.2.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.0.0" },
+    { name = "jinja2", specifier = ">=3.0.0" },
     { name = "mcp", specifier = ">=1.10.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=0.18.0" },
