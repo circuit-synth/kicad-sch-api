@@ -134,6 +134,8 @@ class ElementFactory:
                 if label_dict.get("shape")
                 else None
             ),
+            justify_h=label_dict.get("justify_h", "left"),
+            justify_v=label_dict.get("justify_v", "bottom"),
         )
 
     @staticmethod

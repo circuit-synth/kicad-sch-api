@@ -254,6 +254,8 @@ class LabelCollection(BaseCollection[LabelElement]):
         position: Union[Point, Tuple[float, float]],
         rotation: float = 0.0,
         size: float = 1.27,
+        justify_h: str = "left",
+        justify_v: str = "bottom",
         uuid: Optional[str] = None,
     ) -> LabelElement:
         """
@@ -264,6 +266,8 @@ class LabelCollection(BaseCollection[LabelElement]):
             position: Label position
             rotation: Label rotation in degrees
             size: Text size
+            justify_h: Horizontal justification ("left", "right", "center")
+            justify_v: Vertical justification ("top", "bottom", "center")
             uuid: Optional UUID (auto-generated if not provided)
 
         Returns:
@@ -296,6 +300,8 @@ class LabelCollection(BaseCollection[LabelElement]):
             position=position,
             rotation=rotation,
             size=size,
+            justify_h=justify_h,
+            justify_v=justify_v,
         )
 
         # Create label element wrapper

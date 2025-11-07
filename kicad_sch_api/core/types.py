@@ -390,6 +390,8 @@ class Label:
     rotation: float = 0.0
     size: float = 1.27
     shape: Optional[HierarchicalLabelShape] = None  # Only for hierarchical labels
+    justify_h: str = "left"  # Horizontal justification: "left", "right", "center"
+    justify_v: str = "bottom"  # Vertical justification: "top", "bottom", "center"
 
     def __post_init__(self) -> None:
         if not self.uuid:
