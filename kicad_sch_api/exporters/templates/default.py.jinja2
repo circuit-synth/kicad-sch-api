@@ -23,10 +23,9 @@ def create_{{ metadata.name|sanitize }}():
         '{{ comp.lib_id }}',
         reference='{{ comp.ref }}',
         value='{{ comp.value }}',
-        position=({{ comp.x }}, {{ comp.y }})
-{%- if comp.rotation != 0 %},
-        rotation={{ comp.rotation }}
-{%- endif %}
+        position=({{ comp.x }}, {{ comp.y }}){% if comp.rotation != 0 %},
+        rotation={{ comp.rotation }}{% endif %}
+
     )
 {%- if comp.footprint %}
     {{ comp.variable }}.footprint = '{{ comp.footprint }}'

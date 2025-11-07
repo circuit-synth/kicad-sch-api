@@ -295,7 +295,13 @@ class PythonCodeGenerator:
         if not hasattr(schematic, 'sheets'):
             return sheets
 
-        for sheet in schematic.sheets:
+        # SheetManager doesn't support direct iteration
+        # For now, return empty list - hierarchical support is Phase 3
+        # TODO: Implement when SheetManager has proper iteration support
+        return sheets
+
+        # The code below is for future when SheetManager is iterable:
+        for sheet in getattr(schematic.sheets, 'data', []):
             # Get sheet properties
             name = getattr(sheet, 'name', '')
             filename = getattr(sheet, 'filename', '')
@@ -350,7 +356,8 @@ class PythonCodeGenerator:
         # Standard properties to exclude
         standard_props = {
             'Reference', 'Value', 'Footprint', 'Datasheet',
-            'ki_keywords', 'ki_description', 'ki_fp_filters'
+            'ki_keywords', 'ki_description', 'ki_fp_filters',
+            'Description'  # Also exclude Description as it's often auto-generated
         }
 
         properties = []
@@ -360,11 +367,21 @@ class PythonCodeGenerator:
             comp_props = component.properties
             if isinstance(comp_props, dict):
                 for prop_name, prop_value in comp_props.items():
-                    if prop_name not in standard_props:
-                        properties.append({
-                            'name': prop_name,
-                            'value': str(prop_value)
-                        })
+                    # Skip internal properties (start with __)
+                    if prop_name.startswith('__'):
+                        continue
+                    # Skip standard properties
+                    if prop_name in standard_props:
+                        continue
+                    # Skip if value contains non-serializable content
+                    str_value = str(prop_value)
+                    if 'Symbol(' in str_value or '[Symbol(' in str_value:
+                        continue
+
+                    properties.append({
+                        'name': prop_name,
+                        'value': str_value
+                    })
 
         return properties
 
