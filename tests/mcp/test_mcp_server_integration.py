@@ -18,7 +18,13 @@ from mcp_server.tools.pin_discovery import (
     set_current_schematic,
     get_current_schematic,
 )
-from mcp_server.tools.component_tools import add_component
+from mcp_server.tools.component_tools import (
+    add_component,
+    list_components,
+    update_component,
+    remove_component,
+    filter_components,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -558,6 +564,233 @@ class TestMCPAddComponent:
         # Position should be set (auto-placed)
         assert result.position.x is not None
         assert result.position.y is not None
+
+
+class TestMCPListComponents:
+    """Test list_components MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("ListTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_list_components_empty(self, setup_schematic):
+        """Test listing components in empty schematic."""
+        result = await list_components()
+
+        assert result["success"] is True
+        assert result["count"] == 0
+        assert result["components"] == []
+
+    @pytest.mark.asyncio
+    async def test_list_components_with_components(self, setup_schematic):
+        """Test listing components."""
+        sch = setup_schematic
+
+        # Add some components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "20k", position=(150.0, 100.0))
+        sch.components.add("Device:C", "C1", "100nF", position=(200.0, 100.0))
+
+        # List components
+        result = await list_components()
+
+        assert result["success"] is True
+        assert result["count"] == 3
+        assert len(result["components"]) == 3
+
+        # Check references
+        refs = [comp["reference"] for comp in result["components"]]
+        assert "R1" in refs
+        assert "R2" in refs
+        assert "C1" in refs
+
+
+class TestMCPUpdateComponent:
+    """Test update_component MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("UpdateTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_update_component_value(self, setup_schematic):
+        """Test updating component value."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        # Update value
+        result = await update_component("R1", value="20k")
+
+        assert result.success is True
+        assert result.value == "20k"
+
+        # Verify in schematic
+        comp = sch.components.get("R1")
+        assert comp.value == "20k"
+
+    @pytest.mark.asyncio
+    async def test_update_component_multiple_properties(self, setup_schematic):
+        """Test updating multiple properties at once."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        # Update multiple properties
+        result = await update_component(
+            "R1",
+            value="20k",
+            rotation=90.0,
+            footprint="Resistor_SMD:R_0805_2012Metric"
+        )
+
+        assert result.success is True
+        assert result.value == "20k"
+        assert result.rotation == 90.0
+        assert result.footprint == "Resistor_SMD:R_0805_2012Metric"
+
+    @pytest.mark.asyncio
+    async def test_update_component_not_found(self, setup_schematic):
+        """Test error when component not found."""
+        result = await update_component("R999", value="10k")
+
+        assert result.success is False
+        assert result.error == "COMPONENT_NOT_FOUND"
+
+    @pytest.mark.asyncio
+    async def test_update_component_invalid_rotation(self, setup_schematic):
+        """Test error with invalid rotation."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        result = await update_component("R1", rotation=45.0)
+
+        assert result.success is False
+        assert result.error == "VALIDATION_ERROR"
+
+
+class TestMCPRemoveComponent:
+    """Test remove_component MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("RemoveTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_remove_component_success(self, setup_schematic):
+        """Test successful component removal."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        # Remove component
+        result = await remove_component("R1")
+
+        assert result["success"] is True
+        assert result["reference"] == "R1"
+
+        # Verify removal
+        comp = sch.components.get("R1")
+        assert comp is None
+
+    @pytest.mark.asyncio
+    async def test_remove_component_not_found(self, setup_schematic):
+        """Test error when component not found."""
+        result = await remove_component("R999")
+
+        assert result["success"] is False
+        assert result["error"] == "COMPONENT_NOT_FOUND"
+
+
+class TestMCPFilterComponents:
+    """Test filter_components MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("FilterTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_filter_by_lib_id(self, setup_schematic):
+        """Test filtering by library ID."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "20k", position=(150.0, 100.0))
+        sch.components.add("Device:C", "C1", "100nF", position=(200.0, 100.0))
+
+        # Filter resistors
+        result = await filter_components(lib_id="Device:R")
+
+        assert result["success"] is True
+        assert result["count"] == 2
+        refs = [comp["reference"] for comp in result["components"]]
+        assert "R1" in refs
+        assert "R2" in refs
+        assert "C1" not in refs
+
+    @pytest.mark.asyncio
+    async def test_filter_by_value(self, setup_schematic):
+        """Test filtering by exact value."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "10k", position=(150.0, 100.0))
+        sch.components.add("Device:R", "R3", "20k", position=(200.0, 100.0))
+
+        # Filter by value
+        result = await filter_components(value="10k")
+
+        assert result["success"] is True
+        assert result["count"] == 2
+
+    @pytest.mark.asyncio
+    async def test_filter_by_value_pattern(self, setup_schematic):
+        """Test filtering by value pattern."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "100", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "1000", position=(150.0, 100.0))
+        sch.components.add("Device:R", "R3", "10k", position=(200.0, 100.0))
+
+        # Filter by pattern (contains "10")
+        result = await filter_components(value_pattern="10")
+
+        assert result["success"] is True
+        assert result["count"] >= 2  # Should match "1000" and "10k"
+
+    @pytest.mark.asyncio
+    async def test_filter_multiple_criteria(self, setup_schematic):
+        """Test filtering with multiple criteria (AND logic)."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "20k", position=(150.0, 100.0))
+        sch.components.add("Device:C", "C1", "10k", position=(200.0, 100.0))
+
+        # Filter by lib_id AND value
+        result = await filter_components(lib_id="Device:R", value="10k")
+
+        assert result["success"] is True
+        assert result["count"] == 1
+        assert result["components"][0]["reference"] == "R1"
 
 
 class TestMCPPerformance:
