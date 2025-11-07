@@ -19,6 +19,7 @@ Professional KiCAD Schematic Manipulation Library
 
    API_REFERENCE
    RECIPES
+   HIERARCHY_FEATURES
    ORTHOGONAL_ROUTING
    ARCHITECTURE
    ERC_USER_GUIDE
@@ -134,7 +135,7 @@ Installation
    pip install kicad-sch-api
 
 Requirements:
-   - Python 3.9 or higher
+   - Python 3.10 or higher
    - KiCAD 7 or 8 installation (for component libraries)
 
 Indices and tables

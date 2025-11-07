@@ -1,8 +1,6 @@
 # API Reference
 
-Complete reference for k
-
-icad-sch-api. For practical examples, see [RECIPES.md](RECIPES.md).
+Complete reference for kicad-sch-api. For practical examples, see [RECIPES.md](RECIPES.md).
 
 ## Table of Contents
 
