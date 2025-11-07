@@ -26,16 +26,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `save_schematic`: Save schematics to disk with optional path
   - `get_schematic_info`: Query metadata about loaded schematic
 
+- **Component Management MCP Tools** (`mcp_server/tools/component_tools.py`)
+  - `add_component`: Add components to schematics with comprehensive options
+    - Auto-reference generation if not specified
+    - Auto-positioning if position not provided
+    - Rotation support (0, 90, 180, 270 degrees)
+    - Footprint specification
+    - Full validation and error handling
+  - `list_components`: List all components with complete metadata
+  - `update_component`: Update component properties (value, position, rotation, footprint)
+  - `remove_component`: Remove components from schematic
+  - `filter_components`: Advanced filtering by lib_id, value, footprint
+    - Exact match and pattern matching support
+    - AND logic for multiple criteria
+
+- **Connectivity MCP Tools** (`mcp_server/tools/connectivity_tools.py`)
+  - `add_wire`: Add wire connections between points
+    - Horizontal and vertical wire support
+    - UUID tracking for wire management
+  - `add_label`: Add net labels to establish logical connections
+    - Rotation support (0, 90, 180, 270)
+    - Custom text size
+    - Net naming for non-physical connections
+  - `add_junction`: Add wire junctions for T-connections
+    - Custom diameter support
+    - Required for proper wire branching
+
 - **Pydantic Models** (`mcp_server/models.py`)
   - Type-safe data models for all MCP responses
-  - `PointModel`, `PinInfoOutput`, `ComponentPinsOutput`, `ErrorOutput`
+  - `PointModel`, `PinInfoOutput`, `ComponentPinsOutput`, `ComponentInfoOutput`, `ErrorOutput`
   - Updated to Pydantic v2 standards (ConfigDict)
+  - Comprehensive field validation and examples
 
 - **MCP Server Testing**
-  - 19 comprehensive integration tests (all passing)
+  - 49 comprehensive integration tests (all passing)
+  - Component management: 20 tests
+  - Connectivity: 10 tests
+  - Pin discovery: 11 tests
+  - Schematic management: 4 tests
+  - Workflow & performance: 4 tests
   - End-to-end workflow tests
   - Performance validation (<50ms response times)
   - Error handling coverage for all failure modes
+
+- **MCP Documentation** - Comprehensive documentation for MCP server
+  - Enhanced `MCP_SETUP_GUIDE.md` with detailed tool reference
+  - Created `docs/MCP_EXAMPLES.md` with complete usage examples
+    - Basic component operations
+    - Complete circuit examples (voltage divider, LED circuit, RC filter)
+    - Advanced pin discovery patterns
+    - Batch operations and common patterns
+    - Troubleshooting guide
+  - Updated `README.md` with verified working examples
+  - Common library IDs reference
+  - KiCAD coordinate system explanation
+  - Grid alignment best practices
 
 ### Changed
 - **Dependencies**
@@ -52,6 +97,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pin discovery operations: 4.32ms average (10x faster than 50ms requirement)
 - All MCP operations complete in <50ms
 - Efficient symbol caching and indexed lookups
+- Component iteration and filtering optimized
+- Wire and label creation near-instant
+
+### Circuit Building Capabilities
+The MCP server now enables complete programmatic circuit construction:
+- **Component Management**: Add, list, update, remove, and filter components
+- **Connectivity**: Create wire connections, net labels, and junctions
+- **Pin Discovery**: Find pins by name, type, or get complete pin information
+- **Schematic Management**: Create, load, save, and query schematics
+
+This represents a complete P0 (priority 0) implementation for AI-powered
+circuit design via Model Context Protocol.
 
 ## [0.5.0] - 2025-11-06
 

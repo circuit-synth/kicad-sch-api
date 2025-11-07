@@ -23,6 +23,13 @@ Professional KiCAD Schematic Manipulation Library
    ERC_USER_GUIDE
 
 .. toctree::
+   :maxdepth: 2
+   :caption: MCP Server (AI Agents)
+
+   MCP_EXAMPLES
+   MCP_SERVER_LOGGING_INTEGRATION
+
+.. toctree::
    :maxdepth: 1
    :caption: Developer Documentation
 
@@ -58,8 +65,9 @@ Key Features
 ✅ **Performance Optimized** - O(1) lookups, bulk operations, symbol caching
    Handles large schematics with hundreds of components efficiently
 
-✅ **AI Agent Ready** - Purpose-built for MCP integration
+✅ **AI Agent Ready** - Complete MCP server with 15 tools
    Natural language circuit generation through Claude and other AI agents
+   Build complete circuits from simple text prompts
 
 Quick Example
 -------------
@@ -80,6 +88,39 @@ Quick Example
 
    # Save with exact KiCAD format
    sch.save('led_circuit.kicad_sch')
+
+MCP Server (AI Agents)
+----------------------
+
+Build circuits from natural language using the integrated MCP server:
+
+.. code-block:: bash
+
+   # Start the MCP server
+   uv run kicad-sch-mcp
+
+   # Or configure in Claude Desktop
+   # See MCP_EXAMPLES for complete setup guide
+
+AI agents can now create complete circuits:
+
+.. code-block:: text
+
+   "Create a voltage divider with R1=10k and R2=20k, fully wired with VCC and GND"
+
+The AI agent will automatically:
+- Create schematic and add components
+- Calculate pin positions and route wires
+- Add net labels and junctions
+- Save the complete, functional circuit
+
+**15 MCP Tools Available:**
+- Component management (add, list, update, remove, filter)
+- Connectivity (wires, labels, junctions)
+- Pin discovery (by name, type, complete info)
+- Schematic management (create, load, save, query)
+
+See :doc:`MCP_EXAMPLES` for complete documentation.
 
 Installation
 ------------

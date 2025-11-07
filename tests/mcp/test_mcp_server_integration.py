@@ -18,6 +18,18 @@ from mcp_server.tools.pin_discovery import (
     set_current_schematic,
     get_current_schematic,
 )
+from mcp_server.tools.component_tools import (
+    add_component,
+    list_components,
+    update_component,
+    remove_component,
+    filter_components,
+)
+from mcp_server.tools.connectivity_tools import (
+    add_wire,
+    add_label,
+    add_junction,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -367,6 +379,586 @@ class TestMCPCompleteWorkflow:
 
         assert r1_pins.success is True
         assert r2_pins.success is True
+
+
+class TestMCPAddComponent:
+    """Test add_component MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("ComponentTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_component_basic(self, setup_schematic):
+        """Test basic component addition."""
+        sch = setup_schematic
+
+        # Add component via MCP tool
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+        )
+
+        # Verify success
+        assert result.success is True
+        assert result.reference == "R1"
+        assert result.lib_id == "Device:R"
+        assert result.value == "10k"
+        # Position is grid-snapped (KiCAD's 1.27mm grid)
+        assert abs(result.position.x - 100.0) < 0.5
+        assert abs(result.position.y - 100.0) < 0.5
+        assert result.rotation == 0.0
+
+        # Verify component exists in schematic
+        comp = sch.components.get("R1")
+        assert comp is not None
+        assert comp.value == "10k"
+
+    @pytest.mark.asyncio
+    async def test_add_component_auto_reference(self, setup_schematic):
+        """Test component addition with auto-generated reference."""
+        sch = setup_schematic
+
+        # Add component without reference (should auto-generate)
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            position=(100.0, 100.0),
+        )
+
+        # Should succeed with auto-generated reference
+        assert result.success is True
+        # Reference should be auto-generated (format depends on library)
+        assert result.reference is not None
+        assert len(result.reference) > 0
+
+        # Verify component exists
+        comp = sch.components.get(result.reference)
+        assert comp is not None
+        assert comp.lib_id == "Device:R"
+
+    @pytest.mark.asyncio
+    async def test_add_component_with_footprint(self, setup_schematic):
+        """Test component addition with footprint."""
+        sch = setup_schematic
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+            footprint="Resistor_SMD:R_0603_1608Metric",
+        )
+
+        assert result.success is True
+        assert result.footprint == "Resistor_SMD:R_0603_1608Metric"
+
+        # Verify footprint in schematic
+        comp = sch.components.get("R1")
+        assert comp.footprint == "Resistor_SMD:R_0603_1608Metric"
+
+    @pytest.mark.asyncio
+    async def test_add_component_with_rotation(self, setup_schematic):
+        """Test component addition with rotation."""
+        sch = setup_schematic
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+            rotation=90.0,
+        )
+
+        assert result.success is True
+        assert result.rotation == 90.0
+
+        # Verify rotation in schematic
+        comp = sch.components.get("R1")
+        assert comp.rotation == 90.0
+
+    @pytest.mark.asyncio
+    async def test_add_component_invalid_rotation(self, setup_schematic):
+        """Test error with invalid rotation."""
+        sch = setup_schematic
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+            rotation=45.0,  # Invalid - must be 0, 90, 180, or 270
+        )
+
+        # Should fail with validation error
+        assert result.success is False
+        assert result.error == "VALIDATION_ERROR"
+
+    @pytest.mark.asyncio
+    async def test_add_component_no_schematic(self):
+        """Test error when no schematic is loaded."""
+        set_current_schematic(None)
+
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+        )
+
+        # Should fail with no schematic error
+        assert result.success is False
+        assert result.error == "NO_SCHEMATIC_LOADED"
+
+    @pytest.mark.asyncio
+    async def test_add_multiple_components(self, setup_schematic):
+        """Test adding multiple components."""
+        sch = setup_schematic
+
+        # Add multiple components
+        r1 = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+            position=(100.0, 100.0),
+        )
+
+        r2 = await add_component(
+            lib_id="Device:R",
+            value="20k",
+            reference="R2",
+            position=(150.0, 100.0),
+        )
+
+        c1 = await add_component(
+            lib_id="Device:C",
+            value="100nF",
+            reference="C1",
+            position=(200.0, 100.0),
+        )
+
+        # All should succeed
+        assert r1.success is True
+        assert r2.success is True
+        assert c1.success is True
+
+        # Verify all exist in schematic
+        assert sch.components.get("R1") is not None
+        assert sch.components.get("R2") is not None
+        assert sch.components.get("C1") is not None
+
+    @pytest.mark.asyncio
+    async def test_add_component_auto_position(self, setup_schematic):
+        """Test component addition with auto-positioning."""
+        sch = setup_schematic
+
+        # Add component without position (should auto-place)
+        result = await add_component(
+            lib_id="Device:R",
+            value="10k",
+            reference="R1",
+        )
+
+        assert result.success is True
+        # Position should be set (auto-placed)
+        assert result.position.x is not None
+        assert result.position.y is not None
+
+
+class TestMCPListComponents:
+    """Test list_components MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("ListTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_list_components_empty(self, setup_schematic):
+        """Test listing components in empty schematic."""
+        result = await list_components()
+
+        assert result["success"] is True
+        assert result["count"] == 0
+        assert result["components"] == []
+
+    @pytest.mark.asyncio
+    async def test_list_components_with_components(self, setup_schematic):
+        """Test listing components."""
+        sch = setup_schematic
+
+        # Add some components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "20k", position=(150.0, 100.0))
+        sch.components.add("Device:C", "C1", "100nF", position=(200.0, 100.0))
+
+        # List components
+        result = await list_components()
+
+        assert result["success"] is True
+        assert result["count"] == 3
+        assert len(result["components"]) == 3
+
+        # Check references
+        refs = [comp["reference"] for comp in result["components"]]
+        assert "R1" in refs
+        assert "R2" in refs
+        assert "C1" in refs
+
+
+class TestMCPUpdateComponent:
+    """Test update_component MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("UpdateTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_update_component_value(self, setup_schematic):
+        """Test updating component value."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        # Update value
+        result = await update_component("R1", value="20k")
+
+        assert result.success is True
+        assert result.value == "20k"
+
+        # Verify in schematic
+        comp = sch.components.get("R1")
+        assert comp.value == "20k"
+
+    @pytest.mark.asyncio
+    async def test_update_component_multiple_properties(self, setup_schematic):
+        """Test updating multiple properties at once."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        # Update multiple properties
+        result = await update_component(
+            "R1",
+            value="20k",
+            rotation=90.0,
+            footprint="Resistor_SMD:R_0805_2012Metric"
+        )
+
+        assert result.success is True
+        assert result.value == "20k"
+        assert result.rotation == 90.0
+        assert result.footprint == "Resistor_SMD:R_0805_2012Metric"
+
+    @pytest.mark.asyncio
+    async def test_update_component_not_found(self, setup_schematic):
+        """Test error when component not found."""
+        result = await update_component("R999", value="10k")
+
+        assert result.success is False
+        assert result.error == "COMPONENT_NOT_FOUND"
+
+    @pytest.mark.asyncio
+    async def test_update_component_invalid_rotation(self, setup_schematic):
+        """Test error with invalid rotation."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        result = await update_component("R1", rotation=45.0)
+
+        assert result.success is False
+        assert result.error == "VALIDATION_ERROR"
+
+
+class TestMCPRemoveComponent:
+    """Test remove_component MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("RemoveTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_remove_component_success(self, setup_schematic):
+        """Test successful component removal."""
+        sch = setup_schematic
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+
+        # Remove component
+        result = await remove_component("R1")
+
+        assert result["success"] is True
+        assert result["reference"] == "R1"
+
+        # Verify removal
+        comp = sch.components.get("R1")
+        assert comp is None
+
+    @pytest.mark.asyncio
+    async def test_remove_component_not_found(self, setup_schematic):
+        """Test error when component not found."""
+        result = await remove_component("R999")
+
+        assert result["success"] is False
+        assert result["error"] == "COMPONENT_NOT_FOUND"
+
+
+class TestMCPFilterComponents:
+    """Test filter_components MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("FilterTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_filter_by_lib_id(self, setup_schematic):
+        """Test filtering by library ID."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "20k", position=(150.0, 100.0))
+        sch.components.add("Device:C", "C1", "100nF", position=(200.0, 100.0))
+
+        # Filter resistors
+        result = await filter_components(lib_id="Device:R")
+
+        assert result["success"] is True
+        assert result["count"] == 2
+        refs = [comp["reference"] for comp in result["components"]]
+        assert "R1" in refs
+        assert "R2" in refs
+        assert "C1" not in refs
+
+    @pytest.mark.asyncio
+    async def test_filter_by_value(self, setup_schematic):
+        """Test filtering by exact value."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "10k", position=(150.0, 100.0))
+        sch.components.add("Device:R", "R3", "20k", position=(200.0, 100.0))
+
+        # Filter by value
+        result = await filter_components(value="10k")
+
+        assert result["success"] is True
+        assert result["count"] == 2
+
+    @pytest.mark.asyncio
+    async def test_filter_by_value_pattern(self, setup_schematic):
+        """Test filtering by value pattern."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "100", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "1000", position=(150.0, 100.0))
+        sch.components.add("Device:R", "R3", "10k", position=(200.0, 100.0))
+
+        # Filter by pattern (contains "10")
+        result = await filter_components(value_pattern="10")
+
+        assert result["success"] is True
+        assert result["count"] >= 2  # Should match "1000" and "10k"
+
+    @pytest.mark.asyncio
+    async def test_filter_multiple_criteria(self, setup_schematic):
+        """Test filtering with multiple criteria (AND logic)."""
+        sch = setup_schematic
+
+        # Add components
+        sch.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
+        sch.components.add("Device:R", "R2", "20k", position=(150.0, 100.0))
+        sch.components.add("Device:C", "C1", "10k", position=(200.0, 100.0))
+
+        # Filter by lib_id AND value
+        result = await filter_components(lib_id="Device:R", value="10k")
+
+        assert result["success"] is True
+        assert result["count"] == 1
+        assert result["components"][0]["reference"] == "R1"
+
+
+class TestMCPAddWire:
+    """Test add_wire MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("WireTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_wire_horizontal(self, setup_schematic):
+        """Test adding horizontal wire."""
+        result = await add_wire(
+            start=(100.0, 100.0),
+            end=(150.0, 100.0)
+        )
+
+        assert result["success"] is True
+        assert result["start"]["x"] == 100.0
+        assert result["start"]["y"] == 100.0
+        assert result["end"]["x"] == 150.0
+        assert result["end"]["y"] == 100.0
+        assert "uuid" in result
+
+    @pytest.mark.asyncio
+    async def test_add_wire_vertical(self, setup_schematic):
+        """Test adding vertical wire."""
+        result = await add_wire(
+            start=(100.0, 100.0),
+            end=(100.0, 150.0)
+        )
+
+        assert result["success"] is True
+        assert result["start"]["x"] == 100.0
+        assert result["end"]["x"] == 100.0
+
+    @pytest.mark.asyncio
+    async def test_add_wire_no_schematic(self):
+        """Test error when no schematic loaded."""
+        set_current_schematic(None)
+
+        result = await add_wire(
+            start=(100.0, 100.0),
+            end=(150.0, 100.0)
+        )
+
+        assert result["success"] is False
+        assert result["error"] == "NO_SCHEMATIC_LOADED"
+
+
+class TestMCPAddLabel:
+    """Test add_label MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("LabelTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_label_basic(self, setup_schematic):
+        """Test adding basic label."""
+        result = await add_label(
+            text="VCC",
+            position=(100.0, 100.0)
+        )
+
+        assert result["success"] is True
+        assert result["text"] == "VCC"
+        assert result["position"]["x"] == 100.0
+        assert result["position"]["y"] == 100.0
+        assert result["rotation"] == 0.0
+        assert "uuid" in result
+
+    @pytest.mark.asyncio
+    async def test_add_label_with_rotation(self, setup_schematic):
+        """Test adding label with rotation."""
+        result = await add_label(
+            text="GND",
+            position=(100.0, 100.0),
+            rotation=90.0
+        )
+
+        assert result["success"] is True
+        assert result["rotation"] == 90.0
+
+    @pytest.mark.asyncio
+    async def test_add_label_invalid_rotation(self, setup_schematic):
+        """Test error with invalid rotation."""
+        result = await add_label(
+            text="VCC",
+            position=(100.0, 100.0),
+            rotation=45.0
+        )
+
+        assert result["success"] is False
+        assert result["error"] == "VALIDATION_ERROR"
+
+    @pytest.mark.asyncio
+    async def test_add_label_custom_size(self, setup_schematic):
+        """Test adding label with custom size."""
+        result = await add_label(
+            text="SIGNAL",
+            position=(100.0, 100.0),
+            size=2.54
+        )
+
+        assert result["success"] is True
+        assert result["size"] == 2.54
+
+
+class TestMCPAddJunction:
+    """Test add_junction MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("JunctionTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_junction_basic(self, setup_schematic):
+        """Test adding basic junction."""
+        result = await add_junction(
+            position=(100.0, 100.0)
+        )
+
+        assert result["success"] is True
+        assert result["position"]["x"] == 100.0
+        assert result["position"]["y"] == 100.0
+        assert result["diameter"] == 0.0
+        assert "uuid" in result
+
+    @pytest.mark.asyncio
+    async def test_add_junction_with_diameter(self, setup_schematic):
+        """Test adding junction with custom diameter."""
+        result = await add_junction(
+            position=(100.0, 100.0),
+            diameter=0.8
+        )
+
+        assert result["success"] is True
+        assert result["diameter"] == 0.8
+
+    @pytest.mark.asyncio
+    async def test_add_junction_no_schematic(self):
+        """Test error when no schematic loaded."""
+        set_current_schematic(None)
+
+        result = await add_junction(
+            position=(100.0, 100.0)
+        )
+
+        assert result["success"] is False
+        assert result["error"] == "NO_SCHEMATIC_LOADED"
 
 
 class TestMCPPerformance:

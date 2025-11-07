@@ -18,6 +18,7 @@ from mcp_server.models import (
     PointModel,
     PinInfoOutput,
     ComponentPinsOutput,
+    ComponentInfoOutput,
     ErrorOutput,
 )
 
@@ -28,5 +29,6 @@ __all__ = [
     "PointModel",
     "PinInfoOutput",
     "ComponentPinsOutput",
+    "ComponentInfoOutput",
     "ErrorOutput",
 ]
