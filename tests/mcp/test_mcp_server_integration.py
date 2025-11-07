@@ -25,6 +25,11 @@ from mcp_server.tools.component_tools import (
     remove_component,
     filter_components,
 )
+from mcp_server.tools.connectivity_tools import (
+    add_wire,
+    add_label,
+    add_junction,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -791,6 +796,169 @@ class TestMCPFilterComponents:
         assert result["success"] is True
         assert result["count"] == 1
         assert result["components"][0]["reference"] == "R1"
+
+
+class TestMCPAddWire:
+    """Test add_wire MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("WireTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_wire_horizontal(self, setup_schematic):
+        """Test adding horizontal wire."""
+        result = await add_wire(
+            start=(100.0, 100.0),
+            end=(150.0, 100.0)
+        )
+
+        assert result["success"] is True
+        assert result["start"]["x"] == 100.0
+        assert result["start"]["y"] == 100.0
+        assert result["end"]["x"] == 150.0
+        assert result["end"]["y"] == 100.0
+        assert "uuid" in result
+
+    @pytest.mark.asyncio
+    async def test_add_wire_vertical(self, setup_schematic):
+        """Test adding vertical wire."""
+        result = await add_wire(
+            start=(100.0, 100.0),
+            end=(100.0, 150.0)
+        )
+
+        assert result["success"] is True
+        assert result["start"]["x"] == 100.0
+        assert result["end"]["x"] == 100.0
+
+    @pytest.mark.asyncio
+    async def test_add_wire_no_schematic(self):
+        """Test error when no schematic loaded."""
+        set_current_schematic(None)
+
+        result = await add_wire(
+            start=(100.0, 100.0),
+            end=(150.0, 100.0)
+        )
+
+        assert result["success"] is False
+        assert result["error"] == "NO_SCHEMATIC_LOADED"
+
+
+class TestMCPAddLabel:
+    """Test add_label MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("LabelTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_label_basic(self, setup_schematic):
+        """Test adding basic label."""
+        result = await add_label(
+            text="VCC",
+            position=(100.0, 100.0)
+        )
+
+        assert result["success"] is True
+        assert result["text"] == "VCC"
+        assert result["position"]["x"] == 100.0
+        assert result["position"]["y"] == 100.0
+        assert result["rotation"] == 0.0
+        assert "uuid" in result
+
+    @pytest.mark.asyncio
+    async def test_add_label_with_rotation(self, setup_schematic):
+        """Test adding label with rotation."""
+        result = await add_label(
+            text="GND",
+            position=(100.0, 100.0),
+            rotation=90.0
+        )
+
+        assert result["success"] is True
+        assert result["rotation"] == 90.0
+
+    @pytest.mark.asyncio
+    async def test_add_label_invalid_rotation(self, setup_schematic):
+        """Test error with invalid rotation."""
+        result = await add_label(
+            text="VCC",
+            position=(100.0, 100.0),
+            rotation=45.0
+        )
+
+        assert result["success"] is False
+        assert result["error"] == "VALIDATION_ERROR"
+
+    @pytest.mark.asyncio
+    async def test_add_label_custom_size(self, setup_schematic):
+        """Test adding label with custom size."""
+        result = await add_label(
+            text="SIGNAL",
+            position=(100.0, 100.0),
+            size=2.54
+        )
+
+        assert result["success"] is True
+        assert result["size"] == 2.54
+
+
+class TestMCPAddJunction:
+    """Test add_junction MCP tool."""
+
+    @pytest.fixture(autouse=True)
+    def setup_schematic(self):
+        """Set up a fresh schematic for each test."""
+        sch = ksa.create_schematic("JunctionTest")
+        set_current_schematic(sch)
+        yield sch
+        set_current_schematic(None)
+
+    @pytest.mark.asyncio
+    async def test_add_junction_basic(self, setup_schematic):
+        """Test adding basic junction."""
+        result = await add_junction(
+            position=(100.0, 100.0)
+        )
+
+        assert result["success"] is True
+        assert result["position"]["x"] == 100.0
+        assert result["position"]["y"] == 100.0
+        assert result["diameter"] == 0.0
+        assert "uuid" in result
+
+    @pytest.mark.asyncio
+    async def test_add_junction_with_diameter(self, setup_schematic):
+        """Test adding junction with custom diameter."""
+        result = await add_junction(
+            position=(100.0, 100.0),
+            diameter=0.8
+        )
+
+        assert result["success"] is True
+        assert result["diameter"] == 0.8
+
+    @pytest.mark.asyncio
+    async def test_add_junction_no_schematic(self):
+        """Test error when no schematic loaded."""
+        set_current_schematic(None)
+
+        result = await add_junction(
+            position=(100.0, 100.0)
+        )
+
+        assert result["success"] is False
+        assert result["error"] == "NO_SCHEMATIC_LOADED"
 
 
 class TestMCPPerformance:

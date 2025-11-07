@@ -28,6 +28,11 @@ from mcp_server.tools.component_tools import (
     remove_component,
     filter_components,
 )
+from mcp_server.tools.connectivity_tools import (
+    add_wire,
+    add_label,
+    add_junction,
+)
 
 
 # Configure logging
@@ -289,6 +294,14 @@ mcp.tool()(list_components)
 mcp.tool()(update_component)
 mcp.tool()(remove_component)
 mcp.tool()(filter_components)
+
+
+# ========== Register Connectivity Tools ==========
+
+# Register the connectivity tools from connectivity_tools.py
+mcp.tool()(add_wire)
+mcp.tool()(add_label)
+mcp.tool()(add_junction)
 
 
 # ========== Server Entry Point ==========
