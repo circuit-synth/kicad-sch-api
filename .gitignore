@@ -118,3 +118,12 @@ mcp-server/.npm/
 # Example output
 examples/output/
 build_env/
+
+# Generated test schematic files
+*_demo.kicad_sch
+*_output.kicad_sch
+test_*.kicad_sch
+*.kicad_prl
+*.kicad_pro
+*-backups/
+~*.kicad_sch.lck
