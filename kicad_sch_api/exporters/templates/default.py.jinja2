@@ -51,8 +51,7 @@ def create_{{ metadata.name|sanitize }}():
 {% for label in labels %}
     sch.add_label(
         '{{ label.text }}',
-        position=({{ label.x }}, {{ label.y }}),
-        label_type='{{ label.type }}'
+        position=({{ label.x }}, {{ label.y }})
     )
 {% endfor %}
 

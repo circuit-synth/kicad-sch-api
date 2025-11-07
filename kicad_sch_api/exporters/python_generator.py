@@ -544,8 +544,7 @@ class PythonCodeGenerator:
             for label in data['labels']:
                 lines.append(f"    sch.add_label(")
                 lines.append(f"        '{label['text']}',")
-                lines.append(f"        position=({label['x']}, {label['y']}),")
-                lines.append(f"        label_type='{label['type']}'")
+                lines.append(f"        position=({label['x']}, {label['y']})")
                 lines.append("    )")
             lines.append("")
 
