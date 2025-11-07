@@ -19,6 +19,7 @@ Professional KiCAD Schematic Manipulation Library
 
    API_REFERENCE
    RECIPES
+   ORTHOGONAL_ROUTING
    ARCHITECTURE
    ERC_USER_GUIDE
 
@@ -61,6 +62,9 @@ Key Features
 
 ✅ **Professional API** - Modern Python with full type hints
    Clean, intuitive interface with comprehensive validation
+
+✅ **Automatic Wire Routing** - Manhattan-style orthogonal routing
+   L-shaped wire paths generated automatically between components
 
 ✅ **Performance Optimized** - O(1) lookups, bulk operations, symbol caching
    Handles large schematics with hundreds of components efficiently
