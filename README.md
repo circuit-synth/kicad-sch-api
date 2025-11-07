@@ -262,7 +262,7 @@ For comprehensive documentation on all features:
 
 ## 🤖 AI Agent Integration (MCP Server)
 
-**Integrated MCP (Model Context Protocol) server** for seamless AI agent integration:
+**Complete MCP (Model Context Protocol) server** for AI-powered circuit design:
 
 ```bash
 # Start the MCP server
@@ -273,18 +273,54 @@ pip install kicad-sch-api
 kicad-sch-mcp
 ```
 
-### MCP Tools Available
+### Complete MCP Tool Suite (15 Tools)
 
-**Pin Discovery:**
-- `get_component_pins` - Get comprehensive pin information with positions and metadata
-- `find_pins_by_name` - Semantic pin lookup with wildcard support (*, CLK*, *IN*)
-- `find_pins_by_type` - Filter pins by electrical type (passive, input, output, power_in, etc.)
+**Component Management (5 tools):**
+- `add_component` - Add components with auto-reference/position
+- `list_components` - List all components with metadata
+- `update_component` - Update properties (value, position, rotation, footprint)
+- `remove_component` - Remove components
+- `filter_components` - Advanced filtering by lib_id, value, footprint
 
-**Schematic Management:**
+**Connectivity (3 tools):**
+- `add_wire` - Create wire connections between points
+- `add_label` - Add net labels for logical connections
+- `add_junction` - Add wire junctions for T-connections
+
+**Pin Discovery (3 tools):**
+- `get_component_pins` - Complete pin information with positions
+- `find_pins_by_name` - Semantic lookup with wildcards (*, CLK*, *IN*)
+- `find_pins_by_type` - Filter by electrical type (passive, input, output, power_in)
+
+**Schematic Management (4 tools):**
 - `create_schematic` - Create new KiCAD schematics
 - `load_schematic` - Load existing .kicad_sch files
 - `save_schematic` - Save schematics to disk
 - `get_schematic_info` - Query schematic metadata
+
+### What You Can Build
+
+With the MCP server, AI agents can now:
+- **Design complete circuits**: Add components, create connections, label nets
+- **Manage schematics**: Create, load, save, and modify circuit files
+- **Analyze circuits**: List components, filter by criteria, discover pin information
+- **Build any circuit**: Voltage dividers, filters, LED circuits, power supplies, and more!
+
+### Example: Building a Complete Circuit via MCP
+
+```
+"Create a voltage divider with R1=10k and R2=1k, fully wired with VCC and GND labels"
+```
+
+The AI agent will:
+1. Create a new schematic
+2. Add R1 and R2 using `add_component`
+3. Wire them together using `add_wire`
+4. Add VCC and GND labels using `add_label`
+5. Add junction at the connection point
+6. Save the complete, functional circuit
+
+**Result**: A fully functional KiCAD schematic that opens perfectly in KiCAD!
 
 ### Claude Desktop Integration
 

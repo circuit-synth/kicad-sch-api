@@ -33,6 +33,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Rotation support (0, 90, 180, 270 degrees)
     - Footprint specification
     - Full validation and error handling
+  - `list_components`: List all components with complete metadata
+  - `update_component`: Update component properties (value, position, rotation, footprint)
+  - `remove_component`: Remove components from schematic
+  - `filter_components`: Advanced filtering by lib_id, value, footprint
+    - Exact match and pattern matching support
+    - AND logic for multiple criteria
+
+- **Connectivity MCP Tools** (`mcp_server/tools/connectivity_tools.py`)
+  - `add_wire`: Add wire connections between points
+    - Horizontal and vertical wire support
+    - UUID tracking for wire management
+  - `add_label`: Add net labels to establish logical connections
+    - Rotation support (0, 90, 180, 270)
+    - Custom text size
+    - Net naming for non-physical connections
+  - `add_junction`: Add wire junctions for T-connections
+    - Custom diameter support
+    - Required for proper wire branching
 
 - **Pydantic Models** (`mcp_server/models.py`)
   - Type-safe data models for all MCP responses
@@ -41,8 +59,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Comprehensive field validation and examples
 
 - **MCP Server Testing**
-  - 27 comprehensive integration tests (all passing)
-  - Added 8 tests for `add_component` tool
+  - 49 comprehensive integration tests (all passing)
+  - Component management: 20 tests
+  - Connectivity: 10 tests
+  - Pin discovery: 11 tests
+  - Schematic management: 4 tests
+  - Workflow & performance: 4 tests
   - End-to-end workflow tests
   - Performance validation (<50ms response times)
   - Error handling coverage for all failure modes
@@ -62,6 +84,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pin discovery operations: 4.32ms average (10x faster than 50ms requirement)
 - All MCP operations complete in <50ms
 - Efficient symbol caching and indexed lookups
+- Component iteration and filtering optimized
+- Wire and label creation near-instant
+
+### Circuit Building Capabilities
+The MCP server now enables complete programmatic circuit construction:
+- **Component Management**: Add, list, update, remove, and filter components
+- **Connectivity**: Create wire connections, net labels, and junctions
+- **Pin Discovery**: Find pins by name, type, or get complete pin information
+- **Schematic Management**: Create, load, save, and query schematics
+
+This represents a complete P0 (priority 0) implementation for AI-powered
+circuit design via Model Context Protocol.
 
 ## [0.5.0] - 2025-11-06
 
