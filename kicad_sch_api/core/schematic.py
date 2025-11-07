@@ -709,9 +709,10 @@ class Schematic:
     def add_label(
         self,
         text: str,
-        position: Union[Point, Tuple[float, float]],
+        position: Optional[Union[Point, Tuple[float, float]]] = None,
+        pin: Optional[Tuple[str, str]] = None,
         effects: Optional[Dict[str, Any]] = None,
-        rotation: float = 0,
+        rotation: Optional[float] = None,
         size: Optional[float] = None,
         uuid: Optional[str] = None,
     ) -> str:
@@ -720,19 +721,84 @@ class Schematic:
 
         Args:
             text: Label text content
-            position: Label position
+            position: Label position (required if pin not provided)
+            pin: Pin to attach label to as (component_ref, pin_number) tuple (alternative to position)
             effects: Text effects (size, font, etc.)
-            rotation: Label rotation in degrees (default 0)
+            rotation: Label rotation in degrees (default 0, or auto-calculated if pin provided)
             size: Text size override (default from effects)
             uuid: Specific UUID for label (auto-generated if None)
 
         Returns:
             UUID of created label
+
+        Raises:
+            ValueError: If neither position nor pin is provided, or if pin is not found
         """
+        from .pin_utils import get_component_pin_info
+
+        # Validate arguments
+        if position is None and pin is None:
+            raise ValueError("Either position or pin must be provided")
+        if position is not None and pin is not None:
+            raise ValueError("Cannot provide both position and pin")
+
+        # Handle pin-based placement
+        justify_h = "left"
+        justify_v = "bottom"
+
+        if pin is not None:
+            component_ref, pin_number = pin
+
+            # Get component
+            component = self._components.get(component_ref)
+            if component is None:
+                raise ValueError(f"Component {component_ref} not found")
+
+            # Get pin position and rotation
+            pin_info = get_component_pin_info(component, pin_number)
+            if pin_info is None:
+                raise ValueError(f"Pin {pin_number} not found on component {component_ref}")
+
+            pin_position, pin_rotation = pin_info
+            position = pin_position
+
+            # Calculate label rotation if not explicitly provided
+            if rotation is None:
+                # Label should face away from component:
+                # Pin rotation indicates where pin points INTO the component
+                # Label should face OPPOSITE direction
+                rotation = (pin_rotation + 180) % 360
+                logger.info(
+                    f"Auto-calculated label rotation: {rotation}° (pin rotation: {pin_rotation}°)"
+                )
+
+            # Calculate justification based on pin angle
+            # This determines which corner of the text is anchored to the pin position
+            if pin_rotation == 0:  # Pin points right into component
+                justify_h = "left"
+                justify_v = "bottom"
+            elif pin_rotation == 90:  # Pin points up into component
+                justify_h = "right"
+                justify_v = "bottom"
+            elif pin_rotation == 180:  # Pin points left into component
+                justify_h = "right"
+                justify_v = "bottom"
+            elif pin_rotation == 270:  # Pin points down into component
+                justify_h = "left"
+                justify_v = "bottom"
+            logger.info(f"Auto-calculated justification: {justify_h} {justify_v} (pin angle: {pin_rotation}°)")
+
+        # Use default rotation if still not set
+        if rotation is None:
+            rotation = 0
+
         # Use the new labels collection instead of manager
         if size is None:
             size = 1.27  # Default size
-        label = self._labels.add(text, position, rotation=rotation, size=size, uuid=uuid)
+        label = self._labels.add(
+            text, position, rotation=rotation, size=size,
+            justify_h=justify_h, justify_v=justify_v, uuid=uuid
+        )
         self._sync_labels_to_data()  # Sync immediately
         self._format_sync_manager.mark_dirty("label", "add", {"uuid": label.uuid})
         self._modified = True
@@ -1490,6 +1556,8 @@ class Schematic:
                 "position": {"x": label_element.position.x, "y": label_element.position.y},
                 "rotation": label_element.rotation,
                 "size": label_element.size,
+                "justify_h": label_element._data.justify_h,
+                "justify_v": label_element._data.justify_v,
             }
             label_data.append(label_dict)
 
