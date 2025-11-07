@@ -305,6 +305,75 @@ class Component:
         """
         self.rotation = (self.rotation + angle) % 360
 
+    def align_pin(
+        self, pin_number: str, target_position: Union[Point, Tuple[float, float]]
+    ) -> None:
+        """
+        Move component so that the specified pin is at the target position.
+
+        This adjusts the component's position to align a specific pin with the
+        target coordinates while maintaining the component's current rotation.
+        Useful for aligning existing components in horizontal signal flows.
+
+        Args:
+            pin_number: Pin number to align (e.g., "1", "2")
+            target_position: Desired position for the pin (Point or (x, y) tuple)
+
+        Raises:
+            ValueError: If pin_number doesn't exist in the component
+
+        Example:
+            # Move resistor so pin 2 is at (150, 100)
+            r1 = sch.components.get("R1")
+            r1.align_pin("2", (150, 100))
+
+            # Align capacitor pin 1 on same horizontal line
+            c1 = sch.components.get("C1")
+            c1.align_pin("1", (200, 100))  # Same Y as resistor pin 2
+        """
+        from ..core.geometry import calculate_position_for_pin
+
+        # Get symbol definition to find the pin's local position
+        symbol_def = self.get_symbol_definition()
+        if not symbol_def:
+            raise ValueError(f"Symbol definition not found for {self.reference} ({self.lib_id})")
+
+        # Find the pin in the symbol definition
+        pin_def = None
+        for pin in symbol_def.pins:
+            if pin.number == pin_number:
+                pin_def = pin
+                break
+
+        if not pin_def:
+            available_pins = [p.number for p in symbol_def.pins]
+            raise ValueError(
+                f"Pin '{pin_number}' not found in component {self.reference} ({self.lib_id}). "
+                f"Available pins: {', '.join(available_pins)}"
+            )
+
+        logger.debug(
+            f"Aligning {self.reference} pin {pin_number} "
+            f"(local position: {pin_def.position}) to target {target_position}"
+        )
+
+        # Calculate new component position
+        new_position = calculate_position_for_pin(
+            pin_local_position=pin_def.position,
+            desired_pin_position=target_position,
+            rotation=self.rotation,
+            mirror=None,  # TODO: Add mirror support when needed
+            grid_size=1.27,
+        )
+
+        old_position = self.position
+        self.position = new_position
+
+        logger.info(
+            f"Aligned {self.reference} pin {pin_number} to {target_position}: "
+            f"moved from {old_position} to {new_position}"
+        )
+
     def copy_properties_from(self, other: "Component"):
         """
         Copy all properties from another component.
@@ -596,6 +665,124 @@ class ComponentCollection(BaseCollection[Component]):
         logger.info(f"Added component: {reference} ({lib_id})")
         return component
 
+    def add_with_pin_at(
+        self,
+        lib_id: str,
+        pin_number: str,
+        pin_position: Union[Point, Tuple[float, float]],
+        reference: Optional[str] = None,
+        value: str = "",
+        rotation: float = 0.0,
+        footprint: Optional[str] = None,
+        unit: int = 1,
+        component_uuid: Optional[str] = None,
+        **properties,
+    ) -> Component:
+        """
+        Add component positioned by a specific pin location.
+
+        Instead of specifying the component's center position, this method allows
+        you to specify where a particular pin should be placed. This is extremely
+        useful for aligning components in horizontal signal flows without manual
+        offset calculations.
+
+        Args:
+            lib_id: Library identifier (e.g., "Device:R", "Device:C")
+            pin_number: Pin number to position (e.g., "1", "2")
+            pin_position: Desired position for the specified pin
+            reference: Component reference (auto-generated if None)
+            value: Component value
+            rotation: Component rotation in degrees (0, 90, 180, 270)
+            footprint: Component footprint
+            unit: Unit number for multi-unit components (1-based)
+            component_uuid: Specific UUID for component (auto-generated if None)
+            **properties: Additional component properties
+
+        Returns:
+            Newly created Component with the specified pin at pin_position
+
+        Raises:
+            ValidationError: If component data is invalid
+            LibraryError: If symbol library not found
+            ValueError: If pin_number doesn't exist in the component
+
+        Example:
+            # Place resistor with pin 2 at (150, 100)
+            r1 = sch.components.add_with_pin_at(
+                lib_id="Device:R",
+                pin_number="2",
+                pin_position=(150, 100),
+                value="10k"
+            )
+
+            # Place capacitor with pin 1 aligned on same horizontal line
+            c1 = sch.components.add_with_pin_at(
+                lib_id="Device:C",
+                pin_number="1",
+                pin_position=(200, 100),  # Same Y as resistor pin 2
+                value="100nF"
+            )
+        """
+        from ..core.exceptions import LibraryError
+        from ..core.geometry import calculate_position_for_pin
+
+        # Get symbol definition to find the pin's local position
+        symbol_cache = get_symbol_cache()
+        symbol_def = symbol_cache.get_symbol(lib_id)
+        if not symbol_def:
+            library_name = lib_id.split(":")[0] if ":" in lib_id else "unknown"
+            raise LibraryError(
+                f"Symbol '{lib_id}' not found in KiCAD libraries. "
+                f"Please verify the library name '{library_name}' and symbol name are correct. "
+                f"Common libraries include: Device, Connector_Generic, Regulator_Linear, RF_Module",
+                field="lib_id",
+                value=lib_id,
+            )
+
+        # Find the pin in the symbol definition
+        pin_def = None
+        for pin in symbol_def.pins:
+            if pin.number == pin_number:
+                pin_def = pin
+                break
+
+        if not pin_def:
+            available_pins = [p.number for p in symbol_def.pins]
+            raise ValueError(
+                f"Pin '{pin_number}' not found in symbol '{lib_id}'. "
+                f"Available pins: {', '.join(available_pins)}"
+            )
+
+        logger.debug(
+            f"Pin {pin_number} found at local position ({pin_def.position.x}, {pin_def.position.y})"
+        )
+
+        # Calculate component position that will place the pin at the desired location
+        component_position = calculate_position_for_pin(
+            pin_local_position=pin_def.position,
+            desired_pin_position=pin_position,
+            rotation=rotation,
+            mirror=None,  # TODO: Add mirror support when needed
+            grid_size=1.27,
+        )
+
+        logger.info(
+            f"Calculated component position ({component_position.x}, {component_position.y}) "
+            f"to place pin {pin_number} at ({pin_position if isinstance(pin_position, Point) else Point(*pin_position)})"
+        )
+
+        # Use the regular add() method with the calculated position
+        return self.add(
+            lib_id=lib_id,
+            reference=reference,
+            value=value,
+            position=component_position,
+            footprint=footprint,
+            unit=unit,
+            rotation=rotation,
+            component_uuid=component_uuid,
+            **properties,
+        )
 
     def add_ic(
         self,
