@@ -35,16 +35,21 @@ requires-python = ">=3.10"
 dependencies = [
     "sexpdata>=0.0.3",
     "typing-extensions>=4.0.0; python_version<'3.11'",
+    "pydantic>=2.0.0",
+    "mcp>=1.10.0",
+    "fastmcp>=0.2.0",
 ]
 
 [project.scripts]
 kicad-sch-api = "kicad_sch_api.cli:main"
+kicad-sch-mcp = "mcp_server.server:main"
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
-    "pytest-cov>=4.0.0", 
+    "pytest-cov>=4.0.0",
     "pytest-xdist>=3.0.0",
+    "pytest-asyncio>=0.21.0",
     "black>=22.0.0",
     "isort>=5.0.0",
     "flake8>=4.0.0",
@@ -68,7 +73,7 @@ Changelog = "https://github.com/circuit-synth/kicad-sch-api/blob/main/CHANGELOG.
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["kicad_sch_api*"]
+include = ["kicad_sch_api*", "mcp_server*"]
 exclude = ["tests*", "submodules*"]
 
 [tool.setuptools.package-data]

@@ -156,6 +156,54 @@ class SchematicPin:
 
 
 @dataclass
+class PinInfo:
+    """
+    Complete pin information for a component pin.
+
+    This dataclass provides comprehensive pin metadata including position,
+    electrical properties, and graphical representation. Positions are in
+    schematic coordinates (absolute positions accounting for component
+    rotation and mirroring).
+    """
+
+    number: str  # Pin number (e.g., "1", "2", "A1")
+    name: str  # Pin name (e.g., "VCC", "GND", "CLK")
+    position: Point  # Absolute position in schematic coordinates (mm)
+    electrical_type: PinType = PinType.PASSIVE  # Electrical type (input, output, passive, etc.)
+    shape: PinShape = PinShape.LINE  # Graphical shape (line, inverted, clock, etc.)
+    length: float = 2.54  # Pin length in mm
+    orientation: float = 0.0  # Pin orientation in degrees (0, 90, 180, 270)
+    uuid: str = ""  # Unique identifier for this pin instance
+
+    def __post_init__(self) -> None:
+        """Validate and normalize pin information."""
+        # Ensure types are correct
+        self.electrical_type = (
+            PinType(self.electrical_type)
+            if isinstance(self.electrical_type, str)
+            else self.electrical_type
+        )
+        self.shape = PinShape(self.shape) if isinstance(self.shape, str) else self.shape
+
+        # Generate UUID if not provided
+        if not self.uuid:
+            self.uuid = str(uuid4())
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert pin info to dictionary representation."""
+        return {
+            "number": self.number,
+            "name": self.name,
+            "position": {"x": self.position.x, "y": self.position.y},
+            "electrical_type": self.electrical_type.value,
+            "shape": self.shape.value,
+            "length": self.length,
+            "orientation": self.orientation,
+            "uuid": self.uuid,
+        }
+
+
+@dataclass
 class SchematicSymbol:
     """Component symbol in a schematic."""
 

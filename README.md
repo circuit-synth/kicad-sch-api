@@ -260,9 +260,49 @@ For comprehensive documentation on all features:
 - **[Getting Started](docs/GETTING_STARTED.md)** - Detailed tutorial
 - **[Architecture](docs/ARCHITECTURE.md)** - Library design and internals
 
-## 🤖 AI Agent Integration
+## 🤖 AI Agent Integration (MCP Server)
 
-This library serves as the foundation for AI agent integration. For Claude Code or other AI agents, use the **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)** MCP server.
+**Integrated MCP (Model Context Protocol) server** for seamless AI agent integration:
+
+```bash
+# Start the MCP server
+uv run kicad-sch-mcp
+
+# Or install and run directly
+pip install kicad-sch-api
+kicad-sch-mcp
+```
+
+### MCP Tools Available
+
+**Pin Discovery:**
+- `get_component_pins` - Get comprehensive pin information with positions and metadata
+- `find_pins_by_name` - Semantic pin lookup with wildcard support (*, CLK*, *IN*)
+- `find_pins_by_type` - Filter pins by electrical type (passive, input, output, power_in, etc.)
+
+**Schematic Management:**
+- `create_schematic` - Create new KiCAD schematics
+- `load_schematic` - Load existing .kicad_sch files
+- `save_schematic` - Save schematics to disk
+- `get_schematic_info` - Query schematic metadata
+
+### Claude Desktop Integration
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "kicad-sch-api": {
+      "command": "uv",
+      "args": ["run", "kicad-sch-mcp"],
+      "env": {}
+    }
+  }
+}
+```
+
+AI agents can now create, modify, and analyze KiCAD schematics programmatically!
 
 ## 🏗️ Architecture
 
@@ -271,7 +311,7 @@ This library serves as the foundation for AI agent integration. For Claude Code 
 - **Building Block First**: Designed to be the foundation for other tools
 - **Exact Format Preservation**: Guaranteed byte-perfect KiCAD output
 - **Professional Quality**: Comprehensive error handling and validation
-- **MCP Foundation**: Designed as a stable foundation for MCP servers and AI agents
+- **AI Agent Ready**: Integrated MCP server for seamless AI development workflow
 - **Performance Optimized**: Fast operations on large schematics
 
 **📖 See [Architecture Guide](docs/ARCHITECTURE.md) for detailed design documentation**
@@ -308,7 +348,7 @@ uv run mypy kicad_sch_api/
 ### vs. Other Python KiCAD Libraries
 - **Format Preservation**: Exact KiCAD compatibility vs approximate output
 - **Modern Design**: Object-oriented collections vs legacy patterns
-- **AI Integration**: Purpose-built MCP server vs no agent support
+- **AI Integration**: Integrated MCP server for AI agents vs no agent support
 
 **📖 See [Why Use This Library](docs/WHY_USE_THIS_LIBRARY.md) for detailed comparison**
 
@@ -347,7 +387,7 @@ We welcome contributions! Key areas:
 
 - KiCAD library integration and component validation
 - Performance optimizations for large schematics
-- Additional MCP tools for AI agents
+- MCP server tools and AI agent capabilities
 - Test coverage and format preservation validation
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -358,10 +398,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🔗 Related Projects
 
-- **[mcp-kicad-sch-api](https://github.com/circuit-synth/mcp-kicad-sch-api)** - MCP server for AI agents
 - **[circuit-synth](https://github.com/circuit-synth/circuit-synth)** - High-level circuit design automation
 - **[Claude Code](https://claude.ai/code)** - AI development environment with MCP support
 - **[KiCAD](https://kicad.org/)** - Open source electronics design automation
+- **[Model Context Protocol](https://modelcontextprotocol.io/)** - Standard for AI agent tool integration
 
 ---
 

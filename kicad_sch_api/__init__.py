@@ -48,6 +48,7 @@ __email__ = "info@circuit-synth.com"
 
 from .core.components import Component, ComponentCollection
 from .core.config import KiCADConfig, config
+from .core.types import PinInfo
 
 # Core imports for public API
 from .core.schematic import Schematic
@@ -69,6 +70,7 @@ __all__ = [
     "Schematic",
     "Component",
     "ComponentCollection",
+    "PinInfo",
     "SymbolLibraryCache",
     "get_symbol_cache",
     # Configuration
