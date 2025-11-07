@@ -1,6 +1,6 @@
 ---
 name: generate-circuit
-description: Generate professional KiCAD schematic with expert placement advice
+description: Expert guidance on using kicad-sch-api Python library to generate KiCAD schematics with CRUD operations for all schematic components (add, list, update, remove components, wires, labels, junctions)
 ---
 
 # Generate Professional KiCAD Circuit Schematic
