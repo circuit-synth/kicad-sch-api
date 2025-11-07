@@ -581,6 +581,59 @@ class Schematic:
 
         return self._file_io_manager.create_backup(self._file_path, suffix)
 
+    def export_to_python(
+        self,
+        output_path: Union[str, Path],
+        template: str = 'default',
+        include_hierarchy: bool = True,
+        format_code: bool = True,
+        add_comments: bool = True
+    ) -> Path:
+        """
+        Export schematic to executable Python code.
+
+        Generates Python code that uses kicad-sch-api to recreate this
+        schematic programmatically.
+
+        Args:
+            output_path: Output .py file path
+            template: Code template style ('minimal', 'default', 'verbose', 'documented')
+            include_hierarchy: Include hierarchical sheets
+            format_code: Format code with Black
+            add_comments: Add explanatory comments
+
+        Returns:
+            Path to generated Python file
+
+        Raises:
+            CodeGenerationError: If code generation fails
+
+        Example:
+            >>> sch = Schematic.load('circuit.kicad_sch')
+            >>> sch.export_to_python('circuit.py')
+            PosixPath('circuit.py')
+
+            >>> sch.export_to_python('circuit.py',
+            ...                      template='verbose',
+            ...                      add_comments=True)
+            PosixPath('circuit.py')
+        """
+        from ..exporters.python_generator import PythonCodeGenerator
+
+        generator = PythonCodeGenerator(
+            template=template,
+            format_code=format_code,
+            add_comments=add_comments
+        )
+
+        generator.generate(
+            schematic=self,
+            include_hierarchy=include_hierarchy,
+            output_path=Path(output_path)
+        )
+
+        return Path(output_path)
+
     # Wire operations (delegated to WireManager)
     def add_wire(
         self, start: Union[Point, Tuple[float, float]], end: Union[Point, Tuple[float, float]]

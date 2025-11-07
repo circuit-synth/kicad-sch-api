@@ -123,5 +123,59 @@ def create_schematic(name: str = "Untitled") -> "Schematic":
     return Schematic.create(name)
 
 
+def schematic_to_python(
+    input_path: str,
+    output_path: str,
+    template: str = 'default',
+    include_hierarchy: bool = True,
+    format_code: bool = True,
+    add_comments: bool = True
+):
+    """
+    Convert KiCad schematic to Python code (one-line convenience function).
+
+    Loads a KiCad schematic and generates executable Python code that
+    recreates it using the kicad-sch-api library.
+
+    Args:
+        input_path: Input .kicad_sch file
+        output_path: Output .py file
+        template: Code template style ('minimal', 'default', 'verbose', 'documented')
+        include_hierarchy: Include hierarchical sheets
+        format_code: Format code with Black
+        add_comments: Add explanatory comments
+
+    Returns:
+        Path to generated Python file
+
+    Raises:
+        FileNotFoundError: If input file doesn't exist
+        CodeGenerationError: If code generation fails
+
+    Example:
+        >>> import kicad_sch_api as ksa
+        >>> ksa.schematic_to_python('input.kicad_sch', 'output.py')
+        PosixPath('output.py')
+
+        >>> ksa.schematic_to_python('input.kicad_sch', 'output.py',
+        ...                         template='minimal',
+        ...                         add_comments=False)
+        PosixPath('output.py')
+    """
+    from pathlib import Path
+
+    # Load schematic
+    schematic = Schematic.load(input_path)
+
+    # Export to Python
+    return schematic.export_to_python(
+        output_path=output_path,
+        template=template,
+        include_hierarchy=include_hierarchy,
+        format_code=format_code,
+        add_comments=add_comments
+    )
+
+
 # Add convenience functions to __all__
-__all__.extend(["load_schematic", "create_schematic"])
+__all__.extend(["load_schematic", "create_schematic", "schematic_to_python"])
