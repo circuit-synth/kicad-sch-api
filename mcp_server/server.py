@@ -34,6 +34,16 @@ from mcp_server.tools.connectivity_tools import (
     add_junction,
     connect_components,
 )
+from mcp_server.tools.consolidated_tools import (
+    manage_schematic,
+    manage_components,
+    manage_wires,
+    manage_labels,
+    manage_text_boxes,
+    manage_power,
+    manage_sheets,
+    manage_global_labels,
+)
 
 
 # Configure logging
@@ -304,6 +314,20 @@ mcp.tool()(add_wire)
 mcp.tool()(add_label)
 mcp.tool()(add_junction)
 mcp.tool()(connect_components)
+
+
+# ========== Register Consolidated Tools ==========
+
+# Register the 8 consolidated CRUD tools for schematic management
+# These tools consolidate all operations by entity type with action parameters
+mcp.tool()(manage_schematic)      # Schematic: create, read, save, load
+mcp.tool()(manage_components)     # Components: add, list, get_pins, update, remove
+mcp.tool()(manage_wires)          # Wires: add, remove
+mcp.tool()(manage_labels)         # Labels: add, remove
+mcp.tool()(manage_text_boxes)     # TextBoxes: add, update, remove
+mcp.tool()(manage_power)          # Power: add, list, remove
+mcp.tool()(manage_sheets)         # Sheets: add, set_context, list, remove
+mcp.tool()(manage_global_labels)  # GlobalLabels: add, remove
 
 
 # ========== Server Entry Point ==========
