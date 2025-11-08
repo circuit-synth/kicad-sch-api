@@ -60,7 +60,7 @@ def create_stm32_microprocessor(sch):
     sch.components.add("power:+3.3V", "#PWR03", "+3.3V", position=p(102, 35))
 
     # GND
-    sch.components.add("power:GND", "#PWR04", "GND", position=p(24, 58))
+    sch.components.add("power:GND", "#PWR04", "GND", position=p(30, 58))
     sch.components.add("power:GND", "#PWR05", "GND", position=p(67, 38))
     sch.components.add("power:GND", "#PWR06", "GND", position=p(84, 70))
     sch.components.add("power:GND", "#PWR07", "GND", position=p(56, 89))
@@ -78,11 +78,8 @@ def create_stm32_microprocessor(sch):
 
     # Reset circuit (NRST)
     sch.add_wire(start=p(28, 43), end=p(28, 45))  # VDD to R1
-    sch.add_wire(start=p(42, 45), end=p(50, 51))  # R1 to junction
-    sch.add_wire(start=p(42, 51), end=p(56, 51))  # Junction to MCU NRST
-    sch.add_wire(start=p(19, 51), end=p(24, 51))  # External to C3
-    sch.add_wire(start=p(24, 51), end=p(28, 51))  # C3 to R1
-    sch.add_wire(start=p(24, 57), end=p(24, 58))  # C3 to GND
+    sch.add_wire(start=p(28, 51), end=p(44, 51))  # R1 to C3 to NRST
+    sch.add_wire(start=p(30, 57), end=p(30, 58))  # C3 to GND
 
     # LED indicator circuit
     sch.add_wire(start=p(70, 51), end=p(84, 51))  # MCU PA0 to R2
@@ -91,21 +88,21 @@ def create_stm32_microprocessor(sch):
     sch.add_wire(start=p(84, 68), end=p(84, 70))  # LED to GND
 
     # Debug header (SWD connector) - pins are on left side due to 180° rotation
-    sch.add_wire(start=p(100, 38), end=p(112, 38))  # SWCLK
-    sch.add_wire(start=p(100, 40), end=p(112, 40))  # SWDIO
-    sch.add_wire(start=p(104, 36), end=p(112, 36))  # GND to header
-    sch.add_wire(start=p(101, 34), end=p(112, 34))  # VDD to header
+    sch.add_wire(start=p(100, 39), end=p(108, 39))  # SWCLK
+    sch.add_wire(start=p(100, 41), end=p(108, 41))  # SWDIO
+    sch.add_wire(start=p(105, 37), end=p(108, 37))  # GND to header
+    sch.add_wire(start=p(102, 35), end=p(108, 35))  # VDD to header
 
     # Ground connections
     sch.add_wire(start=p(56, 87), end=p(56, 89))  # MCU GND to GND symbol
 
     # ===== LABELS =====
-    sch.add_label("NRST", position=p(42, 51))
-    sch.add_label("SWDIO", position=p(100, 40))
-    sch.add_label("SWCLK", position=p(100, 38))
+    sch.add_label("NRST", position=p(36, 51))
+    sch.add_label("SWDIO", position=p(100, 41))
+    sch.add_label("SWCLK", position=p(100, 39))
 
     # ===== DECORATIVE ELEMENTS =====
-    sch.add_rectangle(start=p(16, 26), end=p(120, 95))
+    sch.add_rectangle(start=p(16, 18), end=p(120, 95))
     sch.add_text("STM32G030K8Tx MICROCONTROLLER", position=p(51, 20), size=2.5)
 
 
