@@ -1,19 +1,17 @@
 """
-kicad-sch-api Example Circuit - Voltage Divider Only
+kicad-sch-api Example: Voltage Divider
 
-A single clean, parametric circuit demonstrating grid-based positioning.
+Demonstrates:
+- Grid-based parametric circuit design
+- Component placement using integer grid coordinates
+- Wire routing with proper pin connections
+- Junction creation for electrical nodes
+- Adding decorative elements (rectangle, text)
+
+This is a basic 10k/10k voltage divider that outputs 2.5V when powered from 5V.
 """
 
 import kicad_sch_api as ksa
-
-GRID = 1.27  # mm
-
-
-def grid_to_mm(grid_units):
-    """Convert grid units to millimeters"""
-    if isinstance(grid_units, tuple):
-        return (grid_units[0] * GRID, grid_units[1] * GRID)
-    return grid_units * GRID
 
 
 # ============================================================================
@@ -22,64 +20,88 @@ def grid_to_mm(grid_units):
 
 def voltage_divider(sch, x_grid, y_grid):
     """
-    Voltage divider circuit: 10k/10k resistive divider
+    Create a parametric voltage divider circuit.
+
+    This function creates a complete voltage divider that can be placed anywhere
+    on the schematic by specifying grid coordinates. All internal positions are
+    relative offsets from the origin point (x_grid, y_grid).
 
     Args:
-        sch: Schematic object
-        x_grid: X position in grid units
-        y_grid: Y position in grid units
+        sch: Schematic object to add components to
+        x_grid: X origin position in grid units (integer)
+        y_grid: Y origin position in grid units (integer)
+
+    Circuit: VCC -> R1 (10k) -> VOUT -> R2 (10k) -> GND
+    Output: VOUT = VCC * (R2 / (R1 + R2)) = VCC / 2
     """
 
+    # Helper function for grid-relative positioning
     def pos(dx, dy):
-        return grid_to_mm((x_grid + dx, y_grid + dy))
+        """Return grid position relative to origin"""
+        return (x_grid + dx, y_grid + dy)
 
-    # VCC symbol at top
-    sch.components.add('power:VCC', '#PWR01', 'VCC', position=pos(0, 0))
+    # ===== POWER SYMBOLS =====
+    sch.components.add('power:VCC', '#PWR01', 'VCC', position=pos(0, 0), grid_units=True)
+    sch.components.add('power:GND', '#PWR02', 'GND', position=pos(0, 21), grid_units=True)
 
-    # First resistor (6 grid units tall, centered at grid 5)
-    r1 = sch.components.add('Device:R', 'R1', '10k', position=pos(0, 5))
+    # ===== RESISTORS =====
+    # Each resistor is 6 grid units tall (pins at ±3 from center)
+    r1 = sch.components.add('Device:R', 'R1', '10k', position=pos(0, 5), grid_units=True)
+    r2 = sch.components.add('Device:R', 'R2', '10k', position=pos(0, 15), grid_units=True)
 
-    # Second resistor (6 grid units tall, centered at grid 15)
-    r2 = sch.components.add('Device:R', 'R2', '10k', position=pos(0, 15))
+    # ===== JUNCTION =====
+    # Junction at the output node (between R1 and R2)
+    # Note: junctions.add() also needs grid support - convert manually for now
+    sch.junctions.add(position=(pos(0, 11)[0] * 1.27, pos(0, 11)[1] * 1.27))
 
-    # GND symbol closer (grid 21)
-    sch.components.add('power:GND', '#PWR02', 'GND', position=pos(0, 21))
+    # ===== WIRING =====
+    # Vertical chain: VCC -> R1 -> Junction -> R2 -> GND
+    # Note: add_wire also needs grid support - convert manually for now
+    def wire(start, end):
+        """Helper to add wire with grid coordinates"""
+        sch.add_wire(
+            start=(start[0] * 1.27, start[1] * 1.27),
+            end=(end[0] * 1.27, end[1] * 1.27)
+        )
 
-    # Add junction at midpoint between resistors
-    sch.junctions.add(position=pos(0, 11))
+    wire(pos(0, 0), pos(0, 2))       # VCC to R1 pin 1 (top)
+    wire(pos(0, 8), pos(0, 11))      # R1 pin 2 (bottom) to junction
+    wire(pos(0, 11), pos(0, 12))     # Junction to R2 pin 1 (top)
+    wire(pos(0, 18), pos(0, 21))     # R2 pin 2 (bottom) to GND
+    wire(pos(0, 11), pos(3, 11))     # Horizontal tap to VOUT label
 
-    # Wiring - vertical chain with junction tap
-    sch.add_wire(start=pos(0, 0), end=pos(0, 2))       # VCC to R1 top
-    sch.add_wire(start=pos(0, 8), end=pos(0, 11))      # R1 bottom to junction
-    sch.add_wire(start=pos(0, 11), end=pos(0, 12))     # Junction to R2 top
-    sch.add_wire(start=pos(0, 18), end=pos(0, 21))     # R2 bottom to GND
-    sch.add_wire(start=pos(0, 11), end=pos(3, 11))     # Junction to VOUT label (horizontal tap)
+    # ===== LABELS =====
+    sch.add_label('VOUT', position=(pos(3, 11)[0] * 1.27, pos(3, 11)[1] * 1.27))
 
-    # Output label at junction
-    sch.add_label('VOUT', position=pos(3, 11))
-
-    # Rectangle around circuit
+    # ===== DECORATIVE ELEMENTS =====
+    # Rectangle border for visual grouping
     sch.add_rectangle(
-        start=pos(-10, -10),
-        end=pos(10, 26)
+        start=(pos(-10, -10)[0] * 1.27, pos(-10, -10)[1] * 1.27),
+        end=(pos(10, 26)[0] * 1.27, pos(10, 26)[1] * 1.27)
     )
 
     # Title text
-    sch.add_text(
-        "Voltage Divider",
-        position=pos(-2, -8),
-        size=1.27
-    )
+    sch.add_text("Voltage Divider", position=(pos(-2, -8)[0] * 1.27, pos(-2, -8)[1] * 1.27), size=1.27)
 
 
 def main():
+    """Generate the voltage divider example schematic."""
     print("Creating voltage divider circuit...")
+
+    # Create a new schematic
     sch = ksa.create_schematic("Example_VoltageDiv")
 
-    voltage_divider(sch, 20, 20)  # Place at grid (20, 20)
+    # Place the voltage divider at grid position (20, 20)
+    # This positions the VCC symbol at (20, 20) and all other components
+    # are placed relative to this origin point
+    voltage_divider(sch, 20, 20)
 
-    sch.save("example_circuit.kicad_sch")
-    print("✅ Saved: example_circuit.kicad_sch")
+    # Save the schematic
+    sch.save("voltage_divider.kicad_sch")
+    print("✅ Saved: voltage_divider.kicad_sch")
+    print()
+    print("Open in KiCAD to see the result:")
+    print("  open voltage_divider.kicad_sch")
 
 
 if __name__ == "__main__":
