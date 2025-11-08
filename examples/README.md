@@ -4,10 +4,10 @@ Polished examples demonstrating KiCAD schematic generation using Python.
 
 ## Quick Start
 
-All examples are in the `KEEP/` folder. Start with the walkthrough:
+Start with the walkthrough:
 
 ```bash
-cd examples/KEEP
+cd examples
 cat WALKTHROUGH.md   # Read the tutorial
 python voltage_divider.py
 python rc_filter.py
@@ -18,13 +18,12 @@ python power_supply.py
 
 ```
 examples/
-└── KEEP/                   # Polished reference examples
-    ├── WALKTHROUGH.md     # Start here! Complete tutorial
-    ├── voltage_divider.py # Basic voltage divider circuit
-    ├── rc_filter.py       # RC low-pass filter
-    ├── power_supply.py    # LM7805 5V regulator
-    ├── stm32g431_simple.py       # STM32 hierarchical design
-    └── hierarchy_example.py      # Advanced hierarchy features
+├── WALKTHROUGH.md          # Start here! Complete tutorial
+├── voltage_divider.py      # Basic voltage divider circuit
+├── rc_filter.py            # RC low-pass filter
+├── power_supply.py         # AMS1117-3.3 voltage regulator
+├── stm32_simple.py         # STM32 microcontroller example
+└── COMBINED.py             # Run all examples at once
 ```
 
 ---
@@ -49,39 +48,19 @@ Demonstrates:
 - Auto-routing between components
 - Simple junction and labels
 
-**`power_supply.py`** - LM7805 5V regulator
+**`power_supply.py`** - AMS1117-3.3 voltage regulator
 Demonstrates:
-- Power symbols (VBUS, +5V, GND)
+- Power symbols (VCC, GND)
 - Multiple junction points
 - Polarized capacitor placement
-- Text box annotations
+- Voltage regulator circuit patterns
 
-### Advanced Examples
-
-**`stm32g431_simple.py`** - STM32 Development Board
-Perfect for learning hierarchical design!
-
-Features:
-- STM32G431RBT6 (64-pin LQFP)
-- Hierarchical sheet organization
-- 5 schematic sheets (main, power, mcu, usb, ui)
-- ~14 total components
-- Clean, beginner-friendly
-
-Run it:
-```bash
-python stm32g431_simple.py
-```
-
-Output: `stm32g431_simple/` folder with 5 `.kicad_sch` files
-
-**`hierarchy_example.py`** - Advanced Hierarchy Features
+**`stm32_simple.py`** - STM32 Microcontroller Example
 Demonstrates:
-- Sheet reuse tracking
-- Cross-sheet signal tracking
-- Sheet pin validation
-- Hierarchy flattening
-- Signal tracing
+- STM32G030K8Tx microcontroller
+- Reset circuit with button and capacitor
+- LED indicator circuit
+- SWD debug interface connections
 
 ---
 
@@ -146,8 +125,8 @@ sch.save("output.kicad_sch")
 2. **Run `voltage_divider.py`** - Understand basic patterns
 3. **Run `rc_filter.py`** - See auto-routing
 4. **Run `power_supply.py`** - Learn power symbols
-5. **Run `stm32g431_simple.py`** - Learn hierarchical design
-6. **Study `hierarchy_example.py`** - Advanced hierarchy features
+5. **Run `stm32_simple.py`** - See microcontroller integration
+6. **Run `COMBINED.py`** - Generate all examples at once
 
 ---
 

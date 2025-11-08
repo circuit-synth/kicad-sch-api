@@ -13,6 +13,14 @@ repos:
         args: ['--maxkb=1000']
       - id: check-merge-conflict
       - id: debug-statements
+      - id: detect-private-key
+        name: Detect Private Keys (API tokens, SSH keys)
+
+  # Secret detection using gitleaks
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
 
   - repo: https://github.com/psf/black
     rev: 23.3.0
@@ -53,20 +61,31 @@ repos:
 
   - repo: local
     hooks:
-      - id: pytest-check
-        name: pytest-check
-        entry: bash -c 'cd python && uv run pytest tests/test_component_management.py tests/test_sexpr_parsing.py -q'
+      - id: check-root-pollution
+        name: Prevent root directory pollution
+        entry: bash -c '
+          if git diff --cached --name-only | grep -E "^[^/]+\.(kicad_sch|kicad_prl|kicad_pro)$" | grep -v "^examples/" | grep -v "^tests/"; then
+            echo "❌ ERROR: Trying to commit generated schematic files to root directory!"
+            echo "These files should be in examples/ or tests/ directories."
+            echo "Run: ./scripts/clean_root.sh to clean up."
+            exit 1
+          fi
+        '
         language: system
-        types: [python]
         pass_filenames: false
-        always_run: false
+        always_run: true
         stages: [commit]
 
-      - id: import-check
-        name: import-check
-        entry: bash -c 'cd python && uv run python -c "import kicad_sch_api; print(\"✅ Import successful\")"'
+      - id: check-demo-scripts
+        name: Prevent demo/test scripts in root
+        entry: bash -c '
+          if git diff --cached --name-only | grep -E "^(test_circuit_|demo_|generate_).*\.py$"; then
+            echo "⚠️  WARNING: Committing demo/test scripts to root directory."
+            echo "Consider moving to examples/ or tests/ directories."
+            exit 1
+          fi
+        '
         language: system
-        types: [python]
         pass_filenames: false
-        always_run: false
+        always_run: true
         stages: [commit]

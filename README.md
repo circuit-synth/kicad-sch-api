@@ -261,7 +261,6 @@ Learn by example with our polished reference circuits in the **[examples/](examp
 
 ### Microcontroller Examples
 - **[stm32_simple.py](examples/stm32_simple.py)** - STM32G030K8Tx with reset circuit, LED, and SWD debug interface
-- **[stm32g431_simple.py](examples/stm32g431_simple.py)** - STM32G431 development board with hierarchical design (5 sheets)
 
 ### Run All Examples
 - **[COMBINED.py](examples/COMBINED.py)** - Master script that generates all example schematics at once

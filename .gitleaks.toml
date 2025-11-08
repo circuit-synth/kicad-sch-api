@@ -1,0 +1,44 @@
+# Gitleaks configuration for detecting secrets
+# Prevents accidental commits of API tokens, passwords, and credentials
+
+title = "kicad-sch-api gitleaks config"
+
+[extend]
+useDefault = true
+
+# Custom rules for PyPI tokens
+[[rules]]
+id = "pypi-token"
+description = "PyPI API Token"
+regex = '''pypi-[A-Za-z0-9-_]{70,}'''
+tags = ["key", "pypi"]
+
+[[rules]]
+id = "pypi-password-field"
+description = "PyPI password field in config"
+regex = '''password\s*=\s*pypi-'''
+path = '''\.pypirc$'''
+tags = ["credential", "pypi"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|api[_-]?secret)\s*[:=]\s*['"][0-9a-zA-Z\-_]{20,}['"]'''
+tags = ["key", "api"]
+
+# Allowlist for false positives
+[allowlist]
+description = "Allowlisted files and patterns"
+paths = [
+    '''.pypirc.example''',  # Template file is safe
+    '''.*\.md$''',          # Documentation examples
+    '''tests/.*''',         # Test fixtures
+]
+
+# Allowlist example tokens in documentation
+regexes = [
+    '''pypi-YOUR_TOKEN_HERE''',
+    '''pypi-your_production_token_here''',
+    '''api_key.*example''',
+    '''password.*placeholder''',
+]
