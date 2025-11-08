@@ -57,12 +57,15 @@ def voltage_divider(sch, x_grid, y_grid):
     sch.junctions.add(position=p(0, 11))
 
     # ===== WIRING =====
-    # Vertical chain: VCC -> R1 -> Junction -> R2 -> GND
+    # Manual wiring for power connections
     sch.add_wire(start=p(0, 0), end=p(0, 2))       # VCC to R1 pin 1 (top)
-    sch.add_wire(start=p(0, 8), end=p(0, 11))      # R1 pin 2 (bottom) to junction
-    sch.add_wire(start=p(0, 11), end=p(0, 12))     # Junction to R2 pin 1 (top)
     sch.add_wire(start=p(0, 18), end=p(0, 21))     # R2 pin 2 (bottom) to GND
-    sch.add_wire(start=p(0, 11), end=p(3, 11))     # Horizontal tap to VOUT label
+
+    # Auto-route between resistors (demonstrates pin-to-pin connection)
+    sch.auto_route_pins('R1', '2', 'R2', '1', routing_strategy='direct')
+
+    # Horizontal tap to VOUT label
+    sch.add_wire(start=p(0, 11), end=p(3, 11))
 
     # ===== LABELS =====
     sch.add_label('VOUT', position=p(3, 11))
