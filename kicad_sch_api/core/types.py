@@ -215,6 +215,7 @@ class SchematicSymbol:
     footprint: Optional[str] = None
     properties: Dict[str, str] = field(default_factory=dict)
     pins: List[SchematicPin] = field(default_factory=list)
+    pin_uuids: Dict[str, str] = field(default_factory=dict)  # Maps pin number to UUID
     rotation: float = 0.0
     in_bom: bool = True
     on_board: bool = True

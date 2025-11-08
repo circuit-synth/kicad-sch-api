@@ -224,6 +224,11 @@ class Component:
         """List of component pins."""
         return self._data.pins
 
+    @property
+    def pin_uuids(self) -> Dict[str, str]:
+        """Dictionary mapping pin numbers to their UUIDs."""
+        return self._data.pin_uuids
+
     def get_pin(self, pin_number: str) -> Optional[SchematicPin]:
         """
         Get pin by number.

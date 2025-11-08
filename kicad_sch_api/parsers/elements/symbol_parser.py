@@ -37,6 +37,7 @@ class SymbolParser(BaseElementParser):
                 "footprint": None,
                 "properties": {},
                 "pins": [],
+                "pin_uuids": {},  # Maps pin number to UUID
                 "in_bom": True,
                 "on_board": True,
                 "instances": [],
@@ -95,6 +96,14 @@ class SymbolParser(BaseElementParser):
                     instances = self._parse_instances(sub_item)
                     if instances:
                         symbol_data["instances"] = instances
+                elif element_type == "pin":
+                    # Parse pin UUID: (pin "1" (uuid "..."))
+                    pin_data = self._parse_pin_uuid(sub_item)
+                    if pin_data:
+                        pin_number = pin_data.get("number")
+                        pin_uuid = pin_data.get("uuid")
+                        if pin_number and pin_uuid:
+                            symbol_data["pin_uuids"][pin_number] = pin_uuid
 
             return symbol_data
 
@@ -174,6 +183,45 @@ class SymbolParser(BaseElementParser):
 
         return instances
 
+    def _parse_pin_uuid(self, item: List[Any]) -> Optional[Dict[str, Any]]:
+        """
+        Parse pin UUID from S-expression.
+
+        Format:
+        (pin "1" (uuid "df660b58-5cdf-473e-8c0a-859cae977374"))
+
+        Returns:
+            Dict with 'number' and 'uuid' keys, or None if invalid
+        """
+        try:
+            if len(item) < 2:
+                return None
+
+            # Pin number is the second element
+            pin_number = str(item[1])
+
+            # Look for uuid sub-element
+            pin_uuid = None
+            for sub_item in item[2:]:
+                if not isinstance(sub_item, list) or len(sub_item) == 0:
+                    continue
+
+                element_type = str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
+                if element_type == "uuid":
+                    pin_uuid = sub_item[1] if len(sub_item) > 1 else None
+                    break
+
+            if pin_number and pin_uuid:
+                return {
+                    "number": pin_number,
+                    "uuid": pin_uuid,
+                }
+
+            return None
+
+        except Exception as e:
+            logger.warning(f"Error parsing pin UUID: {e}")
+            return None
 
     def _symbol_to_sexp(self, symbol_data: Dict[str, Any], schematic_uuid: str = None) -> List[Any]:
         """Convert symbol to S-expression."""
@@ -292,11 +340,19 @@ class SymbolParser(BaseElementParser):
                 sexp.append(prop)
 
         # Add pin UUID assignments (required by KiCAD)
-        for pin in symbol_data.get("pins", []):
-            pin_uuid = str(uuid.uuid4())
-            # Ensure pin number is a string for proper quoting
-            pin_number = str(pin.number)
-            sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
+        pin_uuids_dict = symbol_data.get("pin_uuids", {})
+        pins_list = symbol_data.get("pins", [])
+
+        # If we have stored pin UUIDs, use those (loaded from file)
+        if pin_uuids_dict:
+            for pin_number, pin_uuid in pin_uuids_dict.items():
+                sexp.append([sexpdata.Symbol("pin"), str(pin_number), [sexpdata.Symbol("uuid"), pin_uuid]])
+        # Otherwise, generate UUIDs for pins from library definition (newly added components)
+        elif pins_list:
+            for pin in pins_list:
+                pin_number = str(pin.number)
+                pin_uuid = str(uuid.uuid4())
+                sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
 
         # Add instances section (required by KiCAD)
         from ...core.config import config
