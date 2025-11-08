@@ -14,7 +14,7 @@ description: Core development workflow - from problem to PR for KiCAD schematic 
 
 ```
 /dev (end-to-end development)
-  ├─ Phase 1: Generate PRD
+  ├─ Phase 1: Generate PRD (research → ask questions → document)
   ├─ Phase 2: Create Reference Schematic (Interactive)
   ├─ Phase 3: Generate Tests
   ├─ Phase 4: Implementation (iterative with logging)
@@ -47,23 +47,75 @@ description: Core development workflow - from problem to PR for KiCAD schematic 
 
 **Goal**: Create comprehensive Product Requirements Document
 
-### Step 1.1: Understand the Problem
+### Step 1.1: Research and Analyze (Silent)
 
-**Ask clarifying questions** to understand:
-- **Problem Overview**: What are we building/fixing and why?
-- **User Needs**: Who needs this and what problem does it solve?
-- **Success Criteria**: What does "done" look like? (measurable)
-- **Constraints**: Technical limits, KiCAD compatibility requirements
-- **Dependencies**: What does this interact with? (parser, formatter, MCP tools)
+**Before asking questions**, do research to understand context:
 
-**For KiCAD-specific features**, also ask:
-- Which KiCAD elements involved (components, wires, labels, properties, pins)?
-- KiCAD version compatibility required (7.0, 8.0)?
-- S-expression format specifics needed?
-- Format preservation requirements (byte-perfect vs semantic equivalence)?
-- Impact on existing features (connectivity, hierarchy, BOM)?
+1. **Search codebase** for related functionality:
+   - Use Grep/Glob to find similar features
+   - Read relevant parser/formatter files
+   - Check existing tests for patterns
+   - Review related PRDs in `docs/prd/`
 
-### Step 1.2: Generate PRD
+2. **Understand the problem domain**:
+   - What KiCAD elements are involved?
+   - What S-expression format is affected?
+   - What existing code handles similar cases?
+   - What reference schematics exist that might help?
+
+3. **Identify knowledge gaps**:
+   - What can't be determined from code alone?
+   - What requires user preference/decision?
+   - What scope clarification is needed?
+   - What technical constraints are unclear?
+
+**DO NOT present research findings to user** - use this to formulate smart questions.
+
+### Step 1.2: Ask Clarifying Questions
+
+**After research**, ask targeted questions to fill knowledge gaps:
+
+**Question Guidelines**:
+- **Maximum 5 questions** unless user asks for more detail
+- **Keep questions concise** - use bullet points, not paragraphs
+- **Be specific** - reference code/files you found during research
+- **Offer options** when possible - makes answering easier
+- **Skip obvious questions** - if you can infer from code, don't ask
+
+**Question Format**:
+```
+I've reviewed the codebase and have a few questions:
+
+1. **{Specific question about scope/requirements}**
+   - Option A: {brief description}
+   - Option B: {brief description}
+
+2. **{Question about technical approach}**
+
+3. **{Question about edge cases}**
+
+(Continue up to 5 questions)
+```
+
+**When to ask more than 5 questions**:
+- User explicitly requests detailed discussion
+- Multiple major architectural decisions needed
+- Significant breaking changes involved
+- Complex feature with many unknowns
+
+**Examples of GOOD questions**:
+- ✅ "Should empty pin UUIDs generate new UUIDs or raise an error?"
+- ✅ "Format preservation: byte-perfect or semantic equivalence acceptable?"
+- ✅ "Found 3 similar parsers (A, B, C) - which pattern should I follow?"
+
+**Examples of BAD questions**:
+- ❌ "What is the problem?" (too vague - you should know from research)
+- ❌ "How does KiCAD work?" (research this yourself)
+- ❌ Long paragraphs explaining what you found (user doesn't need your research dump)
+
+**Wait for user responses** before proceeding.
+
+### Step 1.3: Generate PRD
 
 **IMPORTANT - Writing Guidelines**:
 Following `CLAUDE.md` writing style requirements:
@@ -124,7 +176,7 @@ Following `CLAUDE.md` writing style requirements:
 
 **Save PRD** to: `docs/prd/{feature-name}-prd.md`
 
-### Step 1.3: User Checkpoint
+### Step 1.4: User Checkpoint
 
 **Present PRD and ask**:
 > I've created a PRD for this feature. Please review:
