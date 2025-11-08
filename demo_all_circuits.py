@@ -21,81 +21,72 @@ def snap_to_grid(value: float, grid_size: float = 1.27) -> float:
 
 
 # ============================================================================
-# VOLTAGE DIVIDER CIRCUIT
+# VOLTAGE DIVIDER CIRCUIT - GRID BASED
 # ============================================================================
 
-def create_voltage_divider(sch, x_offset: float, y_offset: float, instance: int = 1):
-    """Create a voltage divider circuit at specified location."""
-    GRID = 2.54
+def create_voltage_divider(sch, x_offset_grids: int, y_offset_grids: int, instance: int = 1):
+    """
+    Create a voltage divider circuit at specified location (GRID-BASED).
 
-    rect_x = snap_to_grid(x_offset)
-    rect_y = snap_to_grid(y_offset)
+    Args:
+        x_offset_grids: X offset in grid units (1.27mm each)
+        y_offset_grids: Y offset in grid units
+        instance: Circuit instance number
+    """
+    GRID = 1.27  # mm per grid unit
 
-    x = snap_to_grid(rect_x + GRID * 3)
-    y = snap_to_grid(rect_y + GRID * 5)
-
-    # Title
-    title_x = snap_to_grid(x + GRID * 2.5)
-    title_y = snap_to_grid(y - GRID * 4.1)
-    sch.add_text("VOLTAGE DIVIDER", position=(title_x, title_y), size=2.0)
+    def pos(x_grid, y_grid):
+        """Convert grid position to mm"""
+        return ((x_offset_grids + x_grid) * GRID, (y_offset_grids + y_grid) * GRID)
 
     # Generate unique references
     r1_ref = f"R{instance}1" if instance > 1 else "R1"
     r2_ref = f"R{instance}2" if instance > 1 else "R2"
 
-    # R1 and R2 positions
-    r1_x, r1_y = snap_to_grid(x), snap_to_grid(y)
-    r2_x, r2_y = snap_to_grid(x), snap_to_grid(y + GRID * 4.5)
+    # Component positions in GRID UNITS
+    r1_pos = pos(6, 10)  # R1 at grid (6, 10)
+    r2_pos = pos(6, 19)  # R2 at grid (6, 19) - 9 grids below
 
     # Components
-    r1 = sch.components.add("Device:R", r1_ref, "10k", position=(r1_x, r1_y))
-    r2 = sch.components.add("Device:R", r2_ref, "10k", position=(r2_x, r2_y))
+    r1 = sch.components.add("Device:R", r1_ref, "10k", position=r1_pos)
+    r2 = sch.components.add("Device:R", r2_ref, "10k", position=r2_pos)
 
-    # Junction point between resistors
-    junction_x = snap_to_grid(x)
-    junction_y = snap_to_grid(y + GRID * 2.5)
-    sch.junctions.add(position=(junction_x, junction_y))
+    # Junction between resistors
+    junction_pos = pos(6, 15)  # Midpoint
+    sch.junctions.add(position=junction_pos)
 
     # Labels
-    vcc_x, vcc_y = snap_to_grid(x), snap_to_grid(r1_y - GRID * 2)
-    vout_x, vout_y = snap_to_grid(x + GRID * 2), snap_to_grid(junction_y)
-    gnd_x, gnd_y = snap_to_grid(x), snap_to_grid(r2_y + GRID * 2)
+    sch.add_label("VCC", position=pos(6, 6))   # Above R1
+    sch.add_label("VOUT", position=pos(10, 15)) # Right of junction
+    sch.add_label("GND", position=pos(6, 23))  # Below R2
 
-    sch.add_label("VCC", position=(vcc_x, vcc_y))
-    sch.add_label("VOUT", position=(vout_x, vout_y))
-    sch.add_label("GND", position=(gnd_x, gnd_y))
-
-    # Wires
+    # Wires - get pin positions
     r1_pins = sch.list_component_pins(r1_ref)
     r2_pins = sch.list_component_pins(r2_ref)
 
-    r1_pin1 = r1_pins[0][1]
-    r1_pin2 = r1_pins[1][1]
-    r2_pin1 = r2_pins[0][1]
-    r2_pin2 = r2_pins[1][1]
+    r1_pin1 = r1_pins[0][1]  # Top pin
+    r1_pin2 = r1_pins[1][1]  # Bottom pin
+    r2_pin1 = r2_pins[0][1]  # Top pin
+    r2_pin2 = r2_pins[1][1]  # Bottom pin
 
-    sch.add_wire(start=(vcc_x, vcc_y), end=r1_pin1)
-    sch.add_wire(start=r1_pin2, end=(junction_x, junction_y))
-    sch.add_wire(start=(junction_x, junction_y), end=r2_pin1)
-    sch.add_wire(start=r2_pin2, end=(gnd_x, gnd_y))
-    sch.add_wire(start=(junction_x, junction_y), end=(vout_x, vout_y))
+    sch.add_wire(start=pos(6, 6), end=r1_pin1)
+    sch.add_wire(start=r1_pin2, end=junction_pos)
+    sch.add_wire(start=junction_pos, end=r2_pin1)
+    sch.add_wire(start=r2_pin2, end=pos(6, 23))
+    sch.add_wire(start=junction_pos, end=pos(10, 15))
 
-    # Rectangle
-    rect_end_x = snap_to_grid(rect_x + GRID * 12)
-    rect_end_y = snap_to_grid(rect_y + GRID * 18)
-    sch.add_rectangle(start=(rect_x, rect_y), end=(rect_end_x, rect_end_y))
+    # Rectangle border
+    sch.add_rectangle(start=pos(0, 0), end=pos(24, 36))
 
-    # Formula annotation - centered text box at bottom of rectangle
-    text_box_x = snap_to_grid(rect_x + GRID * 1)
-    text_box_y = snap_to_grid(rect_end_y - GRID * 3.5)
-    text_box_width = snap_to_grid(GRID * 10)
-    text_box_height = snap_to_grid(GRID * 3)
+    # Title
+    sch.add_text("VOLTAGE DIVIDER", position=pos(11, 2), size=2.0)
 
+    # Formula annotation
     formula_text = "Vout = Vin × R2/(R1+R2)\nVout = 2.5V @ Vin=5V"
     sch.add_text_box(
         formula_text,
-        position=(text_box_x, text_box_y),
-        size=(text_box_width, text_box_height),
+        position=pos(2, 29),
+        size=(20 * GRID, 6 * GRID),
         font_size=1.27
     )
 
@@ -341,15 +332,15 @@ def main():
     # Create schematic
     sch = ksa.create_schematic("Demo_All_Circuits")
 
-    # A4 landscape layout - place circuits in a grid
+    # A4 landscape layout - place circuits in a grid (GRID-BASED)
     # Grid spacing for circuit placement
-    CIRCUIT_GRID = 60  # 60mm between circuit centers
+    CIRCUIT_GRID = 47  # grid units between circuits (≈60mm)
 
-    # Starting position (upper left)
-    START_X = 20
-    START_Y = 20
+    # Starting position in GRID UNITS
+    START_X = 16  # grid units (≈20mm)
+    START_Y = 16  # grid units (≈20mm)
 
-    print("📍 Circuit Placement Layout:")
+    print("📍 Circuit Placement Layout (GRID-BASED):")
     print("  Row 1: Voltage Divider | Power Supply | RC Filter")
     print("  Row 2: STM32 Microprocessor")
     print()
@@ -359,7 +350,7 @@ def main():
     circuit1_x = START_X
     circuit1_y = START_Y
     create_voltage_divider(sch, circuit1_x, circuit1_y, instance=1)
-    print(f"  ✅ Placed at ({circuit1_x}, {circuit1_y})")
+    print(f"  ✅ Placed at grid ({circuit1_x}, {circuit1_y})")
 
     print("🔧 Circuit 2: 5V Power Supply (LM7805)...")
     circuit2_x = START_X + CIRCUIT_GRID
@@ -373,12 +364,12 @@ def main():
     create_rc_filter(sch, circuit3_x, circuit3_y, instance=1)
     print(f"  ✅ Placed at ({circuit3_x}, {circuit3_y})")
 
-    # Row 2: STM32 Microprocessor
+    # Row 2: STM32 Microprocessor (moved up closer)
     print("🔧 Circuit 4: STM32G030K8Tx Microprocessor...")
-    circuit4_x = START_X
-    circuit4_y = START_Y + CIRCUIT_GRID * 2
-    create_stm32_microprocessor(sch, circuit4_x, circuit4_y, instance=2)  # instance=2 to avoid U1 conflict
-    print(f"  ✅ Placed at ({circuit4_x}, {circuit4_y})")
+    circuit4_x_mm = START_X * 1.27  # Convert grid to mm for STM32 (still uses mm)
+    circuit4_y_mm = (START_Y + int(CIRCUIT_GRID * 1.2)) * 1.27
+    create_stm32_microprocessor(sch, circuit4_x_mm, circuit4_y_mm, instance=2)  # instance=2 to avoid U1 conflict
+    print(f"  ✅ Placed at ({circuit4_x_mm:.1f}mm, {circuit4_y_mm:.1f}mm)")
 
     print()
     print("=" * 80)
