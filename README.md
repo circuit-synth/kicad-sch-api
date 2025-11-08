@@ -256,28 +256,35 @@ Learn by example with our polished reference circuits in the **[examples/](examp
 
 ### Basic Circuits
 - **[voltage_divider.py](examples/voltage_divider.py)** - Simple 10k/10k voltage divider with grid-based parametric design
-- **[rc_filter.py](examples/rc_filter.py)** - RC low-pass filter demonstrating auto-routing
-- **[power_supply.py](examples/power_supply.py)** - LM7805 5V regulator with power symbols and text annotations
+- **[rc_filter.py](examples/rc_filter.py)** - RC low-pass filter demonstrating wire routing and junctions
+- **[power_supply.py](examples/power_supply.py)** - AMS1117-3.3 voltage regulator (5V → 3.3V) with power symbols
 
-### Advanced Examples
-- **[stm32g431_simple.py](examples/stm32g431_simple.py)** - STM32 development board with hierarchical design (5 sheets)
-- **[hierarchy_example.py](examples/hierarchy_example.py)** - Advanced hierarchy features and patterns
+### Microcontroller Examples
+- **[stm32_simple.py](examples/stm32_simple.py)** - STM32G030K8Tx with reset circuit, LED, and SWD debug interface
+- **[stm32g431_simple.py](examples/stm32g431_simple.py)** - STM32G431 development board with hierarchical design (5 sheets)
+
+### Run All Examples
+- **[COMBINED.py](examples/COMBINED.py)** - Master script that generates all example schematics at once
 
 ### Getting Started
 Start with **[WALKTHROUGH.md](examples/WALKTHROUGH.md)** - a complete tutorial from basics to advanced parametric circuits.
 
 All examples use:
-- Grid-based positioning with `ksa.use_grid_units(True)`
-- Parametric `p()` helper for reusable circuits
-- Auto-routing between component pins
+- Grid-based positioning with intuitive grid units (1.27mm)
+- Parametric `p(x, y)` helper for clean, readable coordinates
+- Individual `add_wire()` calls with descriptive comments
+- Proper wire junctions at all T-connection points
 - Comprehensive inline documentation
 
 ```bash
 # Run any example
-cd examples
-python voltage_divider.py
-python rc_filter.py
-python power_supply.py
+uv run python examples/voltage_divider.py
+uv run python examples/rc_filter.py
+uv run python examples/power_supply.py
+uv run python examples/stm32_simple.py
+
+# Or run all examples at once
+uv run python examples/COMBINED.py
 ```
 
 ## 📚 Advanced Features
