@@ -91,6 +91,14 @@ sch.save("auto_wiring.kicad_sch")
 - Auto-routing is easier and handles component rotations automatically
 - Wire endpoints must align with component pins for proper electrical connection
 
+> **⚠️ Important: KiCAD Y-Axis Convention**
+> KiCAD uses an **inverted Y-axis** (like computer graphics):
+> - **Higher Y values = lower on screen** (e.g., Y=120 is *below* Y=100)
+> - **Lower Y values = higher on screen** (e.g., Y=100 is *above* Y=120)
+>
+> This is opposite from standard math/physics where +Y goes up!
+> In our example above, R2 at Y=120.0 appears *below* R1 at Y=100.0.
+
 ---
 
 ## 3. Working with Labels and Text
