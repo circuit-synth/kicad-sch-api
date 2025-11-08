@@ -147,7 +147,7 @@ uv run pytest tests/reference_tests/ -v
 uv run pytest tests/test_format_preservation.py -v
 ```
 
-See [CLAUDE.md](CLAUDE.md#testing-strategy--format-preservation) for details on format preservation testing strategy.
+See [docs/CLAUDE_GUIDE.md](docs/CLAUDE_GUIDE.md#testing-strategy--format-preservation) for details on format preservation testing strategy.
 
 ## Code Style Guidelines
 

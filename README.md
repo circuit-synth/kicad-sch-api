@@ -419,7 +419,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 AI agents can now create, modify, and analyze KiCAD schematics programmatically!
 
 **📖 Complete Documentation**:
-- **[MCP Setup Guide](MCP_SETUP_GUIDE.md)** - Installation, configuration, and troubleshooting
+- **[MCP Setup Guide](docs/MCP_SETUP_GUIDE.md)** - Installation, configuration, and troubleshooting
 - **[MCP Examples](docs/MCP_EXAMPLES.md)** - Comprehensive usage examples and patterns
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
 
