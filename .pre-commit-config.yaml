@@ -89,3 +89,31 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [commit]
+
+      - id: check-marketing-language
+        name: Detect AI-slop marketing buzzwords
+        entry: bash -c '
+          BANNED_WORDS="professional|seamless|revolutionary|game-changing|industry-leading|cutting-edge|state-of-the-art|enterprise-ready|enterprise-grade|AI-powered|next-generation|future-proof|world-class|complete solution"
+          FILES=$(git diff --cached --name-only | grep -E "\.(md|rst)$" | grep -v "CLAUDE.md" | grep -v "_PRD.md" | grep -v "REPO_REVIEW" | grep -v "FORUM_POST")
+          if [ -n "$FILES" ]; then
+            MATCHES=$(echo "$FILES" | xargs grep -iE "($BANNED_WORDS)" 2>/dev/null || true)
+            if [ -n "$MATCHES" ]; then
+              echo "❌ ERROR: Marketing buzzwords detected in documentation!"
+              echo ""
+              echo "Found banned words (see CLAUDE.md for style guidelines):"
+              echo "$MATCHES"
+              echo ""
+              echo "Replace with specific technical claims:"
+              echo "  ❌ professional → ✅ object-oriented / tested"
+              echo "  ❌ seamless → ✅ includes / provides"
+              echo "  ❌ AI-powered → ✅ MCP server for programmatic manipulation"
+              echo ""
+              echo "See CLAUDE.md for complete writing guidelines."
+              exit 1
+            fi
+          fi
+        '
+        language: system
+        pass_filenames: false
+        always_run: false
+        stages: [commit]

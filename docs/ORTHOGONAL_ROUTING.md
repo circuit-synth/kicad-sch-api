@@ -17,7 +17,7 @@ Comprehensive guide to automatic wire routing in kicad-sch-api using Manhattan-s
 
 ## Overview
 
-The orthogonal routing module provides automatic Manhattan-style wire routing between points in KiCAD schematics. Instead of manually calculating wire paths and junction points, you can use the routing algorithm to generate professional L-shaped or direct wire routes.
+The orthogonal routing module provides automatic Manhattan-style wire routing between points in KiCAD schematics. Instead of manually calculating wire paths and junction points, you can use the routing algorithm to generate L-shaped or direct wire routes.
 
 ### What is Orthogonal Routing?
 
@@ -538,7 +538,7 @@ def route_component_pins(from_pin: Point, to_pin: Point) -> RoutingResult:
 
 ## Integration with MCP Server
 
-The routing functionality is designed to integrate with MCP servers for AI-powered circuit design. Here's the planned integration (Phase 2):
+The routing functionality integrates with the MCP server for programmatic circuit generation. Here's the planned integration (Phase 2):
 
 ### MCP Tool: connect_components()
 

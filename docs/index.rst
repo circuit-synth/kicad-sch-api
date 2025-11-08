@@ -1,7 +1,7 @@
 kicad-sch-api Documentation
 ============================
 
-Professional KiCAD Schematic Manipulation Library
+KiCAD Schematic Manipulation Library
 
 **kicad-sch-api** is a Python library for programmatic creation and manipulation of KiCAD schematic files with exact format preservation.
 
@@ -61,7 +61,7 @@ Key Features
 ✅ **Real KiCAD Library Integration** - Works with your KiCAD installation
    Automatic component validation and pin position calculation
 
-✅ **Professional API** - Modern Python with full type hints
+✅ **Object-Oriented API** - Modern Python with full type hints
    Clean, intuitive interface with comprehensive validation
 
 ✅ **Automatic Wire Routing** - Manhattan-style orthogonal routing
@@ -70,9 +70,9 @@ Key Features
 ✅ **Performance Optimized** - O(1) lookups, bulk operations, symbol caching
    Handles large schematics with hundreds of components efficiently
 
-✅ **AI Agent Ready** - Complete MCP server with 15 tools
-   Natural language circuit generation through Claude and other AI agents
-   Build complete circuits from simple text prompts
+✅ **MCP Server** - 15 tools for programmatic schematic manipulation
+   Enables circuit generation through natural language with AI agents
+   Build circuits from text prompts using Claude or other MCP clients
 
 Quick Example
 -------------

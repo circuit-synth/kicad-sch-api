@@ -5,25 +5,28 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Professional Python library for KiCAD schematic file manipulation with exact format preservation**
+**Python library for reading and writing KiCAD schematic files**
+
+Generates valid `.kicad_sch` files that open in KiCAD 7/8. Focus on exact format preservation and simple API design.
 
 ## Overview
 
-Create and manipulate KiCAD schematic files programmatically with guaranteed exact format preservation. This library serves as the foundation for EDA automation tools and AI agents that need reliable, professional-grade schematic manipulation capabilities.
+Read and write KiCAD schematic files programmatically. This library parses and generates `.kicad_sch` files with exact format preservation - output matches KiCAD's native formatting byte-for-byte.
 
-## 🎯 Core Features
+## Core Features
 
-- **📋 Exact Format Preservation**: Byte-perfect KiCAD output that matches native formatting
-- **🏗️ Professional Component Management**: Object-oriented collections with search and validation
-- **⚡ High Performance**: Optimized for large schematics with intelligent caching
-- **🔍 Real KiCAD Library Integration**: Access to actual KiCAD symbol libraries and validation
-- **🔌 Connectivity Analysis**: Trace electrical connections through wires, labels, and hierarchy
-- **📐 Component Bounding Boxes**: Precise component boundary calculation and visualization
-- **🛣️ Manhattan Routing**: Intelligent wire routing with obstacle avoidance
-- **🗂️ Hierarchical Design**: Complete support for multi-sheet schematic projects
-- **🤖 AI Agent Ready**: MCP server for seamless integration with AI development tools
+- **Exact format preservation** - Output matches KiCAD's native formatting byte-for-byte
+- **Standalone library** - No KiCAD installation required
+- **Simple API** - Object-oriented interface for components, wires, labels, and symbols
+- **Tested compatibility** - 70+ tests verify format preservation against KiCAD reference files
+- **KiCAD library access** - Read actual KiCAD symbol libraries for component validation
+- **Connectivity analysis** - Trace electrical connections through wires, labels, and hierarchy
+- **Hierarchical design** - Complete support for multi-sheet schematic projects
+- **Component bounding boxes** - Calculate precise component boundaries for layout algorithms
+- **Wire routing** - Manhattan-style orthogonal routing with basic obstacle avoidance
+- **MCP server** - 15 tools for programmatic schematic manipulation via Model Context Protocol
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -296,9 +299,9 @@ For comprehensive documentation on all features:
 - **[Getting Started](docs/GETTING_STARTED.md)** - Detailed tutorial
 - **[Architecture](docs/ARCHITECTURE.md)** - Library design and internals
 
-## 🤖 AI Agent Integration (MCP Server)
+## MCP Server
 
-**Complete MCP (Model Context Protocol) server** for AI-powered circuit design:
+Includes an MCP (Model Context Protocol) server with 15 tools for programmatic schematic manipulation:
 
 ```bash
 # Start the MCP server
@@ -309,7 +312,7 @@ pip install kicad-sch-api
 kicad-sch-mcp
 ```
 
-### Complete MCP Tool Suite (15 Tools)
+### MCP Tool Suite (15 Tools)
 
 **Component Management (5 tools):**
 - `add_component` - Add components with auto-reference/position
@@ -334,13 +337,13 @@ kicad-sch-mcp
 - `save_schematic` - Save schematics to disk
 - `get_schematic_info` - Query schematic metadata
 
-### What You Can Build
+### MCP Server Capabilities
 
-With the MCP server, AI agents can now:
-- **Design complete circuits**: Add components, create connections, label nets
-- **Manage schematics**: Create, load, save, and modify circuit files
-- **Analyze circuits**: List components, filter by criteria, discover pin information
-- **Build any circuit**: Voltage dividers, filters, LED circuits, power supplies, and more!
+The MCP server provides tools for:
+- Adding components, creating connections, and labeling nets
+- Creating, loading, saving, and modifying schematic files
+- Listing components, filtering by criteria, and discovering pin information
+- Building circuits like voltage dividers, filters, LED drivers, and power supplies
 
 ### Example: Building Complete Circuits via MCP
 
@@ -416,26 +419,26 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-AI agents can now create, modify, and analyze KiCAD schematics programmatically!
+MCP tools enable programmatic creation, modification, and analysis of KiCAD schematics.
 
 **📖 Complete Documentation**:
 - **[MCP Setup Guide](docs/MCP_SETUP_GUIDE.md)** - Installation, configuration, and troubleshooting
 - **[MCP Examples](docs/MCP_EXAMPLES.md)** - Comprehensive usage examples and patterns
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
 
-## 🏗️ Architecture
+## Architecture
 
 ### Design Principles
 
 - **Building Block First**: Designed to be the foundation for other tools
 - **Exact Format Preservation**: Guaranteed byte-perfect KiCAD output
-- **Professional Quality**: Comprehensive error handling and validation
-- **AI Agent Ready**: Integrated MCP server for seamless AI development workflow
+- **Comprehensive Validation**: Error handling and input validation
+- **MCP Integration**: Includes MCP server for programmatic schematic manipulation
 - **Performance Optimized**: Fast operations on large schematics
 
 **📖 See [Architecture Guide](docs/ARCHITECTURE.md) for detailed design documentation**
 
-## 🧪 Testing & Quality
+## Testing & Quality
 
 ```bash
 # Run all tests (29 tests covering all functionality)
@@ -457,21 +460,21 @@ uv run mypy kicad_sch_api/
 - **Hierarchy**: Multi-sheet designs, sheet reuse, signal tracing
 - **Integration**: Real KiCAD library compatibility
 
-## 🆚 Why This Library?
+## Why This Library?
 
 ### vs. Direct KiCAD File Editing
-- **Professional API**: High-level operations vs low-level S-expression manipulation
-- **Guaranteed Format**: Byte-perfect output vs manual formatting
+- **High-level API**: Object-oriented interface vs low-level S-expression manipulation
+- **Format Preservation**: Byte-perfect output vs manual formatting
 - **Validation**: Real KiCAD library integration and component validation
 
 ### vs. Other Python KiCAD Libraries
 - **Format Preservation**: Exact KiCAD compatibility vs approximate output
-- **Modern Design**: Object-oriented collections vs legacy patterns
-- **AI Integration**: Integrated MCP server for AI agents vs no agent support
+- **Object-Oriented Design**: Modern collection classes vs legacy patterns
+- **MCP Integration**: Included MCP server vs no programmatic interface
 
 **📖 See [Why Use This Library](docs/WHY_USE_THIS_LIBRARY.md) for detailed comparison**
 
-## ⚠️ Known Limitations
+## Known Limitations
 
 ### Connectivity Analysis
 - **Global Labels**: Explicit global label connections not yet fully implemented (power symbols like VCC/GND work correctly)
@@ -488,7 +491,7 @@ uv run mypy kicad_sch_api/
 
 **Report issues**: https://github.com/circuit-synth/kicad-sch-api/issues
 
-## 📖 Documentation
+## Documentation
 
 Full documentation is available:
 

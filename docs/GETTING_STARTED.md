@@ -28,8 +28,8 @@ Create tools that generate circuits from specifications:
 - Generate power distribution networks automatically
 - Create test circuits from component datasheets
 
-### 3. **AI-Powered Circuit Design**
-Integrate with AI agents (like Claude) to design circuits through natural language. The library works perfectly with MCP (Model Context Protocol) for AI agent integration.
+### 3. **MCP Server Integration**
+Use the included MCP server to manipulate schematics programmatically through AI agents like Claude. The library provides 15 MCP tools for circuit generation via natural language.
 
 ### 4. **Circuit Analysis & Validation**
 Read existing schematics, analyze them, and generate reports:

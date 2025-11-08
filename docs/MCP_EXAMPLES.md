@@ -1,6 +1,6 @@
 # MCP Server Usage Examples
 
-This guide provides comprehensive examples of using the kicad-sch-api MCP server for AI-powered circuit design.
+This guide provides examples of using the kicad-sch-api MCP server for programmatic circuit generation.
 
 ## Table of Contents
 - [Setup](#setup)
@@ -638,7 +638,7 @@ pins = get_component_pins("R1")  # Case-sensitive!
 2. **Get pin positions before wiring** - don't guess coordinates
 3. **Add junctions at T-connections** - ensures proper connectivity
 4. **Place labels offset from wires** - improves readability
-5. **Use consistent spacing** - makes schematics professional
+5. **Use consistent spacing** - improves readability and maintainability
 6. **Verify component references** - use exact case-sensitive names
 7. **Save frequently** - preserve work incrementally
 8. **Test in KiCAD** - verify generated schematics open correctly
