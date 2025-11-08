@@ -1,0 +1,3 @@
+# This directory contains Product Requirements Documents (PRDs)
+# PRDs are excluded from ReadTheDocs via docs/conf.py
+# They are kept here to maintain all documentation in one location
