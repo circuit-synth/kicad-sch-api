@@ -39,40 +39,40 @@ def voltage_divider(sch, x_grid, y_grid):
     """
 
     # Helper function for grid-relative positioning
-    def pos(dx, dy):
-        """Return grid position relative to origin"""
+    def p(dx, dy):
+        """Position helper for parametric placement"""
         return (x_grid + dx, y_grid + dy)
 
     # ===== POWER SYMBOLS =====
-    sch.components.add('power:VCC', '#PWR01', 'VCC', position=pos(0, 0))
-    sch.components.add('power:GND', '#PWR02', 'GND', position=pos(0, 21))
+    sch.components.add('power:VCC', '#PWR01', 'VCC', position=p(0, 0))
+    sch.components.add('power:GND', '#PWR02', 'GND', position=p(0, 21))
 
     # ===== RESISTORS =====
     # Each resistor is 6 grid units tall (pins at ±3 from center)
-    r1 = sch.components.add('Device:R', 'R1', '10k', position=pos(0, 5))
-    r2 = sch.components.add('Device:R', 'R2', '10k', position=pos(0, 15))
+    r1 = sch.components.add('Device:R', 'R1', '10k', position=p(0, 5))
+    r2 = sch.components.add('Device:R', 'R2', '10k', position=p(0, 15))
 
     # ===== JUNCTION =====
     # Junction at the output node (between R1 and R2)
-    sch.junctions.add(position=pos(0, 11))
+    sch.junctions.add(position=p(0, 11))
 
     # ===== WIRING =====
     # Vertical chain: VCC -> R1 -> Junction -> R2 -> GND
-    sch.add_wire(start=pos(0, 0), end=pos(0, 2))       # VCC to R1 pin 1 (top)
-    sch.add_wire(start=pos(0, 8), end=pos(0, 11))      # R1 pin 2 (bottom) to junction
-    sch.add_wire(start=pos(0, 11), end=pos(0, 12))     # Junction to R2 pin 1 (top)
-    sch.add_wire(start=pos(0, 18), end=pos(0, 21))     # R2 pin 2 (bottom) to GND
-    sch.add_wire(start=pos(0, 11), end=pos(3, 11))     # Horizontal tap to VOUT label
+    sch.add_wire(start=p(0, 0), end=p(0, 2))       # VCC to R1 pin 1 (top)
+    sch.add_wire(start=p(0, 8), end=p(0, 11))      # R1 pin 2 (bottom) to junction
+    sch.add_wire(start=p(0, 11), end=p(0, 12))     # Junction to R2 pin 1 (top)
+    sch.add_wire(start=p(0, 18), end=p(0, 21))     # R2 pin 2 (bottom) to GND
+    sch.add_wire(start=p(0, 11), end=p(3, 11))     # Horizontal tap to VOUT label
 
     # ===== LABELS =====
-    sch.add_label('VOUT', position=pos(3, 11))
+    sch.add_label('VOUT', position=p(3, 11))
 
     # ===== DECORATIVE ELEMENTS =====
     # Rectangle border for visual grouping
-    sch.add_rectangle(start=pos(-10, -10), end=pos(10, 26))
+    sch.add_rectangle(start=p(-10, -10), end=p(10, 26))
 
     # Title text
-    sch.add_text("Voltage Divider", position=pos(-2, -8), size=1.27)
+    sch.add_text("Voltage Divider", position=p(-2, -8), size=1.27)
 
 
 def main():
