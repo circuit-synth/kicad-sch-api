@@ -639,8 +639,8 @@ class Schematic:
         self,
         start: Union[Point, Tuple[float, float]],
         end: Union[Point, Tuple[float, float]],
-        grid_units: bool = False,
-        grid_size: float = 1.27,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add a wire connection between two points.
@@ -648,12 +648,19 @@ class Schematic:
         Args:
             start: Start point in mm (or grid units if grid_units=True)
             end: End point in mm (or grid units if grid_units=True)
-            grid_units: If True, interpret positions as grid units instead of mm
-            grid_size: Grid size in mm (default 1.27mm = 50 mil KiCAD standard)
+            grid_units: If True, interpret positions as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created wire
         """
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
         # Convert grid units to mm if requested
         if grid_units:
             if isinstance(start, tuple):
@@ -785,8 +792,8 @@ class Schematic:
         rotation: Optional[float] = None,
         size: Optional[float] = None,
         uuid: Optional[str] = None,
-        grid_units: bool = False,
-        grid_size: float = 1.27,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add a text label to the schematic.
@@ -799,8 +806,8 @@ class Schematic:
             rotation: Label rotation in degrees (default 0, or auto-calculated if pin provided)
             size: Text size override (default from effects)
             uuid: Specific UUID for label (auto-generated if None)
-            grid_units: If True, interpret position as grid units instead of mm
-            grid_size: Grid size in mm (default 1.27mm = 50 mil KiCAD standard)
+            grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created label
@@ -809,6 +816,13 @@ class Schematic:
             ValueError: If neither position nor pin is provided, or if pin is not found
         """
         from .pin_utils import get_component_pin_info
+
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
 
         # Convert grid units to mm if requested
         if grid_units and position is not None:
@@ -893,8 +907,8 @@ class Schematic:
         size: float = 1.27,
         exclude_from_sim: bool = False,
         effects: Optional[Dict[str, Any]] = None,
-        grid_units: bool = False,
-        grid_size: float = 1.27,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add free text annotation to the schematic.
@@ -906,12 +920,19 @@ class Schematic:
             size: Text size
             exclude_from_sim: Whether to exclude from simulation
             effects: Text effects
-            grid_units: If True, interpret position as grid units instead of mm
-            grid_size: Grid size in mm (default 1.27mm = 50 mil KiCAD standard)
+            grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created text
         """
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
         # Convert grid units to mm if requested
         if grid_units:
             if isinstance(position, tuple):
@@ -1194,8 +1215,8 @@ class Schematic:
         fill_type: str = "none",
         stroke_color: Optional[Tuple[int, int, int, float]] = None,
         fill_color: Optional[Tuple[int, int, int, float]] = None,
-        grid_units: bool = False,
-        grid_size: float = 1.27,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add a rectangle to the schematic.
@@ -1208,12 +1229,19 @@ class Schematic:
             fill_type: Fill type (none, background, etc.)
             stroke_color: Stroke color as (r, g, b, a)
             fill_color: Fill color as (r, g, b, a)
-            grid_units: If True, interpret positions as grid units instead of mm
-            grid_size: Grid size in mm (default 1.27mm = 50 mil KiCAD standard)
+            grid_units: If True, interpret positions as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created rectangle
         """
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
         # Convert grid units to mm if requested
         if grid_units:
             if isinstance(start, tuple):

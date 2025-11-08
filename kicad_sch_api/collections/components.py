@@ -548,8 +548,8 @@ class ComponentCollection(BaseCollection[Component]):
         unit: int = 1,
         rotation: float = 0.0,
         component_uuid: Optional[str] = None,
-        grid_units: bool = False,
-        grid_size: float = 1.27,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
         **properties,
     ) -> Component:
         """
@@ -564,8 +564,8 @@ class ComponentCollection(BaseCollection[Component]):
             unit: Unit number for multi-unit components (1-based)
             rotation: Component rotation in degrees (0, 90, 180, 270)
             component_uuid: Specific UUID for component (auto-generated if None)
-            grid_units: If True, interpret position as grid units instead of mm
-            grid_size: Grid size in mm (default 1.27mm = 50 mil KiCAD standard)
+            grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size (default 1.27mm)
             **properties: Additional component properties
 
         Returns:
@@ -599,6 +599,13 @@ class ComponentCollection(BaseCollection[Component]):
         self._ensure_indexes_current()
         if self._index_registry.has_key("reference", reference):
             raise ValidationError(f"Reference {reference} already exists")
+
+        # Use config defaults if not explicitly provided
+        from ..core.config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
 
         # Set default position if not provided
         if position is None:

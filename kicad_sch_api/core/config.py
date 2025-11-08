@@ -52,6 +52,14 @@ class ToleranceSettings:
 
 
 @dataclass
+class PositioningSettings:
+    """Global positioning behavior settings."""
+
+    use_grid_units: bool = False  # If True, all positions default to grid units
+    grid_size: float = 1.27  # Default grid size in mm (50 mil KiCAD standard)
+
+
+@dataclass
 class DefaultValues:
     """Default values for various operations."""
 
@@ -149,6 +157,7 @@ class KiCADConfig:
         self.grid = GridSettings()
         self.sheet = SheetSettings()
         self.tolerance = ToleranceSettings()
+        self.positioning = PositioningSettings()
         self.defaults = DefaultValues()
         self.file_format = FileFormatConstants()
         self.paper = PaperSizeConstants()

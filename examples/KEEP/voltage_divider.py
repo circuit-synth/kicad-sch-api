@@ -13,6 +13,9 @@ This is a basic 10k/10k voltage divider that outputs 2.5V when powered from 5V.
 
 import kicad_sch_api as ksa
 
+# Enable grid units globally for cleaner parametric design
+ksa.config.positioning.use_grid_units = True
+
 
 # ============================================================================
 # VOLTAGE DIVIDER
@@ -41,35 +44,35 @@ def voltage_divider(sch, x_grid, y_grid):
         return (x_grid + dx, y_grid + dy)
 
     # ===== POWER SYMBOLS =====
-    sch.components.add('power:VCC', '#PWR01', 'VCC', position=pos(0, 0), grid_units=True)
-    sch.components.add('power:GND', '#PWR02', 'GND', position=pos(0, 21), grid_units=True)
+    sch.components.add('power:VCC', '#PWR01', 'VCC', position=pos(0, 0))
+    sch.components.add('power:GND', '#PWR02', 'GND', position=pos(0, 21))
 
     # ===== RESISTORS =====
     # Each resistor is 6 grid units tall (pins at ±3 from center)
-    r1 = sch.components.add('Device:R', 'R1', '10k', position=pos(0, 5), grid_units=True)
-    r2 = sch.components.add('Device:R', 'R2', '10k', position=pos(0, 15), grid_units=True)
+    r1 = sch.components.add('Device:R', 'R1', '10k', position=pos(0, 5))
+    r2 = sch.components.add('Device:R', 'R2', '10k', position=pos(0, 15))
 
     # ===== JUNCTION =====
     # Junction at the output node (between R1 and R2)
-    sch.junctions.add(position=pos(0, 11), grid_units=True)
+    sch.junctions.add(position=pos(0, 11))
 
     # ===== WIRING =====
     # Vertical chain: VCC -> R1 -> Junction -> R2 -> GND
-    sch.add_wire(start=pos(0, 0), end=pos(0, 2), grid_units=True)       # VCC to R1 pin 1 (top)
-    sch.add_wire(start=pos(0, 8), end=pos(0, 11), grid_units=True)      # R1 pin 2 (bottom) to junction
-    sch.add_wire(start=pos(0, 11), end=pos(0, 12), grid_units=True)     # Junction to R2 pin 1 (top)
-    sch.add_wire(start=pos(0, 18), end=pos(0, 21), grid_units=True)     # R2 pin 2 (bottom) to GND
-    sch.add_wire(start=pos(0, 11), end=pos(3, 11), grid_units=True)     # Horizontal tap to VOUT label
+    sch.add_wire(start=pos(0, 0), end=pos(0, 2))       # VCC to R1 pin 1 (top)
+    sch.add_wire(start=pos(0, 8), end=pos(0, 11))      # R1 pin 2 (bottom) to junction
+    sch.add_wire(start=pos(0, 11), end=pos(0, 12))     # Junction to R2 pin 1 (top)
+    sch.add_wire(start=pos(0, 18), end=pos(0, 21))     # R2 pin 2 (bottom) to GND
+    sch.add_wire(start=pos(0, 11), end=pos(3, 11))     # Horizontal tap to VOUT label
 
     # ===== LABELS =====
-    sch.add_label('VOUT', position=pos(3, 11), grid_units=True)
+    sch.add_label('VOUT', position=pos(3, 11))
 
     # ===== DECORATIVE ELEMENTS =====
     # Rectangle border for visual grouping
-    sch.add_rectangle(start=pos(-10, -10), end=pos(10, 26), grid_units=True)
+    sch.add_rectangle(start=pos(-10, -10), end=pos(10, 26))
 
     # Title text
-    sch.add_text("Voltage Divider", position=pos(-2, -8), size=1.27, grid_units=True)
+    sch.add_text("Voltage Divider", position=pos(-2, -8), size=1.27)
 
 
 def main():
