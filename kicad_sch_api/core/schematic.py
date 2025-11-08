@@ -636,18 +636,42 @@ class Schematic:
 
     # Wire operations (delegated to WireManager)
     def add_wire(
-        self, start: Union[Point, Tuple[float, float]], end: Union[Point, Tuple[float, float]]
+        self,
+        start: Union[Point, Tuple[float, float]],
+        end: Union[Point, Tuple[float, float]],
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add a wire connection between two points.
 
         Args:
-            start: Start point
-            end: End point
+            start: Start point in mm (or grid units if grid_units=True)
+            end: End point in mm (or grid units if grid_units=True)
+            grid_units: If True, interpret positions as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created wire
         """
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
+        # Convert grid units to mm if requested
+        if grid_units:
+            if isinstance(start, tuple):
+                start = (start[0] * grid_size, start[1] * grid_size)
+            else:
+                start = Point(start.x * grid_size, start.y * grid_size)
+            if isinstance(end, tuple):
+                end = (end[0] * grid_size, end[1] * grid_size)
+            else:
+                end = Point(end.x * grid_size, end.y * grid_size)
+
         wire_uuid = self._wire_manager.add_wire(start, end)
         self._format_sync_manager.mark_dirty("wire", "add", {"uuid": wire_uuid})
         self._modified = True
@@ -768,18 +792,22 @@ class Schematic:
         rotation: Optional[float] = None,
         size: Optional[float] = None,
         uuid: Optional[str] = None,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add a text label to the schematic.
 
         Args:
             text: Label text content
-            position: Label position (required if pin not provided)
+            position: Label position in mm (or grid units if grid_units=True, required if pin not provided)
             pin: Pin to attach label to as (component_ref, pin_number) tuple (alternative to position)
             effects: Text effects (size, font, etc.)
             rotation: Label rotation in degrees (default 0, or auto-calculated if pin provided)
             size: Text size override (default from effects)
             uuid: Specific UUID for label (auto-generated if None)
+            grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created label
@@ -788,6 +816,20 @@ class Schematic:
             ValueError: If neither position nor pin is provided, or if pin is not found
         """
         from .pin_utils import get_component_pin_info
+
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
+        # Convert grid units to mm if requested
+        if grid_units and position is not None:
+            if isinstance(position, tuple):
+                position = (position[0] * grid_size, position[1] * grid_size)
+            else:
+                position = Point(position.x * grid_size, position.y * grid_size)
 
         # Validate arguments
         if position is None and pin is None:
@@ -865,21 +907,39 @@ class Schematic:
         size: float = 1.27,
         exclude_from_sim: bool = False,
         effects: Optional[Dict[str, Any]] = None,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add free text annotation to the schematic.
 
         Args:
             text: Text content
-            position: Text position
+            position: Text position in mm (or grid units if grid_units=True)
             rotation: Text rotation in degrees
             size: Text size
             exclude_from_sim: Whether to exclude from simulation
             effects: Text effects
+            grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created text
         """
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
+        # Convert grid units to mm if requested
+        if grid_units:
+            if isinstance(position, tuple):
+                position = (position[0] * grid_size, position[1] * grid_size)
+            else:
+                position = Point(position.x * grid_size, position.y * grid_size)
+
         # Use the new texts collection instead of manager
         text_elem = self._texts.add(
             text, position, rotation=rotation, size=size, exclude_from_sim=exclude_from_sim
@@ -1155,22 +1215,44 @@ class Schematic:
         fill_type: str = "none",
         stroke_color: Optional[Tuple[int, int, int, float]] = None,
         fill_color: Optional[Tuple[int, int, int, float]] = None,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add a rectangle to the schematic.
 
         Args:
-            start: Top-left corner position
-            end: Bottom-right corner position
+            start: Top-left corner position in mm (or grid units if grid_units=True)
+            end: Bottom-right corner position in mm (or grid units if grid_units=True)
             stroke_width: Line width
             stroke_type: Line type (solid, dash, dash_dot, dash_dot_dot, dot, or default)
             fill_type: Fill type (none, background, etc.)
             stroke_color: Stroke color as (r, g, b, a)
             fill_color: Fill color as (r, g, b, a)
+            grid_units: If True, interpret positions as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of created rectangle
         """
+        # Use config defaults if not explicitly provided
+        from .config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
+        # Convert grid units to mm if requested
+        if grid_units:
+            if isinstance(start, tuple):
+                start = (start[0] * grid_size, start[1] * grid_size)
+            else:
+                start = Point(start.x * grid_size, start.y * grid_size)
+            if isinstance(end, tuple):
+                end = (end[0] * grid_size, end[1] * grid_size)
+            else:
+                end = Point(end.x * grid_size, end.y * grid_size)
+
         # Validate stroke_type
         valid_stroke_types = ["solid", "dash", "dash_dot", "dash_dot_dot", "dot", "default"]
         if stroke_type not in valid_stroke_types:

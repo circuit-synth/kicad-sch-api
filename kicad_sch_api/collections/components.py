@@ -548,6 +548,8 @@ class ComponentCollection(BaseCollection[Component]):
         unit: int = 1,
         rotation: float = 0.0,
         component_uuid: Optional[str] = None,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
         **properties,
     ) -> Component:
         """
@@ -557,11 +559,13 @@ class ComponentCollection(BaseCollection[Component]):
             lib_id: Library identifier (e.g., "Device:R")
             reference: Component reference (auto-generated if None)
             value: Component value
-            position: Component position (auto-placed if None)
+            position: Component position in mm (or grid units if grid_units=True)
             footprint: Component footprint
             unit: Unit number for multi-unit components (1-based)
             rotation: Component rotation in degrees (0, 90, 180, 270)
             component_uuid: Specific UUID for component (auto-generated if None)
+            grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size (default 1.27mm)
             **properties: Additional component properties
 
         Returns:
@@ -570,6 +574,13 @@ class ComponentCollection(BaseCollection[Component]):
         Raises:
             ValidationError: If component data is invalid
             LibraryError: If symbol library not found
+
+        Examples:
+            # Position in millimeters (default)
+            sch.components.add('Device:R', 'R1', '10k', position=(25.4, 50.8))
+
+            # Position in grid units (cleaner for parametric design)
+            sch.components.add('Device:R', 'R1', '10k', position=(20, 40), grid_units=True)
         """
         # Validate lib_id
         validator = SchematicValidator()
@@ -589,11 +600,25 @@ class ComponentCollection(BaseCollection[Component]):
         if self._index_registry.has_key("reference", reference):
             raise ValidationError(f"Reference {reference} already exists")
 
+        # Use config defaults if not explicitly provided
+        from ..core.config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
         # Set default position if not provided
         if position is None:
             position = self._find_available_position()
         elif isinstance(position, tuple):
-            position = Point(position[0], position[1])
+            # Convert grid units to mm if requested
+            if grid_units:
+                position = Point(position[0] * grid_size, position[1] * grid_size)
+            else:
+                position = Point(position[0], position[1])
+        elif grid_units and isinstance(position, Point):
+            # Convert Point from grid units to mm
+            position = Point(position.x * grid_size, position.y * grid_size)
 
         # Always snap component position to KiCAD grid (1.27mm = 50mil)
         from ..core.geometry import snap_to_grid

@@ -127,3 +127,19 @@ test_*.kicad_sch
 *.kicad_pro
 *-backups/
 ~*.kicad_sch.lck
+
+# Test files in root directory
+/example_circuit.py
+/example_circuit.kicad_sch
+/test.kicad_sch
+/demo_*.kicad_sch
+/demo_*.pdf
+/stm32_*.kicad_sch
+/stm32_*.pdf
+/generate_*.py
+/test_*.py
+
+# Temporary directories
+/logs/
+/manual_tests/
+/temp_test_env/

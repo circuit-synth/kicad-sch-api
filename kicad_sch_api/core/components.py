@@ -329,6 +329,8 @@ class ComponentCollection(BaseCollection[Component]):
         unit: int = 1,
         rotation: float = 0.0,
         component_uuid: Optional[str] = None,
+        grid_units: bool = False,
+        grid_size: float = 1.27,
         **properties,
     ) -> Component:
         """
@@ -338,11 +340,13 @@ class ComponentCollection(BaseCollection[Component]):
             lib_id: Library identifier (e.g., "Device:R")
             reference: Component reference (auto-generated if None)
             value: Component value
-            position: Component position (auto-placed if None)
+            position: Component position in mm (or grid units if grid_units=True)
             footprint: Component footprint
             unit: Unit number for multi-unit components (1-based)
             rotation: Component rotation in degrees (0, 90, 180, 270)
             component_uuid: Specific UUID for component (auto-generated if None)
+            grid_units: If True, interpret position as grid units instead of mm
+            grid_size: Grid size in mm (default 1.27mm = 50 mil KiCAD standard)
             **properties: Additional component properties
 
         Returns:
@@ -351,6 +355,13 @@ class ComponentCollection(BaseCollection[Component]):
         Raises:
             ValidationError: If component data is invalid
             LibraryError: If the KiCAD symbol library is not found
+
+        Examples:
+            # Position in millimeters (default)
+            sch.components.add('Device:R', 'R1', '10k', position=(25.4, 50.8))
+
+            # Position in grid units (cleaner for parametric design)
+            sch.components.add('Device:R', 'R1', '10k', position=(20, 40), grid_units=True)
         """
         # Validate lib_id
         validator = SchematicValidator()
@@ -373,16 +384,28 @@ class ComponentCollection(BaseCollection[Component]):
         if position is None:
             position = self._find_available_position()
         elif isinstance(position, tuple):
-            position = Point(position[0], position[1])
+            # Convert grid units to mm if requested
+            if grid_units:
+                logger.debug(f"Component {reference}: Converting grid position {position} to mm")
+                position = Point(position[0] * grid_size, position[1] * grid_size)
+                logger.debug(f"Component {reference}: After conversion: ({position.x:.3f}, {position.y:.3f}) mm")
+            else:
+                position = Point(position[0], position[1])
+        elif grid_units and isinstance(position, Point):
+            # Convert Point from grid units to mm
+            logger.debug(f"Component {reference}: Converting Point grid position ({position.x}, {position.y}) to mm")
+            position = Point(position.x * grid_size, position.y * grid_size)
+            logger.debug(f"Component {reference}: After conversion: ({position.x:.3f}, {position.y:.3f}) mm")
 
         # Always snap component position to KiCAD grid (1.27mm = 50mil)
         from .geometry import snap_to_grid
 
+        logger.debug(f"Component {reference}: Before snap: ({position.x:.3f}, {position.y:.3f}) mm")
         snapped_pos = snap_to_grid((position.x, position.y), grid_size=1.27)
         position = Point(snapped_pos[0], snapped_pos[1])
 
         logger.debug(
-            f"Component {reference} position snapped to grid: ({position.x:.3f}, {position.y:.3f})"
+            f"Component {reference}: Final position after snap: ({position.x:.3f}, {position.y:.3f}) mm"
         )
 
         # Normalize and validate rotation

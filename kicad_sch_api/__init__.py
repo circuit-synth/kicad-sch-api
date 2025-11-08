@@ -177,5 +177,25 @@ def schematic_to_python(
     )
 
 
+def use_grid_units(enabled: bool = True) -> None:
+    """
+    Enable or disable grid units for positioning.
+
+    When enabled, all position values are interpreted as grid units
+    (1 unit = 1.27mm, the standard KiCAD 50 mil grid).
+
+    Args:
+        enabled: If True, use grid units; if False, use millimeters
+
+    Example:
+        >>> import kicad_sch_api as ksa
+        >>> ksa.use_grid_units(True)
+        >>> sch = ksa.create_schematic("MyCircuit")
+        >>> # Now positions are in grid units
+        >>> sch.components.add('Device:R', 'R1', '10k', position=(20, 20))  # 25.4mm, 25.4mm
+    """
+    config.positioning.use_grid_units = enabled
+
+
 # Add convenience functions to __all__
-__all__.extend(["load_schematic", "create_schematic", "schematic_to_python"])
+__all__.extend(["load_schematic", "create_schematic", "schematic_to_python", "use_grid_units"])

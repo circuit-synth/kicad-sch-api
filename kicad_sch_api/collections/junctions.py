@@ -78,15 +78,19 @@ class JunctionCollection(BaseCollection[Junction]):
         diameter: float = 0,
         color: Tuple[int, int, int, int] = (0, 0, 0, 0),
         uuid: Optional[str] = None,
+        grid_units: Optional[bool] = None,
+        grid_size: Optional[float] = None,
     ) -> str:
         """
         Add a junction to the collection.
 
         Args:
-            position: Junction position
+            position: Junction position in mm (or grid units if grid_units=True)
             diameter: Junction diameter (0 is KiCAD default)
             color: RGBA color tuple (0,0,0,0 is default)
             uuid: Optional UUID (auto-generated if not provided)
+            grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
+            grid_size: Grid size in mm; if None, use config.positioning.grid_size
 
         Returns:
             UUID of the created junction
@@ -103,8 +107,21 @@ class JunctionCollection(BaseCollection[Junction]):
             if self._index_registry.has_key("uuid", uuid):
                 raise ValueError(f"Junction with UUID '{uuid}' already exists")
 
+        # Use config defaults if not explicitly provided
+        from ..core.config import config
+        if grid_units is None:
+            grid_units = config.positioning.use_grid_units
+        if grid_size is None:
+            grid_size = config.positioning.grid_size
+
+        # Convert grid units to mm if requested
+        if grid_units:
+            if isinstance(position, tuple):
+                position = Point(position[0] * grid_size, position[1] * grid_size)
+            else:
+                position = Point(position.x * grid_size, position.y * grid_size)
         # Convert position
-        if isinstance(position, tuple):
+        elif isinstance(position, tuple):
             position = Point(position[0], position[1])
 
         # Create junction
