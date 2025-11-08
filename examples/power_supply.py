@@ -1,14 +1,14 @@
 """
-kicad-sch-api Example: 5V Power Supply
+kicad-sch-api Example: 3.3V Power Supply
 
 Demonstrates:
 - Grid-based parametric circuit design
-- Power symbols (VBUS, +5V, GND)
+- Power symbols (+5V, +3.3V, GND)
 - Multiple junction points (input and output rails)
 - Horizontal component layout
 - Text box annotations with specifications
 
-This is a basic 5V linear regulator using the LM7805 with input/output filtering.
+This is a basic 3.3V linear regulator using the AMS1117-3.3 with input/output filtering.
 """
 
 import kicad_sch_api as ksa
@@ -18,20 +18,20 @@ ksa.use_grid_units(True)
 
 
 # ============================================================================
-# 5V POWER SUPPLY
+# 3.3V POWER SUPPLY
 # ============================================================================
 
 def power_supply(sch, x_grid, y_grid):
     """
-    Create a parametric 5V power supply circuit.
+    Create a parametric 3.3V power supply circuit.
 
     Args:
         sch: Schematic object to add components to
         x_grid: X origin position in grid units (integer)
         y_grid: Y origin position in grid units (integer)
 
-    Circuit: VBUS -> C1 (10µF) -> LM7805 -> C2 (10µF) -> +5V
-    Output: 5V @ 1.5A max (7-35V input, ~2V dropout)
+    Circuit: +5V -> C1 (10µF) -> AMS1117-3.3 -> C2 (10µF) -> +3.3V
+    Output: 3.3V @ 1A max (5V input, ~1.2V dropout)
     """
 
     # Helper function for grid-relative positioning
@@ -40,15 +40,15 @@ def power_supply(sch, x_grid, y_grid):
         return (x_grid + dx, y_grid + dy)
 
     # ===== POWER SYMBOLS =====
-    sch.components.add('power:VBUS', '#PWR01', 'VBUS', position=p(0, 0))
-    sch.components.add('power:+5V', '#PWR02', '+5V', position=p(30, 0))
+    sch.components.add('power:+5V', '#PWR01', '+5V', position=p(0, 0))
+    sch.components.add('power:+3.3V', '#PWR02', '+3.3V', position=p(30, 0))
 
     # ===== MAIN COMPONENTS =====
     # Input capacitor (polarized)
     sch.components.add('Device:C_Polarized', 'C1', '10uF', position=p(0, 8))
 
     # Voltage regulator (no rotation needed)
-    sch.components.add('Regulator_Linear:LM7805_TO220', 'U1', 'LM7805',
+    sch.components.add('Regulator_Linear:AMS1117-3.3', 'U1', 'AMS1117-3.3',
                       position=p(15, 4))
 
     # Output capacitor
@@ -81,7 +81,7 @@ def power_supply(sch, x_grid, y_grid):
 
     # ===== ANNOTATIONS =====
     # Specifications text box
-    specs_text = "Input: 7-35V DC\nOutput: 5V @ 1.5A max\nDropout: ~2V min"
+    specs_text = "Input: 5V DC\nOutput: 3.3V @ 1A max\nDropout: ~1.2V min"
     sch.add_text_box(
         specs_text,
         position=p(13, 36),
@@ -94,12 +94,12 @@ def power_supply(sch, x_grid, y_grid):
     sch.add_rectangle(start=p(-5, -7.5), end=p(37, 30))
 
     # Title text
-    sch.add_text("5V Power Supply", position=p(11, -3), size=1.27)
+    sch.add_text("3.3V Power Supply", position=p(11, -3), size=1.27)
 
 
 def main():
     """Generate the power supply example schematic."""
-    print("Creating 5V power supply circuit...")
+    print("Creating 3.3V power supply circuit...")
 
     # Create a new schematic
     sch = ksa.create_schematic("Example_PowerSupply")
