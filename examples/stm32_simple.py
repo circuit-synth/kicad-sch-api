@@ -78,7 +78,7 @@ def create_stm32_microprocessor(sch):
 
     # Reset circuit (NRST)
     sch.add_wire(start=p(28, 43), end=p(28, 45))  # VDD to R1
-    sch.add_wire(start=p(28, 51), end=p(44, 51))  # R1 to C3 to NRST
+    sch.add_wire(start=p(28, 51), end=p(42, 51))  # R1 to C3 to NRST
     sch.add_wire(start=p(30, 57), end=p(30, 58))  # C3 to GND
 
     # LED indicator circuit
@@ -95,6 +95,14 @@ def create_stm32_microprocessor(sch):
 
     # Ground connections
     sch.add_wire(start=p(56, 87), end=p(56, 89))  # MCU GND to GND symbol
+
+    # ===== JUNCTIONS (where 3+ wires meet) =====
+    sch.junctions.add(position=p(62, 32))  # VDD power rail junction
+    sch.junctions.add(position=p(61, 32))  # C1/MCU VDD junction
+    sch.junctions.add(position=p(67, 38))  # GND rail junction
+    sch.junctions.add(position=p(61, 38))  # C1 GND junction
+    sch.junctions.add(position=p(84, 51))  # LED resistor junction
+    sch.junctions.add(position=p(30, 51))  # C3 pin 1 / NRST junction
 
     # ===== LABELS =====
     sch.add_label("NRST", position=p(36, 51))
