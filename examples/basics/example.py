@@ -6,6 +6,12 @@ Demonstrates all major features in one comprehensive example.
 """
 
 import os
+import sys
+from pathlib import Path
+
+# Add repository root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import kicad_sch_api as ksa
 
 

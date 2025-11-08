@@ -1,24 +1,21 @@
 #!/usr/bin/env python3
 """
-Complete Demo Schematic - All Parametric Circuits Combined
+kicad-sch-api Example Circuit - Parametric Circuit Demonstration
 
-This demo combines all parametric circuit generators into one comprehensive schematic:
-1. Voltage Divider (10k/10k) - 2.5V output
-2. 5V Power Supply (LM7805) - regulated power
-3. RC Low-Pass Filter (1kHz) - signal filtering
-4. STM32G030K8Tx Microprocessor - complete MCU with support circuitry
+This example demonstrates how to create reusable parametric circuit blocks that can be
+placed anywhere on a schematic using simple grid-based positioning.
 
-Each circuit is self-contained and reusable with x/y offset parameters.
+Features:
+- Voltage Divider (10k/10k) - 2.5V output
+- 5V Power Supply (LM7805) - regulated power
+- RC Low-Pass Filter (1kHz) - signal filtering
+- STM32G030K8Tx Microprocessor - complete MCU with support circuitry
+
+All circuits use grid-based positioning where you pass in (x, y) as integers representing
+grid units. 1 grid unit = 1.27mm (50 mil standard KiCAD grid).
 """
 
-import sys
-from pathlib import Path
-
-# Add parent directory to path to import kicad_sch_api
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import kicad_sch_api as ksa
-from test_circuit_5_stm32_microprocessor import create_stm32_microprocessor
 
 
 def snap_to_grid(value: float, grid_size: float = 1.27) -> float:
@@ -27,44 +24,48 @@ def snap_to_grid(value: float, grid_size: float = 1.27) -> float:
 
 
 # ============================================================================
-# VOLTAGE DIVIDER CIRCUIT - GRID BASED
+# VOLTAGE DIVIDER CIRCUIT
 # ============================================================================
 
 def create_voltage_divider(sch, x_offset_grids: int, y_offset_grids: int, instance: int = 1):
     """
-    Create a voltage divider circuit at specified location (GRID-BASED).
+    Create a voltage divider circuit at specified grid location.
 
     Args:
-        x_offset_grids: X offset in grid units (1.27mm each)
-        y_offset_grids: Y offset in grid units
-        instance: Circuit instance number
+        sch: Schematic object
+        x_offset_grids: X offset in grid units (integers)
+        y_offset_grids: Y offset in grid units (integers)
+        instance: Circuit instance number for unique references
+
+    Returns:
+        dict: Dictionary of created components
     """
     GRID = 1.27  # mm per grid unit
 
     def pos(x_grid, y_grid):
-        """Convert grid position to mm"""
+        """Convert grid position to mm coordinates"""
         return ((x_offset_grids + x_grid) * GRID, (y_offset_grids + y_grid) * GRID)
 
     # Generate unique references
     r1_ref = f"R{instance}1" if instance > 1 else "R1"
     r2_ref = f"R{instance}2" if instance > 1 else "R2"
 
-    # Component positions in GRID UNITS
-    r1_pos = pos(6, 10)  # R1 at grid (6, 10)
-    r2_pos = pos(6, 19)  # R2 at grid (6, 19) - 9 grids below
+    # Component positions in GRID UNITS (clean integers!)
+    r1_pos = pos(6, 10)
+    r2_pos = pos(6, 19)
 
     # Components
     r1 = sch.components.add("Device:R", r1_ref, "10k", position=r1_pos)
     r2 = sch.components.add("Device:R", r2_ref, "10k", position=r2_pos)
 
     # Junction between resistors
-    junction_pos = pos(6, 15)  # Midpoint
+    junction_pos = pos(6, 15)
     sch.junctions.add(position=junction_pos)
 
     # Labels
-    sch.add_label("VCC", position=pos(6, 6))   # Above R1
-    sch.add_label("VOUT", position=pos(10, 15)) # Right of junction
-    sch.add_label("GND", position=pos(6, 23))  # Below R2
+    sch.add_label("VCC", position=pos(6, 6))
+    sch.add_label("VOUT", position=pos(10, 15))
+    sch.add_label("GND", position=pos(6, 23))
 
     # Wires - get pin positions
     r1_pins = sch.list_component_pins(r1_ref)
@@ -104,7 +105,18 @@ def create_voltage_divider(sch, x_offset_grids: int, y_offset_grids: int, instan
 # ============================================================================
 
 def create_power_supply(sch, x_offset: float, y_offset: float, instance: int = 1):
-    """Create a 5V power supply circuit using LM7805."""
+    """
+    Create a 5V power supply circuit using LM7805.
+
+    Args:
+        sch: Schematic object
+        x_offset: X offset in mm
+        y_offset: Y offset in mm
+        instance: Circuit instance number
+
+    Returns:
+        dict: Dictionary of created components
+    """
     GRID = 2.54
 
     rect_x = snap_to_grid(x_offset)
@@ -195,7 +207,7 @@ def create_power_supply(sch, x_offset: float, y_offset: float, instance: int = 1
     rect_end_y = snap_to_grid(rect_y + GRID * 17)
     sch.add_rectangle(start=(rect_x, rect_y), end=(rect_end_x, rect_end_y))
 
-    # Text box with specs - positioned up and to the right
+    # Text box with specs
     text_box_x = snap_to_grid(rect_x + GRID * 11)
     text_box_y = snap_to_grid(rect_end_y - GRID * 4.5)
     text_box_width = snap_to_grid(GRID * 8.5)
@@ -217,7 +229,18 @@ def create_power_supply(sch, x_offset: float, y_offset: float, instance: int = 1
 # ============================================================================
 
 def create_rc_filter(sch, x_offset: float, y_offset: float, instance: int = 1):
-    """Create an RC low-pass filter circuit."""
+    """
+    Create an RC low-pass filter circuit.
+
+    Args:
+        sch: Schematic object
+        x_offset: X offset in mm
+        y_offset: Y offset in mm
+        instance: Circuit instance number
+
+    Returns:
+        dict: Dictionary of created components
+    """
     import math
 
     GRID = 2.54
@@ -239,23 +262,23 @@ def create_rc_filter(sch, x_offset: float, y_offset: float, instance: int = 1):
     title_y = snap_to_grid(rect_y + GRID * 2.1)
     sch.add_text("RC LOW-PASS FILTER", position=(title_x, title_y), size=2.0)
 
-    # Signal line Y position (horizontal path for IN → R → OUT)
+    # Signal line Y position
     signal_y = snap_to_grid(rect_y + GRID * 6.5)
 
-    # Resistor position (horizontal, centered on signal line)
+    # Resistor position (horizontal)
     r_x = snap_to_grid(rect_x + GRID * 6.5)
     r_y = signal_y
 
-    # Capacitor position (vertical, output side)
+    # Capacitor position (vertical)
     c_x = snap_to_grid(rect_x + GRID * 10.5)
     c_y = snap_to_grid(signal_y + GRID * 3.5)
 
-    # Junction point (where R pin 2, C pin 1, and OUT meet)
+    # Junction point
     junction_x = c_x
     junction_y = signal_y
 
     # Components
-    r = sch.components.add("Device:R", r_ref, "1k", position=(r_x, r_y), rotation=90)  # Horizontal (90° in KiCAD)
+    r = sch.components.add("Device:R", r_ref, "1k", position=(r_x, r_y), rotation=90)
     c = sch.components.add("Device:C", c_ref, "100nF", position=(c_x, c_y))
 
     # GND power symbol
@@ -263,7 +286,7 @@ def create_rc_filter(sch, x_offset: float, y_offset: float, instance: int = 1):
     gnd_y = snap_to_grid(c_y + GRID * 1.5)
     sch.components.add("power:GND", pwr_ref, "GND", position=(gnd_x, gnd_y))
 
-    # Labels (on signal line)
+    # Labels
     in_label_x = snap_to_grid(rect_x + GRID * 3)
     in_label_y = signal_y
     out_label_x = snap_to_grid(rect_x + GRID * 13)
@@ -272,7 +295,7 @@ def create_rc_filter(sch, x_offset: float, y_offset: float, instance: int = 1):
     sch.add_label("IN", position=(in_label_x, in_label_y))
     sch.add_label("OUT", position=(out_label_x, out_label_y))
 
-    # Junction at output node
+    # Junction
     sch.junctions.add(position=(junction_x, junction_y))
 
     # Get pin positions
@@ -280,11 +303,10 @@ def create_rc_filter(sch, x_offset: float, y_offset: float, instance: int = 1):
     c_pins = sch.list_component_pins(c_ref)
     gnd_pins = sch.list_component_pins(pwr_ref)
 
-    # Determine left and right pins based on X position (rotation affects pin order)
-    r_pin1_pos = r_pins[0][1]  # Point object
-    r_pin2_pos = r_pins[1][1]  # Point object
+    # Determine left and right pins (rotation affects pin order)
+    r_pin1_pos = r_pins[0][1]
+    r_pin2_pos = r_pins[1][1]
 
-    # Left pin is the one with smaller X coordinate
     if r_pin1_pos.x < r_pin2_pos.x:
         r_left_pin = r_pin1_pos
         r_right_pin = r_pin2_pos
@@ -293,15 +315,10 @@ def create_rc_filter(sch, x_offset: float, y_offset: float, instance: int = 1):
         r_right_pin = r_pin1_pos
 
     # Wires
-    # IN label to R left pin
     sch.add_wire(start=(in_label_x, in_label_y), end=r_left_pin)
-    # R right pin to junction
     sch.add_wire(start=r_right_pin, end=(junction_x, junction_y))
-    # Junction to OUT label
     sch.add_wire(start=(junction_x, junction_y), end=(out_label_x, out_label_y))
-    # Junction down to C pin 1
     sch.add_wire(start=(junction_x, junction_y), end=c_pins[0][1])
-    # C pin 2 to GND
     sch.add_wire(start=c_pins[1][1], end=gnd_pins[0][1])
 
     # Calculate and display cutoff frequency
@@ -326,56 +343,245 @@ def create_rc_filter(sch, x_offset: float, y_offset: float, instance: int = 1):
 
 
 # ============================================================================
-# MAIN - CREATE COMBINED DEMO SCHEMATIC
+# STM32 MICROPROCESSOR CIRCUIT
+# ============================================================================
+
+def create_stm32_microprocessor(sch, x_offset=0, y_offset=0, instance=1):
+    """
+    Create STM32G030K8Tx microprocessor circuit at specified position.
+
+    Args:
+        sch: Schematic object
+        x_offset: X offset in mm
+        y_offset: Y offset in mm
+        instance: Circuit instance number
+
+    Returns:
+        dict: Dictionary of created components
+    """
+    # Original circuit origin
+    ORIGIN_X = 72.39
+    ORIGIN_Y = 43.815
+
+    def pos(abs_x, abs_y):
+        """Convert absolute position to offset position"""
+        rel_x = abs_x - ORIGIN_X
+        rel_y = abs_y - ORIGIN_Y
+        return (snap_to_grid(x_offset + rel_x), snap_to_grid(y_offset + rel_y))
+
+    # Reference designators
+    base_num = (instance - 1) * 100
+    u_ref = f'U{instance + 1}' if instance > 1 else 'U1'
+    c_refs = [f'C{base_num + 10 + i}' for i in range(3)]
+    r_refs = [f'R{base_num + 10 + i}' for i in range(2)]
+    d_ref = f'D{base_num + 10}'
+    j_ref = f'J{instance}'
+
+    components = {}
+
+    # Microcontroller
+    components['mcu'] = sch.components.add(
+        'MCU_ST_STM32G0:STM32G030K8Tx', u_ref, 'STM32G030K8Tx',
+        position=pos(128.27, 110.49), rotation=0
+    )
+
+    # Resistors
+    components['r_nrst'] = sch.components.add(
+        'Device:R', r_refs[0], '10k',
+        position=pos(91.44, 85.09), rotation=0
+    )
+    components['r_led'] = sch.components.add(
+        'Device:R', r_refs[1], '330',
+        position=pos(160.02, 101.6), rotation=0
+    )
+
+    # LED
+    components['led'] = sch.components.add(
+        'Device:LED', d_ref, 'GREEN',
+        position=pos(160.02, 109.22), rotation=90
+    )
+
+    # Capacitors
+    components['c_vdd1'] = sch.components.add(
+        'Device:C', c_refs[0], '100nF',
+        position=pos(138.43, 70.49), rotation=0  # Moved up 0.5 grid
+    )
+    components['c_vdd2'] = sch.components.add(
+        'Device:C_Polarized', c_refs[1], '10uF',
+        position=pos(149.86, 70.49), rotation=0  # Moved up 0.5 grid
+    )
+    components['c_nrst'] = sch.components.add(
+        'Device:C', c_refs[2], '100nF',
+        position=pos(96.52, 93.98), rotation=0
+    )
+
+    # Debug connector
+    components['debug'] = sch.components.add(
+        'Connector:Conn_01x04_Pin', j_ref, 'SWD',
+        position=pos(184.15, 83.82), rotation=180
+    )
+
+    # Power symbols
+    pwr_base = base_num + 20
+    sch.components.add('power:+3.3V', f'#PWR{pwr_base:02d}', '+3.3V', position=pos(137.16, 63.5))
+    sch.components.add('power:+3.3V', f'#PWR{pwr_base+1:02d}', '+3.3V', position=pos(173.99, 78.74))
+    sch.components.add('power:+3.3V', f'#PWR{pwr_base+2:02d}', '+3.3V', position=pos(91.44, 78.74))
+    sch.components.add('power:GND', f'#PWR{pwr_base+3:02d}', 'GND', position=pos(160.02, 116.84))
+    sch.components.add('power:GND', f'#PWR{pwr_base+4:02d}', 'GND', position=pos(144.78, 74.3))  # Moved up 0.5 grid
+    sch.components.add('power:GND', f'#PWR{pwr_base+5:02d}', 'GND', position=pos(128.27, 135.89))
+    sch.components.add('power:GND', f'#PWR{pwr_base+6:02d}', 'GND', position=pos(96.52, 97.79))
+    sch.components.add('power:GND', f'#PWR{pwr_base+7:02d}', 'GND', position=pos(177.8, 80.01), rotation=270)
+
+    # Wiring
+    wires = [
+        # VDD power distribution
+        ((138.43, 74.3), (144.78, 74.3)),  # GND rail moved up 0.5 grid
+        ((144.78, 74.3), (149.86, 74.3)),  # GND rail moved up 0.5 grid
+        ((128.27, 64.77), (137.16, 64.77)),
+        ((137.16, 64.77), (138.43, 64.77)),
+        ((138.43, 64.77), (149.86, 64.77)),
+        ((128.27, 64.77), (128.27, 82.55)),
+        ((137.16, 63.5), (137.16, 64.77)),
+        ((138.43, 64.77), (138.43, 66.68)),  # Cap top pin moved up 0.5 grid
+        ((149.86, 64.77), (149.86, 66.68)),  # Cap top pin moved up 0.5 grid
+        # NRST circuit
+        ((91.44, 88.9), (96.52, 88.9)),
+        ((96.52, 88.9), (110.49, 88.9)),
+        ((86.36, 88.9), (91.44, 88.9)),
+        ((91.44, 81.28), (91.44, 78.74)),
+        # LED circuit
+        ((146.05, 95.25), (160.02, 95.25)),
+        ((160.02, 95.25), (160.02, 97.79)),
+        ((160.02, 105.41), (160.02, 105.41)),
+        ((160.02, 113.03), (160.02, 116.84)),
+        # Debug header
+        ((173.99, 78.74), (179.07, 78.74)),
+        ((177.8, 80.01), (179.07, 80.01)),
+        ((172.72, 83.82), (179.07, 83.82)),
+        ((172.72, 85.09), (179.07, 85.09)),
+        # SWD signals
+        ((148.59, 115.57), (146.05, 115.57)),
+        ((148.59, 116.84), (146.05, 116.84)),
+    ]
+
+    for start, end in wires:
+        sch.add_wire(start=pos(start[0], start[1]), end=pos(end[0], end[1]))
+
+    # Labels
+    labels = [
+        ('NRST', (86.36, 88.9), 0),
+        ('SWDIO', (148.59, 115.57), 0),
+        ('SWCLK', (148.59, 116.84), 0),
+        ('SWDIO', (172.72, 83.82), 0),
+        ('SWCLK', (172.72, 85.09), 0),
+    ]
+
+    for text, (x, y), rotation in labels:
+        sch.add_label(text, position=pos(x, y), rotation=rotation)
+
+    # Graphical elements
+    sch.add_rectangle(start=pos(72.39, 43.815), end=pos(193.04, 151.13))
+    sch.add_rectangle(start=pos(161.29, 64.77), end=pos(187.325, 90.17))
+    sch.add_text("STM32G030K8Tx MICROCONTROLLER", position=pos(131.572, 50.8), size=2.5)
+    sch.add_text("ARM Cortex-M0+ @ 64MHz • 64KB Flash • 8KB RAM", position=pos(128.778, 147.32), size=1.27)
+    sch.add_text("Debug", position=pos(173.482, 68.58), size=2.0)
+
+    return components
+
+
+# ============================================================================
+# MAIN - CREATE DEMONSTRATION SCHEMATIC
 # ============================================================================
 
 def main():
+    """Create a demonstration schematic with all parametric circuits."""
+
     print("=" * 80)
-    print("🚀 COMPREHENSIVE DEMO - All Parametric Circuits Combined")
+    print("🚀 kicad-sch-api Example Circuit")
     print("=" * 80)
+    print()
+    print("Creating demonstration schematic with parametric circuits...")
     print()
 
     # Create schematic
-    sch = ksa.create_schematic("Demo_All_Circuits")
+    sch = ksa.create_schematic("Example_Circuit")
 
-    # A4 landscape layout - place circuits in a grid (GRID-BASED)
     # Grid spacing for circuit placement
     CIRCUIT_GRID = 47  # grid units between circuits (≈60mm)
-
-    # Starting position in GRID UNITS
     START_X = 16  # grid units (≈20mm)
-    START_Y = 16  # grid units (≈20mm)
+    START_Y = 16  # grid units
 
-    print("📍 Circuit Placement Layout (GRID-BASED):")
+    print("📍 Placing circuits:")
     print("  Row 1: Voltage Divider | Power Supply | RC Filter")
     print("  Row 2: STM32 Microprocessor")
     print()
 
     # Row 1: Three circuits side by side
-    print("🔧 Circuit 1: Voltage Divider...")
-    circuit1_x = START_X
-    circuit1_y = START_Y
-    create_voltage_divider(sch, circuit1_x, circuit1_y, instance=1)
-    print(f"  ✅ Placed at grid ({circuit1_x}, {circuit1_y})")
+    print("  1. Voltage Divider...")
+    create_voltage_divider(sch, START_X, START_Y, instance=1)
 
-    print("🔧 Circuit 2: 5V Power Supply (LM7805)...")
-    circuit2_x = START_X + CIRCUIT_GRID
-    circuit2_y = START_Y
-    create_power_supply(sch, circuit2_x, circuit2_y, instance=1)
-    print(f"  ✅ Placed at ({circuit2_x}, {circuit2_y})")
+    print("  2. 5V Power Supply (LM7805)...")
+    create_power_supply(sch, START_X + CIRCUIT_GRID, START_Y, instance=1)
 
-    print("🔧 Circuit 3: RC Low-Pass Filter...")
-    circuit3_x = START_X + CIRCUIT_GRID * 2
-    circuit3_y = START_Y
-    create_rc_filter(sch, circuit3_x, circuit3_y, instance=1)
-    print(f"  ✅ Placed at ({circuit3_x}, {circuit3_y})")
+    print("  3. RC Low-Pass Filter...")
+    create_rc_filter(sch, START_X + CIRCUIT_GRID * 2.3, START_Y, instance=1)
 
-    # Row 2: STM32 Microprocessor (moved up closer)
-    print("🔧 Circuit 4: STM32G030K8Tx Microprocessor...")
-    circuit4_x_mm = START_X * 1.27  # Convert grid to mm for STM32 (still uses mm)
+    # Row 2: STM32 Microprocessor
+    print("  4. STM32G030K8Tx Microprocessor...")
+    circuit4_x_mm = START_X * 1.27
     circuit4_y_mm = (START_Y + int(CIRCUIT_GRID * 1.2)) * 1.27
-    create_stm32_microprocessor(sch, circuit4_x_mm, circuit4_y_mm, instance=2)  # instance=2 to avoid U1 conflict
-    print(f"  ✅ Placed at ({circuit4_x_mm:.1f}mm, {circuit4_y_mm:.1f}mm)")
+    create_stm32_microprocessor(sch, circuit4_x_mm, circuit4_y_mm, instance=2)
+
+    # Add explanation text box to the right
+    print("  5. Adding explanation text box...")
+    GRID = 1.27
+    text_box_x = (START_X + CIRCUIT_GRID * 3.2) * GRID  # To the right of all circuits
+    text_box_y = START_Y * GRID
+    text_box_width = 50 * GRID  # ~63mm wide
+    text_box_height = 80 * GRID  # ~102mm tall
+
+    explanation_text = """STM32G030K8Tx BASIC CIRCUIT
+
+This example demonstrates a complete minimal
+STM32 microcontroller circuit with:
+
+POWER SUPPLY:
+• 3.3V input (from voltage regulator)
+• 100nF decoupling capacitors (C110, C111)
+• 10µF bulk capacitor for stability
+
+RESET CIRCUIT:
+• 10kΩ pull-up resistor to 3.3V
+• 100nF capacitor for debouncing
+• NRST pin protected from noise
+
+LED INDICATOR:
+• Green LED on PA7 GPIO pin
+• 330Ω current limiting resistor
+• Simple visual feedback circuit
+
+DEBUG INTERFACE:
+• 4-pin SWD header for programming
+• SWDIO and SWCLK debug signals
+• Standard ARM Cortex-M debug port
+
+FEATURES:
+• ARM Cortex-M0+ core @ 64MHz
+• 64KB Flash memory
+• 8KB SRAM
+• Minimal external components
+• Perfect for learning embedded systems
+
+This circuit provides everything needed
+for a basic STM32 project with programming,
+debugging, and I/O capabilities."""
+
+    sch.add_text_box(
+        explanation_text,
+        position=(text_box_x, text_box_y),
+        size=(text_box_width, text_box_height),
+        font_size=1.27
+    )
 
     print()
     print("=" * 80)
@@ -402,42 +608,33 @@ def main():
     print(f"  • Wires: {len(sch.wires)}")
     print(f"  • Labels: {len(sch.labels)}")
     print(f"  • Junctions: {len(sch.junctions)}")
-    print(f"  • Rectangles: 5 (grouping boxes)")
     print()
 
     # Save
-    output_file = "demo_all_circuits.kicad_sch"
+    output_file = "example_circuit.kicad_sch"
     print(f"💾 Saving schematic to: {output_file}")
     sch.save(output_file)
     print(f"✅ Saved successfully!")
     print()
 
     print("=" * 80)
-    print("🎉 DEMO COMPLETE!")
+    print("🎉 Example Complete!")
     print("=" * 80)
     print()
     print("Circuits Included:")
-    print("  1. ⚡ Voltage Divider - 10kΩ/10kΩ resistive divider (Vout = Vin/2)")
-    print("  2. 🔌 5V Power Supply - LM7805 linear regulator with filter caps")
+    print("  1. ⚡ Voltage Divider - 10kΩ/10kΩ resistive divider")
+    print("  2. 🔌 5V Power Supply - LM7805 linear regulator")
     print("  3. 📊 RC Low-Pass Filter - 1kΩ/100nF filter (fc = 1.59 kHz)")
+    print("  4. 🖥️  STM32 Microprocessor - Complete MCU circuit")
     print()
     print("Features Demonstrated:")
     print("  ✅ Parametric circuit functions (reusable at any position)")
-    print("  ✅ Grid-aligned component placement (1.27mm grid)")
+    print("  ✅ Grid-based positioning with integer coordinates")
     print("  ✅ Automatic wire routing with pin position queries")
-    print("  ✅ Power symbols and ground connections")
-    print("  ✅ Net labels for signal identification")
-    print("  ✅ Junctions at connection points")
+    print("  ✅ Power symbols and labels")
     print("  ✅ Grouping rectangles for visual organization")
-    print("  ✅ Text annotations and formulas")
-    print("  ✅ Unique reference designators per circuit")
     print()
-    print("Open in KiCAD:")
-    print(f"  open {output_file}")
-    print()
-    print("Generate PDF:")
-    print(f"  kicad-cli sch export pdf {output_file}")
-    print()
+    print(f"Open in KiCAD:  open {output_file}")
     print("=" * 80)
 
 

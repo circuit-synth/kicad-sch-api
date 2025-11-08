@@ -7,6 +7,12 @@ easy to create clean horizontal signal flows without manual offset calculations.
 Issue: https://github.com/circuit-synth/kicad-sch-api/issues/137
 """
 
+import sys
+from pathlib import Path
+
+# Add repository root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import kicad_sch_api as ksa
 
 # Create a new schematic
