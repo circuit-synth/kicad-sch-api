@@ -315,7 +315,7 @@ power.save("power.kicad_sch")
 
 ### Complete Example
 
-See **`docs/HIERARCHY_FEATURES.md`** for comprehensive hierarchical schematic documentation and **`examples/stm32g431_simple.py`** for a complete working example.
+See **`docs/HIERARCHY_FEATURES.md`** for comprehensive hierarchical schematic documentation.
 
 ## Testing Strategy & Format Preservation
 

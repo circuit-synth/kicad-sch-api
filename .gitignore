@@ -128,6 +128,11 @@ test_*.kicad_sch
 *-backups/
 ~*.kicad_sch.lck
 
+# Generated schematic files in root (from running examples)
+/*.kicad_sch
+!examples/*.kicad_sch
+!tests/**/*.kicad_sch
+
 # Test files in root directory
 /example_circuit.py
 /example_circuit.kicad_sch

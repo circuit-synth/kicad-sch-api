@@ -1,0 +1,11 @@
+# PyPI Configuration Template
+# Copy this file to .pypirc and fill in your actual token
+# NEVER commit .pypirc - it contains secrets!
+
+[pypi]
+username = __token__
+password = pypi-YOUR_TOKEN_HERE
+
+[testpypi]
+username = __token__
+password = pypi-YOUR_TESTPYPI_TOKEN_HERE

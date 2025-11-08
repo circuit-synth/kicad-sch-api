@@ -213,17 +213,11 @@ When you call `set_hierarchy_context()`:
 
 ### Real-World Example
 
-See `examples/stm32g431_simple.py` for a complete working example with:
-- Main schematic with 4 hierarchical sheets
-- Power supply sheet (voltage regulator)
-- MCU sheet (STM32 microcontroller)
-- USB sheet (USB-C connector)
-- UI sheet (buttons, LEDs, debug header)
-
-Run it:
-```bash
-python examples/stm32g431_simple.py
-```
+For hierarchical schematic examples, refer to the test fixtures in `tests/reference_kicad_projects/` which demonstrate:
+- Parent/child schematic relationships
+- Sheet pin connections
+- Hierarchical label usage
+- Multi-level hierarchy structures
 
 ---
 
