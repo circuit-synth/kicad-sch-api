@@ -2,7 +2,7 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid "09fd1910-90f9-46c3-81fe-239edfcfd4f1")
+	(uuid "11949067-cb4e-4f08-a8da-5a5c3398cc01")
 	(paper "A4")
 	(title_block
 		(title "Example_VoltageDiv")
@@ -368,7 +368,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "4bd3fd16-4067-4c86-b043-b2a47933e2d8")
+		(uuid "300ee96c-de29-42ed-9d59-4f39bb6c36d3")
 		(property "Reference" "#PWR01"
 			(at 27.94 24.1299 0)
 			(effects
@@ -388,11 +388,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "fb83e920-0d6e-4ca4-bbeb-f6f2b1508933")
+			(uuid "eb8122a0-35ca-4bde-88c4-9e9d6514bedb")
 		)
 		(instances
 			(project "Example_VoltageDiv"
-				(path "/09fd1910-90f9-46c3-81fe-239edfcfd4f1"
+				(path "/11949067-cb4e-4f08-a8da-5a5c3398cc01"
 					(reference "#PWR01")
 					(unit 1)
 				)
@@ -408,7 +408,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "3a14a4a2-ff37-4d23-bb40-bf80343bfcdd")
+		(uuid "b44290e9-dab2-47d7-9115-f7a4aa91b77a")
 		(property "Reference" "#PWR02"
 			(at 27.94 50.7999 0)
 			(effects
@@ -428,11 +428,11 @@
 			)
 		)
 		(pin "1"
-			(uuid "d0eb4a4d-ad1c-4bed-a3dd-6d5c66188854")
+			(uuid "a864d357-aa5e-48d1-82a5-b21cb5221580")
 		)
 		(instances
 			(project "Example_VoltageDiv"
-				(path "/09fd1910-90f9-46c3-81fe-239edfcfd4f1"
+				(path "/11949067-cb4e-4f08-a8da-5a5c3398cc01"
 					(reference "#PWR02")
 					(unit 1)
 				)
@@ -448,7 +448,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "bf6028c2-9328-440a-a74f-8b806f14ebba")
+		(uuid "e3ff7f9b-79e1-4ecf-8d9b-374942145711")
 		(property "Reference" "R1"
 			(at 27.94 30.4799 0)
 			(effects
@@ -468,14 +468,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "0395ea16-23f1-41a0-a7e1-c638d57a6d74")
+			(uuid "120e803b-1e58-48fe-952f-5befeb371168")
 		)
 		(pin "2"
-			(uuid "75e01f3c-c61f-4084-a444-7560480640ea")
+			(uuid "b7d8e1b0-b6aa-4402-a6bf-1c6d7f2cdd45")
 		)
 		(instances
 			(project "Example_VoltageDiv"
-				(path "/09fd1910-90f9-46c3-81fe-239edfcfd4f1"
+				(path "/11949067-cb4e-4f08-a8da-5a5c3398cc01"
 					(reference "R1")
 					(unit 1)
 				)
@@ -491,7 +491,7 @@
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "1b3827a0-1be2-4fa6-a465-0aadca4eb2dc")
+		(uuid "46d6209d-0cf3-4334-8fe8-48bc7c914311")
 		(property "Reference" "R2"
 			(at 27.94 43.1799 0)
 			(effects
@@ -511,14 +511,14 @@
 			)
 		)
 		(pin "1"
-			(uuid "f30feefa-c508-45ce-bb5d-8524c83d5bc6")
+			(uuid "c859d479-f5ef-4975-9b8e-6381115fbef5")
 		)
 		(pin "2"
-			(uuid "774bfd68-860a-4d5d-883f-5fcee4bf9f21")
+			(uuid "73985e0a-d90a-4ede-8883-f15afd28fe04")
 		)
 		(instances
 			(project "Example_VoltageDiv"
-				(path "/09fd1910-90f9-46c3-81fe-239edfcfd4f1"
+				(path "/11949067-cb4e-4f08-a8da-5a5c3398cc01"
 					(reference "R2")
 					(unit 1)
 				)
@@ -533,7 +533,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "81672f2e-ae53-4da4-b0c2-37049d9101d0")
+		(uuid "c01eb1c2-2a74-4033-bf33-619e4f4726be")
 	)
 	(wire
 		(pts
@@ -543,7 +543,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "2a85912b-e016-45ab-9c5d-e6eb013a739c")
+		(uuid "939347fb-6227-4228-be30-14b55c5b7ff9")
 	)
 	(wire
 		(pts
@@ -553,7 +553,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "96a2d8a7-dbcc-4df1-93b7-5c6fe80336bc")
+		(uuid "dbbddf2f-6508-461c-9dbd-c97e559c6779")
 	)
 	(wire
 		(pts
@@ -563,7 +563,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "df967c54-2215-4cea-892f-1350fe92bf93")
+		(uuid "196c8181-91d0-4fc7-9cf8-8c872ef3b7dc")
 	)
 	(wire
 		(pts
@@ -573,13 +573,13 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b92552d4-0570-40a3-a69f-897d44d1fe44")
+		(uuid "4106928f-a946-42a8-9747-a70b1ec5729b")
 	)
 	(junction
 		(at 25.4 39.37)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "16f075a2-18f7-47f8-b520-05f329b95d82")
+		(uuid "a312ba90-28ff-4eaa-a567-a75f2098ee1b")
 	)
 	(label "VOUT"
 		(at 29.21 39.37 0)
@@ -589,7 +589,7 @@
 			)
 			(justify left bottom)
 		)
-		(uuid "72db9c14-4cdc-408f-956c-008fb8b6255f")
+		(uuid "e5f973a2-3eb2-4019-bce3-69f917ca8df0")
 	)
 	(rectangle
 		(start 12.7 12.7)
@@ -601,7 +601,7 @@
 		(fill
 			(type none)
 		)
-		(uuid "7e1c1367-6069-479c-af93-6d2593e270b9")
+		(uuid "556abe93-2e34-4bcb-af1e-ed64a1acb3a0")
 	)
 	(text "Voltage Divider"
 		(exclude_from_sim no)
@@ -611,7 +611,7 @@
 				(size 1.27 1.27)
 			)
 		)
-		(uuid "7c75c481-17ab-428b-a0cf-a86cfc99edbd")
+		(uuid "7aebe205-3d61-45b5-a40a-207f74fa88ef")
 	)
 	(sheet_instances
 		(path "/"

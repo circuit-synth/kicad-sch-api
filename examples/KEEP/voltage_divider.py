@@ -51,37 +51,25 @@ def voltage_divider(sch, x_grid, y_grid):
 
     # ===== JUNCTION =====
     # Junction at the output node (between R1 and R2)
-    # Note: junctions.add() also needs grid support - convert manually for now
-    sch.junctions.add(position=(pos(0, 11)[0] * 1.27, pos(0, 11)[1] * 1.27))
+    sch.junctions.add(position=pos(0, 11), grid_units=True)
 
     # ===== WIRING =====
     # Vertical chain: VCC -> R1 -> Junction -> R2 -> GND
-    # Note: add_wire also needs grid support - convert manually for now
-    def wire(start, end):
-        """Helper to add wire with grid coordinates"""
-        sch.add_wire(
-            start=(start[0] * 1.27, start[1] * 1.27),
-            end=(end[0] * 1.27, end[1] * 1.27)
-        )
-
-    wire(pos(0, 0), pos(0, 2))       # VCC to R1 pin 1 (top)
-    wire(pos(0, 8), pos(0, 11))      # R1 pin 2 (bottom) to junction
-    wire(pos(0, 11), pos(0, 12))     # Junction to R2 pin 1 (top)
-    wire(pos(0, 18), pos(0, 21))     # R2 pin 2 (bottom) to GND
-    wire(pos(0, 11), pos(3, 11))     # Horizontal tap to VOUT label
+    sch.add_wire(start=pos(0, 0), end=pos(0, 2), grid_units=True)       # VCC to R1 pin 1 (top)
+    sch.add_wire(start=pos(0, 8), end=pos(0, 11), grid_units=True)      # R1 pin 2 (bottom) to junction
+    sch.add_wire(start=pos(0, 11), end=pos(0, 12), grid_units=True)     # Junction to R2 pin 1 (top)
+    sch.add_wire(start=pos(0, 18), end=pos(0, 21), grid_units=True)     # R2 pin 2 (bottom) to GND
+    sch.add_wire(start=pos(0, 11), end=pos(3, 11), grid_units=True)     # Horizontal tap to VOUT label
 
     # ===== LABELS =====
-    sch.add_label('VOUT', position=(pos(3, 11)[0] * 1.27, pos(3, 11)[1] * 1.27))
+    sch.add_label('VOUT', position=pos(3, 11), grid_units=True)
 
     # ===== DECORATIVE ELEMENTS =====
     # Rectangle border for visual grouping
-    sch.add_rectangle(
-        start=(pos(-10, -10)[0] * 1.27, pos(-10, -10)[1] * 1.27),
-        end=(pos(10, 26)[0] * 1.27, pos(10, 26)[1] * 1.27)
-    )
+    sch.add_rectangle(start=pos(-10, -10), end=pos(10, 26), grid_units=True)
 
     # Title text
-    sch.add_text("Voltage Divider", position=(pos(-2, -8)[0] * 1.27, pos(-2, -8)[1] * 1.27), size=1.27)
+    sch.add_text("Voltage Divider", position=pos(-2, -8), size=1.27, grid_units=True)
 
 
 def main():

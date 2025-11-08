@@ -44,15 +44,19 @@ class JunctionCollection(BaseCollection[Junction]):
         diameter: float = 0,
         color: Tuple[int, int, int, int] = (0, 0, 0, 0),
         uuid: Optional[str] = None,
+        grid_units: bool = False,
+        grid_size: float = 1.27,
     ) -> str:
         """
         Add a junction to the collection.
 
         Args:
-            position: Junction position
+            position: Junction position in mm (or grid units if grid_units=True)
             diameter: Junction diameter (0 is KiCAD default)
             color: RGBA color tuple (0,0,0,0 is default)
             uuid: Optional UUID (auto-generated if not provided)
+            grid_units: If True, interpret position as grid units instead of mm
+            grid_size: Grid size in mm (default 1.27mm = 50 mil KiCAD standard)
 
         Returns:
             UUID of the created junction
@@ -66,8 +70,14 @@ class JunctionCollection(BaseCollection[Junction]):
         elif uuid in self._uuid_index:
             raise ValueError(f"Junction with UUID '{uuid}' already exists")
 
+        # Convert grid units to mm if requested
+        if grid_units:
+            if isinstance(position, tuple):
+                position = Point(position[0] * grid_size, position[1] * grid_size)
+            else:
+                position = Point(position.x * grid_size, position.y * grid_size)
         # Convert position
-        if isinstance(position, tuple):
+        elif isinstance(position, tuple):
             position = Point(position[0], position[1])
 
         # Create junction
