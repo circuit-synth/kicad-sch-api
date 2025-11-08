@@ -46,30 +46,50 @@ sch.save("first_circuit.kicad_sch")
 
 ## 2. Adding Wires and Connections
 
-Let's connect two resistors:
+Let's connect two resistors - first manually, then with auto-routing:
+
+**Manual wiring (you calculate pin positions):**
 
 ```python
 import kicad_sch_api as ksa
 
-sch = ksa.create_schematic("TwoResistors")
+sch = ksa.create_schematic("ManualWiring")
 
 # Add two resistors
 r1 = sch.components.add('Device:R', 'R1', '10k', position=(100.0, 100.0))
 r2 = sch.components.add('Device:R', 'R2', '10k', position=(100.0, 120.0))
 
-# Add a wire between them
+# Add a wire between them (manually calculate pin positions)
 sch.add_wire(
     start=(100.0, 106.35),  # Bottom of R1
     end=(100.0, 113.65)     # Top of R2
 )
 
-sch.save("two_resistors.kicad_sch")
+sch.save("manual_wiring.kicad_sch")
+```
+
+**Auto-routing (library calculates pin positions for you):**
+
+```python
+import kicad_sch_api as ksa
+
+sch = ksa.create_schematic("AutoWiring")
+
+# Add two resistors
+r1 = sch.components.add('Device:R', 'R1', '10k', position=(100.0, 100.0))
+r2 = sch.components.add('Device:R', 'R2', '10k', position=(100.0, 120.0))
+
+# Auto-route between pins - no position calculation needed!
+sch.auto_route_pins('R1', '2', 'R2', '1', routing_strategy='direct')
+
+sch.save("auto_wiring.kicad_sch")
 ```
 
 **Key concepts:**
-- `add_wire()` - Creates electrical connections
-- Wire endpoints must align with component pins
-- Standard resistor pins are ±6.35mm from center
+- `add_wire()` - Manual wiring, you specify exact start/end positions
+- `auto_route_pins()` - Automatic wiring between component pins
+- Auto-routing is easier and handles component rotations automatically
+- Wire endpoints must align with component pins for proper electrical connection
 
 ---
 
