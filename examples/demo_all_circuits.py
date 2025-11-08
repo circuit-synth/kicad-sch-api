@@ -11,6 +11,12 @@ This demo combines all parametric circuit generators into one comprehensive sche
 Each circuit is self-contained and reusable with x/y offset parameters.
 """
 
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import kicad_sch_api
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import kicad_sch_api as ksa
 from test_circuit_5_stm32_microprocessor import create_stm32_microprocessor
 
