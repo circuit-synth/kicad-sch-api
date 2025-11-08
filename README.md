@@ -250,6 +250,36 @@ ksa.config.grid.component_spacing = 5.0
 
 **📖 See [API Reference](docs/API_REFERENCE.md#configuration) for all configuration options**
 
+## 📝 Examples
+
+Learn by example with our polished reference circuits in the **[examples/](examples/)** directory:
+
+### Basic Circuits
+- **[voltage_divider.py](examples/voltage_divider.py)** - Simple 10k/10k voltage divider with grid-based parametric design
+- **[rc_filter.py](examples/rc_filter.py)** - RC low-pass filter demonstrating auto-routing
+- **[power_supply.py](examples/power_supply.py)** - LM7805 5V regulator with power symbols and text annotations
+
+### Advanced Examples
+- **[stm32g431_simple.py](examples/stm32g431_simple.py)** - STM32 development board with hierarchical design (5 sheets)
+- **[hierarchy_example.py](examples/hierarchy_example.py)** - Advanced hierarchy features and patterns
+
+### Getting Started
+Start with **[WALKTHROUGH.md](examples/WALKTHROUGH.md)** - a complete tutorial from basics to advanced parametric circuits.
+
+All examples use:
+- Grid-based positioning with `ksa.use_grid_units(True)`
+- Parametric `p()` helper for reusable circuits
+- Auto-routing between component pins
+- Comprehensive inline documentation
+
+```bash
+# Run any example
+cd examples
+python voltage_divider.py
+python rc_filter.py
+python power_supply.py
+```
+
 ## 📚 Advanced Features
 
 For comprehensive documentation on all features:
@@ -454,15 +484,21 @@ uv run mypy kicad_sch_api/
 
 ## 📖 Documentation
 
-Full documentation is available in the **[docs/](docs/)** directory:
+Full documentation is available:
 
+### Learning Resources
+- **[Examples Walkthrough](examples/WALKTHROUGH.md)** - Start here! Complete tutorial from basics to advanced
+- **[Example Circuits](examples/)** - Polished reference circuits (voltage divider, RC filter, power supply, STM32)
 - **[Getting Started Guide](docs/GETTING_STARTED.md)** - Complete beginner's tutorial
+
+### API Documentation
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
 - **[Hierarchy Features](docs/HIERARCHY_FEATURES.md)** - Multi-sheet design guide
 - **[Recipes & Patterns](docs/RECIPES.md)** - Practical examples
+
+### Project Information
 - **[Why Use This Library](docs/WHY_USE_THIS_LIBRARY.md)** - Value proposition
 - **[Architecture](docs/ARCHITECTURE.md)** - Internal design details
-- **[Examples](examples/)** - Code examples and tutorials
 
 ## 🤝 Contributing
 
