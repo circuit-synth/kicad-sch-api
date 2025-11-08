@@ -241,22 +241,42 @@ assert abs(circuit_actual_center_y - rect_center_y) < 1.0, "Circuit not centered
 
 Different components behave differently with rotation. Pin locations change based on rotation angle.
 
-**Best practice workflow:**
+**CRITICAL: Resistor Rotation in KiCAD**
+
+Resistor orientation is counter-intuitive:
+- **`rotation=0`**: Vertical resistor (pins top/bottom)
+- **`rotation=90`**: Horizontal resistor (pins left/right) ← Use this for horizontal signal paths!
+
+**When rotation changes, pin order MAY change - ALWAYS query actual positions!**
+
+**Best practice workflow for horizontal components:**
 
 ```python
-# 1. Place component with rotation
-r1 = sch.components.add('Device:R', 'R1', '1k', position=(180, 115), rotation=90)
+# 1. Place component with rotation for horizontal orientation
+r1 = sch.components.add('Device:R', 'R1', '1k', position=(r_x, signal_y), rotation=90)
 
-# 2. IMMEDIATELY verify pin positions
-r1_pins = sch.list_component_pins('R1')
-print(f"R1 pin 1: {r1_pins[0][1]}")  # Check actual position
-print(f"R1 pin 2: {r1_pins[1][1]}")  # Check actual position
+# 2. Query ACTUAL pin positions (returns Point objects)
+r_pins = sch.list_component_pins('R1')
+r_pin1_pos = r_pins[0][1]  # Point object with .x and .y
+r_pin2_pos = r_pins[1][1]  # Point object with .x and .y
 
-# 3. Use ACTUAL pin positions for wiring (not assumed positions!)
-sch.add_wire(start=r1_pins[0][1], end=next_component_pin)
+# 3. CRITICAL: Determine left/right based on actual X coordinates (NOT pin numbers!)
+if r_pin1_pos.x < r_pin2_pos.x:
+    r_left_pin = r_pin1_pos
+    r_right_pin = r_pin2_pos
+else:
+    r_left_pin = r_pin2_pos
+    r_right_pin = r_pin1_pos
+
+# 4. Wire based on actual positions (prevents crossed wires!)
+sch.add_wire(start=(in_x, signal_y), end=r_left_pin)
+sch.add_wire(start=r_right_pin, end=(out_x, signal_y))
 ```
 
-**Common rotation issue:** Resistor rotated wrong causes pins to be backwards, leading to crossed wires
+**Common rotation issues:**
+- ❌ Assuming pin 1 is always left after rotation (WRONG - it depends on rotation!)
+- ❌ Using rotation=0 for horizontal resistors (creates vertical resistor)
+- ❌ Not querying actual pin positions → crossed wires over component body
 
 **LED Rotation Guide (vertical orientation with cathode pointing DOWN):**
 
@@ -277,7 +297,7 @@ d1 = sch.components.add(
 - `rotation=180`: Cathode points LEFT (horizontal)
 - `rotation=270`: **Cathode points DOWN (CORRECT for vertical circuits)**
 
-**Rule:** Don't assume pin positions after rotation. Always use `list_component_pins()` to verify.
+**Rule:** Don't assume pin positions after rotation. Always query with `list_component_pins()` and determine left/right by X coordinate!
 
 ---
 
