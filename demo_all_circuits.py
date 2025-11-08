@@ -6,11 +6,13 @@ This demo combines all parametric circuit generators into one comprehensive sche
 1. Voltage Divider (10k/10k) - 2.5V output
 2. 5V Power Supply (LM7805) - regulated power
 3. RC Low-Pass Filter (1kHz) - signal filtering
+4. STM32G030K8Tx Microprocessor - complete MCU with support circuitry
 
 Each circuit is self-contained and reusable with x/y offset parameters.
 """
 
 import kicad_sch_api as ksa
+from test_circuit_5_stm32_microprocessor import create_stm32_microprocessor
 
 
 def snap_to_grid(value: float, grid_size: float = 1.27) -> float:
@@ -349,6 +351,7 @@ def main():
 
     print("📍 Circuit Placement Layout:")
     print("  Row 1: Voltage Divider | Power Supply | RC Filter")
+    print("  Row 2: STM32 Microprocessor")
     print()
 
     # Row 1: Three circuits side by side
@@ -370,6 +373,13 @@ def main():
     create_rc_filter(sch, circuit3_x, circuit3_y, instance=1)
     print(f"  ✅ Placed at ({circuit3_x}, {circuit3_y})")
 
+    # Row 2: STM32 Microprocessor
+    print("🔧 Circuit 4: STM32G030K8Tx Microprocessor...")
+    circuit4_x = START_X
+    circuit4_y = START_Y + CIRCUIT_GRID * 2
+    create_stm32_microprocessor(sch, circuit4_x, circuit4_y, instance=2)  # instance=2 to avoid U1 conflict
+    print(f"  ✅ Placed at ({circuit4_x}, {circuit4_y})")
+
     print()
     print("=" * 80)
     print("📊 Schematic Statistics:")
@@ -379,17 +389,23 @@ def main():
     resistors = len([c for c in sch.components if 'Device:R' in c.lib_id])
     capacitors = len([c for c in sch.components if 'Device:C' in c.lib_id or 'C_Polarized' in c.lib_id])
     regulators = len([c for c in sch.components if 'Regulator' in c.lib_id])
+    mcus = len([c for c in sch.components if 'MCU' in c.lib_id or 'STM32' in c.lib_id])
+    leds = len([c for c in sch.components if 'LED' in c.lib_id])
+    connectors = len([c for c in sch.components if 'Connector' in c.lib_id])
     power_symbols = len([c for c in sch.components if c.reference.startswith('#PWR')])
 
     print(f"  • Total Components: {len(sch.components)}")
     print(f"    - Resistors: {resistors}")
     print(f"    - Capacitors: {capacitors}")
     print(f"    - Voltage Regulators: {regulators}")
+    print(f"    - Microcontrollers: {mcus}")
+    print(f"    - LEDs: {leds}")
+    print(f"    - Connectors: {connectors}")
     print(f"    - Power Symbols: {power_symbols}")
     print(f"  • Wires: {len(sch.wires)}")
     print(f"  • Labels: {len(sch.labels)}")
     print(f"  • Junctions: {len(sch.junctions)}")
-    print(f"  • Rectangles: 3 (grouping boxes)")
+    print(f"  • Rectangles: 5 (grouping boxes)")
     print()
 
     # Save
