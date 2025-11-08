@@ -14,7 +14,7 @@ This is a basic 10k/10k voltage divider that outputs 2.5V when powered from 5V.
 import kicad_sch_api as ksa
 
 # Enable grid units globally for cleaner parametric design
-ksa.config.positioning.use_grid_units = True
+ksa.use_grid_units(True)
 
 
 # ============================================================================

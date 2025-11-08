@@ -138,7 +138,7 @@ KiCAD uses a 1.27mm (50 mil) grid. Enable grid units for easier positioning:
 import kicad_sch_api as ksa
 
 # Enable grid units globally
-ksa.config.positioning.use_grid_units = True
+ksa.use_grid_units(True)
 
 sch = ksa.create_schematic("GridExample")
 
@@ -153,7 +153,7 @@ sch.save("grid_example.kicad_sch")
 ```
 
 **Key concepts:**
-- `config.positioning.use_grid_units = True` - Enable grid mode globally
+- `use_grid_units(True)` - Enable grid mode globally
 - Positions in whole numbers align perfectly to KiCAD grid
 - 1 grid unit = 1.27mm (50 mil)
 - Much easier to reason about placement
@@ -167,7 +167,7 @@ Create reusable circuit blocks that can be placed anywhere:
 ```python
 import kicad_sch_api as ksa
 
-ksa.config.positioning.use_grid_units = True
+ksa.use_grid_units(True)
 
 def rc_filter(sch, x, y, r_value, c_value):
     """Reusable RC low-pass filter circuit"""
@@ -205,7 +205,7 @@ Let the library automatically route wires between component pins:
 ```python
 import kicad_sch_api as ksa
 
-ksa.config.positioning.use_grid_units = True
+ksa.use_grid_units(True)
 
 sch = ksa.create_schematic("AutoRouteExample")
 
@@ -235,7 +235,7 @@ A complete circuit showing all the techniques together:
 import kicad_sch_api as ksa
 
 # Enable grid units globally for cleaner code
-ksa.config.positioning.use_grid_units = True
+ksa.use_grid_units(True)
 
 def voltage_divider(sch, x_grid, y_grid):
     """
@@ -300,7 +300,7 @@ sch = ksa.create_schematic("Name")
 sch.save("output.kicad_sch")
 
 # Configuration
-ksa.config.positioning.use_grid_units = True
+ksa.use_grid_units(True)
 ksa.config.positioning.grid_size = 1.27  # mm
 
 # Components
