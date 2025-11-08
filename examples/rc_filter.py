@@ -62,8 +62,8 @@ def rc_filter(sch, x_grid, y_grid):
     sch.add_wire(start=p(5, 9), end=p(9, 9))
 
     # ===== DECORATIVE ELEMENTS =====
-    sch.add_rectangle(start=p(-2, -2), end=p(12, 18))
-    sch.add_text("RC Filter", position=p(2, 0), size=1.27)
+    sch.add_rectangle(start=p(-3, -4), end=p(14, 23))
+    sch.add_text("RC Filter", position=p(3, -2), size=1.27)
 
 
 def main():
