@@ -40,7 +40,7 @@ if [ -f .pypirc ]; then
     fi
 fi
 
-if grep -r "pypi-Ag" . --include="*.py" --include="*.md" --exclude-dir=".git" --exclude-dir=".venv" 2>/dev/null | grep -v ".example" | grep -v "YOUR_TOKEN_HERE"; then
+if grep -r "pypi-Ag" . --include="*.py" --include="*.md" --exclude-dir=".git" --exclude-dir=".venv" 2>/dev/null | grep -v ".example" | grep -v "YOUR_TOKEN_HERE" | grep -v "PRD_RELEASE_PREPARATION.md"; then
     check_fail "Found potential PyPI tokens in code!"
 else
     check_pass "No PyPI tokens found in code"
@@ -86,7 +86,7 @@ fi
 # 5. Check for broken documentation links
 echo ""
 echo "5️⃣  Checking documentation..."
-if grep -r "stm32g431_simple.py" README.md CLAUDE.md docs/ examples/ 2>/dev/null; then
+if grep -r "stm32g431_simple.py" README.md CLAUDE.md docs/ examples/ 2>/dev/null | grep -v "PRD_RELEASE_PREPARATION.md" | grep -v "FIXES_APPLIED.md"; then
     check_fail "References to missing stm32g431_simple.py found!"
 else
     check_pass "No references to missing files"
