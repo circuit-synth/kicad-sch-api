@@ -281,16 +281,32 @@ voltage_divider(sch, 20, 20)
 sch.save("voltage_divider.kicad_sch")
 ```
 
-**See `KEEP/voltage_divider.py` for the complete working example!**
+**See `voltage_divider.py` for the complete working example!**
+
+---
+
+## More Example Circuits
+
+This folder contains polished example circuits:
+
+- **`voltage_divider.py`** - Basic 10k/10k voltage divider (covered above)
+- **`rc_filter.py`** - RC low-pass filter with horizontal resistor rotation
+- **`power_supply.py`** - LM7805 5V regulator with input/output filtering
+
+Each example demonstrates:
+- Grid-based parametric design with `p()` helper
+- Clean API using `ksa.use_grid_units(True)`
+- Proper component placement and wiring
+- Text annotations and decorative elements
 
 ---
 
 ## Next Steps
 
-- **`basics/`** - Simple single-component examples
-- **`parametric_circuits/`** - Reusable circuit blocks
-- **`advanced/`** - Hierarchical designs, multi-sheet projects
-- **`utilities/`** - Helper tools and analysis scripts
+- **`../basics/`** - Simple single-component examples
+- **`../parametric_circuits/`** - Reusable circuit blocks
+- **`../advanced/`** - Hierarchical designs, multi-sheet projects
+- **`../utilities/`** - Helper tools and analysis scripts
 
 ## Key API Reference
 
