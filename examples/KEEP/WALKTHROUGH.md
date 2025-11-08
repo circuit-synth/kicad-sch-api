@@ -178,9 +178,18 @@ def rc_filter(sch, x, y, r_value, c_value):
 
     # Build the circuit relative to (0, 0)
     sch.components.add('Device:R', 'R1', r_value, position=p(0, 0))
-    sch.components.add('Device:C', 'C1', c_value, position=p(0, 10))
-    sch.add_wire(start=p(0, 3), end=p(0, 7))
-    sch.add_label('OUT', position=p(0, 7))
+    sch.components.add('Device:C', 'C1', c_value, position=p(0, 7))
+    sch.components.add('power:GND', '#PWR01', 'GND', position=p(0, 11))
+
+    # Junction at output node
+    sch.junctions.add(position=p(0, 4))
+
+    # Wiring
+    sch.auto_route_pins('R1', '2', 'C1', '1', routing_strategy='direct')
+    sch.add_wire(start=p(0, 4), end=p(3, 4))  # Tap to label
+    sch.add_wire(start=p(0, 10), end=p(0, 11))  # C1 to GND
+
+    sch.add_label('OUT', position=p(3, 4))
 
 # Create schematic and place the filter at different locations
 sch = ksa.create_schematic("ParametricExample")
