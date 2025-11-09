@@ -55,9 +55,25 @@ class TextParser(BaseElementParser):
                 for effect_elem in elem[1:]:
                     if isinstance(effect_elem, list) and str(effect_elem[0]) == "font":
                         for font_elem in effect_elem[1:]:
-                            if isinstance(font_elem, list) and str(font_elem[0]) == "size":
-                                if len(font_elem) >= 2:
+                            if isinstance(font_elem, list):
+                                font_prop = str(font_elem[0])
+                                if font_prop == "size" and len(font_elem) >= 2:
                                     text_data["size"] = float(font_elem[1])
+                                elif font_prop == "thickness" and len(font_elem) >= 2:
+                                    text_data["thickness"] = float(font_elem[1])
+                                elif font_prop == "bold" and len(font_elem) >= 2:
+                                    text_data["bold"] = str(font_elem[1]) == "yes"
+                                elif font_prop == "italic" and len(font_elem) >= 2:
+                                    text_data["italic"] = str(font_elem[1]) == "yes"
+                                elif font_prop == "color" and len(font_elem) >= 5:
+                                    text_data["color"] = (
+                                        int(font_elem[1]),
+                                        int(font_elem[2]),
+                                        int(font_elem[3]),
+                                        float(font_elem[4]),
+                                    )
+                                elif font_prop == "face" and len(font_elem) >= 2:
+                                    text_data["face"] = str(font_elem[1])
             elif elem_type == "uuid":
                 text_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
 
@@ -170,6 +186,20 @@ class TextParser(BaseElementParser):
         size = text_data.get("size", config.defaults.font_size)
         effects = [sexpdata.Symbol("effects")]
         font = [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), size, size]]
+
+        # Add optional font properties
+        if text_data.get("thickness") is not None:
+            font.append([sexpdata.Symbol("thickness"), text_data["thickness"]])
+        if text_data.get("bold", False):
+            font.append([sexpdata.Symbol("bold"), sexpdata.Symbol("yes")])
+        if text_data.get("italic", False):
+            font.append([sexpdata.Symbol("italic"), sexpdata.Symbol("yes")])
+        if text_data.get("color") is not None:
+            r, g, b, a = text_data["color"]
+            font.append([sexpdata.Symbol("color"), r, g, b, a])
+        if text_data.get("face") is not None:
+            font.append([sexpdata.Symbol("face"), text_data["face"]])
+
         effects.append(font)
         sexp.append(effects)
 

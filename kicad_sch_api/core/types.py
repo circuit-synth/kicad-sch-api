@@ -617,6 +617,12 @@ class Text:
     rotation: float = 0.0
     size: float = 1.27
     exclude_from_sim: bool = False
+    # Font effects (optional, for styling)
+    bold: bool = False
+    italic: bool = False
+    thickness: Optional[float] = None  # Stroke width (None = use default)
+    color: Optional[Tuple[int, int, int, float]] = None  # RGBA (None = use default)
+    face: Optional[str] = None  # Font face name (None = use default)
 
     def __post_init__(self) -> None:
         if not self.uuid:
