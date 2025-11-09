@@ -289,12 +289,81 @@ comp.remove_property("MPN")
 pin = comp.get_pin("1")  # Get pin by number
 pin_pos = comp.get_pin_position("1")  # Get absolute position
 
+# Text effects (formatting, colors, fonts)
+effects = comp.get_property_effects("Reference")  # Get all effects
+comp.set_property_effects("Reference", {"bold": True, "color": (255, 0, 0, 1.0)})
+
 # Validation
 issues = comp.validate()  # List[ValidationIssue]
 
 # Conversion
 comp_dict = comp.to_dict()  # Convert to dictionary
 ```
+
+#### Text Effects
+
+Get and modify text effects for component properties (Reference, Value, Footprint).
+
+```python
+comp = sch.components.get("R1")
+
+# Get all effects for a property
+effects = comp.get_property_effects("Reference")
+# Returns dictionary with:
+# {
+#     'position': (x, y),           # Position relative to component
+#     'rotation': float,            # Rotation in degrees
+#     'font_face': str,             # Font name (e.g., 'Arial')
+#     'font_size': (h, w),          # Font size (height, width) in mm
+#     'font_thickness': float,      # Line thickness
+#     'bold': bool,                 # Bold flag
+#     'italic': bool,               # Italic flag
+#     'color': (r, g, b, a),        # RGBA color (0-255, 0-1 alpha)
+#     'justify_h': str,             # 'left', 'right', 'center'
+#     'justify_v': str,             # 'top', 'bottom'
+#     'visible': bool,              # True = visible, False = hidden
+# }
+
+# Modify effects (partial updates - preserves other effects)
+comp.set_property_effects("Reference", {
+    "color": (0, 255, 0, 1.0),  # Green
+    "bold": True,
+    "font_size": (2.0, 2.0)
+})
+
+# Hide a property
+comp.set_property_effects("Footprint", {"visible": False})
+
+# Rotate and style value
+comp.set_property_effects("Value", {
+    "rotation": 90.0,
+    "italic": True,
+    "justify_h": "left",
+    "color": (160, 32, 240, 1.0)  # Purple
+})
+```
+
+**Supported Properties:**
+- `Reference`, `Value`, `Footprint` (standard properties)
+- Any custom property that exists in the component
+
+**Effect Properties:**
+- `position` (tuple): (x, y) position relative to component
+- `rotation` (float): Rotation angle in degrees (stored in `(at x y rotation)` section)
+- `font_face` (str): Font name (e.g., "Arial", "Courier New")
+- `font_size` (tuple): (height, width) in mm
+- `font_thickness` (float): Line thickness for text
+- `bold` (bool): Bold text flag
+- `italic` (bool): Italic text flag
+- `color` (tuple): (r, g, b, alpha) - RGB 0-255, alpha 0.0-1.0
+- `justify_h` (str): Horizontal justification - "left", "right", "center"
+- `justify_v` (str): Vertical justification - "top", "bottom"
+- `visible` (bool): Visibility flag (False = hidden)
+
+**Notes:**
+- Effects are merged - only specified properties are changed, others preserved
+- Works on both loaded components (preserves existing) and newly created components (creates defaults)
+- Format preservation - exact KiCAD S-expression format maintained
 
 ---
 
