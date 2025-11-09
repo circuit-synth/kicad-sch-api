@@ -216,6 +216,7 @@ class SchematicSymbol:
     properties: Dict[str, str] = field(default_factory=dict)
     pins: List[SchematicPin] = field(default_factory=list)
     pin_uuids: Dict[str, str] = field(default_factory=dict)  # Maps pin number to UUID
+    hidden_properties: "set[str]" = field(default_factory=set)  # Properties with (hide yes) flag
     rotation: float = 0.0
     in_bom: bool = True
     on_board: bool = True
@@ -418,6 +419,61 @@ class SchematicSymbol:
 
         # Store updated S-expression
         self.properties[sexp_key] = updated_sexp
+
+    def add_property(self, name: str, value: str, hidden: bool = False) -> None:
+        """
+        Add or update a component property with visibility control.
+
+        Sets the property value and manages its visibility state. If the property
+        already exists, both value and visibility are updated.
+
+        Args:
+            name: Property name (e.g., "MPN", "Manufacturer", "Tolerance")
+            value: Property value
+            hidden: If True, property will have (hide yes) flag in S-expression.
+                   If False, property will be visible on schematic. Default: False
+
+        Example:
+            >>> component.add_property("MPN", "RC0603FR-0710KL", hidden=True)
+            >>> component.add_property("Tolerance", "1%", hidden=False)
+        """
+        # Set property value
+        self.properties[name] = value
+
+        # Manage visibility
+        if hidden:
+            self.hidden_properties.add(name)
+        else:
+            self.hidden_properties.discard(name)
+
+    def add_properties(self, props: Dict[str, str], hidden: bool = False) -> None:
+        """
+        Add or update multiple properties with same visibility setting.
+
+        Convenience method for bulk property operations. All properties will
+        have the same visibility state.
+
+        Args:
+            props: Dictionary of property name/value pairs
+            hidden: If True, all properties will be hidden. If False, all will
+                   be visible. Default: False
+
+        Example:
+            >>> component.add_properties({
+            ...     "MPN": "RC0603FR-0710KL",
+            ...     "Manufacturer": "Yageo",
+            ...     "Supplier": "Digikey"
+            ... }, hidden=True)
+        """
+        # Update all property values
+        self.properties.update(props)
+
+        # Manage visibility for all properties
+        if hidden:
+            self.hidden_properties.update(props.keys())
+        else:
+            for name in props.keys():
+                self.hidden_properties.discard(name)
 
 
 class WireType(Enum):
