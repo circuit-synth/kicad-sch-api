@@ -7,7 +7,7 @@ featuring fast lookup, bulk operations, and validation.
 
 import logging
 import uuid
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
 from .collections import BaseCollection
@@ -108,10 +108,10 @@ class TextElement:
     @property
     def bold(self) -> bool:
         """Text bold flag."""
-        return getattr(self._data, 'bold', False)
+        return getattr(self._data, "bold", False)
 
     @bold.setter
-    def bold(self, value: bool):
+    def bold(self, value: bool) -> None:
         """Set text bold flag."""
         self._data.bold = bool(value)
         self._collection._mark_modified()
@@ -119,10 +119,10 @@ class TextElement:
     @property
     def italic(self) -> bool:
         """Text italic flag."""
-        return getattr(self._data, 'italic', False)
+        return getattr(self._data, "italic", False)
 
     @italic.setter
-    def italic(self, value: bool):
+    def italic(self, value: bool) -> None:
         """Set text italic flag."""
         self._data.italic = bool(value)
         self._collection._mark_modified()
@@ -130,10 +130,10 @@ class TextElement:
     @property
     def thickness(self) -> Optional[float]:
         """Text stroke thickness."""
-        return getattr(self._data, 'thickness', None)
+        return getattr(self._data, "thickness", None)
 
     @thickness.setter
-    def thickness(self, value: Optional[float]):
+    def thickness(self, value: Optional[float]) -> None:
         """Set text stroke thickness."""
         if value is not None and value <= 0:
             raise ValidationError(f"Thickness must be positive, got {value}")
@@ -143,17 +143,17 @@ class TextElement:
     @property
     def color(self) -> Optional[Tuple[int, int, int, float]]:
         """Text color (RGBA)."""
-        return getattr(self._data, 'color', None)
+        return getattr(self._data, "color", None)
 
     @color.setter
-    def color(self, value: Optional[Tuple[int, int, int, float]]):
+    def color(self, value: Optional[Tuple[int, int, int, float]]) -> None:
         """Set text color."""
         if value is not None:
             if len(value) != 4:
                 raise ValidationError(f"Color must be RGBA tuple (4 values), got {len(value)}")
             r, g, b, a = value
             if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255 and 0 <= a <= 1):
-                raise ValidationError(f"Color values out of range: RGB 0-255, A 0-1")
+                raise ValidationError("Color values out of range: RGB 0-255, A 0-1")
             value = (int(r), int(g), int(b), float(a))
         self._data.color = value
         self._collection._mark_modified()
@@ -161,10 +161,10 @@ class TextElement:
     @property
     def face(self) -> Optional[str]:
         """Font face name."""
-        return getattr(self._data, 'face', None)
+        return getattr(self._data, "face", None)
 
     @face.setter
-    def face(self, value: Optional[str]):
+    def face(self, value: Optional[str]) -> None:
         """Set font face name."""
         self._data.face = str(value) if value is not None else None
         self._collection._mark_modified()
@@ -286,7 +286,7 @@ class TextCollection(BaseCollection[TextElement]):
                 raise ValidationError(f"Color must be RGBA tuple (4 values), got {len(color)}")
             r, g, b, a = color
             if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255 and 0 <= a <= 1):
-                raise ValidationError(f"Color values out of range: RGB 0-255, A 0-1")
+                raise ValidationError("Color values out of range: RGB 0-255, A 0-1")
             color = (int(r), int(g), int(b), float(a))
 
         # Validate thickness if provided

@@ -136,9 +136,7 @@ class ElementFactory:
             rotation=label_dict.get("rotation", 0.0),
             size=label_dict.get("size", 1.27),
             shape=(
-                HierarchicalLabelShape(label_dict.get("shape"))
-                if label_dict.get("shape")
-                else None
+                HierarchicalLabelShape(label_dict.get("shape")) if label_dict.get("shape") else None
             ),
             justify_h=label_dict.get("justify_h", "left"),
             justify_v=label_dict.get("justify_v", "bottom"),

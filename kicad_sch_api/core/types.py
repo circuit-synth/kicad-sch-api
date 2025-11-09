@@ -36,7 +36,7 @@ class Point:
 
 
 def point_from_dict_or_tuple(
-    position: Union[Point, Dict[str, float], Tuple[float, float], List[float], Any]
+    position: Union[Point, Dict[str, float], Tuple[float, float], List[float], Any],
 ) -> Point:
     """
     Convert various position formats to a Point object.
@@ -220,7 +220,9 @@ class SchematicSymbol:
     in_bom: bool = True
     on_board: bool = True
     unit: int = 1
-    instances: List["SymbolInstance"] = field(default_factory=list)  # FIX: Add instances field for hierarchical support
+    instances: List["SymbolInstance"] = field(
+        default_factory=list
+    )  # FIX: Add instances field for hierarchical support
 
     def __post_init__(self) -> None:
         # Generate UUID if not provided
@@ -369,7 +371,7 @@ class SchematicSymbol:
             parse_effects_from_sexp,
             merge_effects,
             update_property_sexp_with_effects,
-            create_effects_sexp
+            create_effects_sexp,
         )
         from sexpdata import Symbol
 
@@ -393,14 +395,11 @@ class SchematicSymbol:
             # Create default S-expression structure
             # Format: (property "Name" "Value" (at x y rotation) (effects ...))
             property_sexp = [
-                Symbol('property'),
+                Symbol("property"),
                 property_name,
                 str(prop_value),
-                [Symbol('at'), self.position.x, self.position.y, 0],
-                create_effects_sexp({
-                    'font_size': (1.27, 1.27),
-                    'visible': True
-                })
+                [Symbol("at"), self.position.x, self.position.y, 0],
+                create_effects_sexp({"font_size": (1.27, 1.27), "visible": True}),
             ]
 
             # Store it

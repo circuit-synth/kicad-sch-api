@@ -5,7 +5,6 @@ Tests the Text dataclass, parser, and API for bold, italic, thickness, color, an
 """
 
 import pytest
-from typing import Tuple, Optional
 
 import kicad_sch_api as ksa
 from kicad_sch_api.core.types import Text, Point
@@ -147,7 +146,7 @@ class TestTextAPI:
     def test_add_text_with_color(self, tmp_path):
         """Add text with color via API."""
         sch = ksa.create_schematic("test")
-        text_uuid = sch.add_text(
+        sch.add_text(
             "Red Text",
             position=(100, 100),
             color=(255, 0, 0, 1.0),
@@ -171,7 +170,7 @@ class TestTextAPI:
     def test_add_text_with_all_effects(self, tmp_path):
         """Add text with all effects via API."""
         sch = ksa.create_schematic("test")
-        text_uuid = sch.add_text(
+        sch.add_text(
             "Styled Text",
             position=(100, 100),
             size=2.0,

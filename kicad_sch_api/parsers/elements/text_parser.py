@@ -70,7 +70,7 @@ class TextParser(BaseElementParser):
                                         int(font_elem[1]),
                                         int(font_elem[2]),
                                         int(font_elem[3]),
-                                        float(font_elem[4])
+                                        float(font_elem[4]),
                                     )
                                 elif font_prop == "face" and len(font_elem) >= 2:
                                     text_data["face"] = str(font_elem[1])
@@ -78,7 +78,6 @@ class TextParser(BaseElementParser):
                 text_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
 
         return text_data
-
 
     def _parse_text_box(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a text_box element."""
@@ -160,7 +159,6 @@ class TextParser(BaseElementParser):
 
         return text_box_data
 
-
     def _text_to_sexp(self, text_data: Dict[str, Any]) -> List[Any]:
         """Convert text element to S-expression."""
         sexp = [sexpdata.Symbol("text"), text_data["text"]]
@@ -210,7 +208,6 @@ class TextParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), text_data["uuid"]])
 
         return sexp
-
 
     def _text_box_to_sexp(self, text_box_data: Dict[str, Any]) -> List[Any]:
         """Convert text box element to S-expression."""
@@ -276,5 +273,3 @@ class TextParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), text_box_data["uuid"]])
 
         return sexp
-
-
