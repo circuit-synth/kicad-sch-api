@@ -841,6 +841,28 @@ class Schematic:
         return len(self.wires) + sum(len(net.components) for net in self.nets)
 
 
+@dataclass
+class SymbolInfo:
+    """
+    Symbol metadata from library cache for multi-unit component introspection.
+
+    Used by get_symbol_info() to query unit count, names, and other metadata
+    before adding components programmatically.
+    """
+
+    lib_id: str  # e.g., "Amplifier_Operational:TL072"
+    name: str  # Symbol name within library
+    library: str  # Library name (e.g., "Amplifier_Operational")
+    reference_prefix: str  # e.g., "U" for ICs, "R" for resistors
+    description: str  # Symbol description
+    keywords: str  # Search keywords
+    datasheet: str  # Datasheet URL
+    unit_count: int  # Number of units (1 for single-unit, 3 for TL072, 5 for TL074)
+    unit_names: Dict[int, str]  # Maps unit number to name (e.g., {1: "A", 2: "B", 3: "C"})
+    pins: List[SchematicPin]  # All pins across all units
+    power_symbol: bool  # True if this is a power symbol
+
+
 # Type aliases for convenience
 ComponentDict = Dict[str, Any]  # Raw component data from parser
 WireDict = Dict[str, Any]  # Raw wire data from parser
