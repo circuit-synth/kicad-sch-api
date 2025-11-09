@@ -413,7 +413,7 @@ class SymbolParser(BaseElementParser):
                 # Default: hide for power symbols, otherwise visible
                 ref_hide = "Reference" in hidden_props if "Reference" in hidden_props or not is_power_symbol else is_power_symbol
                 ref_prop = self._create_property_with_positioning(
-                    "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide, rotation=rotation
+                    "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide, rotation=rotation, lib_id=lib_id
                 )
                 sexp.append(ref_prop)
 
@@ -438,7 +438,7 @@ class SymbolParser(BaseElementParser):
                     )
                 else:
                     val_prop = self._create_property_with_positioning(
-                        "Value", symbol_data["value"], pos, 1, "left", hide=val_hide, rotation=rotation
+                        "Value", symbol_data["value"], pos, 1, "left", hide=val_hide, rotation=rotation, lib_id=lib_id
                     )
                 sexp.append(val_prop)
 
@@ -460,7 +460,7 @@ class SymbolParser(BaseElementParser):
                 # Default: Footprint is usually hidden
                 fp_hide = "Footprint" in hidden_props if "Footprint" in hidden_props else True
                 fp_prop = self._create_property_with_positioning(
-                    "Footprint", footprint, pos, 2, "left", hide=fp_hide
+                    "Footprint", footprint, pos, 2, "left", hide=fp_hide, lib_id=lib_id
                 )
                 sexp.append(fp_prop)
 
@@ -632,14 +632,22 @@ class SymbolParser(BaseElementParser):
         justify: str = "left",
         hide: bool = False,
         rotation: float = 0,
+        lib_id: str = None,
     ) -> List[Any]:
         """Create a property with proper positioning and effects like KiCAD."""
-        from ...core.config import config
+        from ...core.property_positioning import get_property_position
 
-        # Calculate property position using configuration
-        prop_x, prop_y, text_rotation = config.get_property_position(
-            prop_name, (component_pos.x, component_pos.y), offset_index, rotation
-        )
+        # Calculate property position using library-specific positioning
+        if lib_id and prop_name in ["Reference", "Value", "Footprint"]:
+            prop_x, prop_y, text_rotation = get_property_position(
+                lib_id, prop_name, (component_pos.x, component_pos.y), rotation
+            )
+        else:
+            # Fallback for custom properties or when lib_id not available
+            from ...core.config import config
+            prop_x, prop_y, text_rotation = config.get_property_position(
+                prop_name, (component_pos.x, component_pos.y), offset_index, rotation
+            )
 
         # Build effects section based on hide status
         effects = [
