@@ -30,6 +30,77 @@ description: Core development workflow - from problem to PR for KiCAD schematic 
 
 ---
 
+## Reviewing and Fixing Existing PRs
+
+**If you encounter an existing PR with failing CI**, follow these steps to fix it:
+
+### Step 1: Checkout the PR branch
+```bash
+gh pr checkout {PR_NUMBER}
+```
+
+### Step 2: Fix formatting issues
+```bash
+# Format code
+uv run black kicad_sch_api/ tests/
+uv run isort kicad_sch_api/ tests/
+```
+
+### Step 3: Fix other CI failures
+```bash
+# Run tests to identify failures
+uv run pytest tests/ -v
+
+# Fix type errors
+uv run mypy kicad_sch_api/
+
+# Fix linting issues
+uv run flake8 kicad_sch_api/ tests/
+```
+
+### Step 4: Commit and push fixes
+```bash
+git add -A
+git commit -m "chore: Fix CI formatting and test failures
+
+Apply black and isort formatting to pass CI checks.
+Fix any test failures and type errors.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+git push origin {BRANCH_NAME}
+```
+
+### Step 5: Resolve merge conflicts (if needed)
+```bash
+# Fetch and merge main
+git fetch origin main
+git merge origin/main
+
+# Resolve conflicts manually or use preferred versions:
+# - Use theirs for files unrelated to the PR's purpose
+# - Manually resolve conflicts in PR-specific changes
+
+git add {resolved_files}
+git commit -m "Merge branch 'main' into {branch_name}"
+git push origin {BRANCH_NAME}
+```
+
+### Step 6: Merge the PR
+```bash
+# Squash merge (preferred for clean history)
+gh pr merge {PR_NUMBER} --squash --delete-branch
+
+# Or regular merge if history preservation needed
+gh pr merge {PR_NUMBER} --merge --delete-branch
+```
+
+**Key Principle**: ALWAYS fix CI locally before pushing. Never leave a PR with failing checks.
+
+---
+
 ## Usage
 
 ```bash
@@ -964,21 +1035,55 @@ Fixes #139
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-### Step 5.5: Create Pull Request
+### Step 5.5: Pre-PR CI Validation and Fixing
 
-**Run final validation**:
+**CRITICAL**: Before creating a PR, ensure all CI checks will pass by running and fixing issues locally.
+
+**Run complete CI validation suite**:
 ```bash
-# All tests pass
-uv run pytest tests/ -v
+# 1. Format code (FIX, don't just check)
+uv run black kicad_sch_api/ tests/
+uv run isort kicad_sch_api/ tests/
 
-# Code quality
+# 2. Verify formatting is correct
 uv run black kicad_sch_api/ tests/ --check
 uv run isort kicad_sch_api/ tests/ --check
+
+# 3. Type checking
 uv run mypy kicad_sch_api/
+
+# 4. Linting
 uv run flake8 kicad_sch_api/ tests/
 
-# Format preservation tests
+# 5. All tests pass
+uv run pytest tests/ -v
+
+# 6. Format preservation tests
 uv run pytest tests/reference_tests/ -v -m format
+```
+
+**If any checks fail:**
+1. **Fix formatting issues** immediately with `black` and `isort`
+2. **Fix type errors** reported by `mypy`
+3. **Fix linting issues** reported by `flake8`
+4. **Fix failing tests** by returning to implementation phase
+5. **Re-run all checks** until everything passes
+
+**NEVER create a PR with failing CI** - fix all issues locally first.
+
+### Step 5.6: Create Pull Request
+
+**Final validation before PR**:
+```bash
+# Confirm all checks pass
+uv run black kicad_sch_api/ tests/ --check && \
+uv run isort kicad_sch_api/ tests/ --check && \
+uv run mypy kicad_sch_api/ && \
+uv run flake8 kicad_sch_api/ tests/ && \
+uv run pytest tests/ -v
+
+# If all pass, proceed with PR
+echo "✅ All checks passed - ready for PR"
 ```
 
 **Generate PR description**:
@@ -1035,7 +1140,7 @@ git push origin HEAD
 gh pr create --title "{PR title}" --body "{PR description}"
 ```
 
-### Step 5.6: PR Summary and Completion
+### Step 5.7: PR Summary and Completion
 
 **Present completed PR**:
 > ✅ **Pull request created**: {PR URL}
