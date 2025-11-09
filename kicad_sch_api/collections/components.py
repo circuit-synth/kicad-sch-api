@@ -398,6 +398,17 @@ class Component:
         self._data.on_board = bool(value)
         self._collection._mark_modified()
 
+    @property
+    def fields_autoplaced(self) -> bool:
+        """Whether component properties are auto-placed by KiCAD."""
+        return self._data.fields_autoplaced
+
+    @fields_autoplaced.setter
+    def fields_autoplaced(self, value: bool):
+        """Set fields autoplaced flag."""
+        self._data.fields_autoplaced = bool(value)
+        self._collection._mark_modified()
+
     # Utility methods
     def move(self, x: float, y: float):
         """

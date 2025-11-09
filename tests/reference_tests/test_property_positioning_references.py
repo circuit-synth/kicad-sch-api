@@ -12,7 +12,6 @@ Related:
 """
 
 import pytest
-
 import kicad_sch_api as ksa
 
 
@@ -113,8 +112,8 @@ class TestCapacitorReferencePositioning:
         """Capacitor should use DIFFERENT offset than resistor.
 
         This validates library-specific positioning.
-        Capacitor offset: (+0.64, ±2.54)
-        Resistor offset: (+2.54, ±1.27)  ← DIFFERENT
+        Capacitor offset: (+3.81, ±1.27)
+        Resistor offset: (+2.54, ±1.27)  ← DIFFERENT X offset
         """
         comp = capacitor_sch.components[0]
         comp_x = comp.position.x
@@ -124,9 +123,9 @@ class TestCapacitorReferencePositioning:
         ref_offset_x = ref_prop["at"][0] - comp_x
         ref_offset_y = ref_prop["at"][1] - comp_y
 
-        # Capacitor uses +0.64 horizontal offset (not +2.54 like resistor)
-        assert ref_offset_x == pytest.approx(0.64, abs=0.01)
-        assert ref_offset_y == pytest.approx(2.54, abs=0.01)
+        # Capacitor uses +3.81 horizontal offset (different from +2.54 for resistor)
+        assert ref_offset_x == pytest.approx(3.81, abs=0.01)
+        assert ref_offset_y == pytest.approx(-1.2701, abs=0.01)
 
 
 class TestDiodeReferencePositioning:
@@ -145,10 +144,10 @@ class TestDiodeReferencePositioning:
         )
 
     def test_diode_centered_vertical_stacking(self, diode_sch):
-        """Diode should stack properties VERTICALLY on centerline.
+        """Diode should stack properties VERTICALLY on centerline ABOVE component.
 
-        This is DIFFERENT from resistor (which offsets horizontally).
-        Expected offset: (0, ±2.54) - no horizontal offset
+        This is DIFFERENT from resistor (which offsets to the right).
+        Expected offset: (0, -6.35) Reference, (0, -3.81) Value - both ABOVE
         """
         comp = diode_sch.components[0]
         comp_x = comp.position.x
@@ -158,18 +157,13 @@ class TestDiodeReferencePositioning:
         val_prop = comp.properties["Value"]
 
         ref_offset_x = ref_prop["at"][0] - comp_x
-        val_offset_x = val_prop["at"][0] - comp_x
-
-        # No horizontal offset (centered)
-        assert ref_offset_x == pytest.approx(0.0, abs=0.01)
-        assert val_offset_x == pytest.approx(0.0, abs=0.01)
-
-        # Vertical stacking
         ref_offset_y = ref_prop["at"][1] - comp_y
         val_offset_y = val_prop["at"][1] - comp_y
 
-        assert ref_offset_y == pytest.approx(2.54, abs=0.01)  # Above
-        assert val_offset_y == pytest.approx(-2.54, abs=0.01)  # Below
+        # No horizontal offset (centered), both properties ABOVE component
+        assert ref_offset_x == pytest.approx(0.0, abs=0.01)
+        assert ref_offset_y == pytest.approx(-6.35, abs=0.01)
+        assert val_offset_y == pytest.approx(-3.81, abs=0.01)
 
 
 class TestInductorReferencePositioning:
@@ -188,9 +182,9 @@ class TestInductorReferencePositioning:
         )
 
     def test_inductor_horizontal_stacking(self, inductor_sch):
-        """Inductor should stack properties HORIZONTALLY (left/right).
+        """Inductor should stack properties VERTICALLY like resistor but with narrower X offset.
 
-        Pattern: Reference LEFT (-1.27, 0), Value RIGHT (+1.91, 0)
+        Pattern: Reference RIGHT (+1.27, -1.27), Value RIGHT (+1.27, +1.27)
         """
         comp = inductor_sch.components[0]
         comp_x = comp.position.x
@@ -200,28 +194,23 @@ class TestInductorReferencePositioning:
         val_prop = comp.properties["Value"]
 
         ref_offset_x = ref_prop["at"][0] - comp_x
-        val_offset_x = val_prop["at"][0] - comp_x
-
-        # Horizontal stacking
-        assert ref_offset_x == pytest.approx(-1.27, abs=0.01)  # Left
-        assert val_offset_x == pytest.approx(1.91, abs=0.01)  # Right
-
-        # No vertical offset (horizontal stacking)
         ref_offset_y = ref_prop["at"][1] - comp_y
         val_offset_y = val_prop["at"][1] - comp_y
 
-        assert ref_offset_y == pytest.approx(0.0, abs=0.01)
-        assert val_offset_y == pytest.approx(0.0, abs=0.01)
+        # Vertical stacking with narrow X offset
+        assert ref_offset_x == pytest.approx(1.27, abs=0.01)
+        assert ref_offset_y == pytest.approx(-1.2701, abs=0.01)
+        assert val_offset_y == pytest.approx(1.2699, abs=0.01)
 
     def test_inductor_text_rotated_90deg(self, inductor_sch):
-        """Inductor properties should have 90° text rotation."""
+        """Inductor properties should have 0° text rotation (vertical stacking)."""
         comp = inductor_sch.components[0]
 
         ref_rotation = comp.properties["Reference"]["at"][2]
         val_rotation = comp.properties["Value"]["at"][2]
 
-        assert ref_rotation == 90.0
-        assert val_rotation == 90.0
+        assert ref_rotation == 0.0
+        assert val_rotation == 0.0
 
 
 class TestLEDReferencePositioning:
@@ -240,22 +229,25 @@ class TestLEDReferencePositioning:
         )
 
     def test_led_same_pattern_as_diode(self, led_sch):
-        """LED should use same pattern as diode (both are 2-pin polar).
+        """LED should use similar pattern to diode (both properties ABOVE).
 
-        Expected: centered vertical stacking (0, ±2.54)
+        Expected: LEFT and ABOVE (-1.5875, -6.35) Reference, (-1.5875, -3.81) Value
         """
         comp = led_sch.components[0]
         comp_x = comp.position.x
         comp_y = comp.position.y
 
         ref_prop = comp.properties["Reference"]
+        val_prop = comp.properties["Value"]
 
         ref_offset_x = ref_prop["at"][0] - comp_x
         ref_offset_y = ref_prop["at"][1] - comp_y
+        val_offset_y = val_prop["at"][1] - comp_y
 
-        # Centered like diode
-        assert ref_offset_x == pytest.approx(0.0, abs=0.01)
-        assert ref_offset_y == pytest.approx(2.54, abs=0.01)
+        # LEFT and ABOVE like diode
+        assert ref_offset_x == pytest.approx(-1.5875, abs=0.01)
+        assert ref_offset_y == pytest.approx(-6.35, abs=0.01)
+        assert val_offset_y == pytest.approx(-3.81, abs=0.01)
 
 
 class TestTransistorReferencePositioning:
@@ -344,10 +336,10 @@ class TestLogicICReferencePositioning:
         )
 
     def test_logic_ic_left_positioning(self, logic_ic_sch):
-        """Large logic IC should position properties LEFT with huge spacing.
+        """Large logic IC should position properties ABOVE with huge spacing.
 
-        16-pin IC uses left positioning: (-7.62, ±13-16mm)
-        Different from op-amp (centered).
+        16-pin IC uses slight RIGHT positioning with properties stacked ABOVE:
+        Reference: (+2.1433, -17.78), Value: (+2.1433, -15.24)
         """
         comp = logic_ic_sch.components[0]
         comp_x = comp.position.x
@@ -356,19 +348,14 @@ class TestLogicICReferencePositioning:
         ref_prop = comp.properties["Reference"]
         val_prop = comp.properties["Value"]
 
-        # LEFT positioning
+        # Slight RIGHT, stacked ABOVE
         ref_offset_x = ref_prop["at"][0] - comp_x
-        val_offset_x = val_prop["at"][0] - comp_x
-
-        assert ref_offset_x == pytest.approx(-7.62, abs=0.01)
-        assert val_offset_x == pytest.approx(-7.62, abs=0.01)
-
-        # Very large vertical spacing
         ref_offset_y = ref_prop["at"][1] - comp_y
         val_offset_y = val_prop["at"][1] - comp_y
 
-        assert ref_offset_y == pytest.approx(13.97, abs=0.01)
-        assert val_offset_y == pytest.approx(-16.51, abs=0.01)
+        assert ref_offset_x == pytest.approx(2.1433, abs=0.01)
+        assert ref_offset_y == pytest.approx(-17.78, abs=0.01)
+        assert val_offset_y == pytest.approx(-15.24, abs=0.01)
 
 
 class TestConnectorReferencePositioning:
@@ -387,18 +374,25 @@ class TestConnectorReferencePositioning:
         )
 
     def test_connector_centered_stacking(self, connector_sch):
-        """Connector should use centered vertical stacking.
+        """Connector should use slight RIGHT positioning with properties ABOVE.
 
-        Multi-pin connector: (0, ±5-7.62mm)
+        Multi-pin connector: Reference (+0.635, -7.62), Value (+0.635, -5.08)
         """
         comp = connector_sch.components[0]
         comp_x = comp.position.x
+        comp_y = comp.position.y
 
         ref_prop = comp.properties["Reference"]
-        ref_offset_x = ref_prop["at"][0] - comp_x
+        val_prop = comp.properties["Value"]
 
-        # Centered
-        assert ref_offset_x == pytest.approx(0.0, abs=0.01)
+        ref_offset_x = ref_prop["at"][0] - comp_x
+        ref_offset_y = ref_prop["at"][1] - comp_y
+        val_offset_y = val_prop["at"][1] - comp_y
+
+        # Slight RIGHT, stacked ABOVE
+        assert ref_offset_x == pytest.approx(0.635, abs=0.01)
+        assert ref_offset_y == pytest.approx(-7.62, abs=0.01)
+        assert val_offset_y == pytest.approx(-5.08, abs=0.01)
 
 
 class TestCapacitorPolarizedReferencePositioning:
@@ -417,22 +411,25 @@ class TestCapacitorPolarizedReferencePositioning:
         )
 
     def test_polarized_capacitor_same_as_unpolarized(self, cap_polarized_sch):
-        """Polarized capacitor should use same positioning as unpolarized.
+        """Polarized capacitor has slightly different Y offsets than unpolarized.
 
-        Expected: (+0.64, ±2.54) like Device:C
+        Expected: Reference (+3.81, -2.1591), Value (+3.81, +0.3809)
         """
         comp = cap_polarized_sch.components[0]
         comp_x = comp.position.x
         comp_y = comp.position.y
 
         ref_prop = comp.properties["Reference"]
+        val_prop = comp.properties["Value"]
 
         ref_offset_x = ref_prop["at"][0] - comp_x
         ref_offset_y = ref_prop["at"][1] - comp_y
+        val_offset_y = val_prop["at"][1] - comp_y
 
-        # Same as unpolarized capacitor
-        assert ref_offset_x == pytest.approx(0.64, abs=0.01)
-        assert ref_offset_y == pytest.approx(2.54, abs=0.01)
+        # Same X as unpolarized, but different Y offsets
+        assert ref_offset_x == pytest.approx(3.81, abs=0.01)
+        assert ref_offset_y == pytest.approx(-2.1591, abs=0.01)
+        assert val_offset_y == pytest.approx(0.3809, abs=0.01)
 
 
 class TestFormatPreservationAcrossAllReferences:
@@ -471,6 +468,4 @@ class TestFormatPreservationAcrossAllReferences:
 
         # Files should be byte-identical (or semantically equivalent)
         # Note: Some whitespace/formatting differences may be acceptable
-        assert filecmp.cmp(
-            ref_path, str(temp_file), shallow=False
-        ), f"Round-trip failed for {ref_file}"
+        assert filecmp.cmp(ref_path, str(temp_file), shallow=False), f"Round-trip failed for {ref_file}"

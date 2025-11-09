@@ -41,6 +41,7 @@ class SymbolParser(BaseElementParser):
                 "hidden_properties": set(),  # Properties with (hide yes) flag
                 "in_bom": True,
                 "on_board": True,
+                "fields_autoplaced": True,
                 "instances": [],
             }
 
@@ -70,22 +71,20 @@ class SymbolParser(BaseElementParser):
                         sexp_key = f"__sexp_{prop_name}"
                         symbol_data["properties"][sexp_key] = sub_item
 
+                        # Store parsed property dict for easy access (used by tests and API)
+                        symbol_data["properties"][prop_name] = prop_data
+
                         # Check if property is hidden
                         if prop_data.get("hidden", False):
                             symbol_data["hidden_properties"].add(prop_name)
 
+                        # Also extract standard properties to dedicated fields for backward compatibility
                         if prop_name == "Reference":
                             symbol_data["reference"] = prop_data.get("value")
                         elif prop_name == "Value":
                             symbol_data["value"] = prop_data.get("value")
                         elif prop_name == "Footprint":
                             symbol_data["footprint"] = prop_data.get("value")
-                        else:
-                            # Unescape quotes in property values when loading
-                            prop_value = prop_data.get("value")
-                            if prop_value:
-                                prop_value = str(prop_value).replace('\\"', '"')
-                            symbol_data["properties"][prop_name] = prop_value
                 elif element_type == "in_bom":
                     symbol_data["in_bom"] = parse_bool_property(
                         sub_item[1] if len(sub_item) > 1 else None, default=True
@@ -93,6 +92,11 @@ class SymbolParser(BaseElementParser):
                 elif element_type == "on_board":
                     symbol_data["on_board"] = parse_bool_property(
                         sub_item[1] if len(sub_item) > 1 else None, default=True
+                    )
+                elif element_type == "fields_autoplaced":
+                    symbol_data["fields_autoplaced"] = parse_bool_property(
+                        sub_item[1] if len(sub_item) > 1 else None,
+                        default=True
                     )
                 elif element_type == "instances":
                     # Parse instances section
@@ -167,7 +171,15 @@ class SymbolParser(BaseElementParser):
         return prop
 
     def _parse_property(self, item: List[Any]) -> Optional[Dict[str, Any]]:
-        """Parse a property definition and extract hide flag."""
+        """Parse a property definition and extract all metadata.
+
+        Returns dict with keys:
+        - name: Property name
+        - value: Property value
+        - hidden: Whether property is hidden
+        - at: Position tuple (x, y, rotation)
+        - effects: Effects dict with font, justify, hide
+        """
         if len(item) < 3:
             return None
 
@@ -175,16 +187,29 @@ class SymbolParser(BaseElementParser):
         prop_name = item[1] if len(item) > 1 else None
         prop_value = item[2] if len(item) > 2 else None
 
-        # Look for effects section to extract hide flag
+        # Initialize parsed data
+        position = None
         is_hidden = False
+        justify = None
+        effects_dict = {}
+
+        # Parse sub-elements (at, effects, etc.)
         for sub_item in item[3:]:
             if not isinstance(sub_item, list) or len(sub_item) == 0:
                 continue
 
             element_type = str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
 
-            if element_type == "effects":
-                # Search for (hide yes) within effects
+            if element_type == "at":
+                # Parse position: (at x y rotation)
+                if len(sub_item) >= 3:
+                    x = float(sub_item[1])
+                    y = float(sub_item[2])
+                    rotation = float(sub_item[3]) if len(sub_item) > 3 else 0.0
+                    position = [x, y, rotation]
+
+            elif element_type == "effects":
+                # Parse effects section
                 for effect_item in sub_item[1:]:
                     if not isinstance(effect_item, list) or len(effect_item) == 0:
                         continue
@@ -201,14 +226,31 @@ class SymbolParser(BaseElementParser):
                         else:
                             # Just (hide) with no value defaults to yes
                             is_hidden = True
-                        break
-                break
+                        effects_dict["hide"] = "yes" if is_hidden else "no"
 
-        return {
+                    elif effect_type == "justify":
+                        # Extract justify value: (justify left|right|center)
+                        if len(effect_item) > 1:
+                            justify = str(effect_item[1])
+                            effects_dict["justify"] = justify
+
+                    elif effect_type == "font":
+                        # Store font info if needed
+                        effects_dict["font"] = effect_item
+
+        result = {
             "name": prop_name,
             "value": prop_value,
             "hidden": is_hidden,
         }
+
+        if position is not None:
+            result["at"] = position
+
+        if effects_dict:
+            result["effects"] = effects_dict
+
+        return result
 
     def _parse_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
         """
@@ -268,7 +310,12 @@ class SymbolParser(BaseElementParser):
 
                         # Create instance
                         if path and reference:
-                            instance = SymbolInstance(path=path, reference=reference, unit=unit)
+                            instance = SymbolInstance(
+                                path=path,
+                                reference=reference,
+                                unit=unit,
+                                project=project if project is not None else "",
+                            )
                             instances.append(instance)
 
         return instances
@@ -343,7 +390,7 @@ class SymbolParser(BaseElementParser):
             [sexpdata.Symbol("on_board"), "yes" if symbol_data.get("on_board", True) else "no"]
         )
         sexp.append([sexpdata.Symbol("dnp"), "no"])
-        sexp.append([sexpdata.Symbol("fields_autoplaced"), "yes"])
+        sexp.append([sexpdata.Symbol("fields_autoplaced"), "yes" if symbol_data.get("fields_autoplaced", True) else "no"])
 
         if symbol_data.get("uuid"):
             sexp.append([sexpdata.Symbol("uuid"), symbol_data["uuid"]])
@@ -384,6 +431,7 @@ class SymbolParser(BaseElementParser):
                     "left",
                     hide=ref_hide,
                     rotation=rotation,
+                    lib_id=lib_id,
                 )
                 sexp.append(ref_prop)
 
@@ -415,6 +463,7 @@ class SymbolParser(BaseElementParser):
                         "left",
                         hide=val_hide,
                         rotation=rotation,
+                        lib_id=lib_id,
                     )
                 sexp.append(val_prop)
 
@@ -436,7 +485,7 @@ class SymbolParser(BaseElementParser):
                 # Default: Footprint is usually hidden
                 fp_hide = "Footprint" in hidden_props if "Footprint" in hidden_props else True
                 fp_prop = self._create_property_with_positioning(
-                    "Footprint", footprint, pos, 2, "left", hide=fp_hide
+                    "Footprint", footprint, pos, 2, "left", hide=fp_hide, lib_id=lib_id
                 )
                 sexp.append(fp_prop)
 
@@ -449,10 +498,23 @@ class SymbolParser(BaseElementParser):
             "ki_fp_filters",
         }
 
+        # Standard properties handled separately above
+        STANDARD_PROPERTIES = {"Reference", "Value", "Footprint"}
+
         for prop_name, prop_value in symbol_data.get("properties", {}).items():
             # Skip internal preservation keys
             if prop_name.startswith("__sexp_"):
                 continue
+
+            # Skip standard properties (Reference, Value, Footprint) - already handled above
+            if prop_name in STANDARD_PROPERTIES:
+                continue
+
+            # Extract actual value - prop_value might be a dict (parsed property) or string (legacy)
+            if isinstance(prop_value, dict):
+                actual_value = prop_value.get("value", "")
+            else:
+                actual_value = prop_value
 
             # Determine hide state:
             # 1. If explicitly in hidden_props -> hide
@@ -472,7 +534,7 @@ class SymbolParser(BaseElementParser):
                 prop = list(preserved_prop)
                 if len(prop) >= 3:
                     # Re-escape quotes when saving
-                    escaped_value = str(prop_value).replace('"', '\\"')
+                    escaped_value = str(actual_value).replace('"', '\\"')
                     prop[2] = escaped_value
 
                 # Update hide flag based on hidden_properties set
@@ -480,7 +542,7 @@ class SymbolParser(BaseElementParser):
                 sexp.append(prop)
             else:
                 # No preserved format - create new (for newly added properties)
-                escaped_value = str(prop_value).replace('"', '\\"')
+                escaped_value = str(actual_value).replace('"', '\\"')
                 prop = self._create_property_with_positioning(
                     prop_name, escaped_value, pos, 3, "left", hide=should_hide
                 )
@@ -518,10 +580,17 @@ class SymbolParser(BaseElementParser):
             # Build instances sexp from user data
             instances_sexp = [sexpdata.Symbol("instances")]
             for inst in user_instances:
-                project = inst.get("project", getattr(self, "project_name", "circuit"))
-                path = inst.get("path", "/")
-                reference = inst.get("reference", symbol_data.get("reference", "U?"))
-                unit = inst.get("unit", 1)
+                # Handle both SymbolInstance objects and dicts for backward compatibility
+                if hasattr(inst, "project"):  # SymbolInstance object
+                    project = inst.project
+                    path = inst.path
+                    reference = inst.reference
+                    unit = inst.unit
+                else:  # Dict (legacy)
+                    project = inst.get("project", getattr(self, "project_name", "circuit"))
+                    path = inst.get("path", "/")
+                    reference = inst.get("reference", symbol_data.get("reference", "U?"))
+                    unit = inst.get("unit", 1)
 
                 logger.debug(
                     f"   Instance: project={project}, path={path}, ref={reference}, unit={unit}"
@@ -605,14 +674,22 @@ class SymbolParser(BaseElementParser):
         justify: str = "left",
         hide: bool = False,
         rotation: float = 0,
+        lib_id: str = None,
     ) -> List[Any]:
         """Create a property with proper positioning and effects like KiCAD."""
-        from ...core.config import config
+        from ...core.property_positioning import get_property_position
 
-        # Calculate property position using configuration
-        prop_x, prop_y, text_rotation = config.get_property_position(
-            prop_name, (component_pos.x, component_pos.y), offset_index, rotation
-        )
+        # Calculate property position using library-specific positioning
+        if lib_id and prop_name in ["Reference", "Value", "Footprint"]:
+            prop_x, prop_y, text_rotation = get_property_position(
+                lib_id, prop_name, (component_pos.x, component_pos.y), rotation
+            )
+        else:
+            # Fallback for custom properties or when lib_id not available
+            from ...core.config import config
+            prop_x, prop_y, text_rotation = config.get_property_position(
+                prop_name, (component_pos.x, component_pos.y), offset_index, rotation
+            )
 
         # Build effects section based on hide status
         effects = [
