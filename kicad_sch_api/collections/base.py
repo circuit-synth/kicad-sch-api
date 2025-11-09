@@ -449,6 +449,23 @@ class BaseCollection(Generic[T], ABC):
 
         return self.find(matches_criteria)
 
+    def all(self) -> Iterator[T]:
+        """
+        Get iterator over all items in the collection.
+
+        Returns:
+            Iterator over all items
+
+        Example:
+            # Iterate over all components
+            for component in sch.components.all():
+                print(component.reference)
+
+            # Convert to list
+            all_components = list(sch.components.all())
+        """
+        return iter(self._items)
+
     def clear(self) -> None:
         """Clear all items from the collection."""
         self._items.clear()
