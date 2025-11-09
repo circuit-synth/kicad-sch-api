@@ -909,6 +909,12 @@ class Schematic:
         effects: Optional[Dict[str, Any]] = None,
         grid_units: Optional[bool] = None,
         grid_size: Optional[float] = None,
+        # Font effects (new parameters)
+        bold: bool = False,
+        italic: bool = False,
+        thickness: Optional[float] = None,
+        color: Optional[Tuple[int, int, int, float]] = None,
+        face: Optional[str] = None,
     ) -> str:
         """
         Add free text annotation to the schematic.
@@ -919,9 +925,14 @@ class Schematic:
             rotation: Text rotation in degrees
             size: Text size
             exclude_from_sim: Whether to exclude from simulation
-            effects: Text effects
+            effects: (Deprecated) Text effects dictionary
             grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
             grid_size: Grid size in mm; if None, use config.positioning.grid_size
+            bold: Bold font flag
+            italic: Italic font flag
+            thickness: Stroke width (None = use default)
+            color: RGBA color tuple (r, g, b, a) where RGB are 0-255 and A is 0-1
+            face: Font face name (None = use default)
 
         Returns:
             UUID of created text
@@ -940,9 +951,18 @@ class Schematic:
             else:
                 position = Point(position.x * grid_size, position.y * grid_size)
 
-        # Use the new texts collection instead of manager
+        # Use the new texts collection with all parameters
         text_elem = self._texts.add(
-            text, position, rotation=rotation, size=size, exclude_from_sim=exclude_from_sim
+            text,
+            position,
+            rotation=rotation,
+            size=size,
+            exclude_from_sim=exclude_from_sim,
+            bold=bold,
+            italic=italic,
+            thickness=thickness,
+            color=color,
+            face=face,
         )
         self._sync_texts_to_data()  # Sync immediately
         self._format_sync_manager.mark_dirty("text", "add", {"uuid": text_elem.uuid})
