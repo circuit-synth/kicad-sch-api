@@ -171,6 +171,11 @@ class Component:
         """Dictionary of all component properties."""
         return self._data.properties
 
+    @property
+    def hidden_properties(self) -> "set[str]":
+        """Set of property names that have (hide yes) flag."""
+        return self._data.hidden_properties
+
     def get_property(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """
         Get property value by name.
@@ -214,9 +219,55 @@ class Component:
         """
         if name in self._data.properties:
             del self._data.properties[name]
+            # Also remove from hidden_properties if present
+            self._data.hidden_properties.discard(name)
             self._collection._mark_modified()
             return True
         return False
+
+    def add_property(self, name: str, value: str, hidden: bool = False) -> None:
+        """
+        Add or update a component property with visibility control.
+
+        Sets the property value and manages its visibility state. If the property
+        already exists, both value and visibility are updated.
+
+        Args:
+            name: Property name (e.g., "MPN", "Manufacturer", "Tolerance")
+            value: Property value
+            hidden: If True, property will have (hide yes) flag in S-expression.
+                   If False, property will be visible on schematic. Default: False
+
+        Example:
+            >>> component.add_property("MPN", "RC0603FR-0710KL", hidden=True)
+            >>> component.add_property("Tolerance", "1%", hidden=False)
+        """
+        self._data.add_property(name, value, hidden)
+        self._collection._mark_modified()
+        logger.debug(f"Added property {self.reference}.{name} = {value} (hidden={hidden})")
+
+    def add_properties(self, props: Dict[str, str], hidden: bool = False) -> None:
+        """
+        Add or update multiple properties with same visibility setting.
+
+        Convenience method for bulk property operations. All properties will
+        have the same visibility state.
+
+        Args:
+            props: Dictionary of property name/value pairs
+            hidden: If True, all properties will be hidden. If False, all will
+                   be visible. Default: False
+
+        Example:
+            >>> component.add_properties({
+            ...     "MPN": "RC0603FR-0710KL",
+            ...     "Manufacturer": "Yageo",
+            ...     "Supplier": "Digikey"
+            ... }, hidden=True)
+        """
+        self._data.add_properties(props, hidden)
+        self._collection._mark_modified()
+        logger.debug(f"Added {len(props)} properties to {self.reference} (hidden={hidden})")
 
     # Text effects (position, font, color, etc.)
     def get_property_effects(self, property_name: str) -> Dict[str, Any]:
@@ -345,6 +396,17 @@ class Component:
     def on_board(self, value: bool):
         """Set board inclusion flag."""
         self._data.on_board = bool(value)
+        self._collection._mark_modified()
+
+    @property
+    def fields_autoplaced(self) -> bool:
+        """Whether component properties are auto-placed by KiCAD."""
+        return self._data.fields_autoplaced
+
+    @fields_autoplaced.setter
+    def fields_autoplaced(self, value: bool):
+        """Set fields autoplaced flag."""
+        self._data.fields_autoplaced = bool(value)
         self._collection._mark_modified()
 
     # Utility methods
