@@ -56,6 +56,26 @@ def copy_commands_with_prefix(
         return 0
 
     for source_file in source_commands.rglob("*.md"):
+        # Validate the file content
+        try:
+            content = source_file.read_text()
+            # Basic validation: ensure it's markdown and not empty
+            if not content.strip():
+                if verbose:
+                    print(f"  ⚠ Skipping empty file: {source_file.name}")
+                continue
+
+            # Ensure it starts with markdown (# or text, not binary)
+            if '\x00' in content:
+                if verbose:
+                    print(f"  ⚠ Skipping binary file: {source_file.name}")
+                continue
+
+        except Exception as e:
+            if verbose:
+                print(f"  ⚠ Skipping unreadable file {source_file.name}: {e}")
+            continue
+
         # Calculate relative path from commands directory
         rel_path = source_file.relative_to(source_commands)
 
@@ -66,8 +86,8 @@ def copy_commands_with_prefix(
         # Create parent directory if needed
         target_file.parent.mkdir(parents=True, exist_ok=True)
 
-        # Copy the file
-        shutil.copy2(source_file, target_file)
+        # Copy the file (use copy instead of copy2 to set current timestamp)
+        shutil.copy(source_file, target_file)
         copied_count += 1
 
         if verbose:

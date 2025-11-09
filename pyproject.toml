@@ -43,8 +43,8 @@ dependencies = [
 kicad-sch-api = "kicad_sch_api.cli:main"
 kicad-sch-mcp = "mcp_server.server:main"
 ksa-kicad-to-python = "kicad_sch_api.cli.kicad_to_python:entry_point"
-ksa_claude_setup = "kicad_sch_api.cli.setup_claude:entry_point"
-ksa_demo = "kicad_sch_api.cli.demo:entry_point"
+ksa-claude-setup = "kicad_sch_api.cli.setup_claude:entry_point"
+ksa-demo = "kicad_sch_api.cli.demo:entry_point"
 
 [project.optional-dependencies]
 dev = [
