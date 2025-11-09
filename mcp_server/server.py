@@ -147,7 +147,7 @@ async def load_schematic(file_path: str) -> dict:
         set_current_schematic(schematic)
 
         # Count components
-        component_count = len(list(schematic.components.all()))
+        component_count = len(schematic.components)
 
         logger.info(
             f"[MCP] Loaded schematic: {schematic.title_block.title} "
@@ -263,7 +263,7 @@ async def get_schematic_info() -> dict:
 
     try:
         # Collect schematic information
-        components = list(schematic.components.all())
+        components = list(schematic.components)
         component_refs = [c.reference for c in components]
 
         info = {
