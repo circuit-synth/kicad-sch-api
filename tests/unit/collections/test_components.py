@@ -646,3 +646,103 @@ class TestComponent:
         assert collection.get("R1") is None
         assert len(collection.filter(lib_id="Device:R")) == 0
         assert len(collection.filter(value="10k")) == 0
+
+    def test_all_returns_iterator(self):
+        """Test that all() returns an iterator over all components."""
+        symbol_data = [
+            SchematicSymbol(
+                uuid="uuid1",
+                lib_id="Device:R",
+                reference="R1",
+                value="10k",
+                position=Point(100, 100),
+            ),
+            SchematicSymbol(
+                uuid="uuid2",
+                lib_id="Device:C",
+                reference="C1",
+                value="100nF",
+                position=Point(200, 100),
+            ),
+            SchematicSymbol(
+                uuid="uuid3",
+                lib_id="Device:L",
+                reference="L1",
+                value="10uH",
+                position=Point(300, 100),
+            ),
+        ]
+        collection = ComponentCollection(symbol_data)
+
+        # Test that all() returns an iterator
+        result = collection.all()
+        assert hasattr(result, "__iter__"), "all() should return an iterator"
+
+    def test_all_lists_all_components(self):
+        """Test that all() can be converted to list and contains all components."""
+        symbol_data = [
+            SchematicSymbol(
+                uuid="uuid1",
+                lib_id="Device:R",
+                reference="R1",
+                value="10k",
+                position=Point(100, 100),
+            ),
+            SchematicSymbol(
+                uuid="uuid2",
+                lib_id="Device:C",
+                reference="C1",
+                value="100nF",
+                position=Point(200, 100),
+            ),
+            SchematicSymbol(
+                uuid="uuid3",
+                lib_id="Device:L",
+                reference="L1",
+                value="10uH",
+                position=Point(300, 100),
+            ),
+        ]
+        collection = ComponentCollection(symbol_data)
+
+        # Convert iterator to list
+        all_components = list(collection.all())
+
+        # Verify all components are present
+        assert len(all_components) == 3
+        refs = [c.reference for c in all_components]
+        assert "R1" in refs
+        assert "C1" in refs
+        assert "L1" in refs
+
+    def test_all_matches_len(self):
+        """Test that len(all()) equals len(collection)."""
+        symbol_data = [
+            SchematicSymbol(
+                uuid="uuid1",
+                lib_id="Device:R",
+                reference="R1",
+                value="10k",
+                position=Point(100, 100),
+            ),
+            SchematicSymbol(
+                uuid="uuid2",
+                lib_id="Device:C",
+                reference="C1",
+                value="100nF",
+                position=Point(200, 100),
+            ),
+        ]
+        collection = ComponentCollection(symbol_data)
+
+        # Verify all() returns correct count
+        all_components = list(collection.all())
+        assert len(all_components) == len(collection)
+
+    def test_all_empty_collection(self):
+        """Test that all() returns empty iterator for empty collection."""
+        collection = ComponentCollection()
+
+        # Should return empty iterator
+        all_components = list(collection.all())
+        assert len(all_components) == 0
