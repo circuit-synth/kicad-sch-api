@@ -148,6 +148,36 @@ sch.components.remove("R1")
 
 **📖 See [API Reference](docs/API_REFERENCE.md) for complete component API**
 
+### Text Effects & Styling
+
+```python
+# Read text effects from component properties
+r1 = sch.components.get("R1")
+effects = r1.get_property_effects("Reference")
+# Returns: {'font_face': 'Arial', 'font_size': (2.0, 2.0), 'bold': True, ...}
+
+# Modify text effects (partial updates - preserves other effects)
+r1.set_property_effects("Reference", {
+    "color": (0, 255, 0, 1.0),  # Green
+    "bold": True,
+    "font_size": (2.0, 2.0)
+})
+
+# Create components with custom styling
+r2 = sch.components.add("Device:R", "R2", "10k", position=(100, 100))
+r2.set_property_effects("Value", {
+    "rotation": 90.0,           # Sideways
+    "justify_h": "left",        # Left justified
+    "color": (160, 32, 240, 1.0),  # Purple
+    "italic": True
+})
+
+# Supported effects: position, rotation, font_face, font_size, font_thickness,
+# bold, italic, color (RGBA), justify_h, justify_v, visible
+```
+
+**📖 See [API Reference](docs/API_REFERENCE.md#text-effects) for text effects details**
+
 ### Connectivity Analysis
 
 ```python

@@ -127,7 +127,14 @@ This is a **critical phase** - the reference schematic becomes the source of tru
 
 ### Step 2.1: Create Initial Schematic
 
-**Agent creates schematic** with elements from PRD (components, wires, labels, edge cases). Use grid-aligned positions (multiples of 1.27mm), generic positioning like (100,100), (150,100). Functional > beautiful.
+**Agent creates schematic** with elements from PRD. **IMPORTANT: Keep references MINIMAL - one component per reference schematic whenever possible.** This makes debugging easier, tests clearer, and references more focused.
+
+**Reference Schematic Guidelines:**
+- **One component per schematic** - simpler is better
+- **Minimal elements** - only what's needed to demonstrate the feature
+- **Grid-aligned positions** (multiples of 1.27mm)
+- **Generic positioning** like (100, 100) - functional > beautiful
+- **Multiple references** - create separate schematics for different test cases rather than one complex schematic
 
 If human should create: provide blank schematic instead.
 
@@ -807,9 +814,64 @@ fi
 
 ## Phase 5: Cleanup & Pull Request
 
-**Goal**: Production-ready code with PR
+**Goal**: Production-ready code with documentation and PR
 
-### Step 5.1: Code Cleanup
+### Step 5.1: Update Documentation
+
+**Update user-facing documentation** for the new feature:
+
+**README.md** - Add example to relevant section:
+```markdown
+### {Feature Category}
+
+```python
+# Example demonstrating new feature
+{code example}
+```
+
+**📖 See [API Reference](docs/API_REFERENCE.md#{feature-anchor}) for details**
+```
+
+**API_REFERENCE.md** - Add to appropriate section:
+```markdown
+#### {Feature Name}
+
+{Description of what this feature does}
+
+```python
+# Usage examples
+{comprehensive examples}
+```
+
+**Parameters:**
+- `param1` (type): Description
+- `param2` (type, optional): Description
+
+**Returns:** Return type and description
+
+**Notes:**
+- Important behavior
+- Edge cases
+- Format preservation details
+```
+
+**Documentation guidelines**:
+- ✅ Follow existing documentation structure
+- ✅ Use code examples (copy from validation phase)
+- ✅ Link between README and API_REFERENCE
+- ✅ Document all parameters and return types
+- ✅ Include notes about format preservation if relevant
+- ✅ Keep technical, avoid marketing language
+- ❌ Don't create new documentation files unless necessary
+- ❌ Don't document internal implementation details
+
+**Files to check**:
+- `README.md` - Main library documentation
+- `docs/API_REFERENCE.md` - Complete API documentation
+- `docs/RECIPES.md` - If adding a common pattern
+- `docs/GETTING_STARTED.md` - If affects getting started
+
+### Step 5.2: Code Cleanup
 
 **Remove debug logging**:
 ```python
@@ -842,7 +904,7 @@ uv run mypy kicad_sch_api/
 uv run flake8 kicad_sch_api/ tests/
 ```
 
-### Step 5.2: Best Practices Review
+### Step 5.3: Best Practices Review
 
 **Verify**:
 - [ ] Security (no hardcoded paths, validate inputs)
@@ -858,7 +920,7 @@ uv run flake8 kicad_sch_api/ tests/
 - [ ] Backward compatibility maintained
 - [ ] MCP tools still work (if affected)
 
-### Step 5.3: Commit Message Format
+### Step 5.4: Commit Message Format
 
 **Follow conventional commits** (from `CLAUDE.md`):
 
@@ -902,7 +964,7 @@ Fixes #139
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-### Step 5.4: Create Pull Request
+### Step 5.5: Create Pull Request
 
 **Run final validation**:
 ```bash
@@ -973,7 +1035,7 @@ git push origin HEAD
 gh pr create --title "{PR title}" --body "{PR description}"
 ```
 
-### Step 5.5: PR Summary and Completion
+### Step 5.6: PR Summary and Completion
 
 **Present completed PR**:
 > ✅ **Pull request created**: {PR URL}
