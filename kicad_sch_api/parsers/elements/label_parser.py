@@ -81,7 +81,6 @@ class LabelParser(BaseElementParser):
 
         return label_data
 
-
     def _parse_hierarchical_label(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a hierarchical label definition."""
         # Format: (hierarchical_label "text" (shape input) (at x y rotation) (effects ...) (uuid ...))
@@ -143,7 +142,6 @@ class LabelParser(BaseElementParser):
 
         return hlabel_data
 
-
     def _label_to_sexp(self, label_data: Dict[str, Any]) -> List[Any]:
         """Convert local label to S-expression."""
         sexp = [sexpdata.Symbol("label"), label_data["text"]]
@@ -181,7 +179,6 @@ class LabelParser(BaseElementParser):
 
         return sexp
 
-
     def _hierarchical_label_to_sexp(self, hlabel_data: Dict[str, Any]) -> List[Any]:
         """Convert hierarchical label to S-expression."""
         sexp = [sexpdata.Symbol("hierarchical_label"), hlabel_data["text"]]
@@ -212,5 +209,3 @@ class LabelParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), hlabel_data["uuid"]])
 
         return sexp
-
-

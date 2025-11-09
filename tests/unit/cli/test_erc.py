@@ -17,7 +17,7 @@ class TestERCExecution:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.erc.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.erc.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
@@ -25,7 +25,7 @@ class TestERCExecution:
             erc_output = tmp_path / "test_erc.json"
             erc_output.write_text(json.dumps({"violations": []}))
 
-            with patch('pathlib.Path.read_text', return_value='{"violations": []}'):
+            with patch("pathlib.Path.read_text", return_value='{"violations": []}'):
                 report = run_erc(sch_file)
 
             assert isinstance(report, ErcReport)
@@ -37,22 +37,24 @@ class TestERCExecution:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.erc.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.erc.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
-            json_content = json.dumps({
-                "violations": [
-                    {
-                        "severity": "error",
-                        "type": "pin_not_connected",
-                        "description": "Pin not connected",
-                        "sheet": "/"
-                    }
-                ]
-            })
+            json_content = json.dumps(
+                {
+                    "violations": [
+                        {
+                            "severity": "error",
+                            "type": "pin_not_connected",
+                            "description": "Pin not connected",
+                            "sheet": "/",
+                        }
+                    ]
+                }
+            )
 
-            with patch('pathlib.Path.read_text', return_value=json_content):
+            with patch("pathlib.Path.read_text", return_value=json_content):
                 report = run_erc(sch_file, format="json")
 
             assert report.error_count == 1
@@ -64,11 +66,11 @@ class TestERCExecution:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.erc.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.erc.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
-            with patch('pathlib.Path.read_text', return_value='{"violations": []}'):
+            with patch("pathlib.Path.read_text", return_value='{"violations": []}'):
                 run_erc(sch_file, severity="error")
 
             args = mock_executor.run.call_args[0][0]
@@ -79,11 +81,11 @@ class TestERCExecution:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.erc.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.erc.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
-            with patch('pathlib.Path.read_text', return_value='{"violations": []}'):
+            with patch("pathlib.Path.read_text", return_value='{"violations": []}'):
                 run_erc(sch_file, units="in")
 
             args = mock_executor.run.call_args[0][0]

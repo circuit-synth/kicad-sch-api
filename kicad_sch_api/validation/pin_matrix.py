@@ -11,6 +11,7 @@ from typing import Dict, Tuple
 
 class PinSeverity(IntEnum):
     """Severity levels for pin connections."""
+
     OK = 0
     WARNING = 1
     ERROR = 2
@@ -28,54 +29,43 @@ class PinConflictMatrix:
         "input": "input",
         "pt_input": "input",
         "i": "input",
-
         "output": "output",
         "pt_output": "output",
         "o": "output",
-
         "bidirectional": "bidirectional",
         "pt_bidi": "bidirectional",
         "bidi": "bidirectional",
         "b": "bidirectional",
-
         "tristate": "tristate",
         "pt_tristate": "tristate",
         "tri": "tristate",
         "t": "tristate",
-
         "passive": "passive",
         "pt_passive": "passive",
         "p": "passive",
-
         "free": "free",
         "nic": "free",
         "pt_nic": "free",
         "not_connected": "free",
         "f": "free",
-
         "unspecified": "unspecified",
         "pt_unspecified": "unspecified",
         "u": "unspecified",
-
         "power_input": "power_input",
         "pt_power_in": "power_input",
         "pwr_in": "power_input",
         "w": "power_input",
-
         "power_output": "power_output",
         "pt_power_out": "power_output",
         "pwr_out": "power_output",
-
         "open_collector": "open_collector",
         "pt_opencollector": "open_collector",
         "oc": "open_collector",
         "c": "open_collector",
-
         "open_emitter": "open_emitter",
         "pt_openemitter": "open_emitter",
         "oe": "open_emitter",
         "e": "open_emitter",
-
         "nc": "nc",
         "pt_nc": "nc",
         "not_connected": "nc",
@@ -98,9 +88,18 @@ class PinConflictMatrix:
 
         # Define all pin types
         pin_types = [
-            "input", "output", "bidirectional", "tristate", "passive",
-            "free", "unspecified", "power_input", "power_output",
-            "open_collector", "open_emitter", "nc"
+            "input",
+            "output",
+            "bidirectional",
+            "tristate",
+            "passive",
+            "free",
+            "unspecified",
+            "power_input",
+            "power_output",
+            "open_collector",
+            "open_emitter",
+            "nc",
         ]
 
         # Default: everything is OK
@@ -111,10 +110,10 @@ class PinConflictMatrix:
 
         # ERROR conditions (serious electrical conflicts)
         error_rules = [
-            ("output", "output"),           # Multiple outputs driving same net
-            ("power_output", "power_output"), # Multiple power supplies shorted
-            ("output", "power_output"),     # Logic output to power rail
-            ("nc", "input"),                # NC pin should not connect
+            ("output", "output"),  # Multiple outputs driving same net
+            ("power_output", "power_output"),  # Multiple power supplies shorted
+            ("output", "power_output"),  # Logic output to power rail
+            ("nc", "input"),  # NC pin should not connect
             ("nc", "output"),
             ("nc", "bidirectional"),
             ("nc", "tristate"),
@@ -140,8 +139,8 @@ class PinConflictMatrix:
             ("unspecified", "open_collector"),
             ("unspecified", "open_emitter"),
             ("unspecified", "unspecified"),
-            ("tristate", "output"),         # Tri-state with output can conflict
-            ("tristate", "tristate"),       # Multiple tri-states
+            ("tristate", "output"),  # Tri-state with output can conflict
+            ("tristate", "tristate"),  # Multiple tri-states
         ]
 
         for pin1, pin2 in warning_rules:

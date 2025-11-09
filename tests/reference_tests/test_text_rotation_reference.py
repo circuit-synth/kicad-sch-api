@@ -7,6 +7,7 @@ from manually created schematics with rotated text elements.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -42,12 +43,15 @@ class TestTextRotationReference:
         assert rotation_180 == 180, f"TEXT_180 should be at 180° rotation: got {rotation_180}"
         assert rotation_270 == 270, f"TEXT_270 should be at 270° rotation: got {rotation_270}"
 
-    @pytest.mark.parametrize("text_name,expected_rotation", [
-        ("TEXT_0", 0),
-        ("TEXT_90", 90),
-        ("TEXT_180", 180),
-        ("TEXT_270", 270),
-    ])
+    @pytest.mark.parametrize(
+        "text_name,expected_rotation",
+        [
+            ("TEXT_0", 0),
+            ("TEXT_90", 90),
+            ("TEXT_180", 180),
+            ("TEXT_270", 270),
+        ],
+    )
     def test_individual_text_rotations(self, text_name, expected_rotation):
         """Verify each text rotation individually."""
         sch_path = "tests/reference_kicad_projects/text_rotations/text_rotations.kicad_sch"
@@ -66,8 +70,9 @@ class TestTextRotationReference:
         # Extract rotation from text data
         rotation = text_data.get("rotation", 0)
 
-        assert rotation == expected_rotation, \
-            f"{text_name} should be at {expected_rotation}° rotation: got {rotation}"
+        assert (
+            rotation == expected_rotation
+        ), f"{text_name} should be at {expected_rotation}° rotation: got {rotation}"
 
 
 if __name__ == "__main__":

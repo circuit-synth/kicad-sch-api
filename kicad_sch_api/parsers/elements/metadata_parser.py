@@ -31,12 +31,10 @@ class MetadataParser(BaseElementParser):
                     title_block[key] = sub_item[1] if len(sub_item) > 1 else None
         return title_block
 
-
     def _parse_symbol_instances(self, item: List[Any]) -> List[Any]:
         """Parse symbol_instances section."""
         # For now, just return the raw structure minus the header
         return item[1:] if len(item) > 1 else []
-
 
     def _title_block_to_sexp(self, title_block: Dict[str, Any]) -> List[Any]:
         """Convert title block to S-expression."""
@@ -54,5 +52,3 @@ class MetadataParser(BaseElementParser):
                 sexp.append([sexpdata.Symbol("comment"), comment_num, comment_text])
 
         return sexp
-
-

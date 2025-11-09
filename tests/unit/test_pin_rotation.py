@@ -7,7 +7,9 @@ using the standard 2D rotation matrix.
 """
 
 import math
+
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -23,9 +25,7 @@ class TestPinRotation:
         """Test pin positions at 0° rotation (vertical resistor)."""
         # Add resistor at 0° (default vertical orientation)
         comp = schematic.components.add(
-            "Device:R", "R1", "10k",
-            position=(100.0, 100.0),
-            rotation=0
+            "Device:R", "R1", "10k", position=(100.0, 100.0), rotation=0
         )
 
         # Get actual component position (may be grid-snapped)
@@ -50,9 +50,7 @@ class TestPinRotation:
     def test_pin_position_90_degrees(self, schematic):
         """Test pin positions at 90° rotation (horizontal resistor)."""
         comp = schematic.components.add(
-            "Device:R", "R1", "10k",
-            position=(100.0, 100.0),
-            rotation=90
+            "Device:R", "R1", "10k", position=(100.0, 100.0), rotation=90
         )
 
         comp_x, comp_y = comp.position.x, comp.position.y
@@ -75,9 +73,7 @@ class TestPinRotation:
     def test_pin_position_180_degrees(self, schematic):
         """Test pin positions at 180° rotation (vertical, flipped)."""
         comp = schematic.components.add(
-            "Device:R", "R1", "10k",
-            position=(100.0, 100.0),
-            rotation=180
+            "Device:R", "R1", "10k", position=(100.0, 100.0), rotation=180
         )
 
         comp_x, comp_y = comp.position.x, comp.position.y
@@ -100,9 +96,7 @@ class TestPinRotation:
     def test_pin_position_270_degrees(self, schematic):
         """Test pin positions at 270° rotation (horizontal, flipped)."""
         comp = schematic.components.add(
-            "Device:R", "R1", "10k",
-            position=(100.0, 100.0),
-            rotation=270
+            "Device:R", "R1", "10k", position=(100.0, 100.0), rotation=270
         )
 
         comp_x, comp_y = comp.position.x, comp.position.y
@@ -126,9 +120,7 @@ class TestPinRotation:
     def test_pin_position_all_rotations(self, schematic, rotation):
         """Test pin positions for all valid rotation angles."""
         comp = schematic.components.add(
-            "Device:R", "R1", "10k",
-            position=(100.0, 100.0),
-            rotation=rotation
+            "Device:R", "R1", "10k", position=(100.0, 100.0), rotation=rotation
         )
 
         comp_x, comp_y = comp.position.x, comp.position.y
@@ -142,20 +134,16 @@ class TestPinRotation:
 
         # Verify pins are at the expected distance from component center
         # Resistor pins are at 3.81mm from center
-        dist1 = math.sqrt((pin1_pos.x - comp_x)**2 + (pin1_pos.y - comp_y)**2)
-        dist2 = math.sqrt((pin2_pos.x - comp_x)**2 + (pin2_pos.y - comp_y)**2)
+        dist1 = math.sqrt((pin1_pos.x - comp_x) ** 2 + (pin1_pos.y - comp_y) ** 2)
+        dist2 = math.sqrt((pin2_pos.x - comp_x) ** 2 + (pin2_pos.y - comp_y) ** 2)
 
-        assert math.isclose(dist1, 3.81, abs_tol=0.01), \
-            f"Pin 1 distance incorrect at {rotation}°"
-        assert math.isclose(dist2, 3.81, abs_tol=0.01), \
-            f"Pin 2 distance incorrect at {rotation}°"
+        assert math.isclose(dist1, 3.81, abs_tol=0.01), f"Pin 1 distance incorrect at {rotation}°"
+        assert math.isclose(dist2, 3.81, abs_tol=0.01), f"Pin 2 distance incorrect at {rotation}°"
 
     def test_pin_position_nonexistent_pin(self, schematic):
         """Test that get_pin_position returns None for non-existent pins."""
         comp = schematic.components.add(
-            "Device:R", "R1", "10k",
-            position=(100.0, 100.0),
-            rotation=0
+            "Device:R", "R1", "10k", position=(100.0, 100.0), rotation=0
         )
 
         # Resistor only has pins 1 and 2
@@ -165,9 +153,7 @@ class TestPinRotation:
     def test_pin_position_with_offset_component_position(self, schematic):
         """Test pin positions with non-standard component position."""
         comp = schematic.components.add(
-            "Device:R", "R1", "10k",
-            position=(150.5, 200.7),
-            rotation=90
+            "Device:R", "R1", "10k", position=(150.5, 200.7), rotation=90
         )
 
         comp_x, comp_y = comp.position.x, comp.position.y
@@ -188,9 +174,7 @@ class TestPinRotation:
         """Test pin positions work with different component types."""
         # Test with capacitor (also 2-pin component)
         cap = schematic.components.add(
-            "Device:C", "C1", "100nF",
-            position=(100.0, 100.0),
-            rotation=90
+            "Device:C", "C1", "100nF", position=(100.0, 100.0), rotation=90
         )
 
         cap_pin1 = cap.get_pin_position("1")
@@ -200,11 +184,12 @@ class TestPinRotation:
         assert cap_pin2 is not None
 
         # Verify pins are rotated correctly (horizontal at 90°)
-        assert not math.isclose(cap_pin1.x, cap_pin2.x, abs_tol=0.1), \
-            "Pins should be horizontally separated at 90°"
-        assert math.isclose(cap_pin1.y, cap_pin2.y, abs_tol=0.1), \
-            "Pins should be at same Y coordinate at 90°"
-
+        assert not math.isclose(
+            cap_pin1.x, cap_pin2.x, abs_tol=0.1
+        ), "Pins should be horizontally separated at 90°"
+        assert math.isclose(
+            cap_pin1.y, cap_pin2.y, abs_tol=0.1
+        ), "Pins should be at same Y coordinate at 90°"
 
 
 if __name__ == "__main__":

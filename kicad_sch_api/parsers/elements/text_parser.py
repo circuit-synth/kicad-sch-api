@@ -63,7 +63,6 @@ class TextParser(BaseElementParser):
 
         return text_data
 
-
     def _parse_text_box(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a text_box element."""
         # Format: (text_box "text" (exclude_from_sim no) (at x y rotation) (size w h) (margins ...) (stroke ...) (fill ...) (effects ...) (uuid ...))
@@ -144,7 +143,6 @@ class TextParser(BaseElementParser):
 
         return text_box_data
 
-
     def _text_to_sexp(self, text_data: Dict[str, Any]) -> List[Any]:
         """Convert text element to S-expression."""
         sexp = [sexpdata.Symbol("text"), text_data["text"]]
@@ -180,7 +178,6 @@ class TextParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), text_data["uuid"]])
 
         return sexp
-
 
     def _text_box_to_sexp(self, text_box_data: Dict[str, Any]) -> List[Any]:
         """Convert text box element to S-expression."""
@@ -246,5 +243,3 @@ class TextParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), text_box_data["uuid"]])
 
         return sexp
-
-

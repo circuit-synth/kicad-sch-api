@@ -11,7 +11,7 @@ import uuid
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from ..core.ic_manager import ICManager
-from ..core.types import Point, PinInfo, SchematicPin, SchematicSymbol
+from ..core.types import PinInfo, Point, SchematicPin, SchematicSymbol
 from ..library.cache import SymbolDefinition, get_symbol_cache
 from ..utils.validation import SchematicValidator, ValidationError, ValidationIssue
 from .base import BaseCollection, IndexSpec, ValidationLevel
@@ -737,6 +737,7 @@ class ComponentCollection(BaseCollection[Component]):
 
         # Use config defaults if not explicitly provided
         from ..core.config import config
+
         if grid_units is None:
             grid_units = config.positioning.use_grid_units
         if grid_size is None:
@@ -1194,9 +1195,7 @@ class ComponentCollection(BaseCollection[Component]):
         Returns:
             List of matching components
         """
-        return [
-            c for c in self._items if c.symbol_name.upper().startswith(component_type.upper())
-        ]
+        return [c for c in self._items if c.symbol_name.upper().startswith(component_type.upper())]
 
     def in_area(self, x1: float, y1: float, x2: float, y2: float) -> List[Component]:
         """
@@ -1265,7 +1264,9 @@ class ComponentCollection(BaseCollection[Component]):
         import fnmatch
 
         logger.debug(f"[PIN_DISCOVERY] find_pins_by_name() called for {reference}")
-        logger.debug(f"[PIN_DISCOVERY]   Pattern: '{name_pattern}' (case_sensitive={case_sensitive})")
+        logger.debug(
+            f"[PIN_DISCOVERY]   Pattern: '{name_pattern}' (case_sensitive={case_sensitive})"
+        )
 
         if not name_pattern:
             raise ValueError("name_pattern cannot be empty")
@@ -1286,9 +1287,7 @@ class ComponentCollection(BaseCollection[Component]):
             )
             return None
 
-        logger.debug(
-            f"[PIN_DISCOVERY] Symbol has {len(symbol_def.pins)} total pins to search"
-        )
+        logger.debug(f"[PIN_DISCOVERY] Symbol has {len(symbol_def.pins)} total pins to search")
 
         # Step 3: Match pins by name
         matching_pins = []
@@ -1371,9 +1370,7 @@ class ComponentCollection(BaseCollection[Component]):
             )
             return None
 
-        logger.debug(
-            f"[PIN_DISCOVERY] Symbol has {len(symbol_def.pins)} total pins to filter"
-        )
+        logger.debug(f"[PIN_DISCOVERY] Symbol has {len(symbol_def.pins)} total pins to filter")
 
         # Step 3: Filter pins by type
         matching_pins = []
@@ -1462,9 +1459,7 @@ class ComponentCollection(BaseCollection[Component]):
                 )
                 continue
 
-            logger.debug(
-                f"[PIN_DISCOVERY] Pin {pin.number} absolute position: {absolute_position}"
-            )
+            logger.debug(f"[PIN_DISCOVERY] Pin {pin.number} absolute position: {absolute_position}")
 
             # Create PinInfo with absolute position
             pin_info = PinInfo(
@@ -1485,9 +1480,7 @@ class ComponentCollection(BaseCollection[Component]):
 
             pins_info.append(pin_info)
 
-        logger.info(
-            f"[PIN_DISCOVERY] Successfully retrieved {len(pins_info)} pins for {reference}"
-        )
+        logger.info(f"[PIN_DISCOVERY] Successfully retrieved {len(pins_info)} pins for {reference}")
         return pins_info
 
     # Bulk operations

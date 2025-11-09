@@ -13,13 +13,14 @@ import asyncio
 import tempfile
 from pathlib import Path
 
-import kicad_sch_api as ksa
 from mcp_server.tools.pin_discovery import (
     find_pins_by_name,
     find_pins_by_type,
     get_component_pins,
     set_current_schematic,
 )
+
+import kicad_sch_api as ksa
 
 
 async def main():

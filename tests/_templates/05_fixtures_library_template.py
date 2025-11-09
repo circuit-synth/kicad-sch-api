@@ -29,7 +29,7 @@ Copy and customize for your test fixture library.
 import logging
 import os
 import tempfile
-from typing import Tuple, List
+from typing import List, Tuple
 
 import pytest
 
@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # BASIC FIXTURES
 # ============================================================================
+
 
 class TestBasicFixtures:
     """Examples of basic fixture patterns."""
@@ -69,10 +70,7 @@ class TestBasicFixtures:
         sch = ksa.create_schematic("Single Resistor Test")
 
         resistor = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0)
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0)
         )
 
         logger.info(f"Added R1 at {resistor.position}")
@@ -90,17 +88,11 @@ class TestBasicFixtures:
         sch = ksa.create_schematic("Two Resistor Test")
 
         r1 = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0)
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0)
         )
 
         r2 = sch.components.add(
-            lib_id="Device:R",
-            reference="R2",
-            value="20k",
-            position=(150.0, 100.0)  # To the right
+            lib_id="Device:R", reference="R2", value="20k", position=(150.0, 100.0)  # To the right
         )
 
         logger.info(f"Added R1 at {r1.position}, R2 at {r2.position}")
@@ -121,6 +113,7 @@ class TestBasicFixtures:
 # FACTORY FIXTURES
 # ============================================================================
 
+
 class TestFactoryFixtures:
     """Flexible fixtures that create components with custom parameters."""
 
@@ -132,6 +125,7 @@ class TestFactoryFixtures:
         Returns a function that creates schematics.
         Allows tests to create multiple schematics with different names.
         """
+
         def _create_schematic(name="Test Schematic"):
             logger.info(f"Creating schematic: {name}")
             return ksa.create_schematic(name)
@@ -149,12 +143,13 @@ class TestFactoryFixtures:
             sch = ksa.create_schematic("Test")
             r1 = resistor_factory(sch, "R1", "10k", (100, 100))
         """
+
         def _add_resistor(
             schematic,
             reference: str = "R1",
             value: str = "10k",
             position: Tuple[float, float] = (100.0, 100.0),
-            rotation: float = 0.0
+            rotation: float = 0.0,
         ):
             """
             Create and add resistor to schematic.
@@ -176,7 +171,7 @@ class TestFactoryFixtures:
                 reference=reference,
                 value=value,
                 position=position,
-                rotation=rotation
+                rotation=rotation,
             )
 
             return comp
@@ -190,13 +185,14 @@ class TestFactoryFixtures:
 
         Allows creating any type of component with parameters.
         """
+
         def _add_component(
             schematic,
             lib_id: str,
             reference: str,
             value: str = "test",
             position: Tuple[float, float] = (100.0, 100.0),
-            rotation: float = 0.0
+            rotation: float = 0.0,
         ):
             """Create and add component to schematic."""
             logger.info(f"Creating {reference} ({lib_id})")
@@ -206,7 +202,7 @@ class TestFactoryFixtures:
                 reference=reference,
                 value=value,
                 position=position,
-                rotation=rotation
+                rotation=rotation,
             )
 
             return comp
@@ -240,6 +236,7 @@ class TestFactoryFixtures:
 # COMPLEX CIRCUIT FIXTURES
 # ============================================================================
 
+
 class TestComplexFixtures:
     """Fixtures for complete circuits and common topologies."""
 
@@ -261,34 +258,22 @@ class TestComplexFixtures:
 
         # Add VCC (top)
         vcc = sch.components.add(
-            lib_id="power:VCC",
-            reference="#PWR01",
-            value="VCC",
-            position=(100.0, 50.0)
+            lib_id="power:VCC", reference="#PWR01", value="VCC", position=(100.0, 50.0)
         )
 
         # Add R1 (top resistor)
         r1 = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0)
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0)
         )
 
         # Add R2 (bottom resistor)
         r2 = sch.components.add(
-            lib_id="Device:R",
-            reference="R2",
-            value="10k",
-            position=(100.0, 150.0)
+            lib_id="Device:R", reference="R2", value="10k", position=(100.0, 150.0)
         )
 
         # Add GND (bottom)
         gnd = sch.components.add(
-            lib_id="power:GND",
-            reference="#PWR02",
-            value="GND",
-            position=(100.0, 200.0)
+            lib_id="power:GND", reference="#PWR02", value="GND", position=(100.0, 200.0)
         )
 
         logger.info("Voltage divider created: VCC → R1 → R2 → GND")
@@ -313,20 +298,12 @@ class TestComplexFixtures:
 
         # Series resistor
         r = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="1k",
-            position=(100.0, 100.0),
-            rotation=0
+            lib_id="Device:R", reference="R1", value="1k", position=(100.0, 100.0), rotation=0
         )
 
         # Shunt capacitor
         c = sch.components.add(
-            lib_id="Device:C",
-            reference="C1",
-            value="100nF",
-            position=(150.0, 100.0),
-            rotation=90
+            lib_id="Device:C", reference="C1", value="100nF", position=(150.0, 100.0), rotation=90
         )
 
         logger.info("RC filter created: R1 in series, C1 to ground")
@@ -350,34 +327,22 @@ class TestComplexFixtures:
 
         # Input stage
         cin = sch.components.add(
-            lib_id="Device:C",
-            reference="C_in",
-            value="10uF",
-            position=(50.0, 100.0)
+            lib_id="Device:C", reference="C_in", value="10uF", position=(50.0, 100.0)
         )
 
         # First stage transistor (simplified with resistor for testing)
         r1 = sch.components.add(
-            lib_id="Device:R",
-            reference="R_load1",
-            value="10k",
-            position=(100.0, 50.0)
+            lib_id="Device:R", reference="R_load1", value="10k", position=(100.0, 50.0)
         )
 
         # Second stage
         r2 = sch.components.add(
-            lib_id="Device:R",
-            reference="R_load2",
-            value="10k",
-            position=(150.0, 50.0)
+            lib_id="Device:R", reference="R_load2", value="10k", position=(150.0, 50.0)
         )
 
         # Output stage
         cout = sch.components.add(
-            lib_id="Device:C",
-            reference="C_out",
-            value="10uF",
-            position=(200.0, 100.0)
+            lib_id="Device:C", reference="C_out", value="10uF", position=(200.0, 100.0)
         )
 
         logger.info("Multi-stage amplifier created with 4 components")
@@ -405,6 +370,7 @@ class TestComplexFixtures:
 # FILE MANAGEMENT FIXTURES
 # ============================================================================
 
+
 class TestFileFixtures:
     """Fixtures for temporary file handling."""
 
@@ -422,10 +388,7 @@ class TestFileFixtures:
                 sch2 = ksa.Schematic.load(temp_schematic_file)
         """
         # Create temp file
-        with tempfile.NamedTemporaryFile(
-            suffix=".kicad_sch",
-            delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(suffix=".kicad_sch", delete=False) as f:
             temp_path = f.name
 
         logger.info(f"Created temporary file: {temp_path}")
@@ -456,6 +419,7 @@ class TestFileFixtures:
         # Cleanup
         try:
             import shutil
+
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
                 logger.info(f"Cleaned up directory: {temp_dir}")
@@ -478,6 +442,7 @@ class TestFileFixtures:
 # ============================================================================
 # TEST DATA FIXTURES
 # ============================================================================
+
 
 class TestDataFixtures:
     """Fixtures providing test data and expected values."""
@@ -521,10 +486,10 @@ class TestDataFixtures:
         Returns dict mapping component library IDs to pin distances (mm)
         """
         return {
-            "Device:R": 3.81,           # Resistor pins 3.81mm apart
-            "Device:C": 3.81,           # Capacitor pins 3.81mm apart
-            "Device:D": 3.81,           # Diode pins 3.81mm apart
-            "Device:L": 3.81,           # Inductor pins 3.81mm apart
+            "Device:R": 3.81,  # Resistor pins 3.81mm apart
+            "Device:C": 3.81,  # Capacitor pins 3.81mm apart
+            "Device:D": 3.81,  # Diode pins 3.81mm apart
+            "Device:L": 3.81,  # Inductor pins 3.81mm apart
         }
 
     def test_using_test_data_fixtures(
@@ -539,7 +504,7 @@ class TestDataFixtures:
                 lib_id="Device:R",
                 reference=f"R_{numeric_val}",
                 value=value_str,
-                position=component_positions["standard"]
+                position=component_positions["standard"],
             )
             assert r.value == value_str
 
@@ -552,13 +517,12 @@ class TestDataFixtures:
 # FIXTURE COMPOSITION
 # ============================================================================
 
+
 class TestFixtureComposition:
     """Examples of using multiple fixtures together."""
 
     @pytest.fixture
-    def configured_test_environment(
-        self, empty_schematic, resistor_factory, temp_schematic_file
-    ):
+    def configured_test_environment(self, empty_schematic, resistor_factory, temp_schematic_file):
         """
         Fixture: Compose multiple fixtures for complete test environment.
 

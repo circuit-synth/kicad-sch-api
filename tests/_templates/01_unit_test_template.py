@@ -23,6 +23,7 @@ Copy and customize for your specific pin connection feature.
 
 import logging
 import math
+
 import pytest
 
 import kicad_sch_api as ksa
@@ -61,7 +62,7 @@ class TestGetComponentPins:
             reference="R1",
             value="10k",
             position=(100.0, 100.0),
-            rotation=0  # No rotation for baseline test
+            rotation=0,  # No rotation for baseline test
         )
 
         logger.info(f"Added resistor: {resistor.reference} at {resistor.position}")
@@ -127,7 +128,7 @@ class TestGetComponentPins:
         assert pins_different, "Pins should be at different positions"
 
         # Log distance between pins for understanding
-        distance = math.sqrt((pin2_pos.x - pin1_pos.x)**2 + (pin2_pos.y - pin1_pos.y)**2)
+        distance = math.sqrt((pin2_pos.x - pin1_pos.x) ** 2 + (pin2_pos.y - pin1_pos.y) ** 2)
         logger.info(f"Distance between pins: {distance:.2f}mm")
 
     def test_get_nonexistent_pin_returns_none(self, basic_schematic):
@@ -179,13 +180,16 @@ class TestGetComponentPins:
         assert abs(pin_offset_x) < 20, "Pin X offset should be within component"
         assert abs(pin_offset_y) < 20, "Pin Y offset should be within component"
 
-    @pytest.mark.parametrize("pin_number,should_exist", [
-        ("1", True),   # Resistor has pin 1
-        ("2", True),   # Resistor has pin 2
-        ("3", False),  # Resistor doesn't have pin 3
-        ("0", False),  # Pin numbering starts at 1
-        ("10", False), # Resistor doesn't have pin 10
-    ])
+    @pytest.mark.parametrize(
+        "pin_number,should_exist",
+        [
+            ("1", True),  # Resistor has pin 1
+            ("2", True),  # Resistor has pin 2
+            ("3", False),  # Resistor doesn't have pin 3
+            ("0", False),  # Pin numbering starts at 1
+            ("10", False),  # Resistor doesn't have pin 10
+        ],
+    )
     def test_get_pin_parametrized(self, basic_schematic, pin_number, should_exist):
         """
         Test: Pin existence parametrized across multiple pin numbers.
@@ -226,6 +230,7 @@ class TestPinPositionWithRotation:
         This is more flexible than a single fixture - allows creating
         multiple rotated components with different angles.
         """
+
         def _create_rotated_resistor(rotation=0):
             logger.info(f"Creating resistor with {rotation}° rotation")
             sch = ksa.create_schematic(f"Rotation {rotation} Test")
@@ -234,7 +239,7 @@ class TestPinPositionWithRotation:
                 reference="R1",
                 value="10k",
                 position=(100.0, 100.0),
-                rotation=rotation
+                rotation=rotation,
             )
             return sch, comp
 
@@ -264,7 +269,7 @@ class TestPinPositionWithRotation:
         assert pin1_pos != pin2_pos, f"Pins should differ at {rotation}°"
 
         # Log distance for debugging
-        dist = math.sqrt((pin2_pos.x - pin1_pos.x)**2 + (pin2_pos.y - pin1_pos.y)**2)
+        dist = math.sqrt((pin2_pos.x - pin1_pos.x) ** 2 + (pin2_pos.y - pin1_pos.y) ** 2)
         logger.debug(f"Distance at {rotation}°: {dist:.2f}mm")
 
     def test_pin_distance_invariant_with_rotation(self, rotated_component_factory):
@@ -284,15 +289,16 @@ class TestPinPositionWithRotation:
             pin1_pos = comp.get_pin_position("1")
             pin2_pos = comp.get_pin_position("2")
 
-            distance = math.sqrt((pin2_pos.x - pin1_pos.x)**2 + (pin2_pos.y - pin1_pos.y)**2)
+            distance = math.sqrt((pin2_pos.x - pin1_pos.x) ** 2 + (pin2_pos.y - pin1_pos.y) ** 2)
             distances.append(distance)
             logger.debug(f"Rotation {rotation}°: distance = {distance:.4f}mm")
 
         # Assert: All distances should be approximately equal
         # Use relative tolerance for floating-point comparison
         for i, dist in enumerate(distances[1:], 1):
-            assert math.isclose(dist, distances[0], rel_tol=0.01), \
-                f"Distance at {i*90}° should match distance at 0°"
+            assert math.isclose(
+                dist, distances[0], rel_tol=0.01
+            ), f"Distance at {i*90}° should match distance at 0°"
 
 
 class TestGetComponentPinEdgeCases:
@@ -353,10 +359,7 @@ class TestGetComponentPinEdgeCases:
 
         # Add an IC (has many pins)
         ic = sch.components.add(
-            lib_id="Package_DIP:DIP-8",
-            reference="U1",
-            value="Test IC",
-            position=(100.0, 100.0)
+            lib_id="Package_DIP:DIP-8", reference="U1", value="Test IC", position=(100.0, 100.0)
         )
 
         logger.info(f"Added IC: {ic.reference}")

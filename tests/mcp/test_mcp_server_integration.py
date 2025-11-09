@@ -7,30 +7,30 @@ and pin discovery tools.
 """
 
 import logging
-import pytest
 from pathlib import Path
 
-import kicad_sch_api as ksa
-from mcp_server.tools.pin_discovery import (
-    get_component_pins,
-    find_pins_by_name,
-    find_pins_by_type,
-    set_current_schematic,
-    get_current_schematic,
-)
+import pytest
 from mcp_server.tools.component_tools import (
     add_component,
-    list_components,
-    update_component,
-    remove_component,
     filter_components,
+    list_components,
+    remove_component,
+    update_component,
 )
 from mcp_server.tools.connectivity_tools import (
-    add_wire,
-    add_label,
     add_junction,
+    add_label,
+    add_wire,
+)
+from mcp_server.tools.pin_discovery import (
+    find_pins_by_name,
+    find_pins_by_type,
+    get_component_pins,
+    get_current_schematic,
+    set_current_schematic,
 )
 
+import kicad_sch_api as ksa
 
 logger = logging.getLogger(__name__)
 
@@ -650,10 +650,7 @@ class TestMCPUpdateComponent:
 
         # Update multiple properties
         result = await update_component(
-            "R1",
-            value="20k",
-            rotation=90.0,
-            footprint="Resistor_SMD:R_0805_2012Metric"
+            "R1", value="20k", rotation=90.0, footprint="Resistor_SMD:R_0805_2012Metric"
         )
 
         assert result.success is True
@@ -812,10 +809,7 @@ class TestMCPAddWire:
     @pytest.mark.asyncio
     async def test_add_wire_horizontal(self, setup_schematic):
         """Test adding horizontal wire."""
-        result = await add_wire(
-            start=(100.0, 100.0),
-            end=(150.0, 100.0)
-        )
+        result = await add_wire(start=(100.0, 100.0), end=(150.0, 100.0))
 
         assert result["success"] is True
         assert result["start"]["x"] == 100.0
@@ -827,10 +821,7 @@ class TestMCPAddWire:
     @pytest.mark.asyncio
     async def test_add_wire_vertical(self, setup_schematic):
         """Test adding vertical wire."""
-        result = await add_wire(
-            start=(100.0, 100.0),
-            end=(100.0, 150.0)
-        )
+        result = await add_wire(start=(100.0, 100.0), end=(100.0, 150.0))
 
         assert result["success"] is True
         assert result["start"]["x"] == 100.0
@@ -841,10 +832,7 @@ class TestMCPAddWire:
         """Test error when no schematic loaded."""
         set_current_schematic(None)
 
-        result = await add_wire(
-            start=(100.0, 100.0),
-            end=(150.0, 100.0)
-        )
+        result = await add_wire(start=(100.0, 100.0), end=(150.0, 100.0))
 
         assert result["success"] is False
         assert result["error"] == "NO_SCHEMATIC_LOADED"
@@ -864,10 +852,7 @@ class TestMCPAddLabel:
     @pytest.mark.asyncio
     async def test_add_label_basic(self, setup_schematic):
         """Test adding basic label."""
-        result = await add_label(
-            text="VCC",
-            position=(100.0, 100.0)
-        )
+        result = await add_label(text="VCC", position=(100.0, 100.0))
 
         assert result["success"] is True
         assert result["text"] == "VCC"
@@ -879,11 +864,7 @@ class TestMCPAddLabel:
     @pytest.mark.asyncio
     async def test_add_label_with_rotation(self, setup_schematic):
         """Test adding label with rotation."""
-        result = await add_label(
-            text="GND",
-            position=(100.0, 100.0),
-            rotation=90.0
-        )
+        result = await add_label(text="GND", position=(100.0, 100.0), rotation=90.0)
 
         assert result["success"] is True
         assert result["rotation"] == 90.0
@@ -891,11 +872,7 @@ class TestMCPAddLabel:
     @pytest.mark.asyncio
     async def test_add_label_invalid_rotation(self, setup_schematic):
         """Test error with invalid rotation."""
-        result = await add_label(
-            text="VCC",
-            position=(100.0, 100.0),
-            rotation=45.0
-        )
+        result = await add_label(text="VCC", position=(100.0, 100.0), rotation=45.0)
 
         assert result["success"] is False
         assert result["error"] == "VALIDATION_ERROR"
@@ -903,11 +880,7 @@ class TestMCPAddLabel:
     @pytest.mark.asyncio
     async def test_add_label_custom_size(self, setup_schematic):
         """Test adding label with custom size."""
-        result = await add_label(
-            text="SIGNAL",
-            position=(100.0, 100.0),
-            size=2.54
-        )
+        result = await add_label(text="SIGNAL", position=(100.0, 100.0), size=2.54)
 
         assert result["success"] is True
         assert result["size"] == 2.54
@@ -927,9 +900,7 @@ class TestMCPAddJunction:
     @pytest.mark.asyncio
     async def test_add_junction_basic(self, setup_schematic):
         """Test adding basic junction."""
-        result = await add_junction(
-            position=(100.0, 100.0)
-        )
+        result = await add_junction(position=(100.0, 100.0))
 
         assert result["success"] is True
         assert result["position"]["x"] == 100.0
@@ -940,10 +911,7 @@ class TestMCPAddJunction:
     @pytest.mark.asyncio
     async def test_add_junction_with_diameter(self, setup_schematic):
         """Test adding junction with custom diameter."""
-        result = await add_junction(
-            position=(100.0, 100.0),
-            diameter=0.8
-        )
+        result = await add_junction(position=(100.0, 100.0), diameter=0.8)
 
         assert result["success"] is True
         assert result["diameter"] == 0.8
@@ -953,9 +921,7 @@ class TestMCPAddJunction:
         """Test error when no schematic loaded."""
         set_current_schematic(None)
 
-        result = await add_junction(
-            position=(100.0, 100.0)
-        )
+        result = await add_junction(position=(100.0, 100.0))
 
         assert result["success"] is False
         assert result["error"] == "NO_SCHEMATIC_LOADED"
@@ -979,10 +945,13 @@ class TestMCPPerformance:
 
         # Add 10 components
         for i in range(10):
-            sch.components.add("Device:R", f"R{i+1}", f"{10*(i+1)}k", position=(100.0 + i*10, 100.0))
+            sch.components.add(
+                "Device:R", f"R{i+1}", f"{10*(i+1)}k", position=(100.0 + i * 10, 100.0)
+            )
 
         # Do 10 lookups
         import time
+
         start = time.time()
 
         for i in range(10):

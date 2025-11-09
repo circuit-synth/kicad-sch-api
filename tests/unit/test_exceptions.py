@@ -1,22 +1,23 @@
 """Unit tests for exception hierarchy."""
 
 import pytest
+
 from kicad_sch_api.core.exceptions import (
-    KiCadSchError,
-    ValidationError,
-    ReferenceError,
-    LibraryError,
+    CLIError,
+    CollectionError,
+    CollectionOperationError,
+    DuplicateElementError,
+    ElementNotFoundError,
+    FileOperationError,
+    FormatError,
     GeometryError,
+    KiCadSchError,
+    LibraryError,
     NetError,
     ParseError,
-    FormatError,
-    CollectionError,
-    ElementNotFoundError,
-    DuplicateElementError,
-    CollectionOperationError,
-    FileOperationError,
-    CLIError,
+    ReferenceError,
     SchematicStateError,
+    ValidationError,
 )
 from kicad_sch_api.utils.validation import ValidationIssue, ValidationLevel
 
@@ -71,16 +72,8 @@ class TestValidationError:
 
     def test_validation_error_with_issues_list(self):
         """Test ValidationError with issues list."""
-        issue1 = ValidationIssue(
-            category="test",
-            message="Issue 1",
-            level=ValidationLevel.ERROR
-        )
-        issue2 = ValidationIssue(
-            category="test",
-            message="Issue 2",
-            level=ValidationLevel.WARNING
-        )
+        issue1 = ValidationIssue(category="test", message="Issue 1", level=ValidationLevel.ERROR)
+        issue2 = ValidationIssue(category="test", message="Issue 2", level=ValidationLevel.WARNING)
 
         error = ValidationError("Validation failed", issues=[issue1, issue2])
         assert len(error.issues) == 2
@@ -91,11 +84,7 @@ class TestValidationError:
         """Test adding issues to ValidationError."""
         error = ValidationError("Validation failed")
 
-        issue = ValidationIssue(
-            category="test",
-            message="New issue",
-            level=ValidationLevel.ERROR
-        )
+        issue = ValidationIssue(category="test", message="New issue", level=ValidationLevel.ERROR)
         error.add_issue(issue)
 
         assert len(error.issues) == 1
@@ -178,11 +167,7 @@ class TestCollectionErrors:
 
     def test_element_not_found_error(self):
         """Test ElementNotFoundError with context."""
-        error = ElementNotFoundError(
-            "Element not found",
-            element_type="component",
-            identifier="R1"
-        )
+        error = ElementNotFoundError("Element not found", element_type="component", identifier="R1")
         assert isinstance(error, CollectionError)
         assert error.element_type == "component"
         assert error.identifier == "R1"
@@ -196,9 +181,7 @@ class TestCollectionErrors:
     def test_duplicate_element_error(self):
         """Test DuplicateElementError with context."""
         error = DuplicateElementError(
-            "Duplicate element",
-            element_type="component",
-            identifier="R1"
+            "Duplicate element", element_type="component", identifier="R1"
         )
         assert isinstance(error, CollectionError)
         assert error.element_type == "component"
@@ -320,19 +303,15 @@ class TestBackwardCompatibility:
 
     def test_validation_error_importable_from_utils(self):
         """Test ValidationError can be imported from utils.validation."""
-        from kicad_sch_api.utils.validation import ValidationError as UtilsValidationError
         from kicad_sch_api.core.exceptions import ValidationError as CoreValidationError
+        from kicad_sch_api.utils.validation import ValidationError as UtilsValidationError
 
         # Should be the same class
         assert UtilsValidationError is CoreValidationError
 
     def test_validation_issue_still_works(self):
         """Test ValidationIssue integration still works."""
-        issue = ValidationIssue(
-            category="test",
-            message="Test issue",
-            level=ValidationLevel.ERROR
-        )
+        issue = ValidationIssue(category="test", message="Test issue", level=ValidationLevel.ERROR)
 
         error = ValidationError("Test", issues=[issue])
         assert len(error.issues) == 1

@@ -5,10 +5,11 @@ Tests that special characters (newlines, tabs, backslashes, quotes) are
 properly escaped when formatting text_box elements for KiCad schematic files.
 """
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
+import pytest
 
 import kicad_sch_api as ksa
 from kicad_sch_api.core.formatter import ExactFormatter
@@ -107,21 +108,21 @@ class TestTextBoxEscaping:
         sch.save(str(output_path))
 
         # Read the file and verify escaping
-        with open(output_path, 'rb') as f:
+        with open(output_path, "rb") as f:
             content = f.read()
 
         # Should contain escaped newlines (bytes 0x5C 0x6E = \n)
-        assert b'\\n' in content
+        assert b"\\n" in content
 
         # Count actual newlines - should only be structural (between S-expressions)
         # The text_box line itself should NOT contain literal newlines
-        lines = content.split(b'\n')
-        text_box_line = [line for line in lines if b'text_box' in line][0]
+        lines = content.split(b"\n")
+        text_box_line = [line for line in lines if b"text_box" in line][0]
 
         # The text_box line should have no embedded newlines (it's on one line)
         # but should have escaped \n in the string
-        assert b'\\n' in text_box_line
-        assert text_box_line.count(b'\n') == 0  # No literal newlines in this line
+        assert b"\\n" in text_box_line
+        assert text_box_line.count(b"\n") == 0  # No literal newlines in this line
 
     def test_text_box_special_characters_formatting(self, temp_dir):
         """Test that text_box with special chars is formatted correctly."""
@@ -138,15 +139,15 @@ class TestTextBoxEscaping:
         sch.save(str(output_path))
 
         # Read and verify
-        with open(output_path, 'r') as f:
+        with open(output_path, "r") as f:
             content = f.read()
 
         # Find the text_box line
-        text_box_line = [line for line in content.split('\n') if 'text_box' in line][0]
+        text_box_line = [line for line in content.split("\n") if "text_box" in line][0]
 
         # Check for escaped characters
-        assert '\\t' in text_box_line  # Escaped tab
-        assert '\\\\' in text_box_line  # Escaped backslash
+        assert "\\t" in text_box_line  # Escaped tab
+        assert "\\\\" in text_box_line  # Escaped backslash
         assert '\\"' in text_box_line  # Escaped quote
 
     def test_text_box_matches_kicad_reference(self, temp_dir):
@@ -155,7 +156,12 @@ class TestTextBoxEscaping:
         Uses the reference file created by KiCad as ground truth.
         """
         # Load the reference schematic created by KiCad
-        reference_path = Path(__file__).parent.parent / "fixtures" / "multi-line-string-kicad" / "multi-line-string-kicad.kicad_sch"
+        reference_path = (
+            Path(__file__).parent.parent
+            / "fixtures"
+            / "multi-line-string-kicad"
+            / "multi-line-string-kicad.kicad_sch"
+        )
 
         if not reference_path.exists():
             pytest.skip(f"Reference file not found: {reference_path}")
@@ -167,26 +173,26 @@ class TestTextBoxEscaping:
         ref_sch.save(str(output_path))
 
         # Read both files
-        with open(reference_path, 'r') as f:
+        with open(reference_path, "r") as f:
             ref_content = f.read()
-        with open(output_path, 'r') as f:
+        with open(output_path, "r") as f:
             output_content = f.read()
 
         # Extract the text_box lines
-        ref_text_box = [line for line in ref_content.split('\n') if 'text_box' in line][0]
-        out_text_box = [line for line in output_content.split('\n') if 'text_box' in line][0]
+        ref_text_box = [line for line in ref_content.split("\n") if "text_box" in line][0]
+        out_text_box = [line for line in output_content.split("\n") if "text_box" in line][0]
 
         # The text_box content should match (same escaping)
         # Note: We compare the text content, not the entire line (positions might differ)
-        assert '\\n' in out_text_box  # Has escaped newlines
-        assert '\\\\' in out_text_box  # Has escaped backslashes
+        assert "\\n" in out_text_box  # Has escaped newlines
+        assert "\\\\" in out_text_box  # Has escaped backslashes
         assert '\\"' in out_text_box  # Has escaped quotes
 
     def test_text_box_roundtrip_preserves_content(self, temp_dir):
         """Test that text survives save/load roundtrip correctly."""
         sch = ksa.create_schematic("Test Roundtrip")
 
-        original_text = "Line 1\nLine 2 with\ttab\nLine 3 with\\backslash and\"quote\""
+        original_text = 'Line 1\nLine 2 with\ttab\nLine 3 with\\backslash and"quote"'
         sch.add_text_box(
             text=original_text,
             position=(100, 100),
@@ -200,8 +206,11 @@ class TestTextBoxEscaping:
         loaded_sch = ksa.Schematic.load(str(output_path))
 
         # Get the text_box from loaded schematic
-        text_boxes = [item for item in loaded_sch._data.get('items', [])
-                      if isinstance(item, list) and len(item) > 0 and item[0] == 'text_box']
+        text_boxes = [
+            item
+            for item in loaded_sch._data.get("items", [])
+            if isinstance(item, list) and len(item) > 0 and item[0] == "text_box"
+        ]
 
         assert len(text_boxes) == 1
         loaded_text = text_boxes[0][1]
@@ -214,10 +223,10 @@ class TestTextBoxEscaping:
         formatter = ExactFormatter()
 
         # text_box should have a format rule
-        assert 'text_box' in formatter.rules
+        assert "text_box" in formatter.rules
 
         # Should have quote_indices set to escape the text content
-        rule = formatter.rules['text_box']
+        rule = formatter.rules["text_box"]
         assert rule.quote_indices == {1}  # Index 1 is the text content
 
     def test_format_rule_for_text(self):
@@ -225,9 +234,9 @@ class TestTextBoxEscaping:
         formatter = ExactFormatter()
 
         # text should also have a format rule
-        assert 'text' in formatter.rules
+        assert "text" in formatter.rules
 
-        rule = formatter.rules['text']
+        rule = formatter.rules["text"]
         assert rule.quote_indices == {1}
 
 

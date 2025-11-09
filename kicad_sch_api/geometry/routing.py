@@ -42,9 +42,7 @@ class RoutingResult:
 
 
 def create_orthogonal_routing(
-    from_pos: Point,
-    to_pos: Point,
-    corner_direction: CornerDirection = CornerDirection.AUTO
+    from_pos: Point, to_pos: Point, corner_direction: CornerDirection = CornerDirection.AUTO
 ) -> RoutingResult:
     """
     Create orthogonal (Manhattan) routing between two points.
@@ -94,29 +92,18 @@ def create_orthogonal_routing(
     # Check if points are aligned on same axis (direct routing possible)
     if from_pos.x == to_pos.x or from_pos.y == to_pos.y:
         # Direct line - no corner needed
-        return RoutingResult(
-            segments=[(from_pos, to_pos)],
-            corner=None,
-            is_direct=True
-        )
+        return RoutingResult(segments=[(from_pos, to_pos)], corner=None, is_direct=True)
 
     # Points are not aligned - need L-shaped routing with corner
     corner = _calculate_corner_point(from_pos, to_pos, corner_direction)
 
     return RoutingResult(
-        segments=[
-            (from_pos, corner),
-            (corner, to_pos)
-        ],
-        corner=corner,
-        is_direct=False
+        segments=[(from_pos, corner), (corner, to_pos)], corner=corner, is_direct=False
     )
 
 
 def _calculate_corner_point(
-    from_pos: Point,
-    to_pos: Point,
-    corner_direction: CornerDirection
+    from_pos: Point, to_pos: Point, corner_direction: CornerDirection
 ) -> Point:
     """
     Calculate the corner point for L-shaped routing.
@@ -201,8 +188,12 @@ def validate_routing_result(result: RoutingResult) -> bool:
         first_end = result.segments[0][1]
         second_start = result.segments[1][0]
 
-        if (result.corner.x != first_end.x or result.corner.y != first_end.y or
-            result.corner.x != second_start.x or result.corner.y != second_start.y):
+        if (
+            result.corner.x != first_end.x
+            or result.corner.y != first_end.y
+            or result.corner.x != second_start.x
+            or result.corner.y != second_start.y
+        ):
             raise ValueError(
                 f"Corner point {result.corner} does not match segment endpoints: "
                 f"first segment ends at {first_end}, second starts at {second_start}"

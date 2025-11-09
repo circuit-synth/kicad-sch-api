@@ -106,8 +106,11 @@ def export_bom(
 
     # Build command
     args = [
-        "sch", "export", "bom",
-        "--output", str(output_path),
+        "sch",
+        "export",
+        "bom",
+        "--output",
+        str(output_path),
     ]
 
     # Add optional parameters

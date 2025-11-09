@@ -6,10 +6,11 @@ Tests semantic pin lookup by name pattern and electrical type filtering.
 """
 
 import logging
+
 import pytest
+
 import kicad_sch_api as ksa
 from kicad_sch_api.core.types import PinType
-
 
 logger = logging.getLogger(__name__)
 

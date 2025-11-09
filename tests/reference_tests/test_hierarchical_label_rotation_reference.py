@@ -7,6 +7,7 @@ from manually created schematics with hierarchical labels.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -39,10 +40,12 @@ class TestHierarchicalLabelRotationReference:
 
             # Verify rotation is a valid numeric value
             rotation = hlabel.get("rotation", 0)
-            assert isinstance(rotation, (int, float)), \
-                f"Hierarchical label '{text}' rotation should be numeric: got {rotation}"
-            assert 0 <= rotation < 360, \
-                f"Hierarchical label '{text}' rotation should be 0-359°: got {rotation}"
+            assert isinstance(
+                rotation, (int, float)
+            ), f"Hierarchical label '{text}' rotation should be numeric: got {rotation}"
+            assert (
+                0 <= rotation < 360
+            ), f"Hierarchical label '{text}' rotation should be 0-359°: got {rotation}"
 
     def test_hierarchical_label_loading(self):
         """Verify hierarchical labels can be loaded successfully."""

@@ -10,18 +10,17 @@ This module provides:
 - Exception logging helpers
 """
 
+import functools
+import json
 import logging
 import logging.handlers
-import json
-import functools
 import time
 import traceback
-from pathlib import Path
 from contextlib import contextmanager
-from typing import Any, Optional, Dict, List, Callable, TypeVar
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from dataclasses import dataclass, field, asdict
-
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 # Type definitions
 T = TypeVar("T")
@@ -101,9 +100,7 @@ class StructuredFormatter(logging.Formatter):
 
     def _format_text(self, record: logging.LogRecord) -> str:
         """Format as human-readable text for development."""
-        timestamp = datetime.fromtimestamp(record.created).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        timestamp = datetime.fromtimestamp(record.created).strftime("%Y-%m-%d %H:%M:%S")
         level = record.levelname
         logger = record.name
         msg = record.getMessage()
@@ -192,15 +189,12 @@ def configure_logging(
     # Log startup
     logger = logging.getLogger(__name__)
     logger.info(
-        f"Logging configured: log_dir={log_dir}, "
-        f"debug={debug_level}, json={json_format}"
+        f"Logging configured: log_dir={log_dir}, " f"debug={debug_level}, json={json_format}"
     )
 
 
 @contextmanager
-def operation_context(
-    operation_name: str, component: Optional[str] = None, **details: Any
-):
+def operation_context(operation_name: str, component: Optional[str] = None, **details: Any):
     """Context manager for tracking operation execution.
 
     Logs operation start, completion, duration, and any exceptions.
@@ -264,9 +258,7 @@ def timer_decorator(logger_obj: Optional[logging.Logger] = None) -> Callable:
             try:
                 result = func(*args, **kwargs)
                 elapsed = (time.time() - start) * 1000
-                logger.debug(
-                    f"{func.__name__} completed in {elapsed:.2f}ms"
-                )
+                logger.debug(f"{func.__name__} completed in {elapsed:.2f}ms")
                 return result
             except Exception as e:
                 elapsed = (time.time() - start) * 1000
@@ -385,9 +377,7 @@ def get_log_statistics(log_path: Path) -> Dict[str, Any]:
                         if "context" in record:
                             op = record["context"].get("operation")
                             if op:
-                                stats["operations"][op] = (
-                                    stats["operations"].get(op, 0) + 1
-                                )
+                                stats["operations"][op] = stats["operations"].get(op, 0) + 1
 
                             comp = record["context"].get("component")
                             if comp:

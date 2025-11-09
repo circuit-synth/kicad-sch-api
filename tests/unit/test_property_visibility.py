@@ -6,8 +6,9 @@ property visibility state during load, save, and programmatic modification.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
-from kicad_sch_api.core.types import SchematicSymbol, Point
+from kicad_sch_api.core.types import Point, SchematicSymbol
 
 
 class TestPropertyVisibilityLoading:

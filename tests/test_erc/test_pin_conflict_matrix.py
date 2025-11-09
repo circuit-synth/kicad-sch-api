@@ -74,15 +74,24 @@ class TestPinConflictMatrix:
 
         # Passive should be OK with all pin types
         pin_types = [
-            "input", "output", "bidirectional", "tristate",
-            "passive", "power_input", "power_output",
-            "open_collector", "open_emitter", "unspecified"
+            "input",
+            "output",
+            "bidirectional",
+            "tristate",
+            "passive",
+            "power_input",
+            "power_output",
+            "open_collector",
+            "open_emitter",
+            "unspecified",
         ]
 
         for pin_type in pin_types:
             severity = matrix.check_connection("passive", pin_type)
-            assert severity in [PinSeverity.OK, PinSeverity.WARNING], \
-                f"Passive-to-{pin_type} should be OK or WARNING, got {severity}"
+            assert severity in [
+                PinSeverity.OK,
+                PinSeverity.WARNING,
+            ], f"Passive-to-{pin_type} should be OK or WARNING, got {severity}"
 
     def test_unspecified_generates_warning(self):
         """Test that Unspecified pins generate warnings."""
@@ -114,7 +123,10 @@ class TestPinConflictMatrix:
         matrix = PinConflictMatrix()
 
         # Open collector should be OK with most inputs
-        assert matrix.check_connection("open_collector", "input") in [PinSeverity.OK, PinSeverity.WARNING]
+        assert matrix.check_connection("open_collector", "input") in [
+            PinSeverity.OK,
+            PinSeverity.WARNING,
+        ]
 
     def test_matrix_is_symmetric(self):
         """Test that matrix is symmetric (pin1-pin2 == pin2-pin1)."""
@@ -127,8 +139,9 @@ class TestPinConflictMatrix:
                 severity1 = matrix.check_connection(pin1, pin2)
                 severity2 = matrix.check_connection(pin2, pin1)
 
-                assert severity1 == severity2, \
-                    f"{pin1}-{pin2} ({severity1}) != {pin2}-{pin1} ({severity2})"
+                assert (
+                    severity1 == severity2
+                ), f"{pin1}-{pin2} ({severity1}) != {pin2}-{pin1} ({severity2})"
 
     def test_set_custom_rule(self):
         """Test setting custom rule in matrix."""
@@ -146,10 +159,12 @@ class TestPinConflictMatrix:
         matrix = PinConflictMatrix()
 
         # All these should be equivalent
-        assert matrix.check_connection("output", "output") == \
-               matrix.check_connection("OUTPUT", "output")
-        assert matrix.check_connection("output", "output") == \
-               matrix.check_connection("PT_OUTPUT", "PT_OUTPUT")
+        assert matrix.check_connection("output", "output") == matrix.check_connection(
+            "OUTPUT", "output"
+        )
+        assert matrix.check_connection("output", "output") == matrix.check_connection(
+            "PT_OUTPUT", "PT_OUTPUT"
+        )
 
     def test_invalid_pin_type(self):
         """Test handling of invalid pin type."""
@@ -164,18 +179,18 @@ class TestPinConflictMatrix:
         matrix = PinConflictMatrix()
 
         kicad_pin_types = [
-            "input",          # PT_INPUT
-            "output",         # PT_OUTPUT
+            "input",  # PT_INPUT
+            "output",  # PT_OUTPUT
             "bidirectional",  # PT_BIDI
-            "tristate",       # PT_TRISTATE
-            "passive",        # PT_PASSIVE
-            "free",           # PT_NIC (not internally connected)
-            "unspecified",    # PT_UNSPECIFIED
-            "power_input",    # PT_POWER_IN
-            "power_output",   # PT_POWER_OUT
-            "open_collector", # PT_OPENCOLLECTOR
-            "open_emitter",   # PT_OPENEMITTER
-            "nc"              # PT_NC (not connected)
+            "tristate",  # PT_TRISTATE
+            "passive",  # PT_PASSIVE
+            "free",  # PT_NIC (not internally connected)
+            "unspecified",  # PT_UNSPECIFIED
+            "power_input",  # PT_POWER_IN
+            "power_output",  # PT_POWER_OUT
+            "open_collector",  # PT_OPENCOLLECTOR
+            "open_emitter",  # PT_OPENEMITTER
+            "nc",  # PT_NC (not connected)
         ]
 
         # All should be valid (not raise exception)
@@ -199,7 +214,7 @@ class TestPinConflictMatrix:
         """Test loading custom matrix from dictionary."""
         custom_dict = {
             ("output", "output"): PinSeverity.WARNING,  # Override default
-            ("input", "input"): PinSeverity.WARNING,    # Custom rule
+            ("input", "input"): PinSeverity.WARNING,  # Custom rule
         }
 
         matrix = PinConflictMatrix.from_dict(custom_dict)
@@ -240,9 +255,18 @@ class TestPinConflictMatrix:
         matrix = PinConflictMatrix()
 
         pin_types = [
-            "input", "output", "bidirectional", "tristate", "passive",
-            "free", "unspecified", "power_input", "power_output",
-            "open_collector", "open_emitter", "nc"
+            "input",
+            "output",
+            "bidirectional",
+            "tristate",
+            "passive",
+            "free",
+            "unspecified",
+            "power_input",
+            "power_output",
+            "open_collector",
+            "open_emitter",
+            "nc",
         ]
 
         # Check all combinations have rules

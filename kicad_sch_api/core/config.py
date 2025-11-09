@@ -183,7 +183,11 @@ class KiCADConfig:
         return name.lower() not in self.no_title_block_names
 
     def get_property_position(
-        self, property_name: str, component_pos: Tuple[float, float], offset_index: int = 0, component_rotation: float = 0
+        self,
+        property_name: str,
+        component_pos: Tuple[float, float],
+        offset_index: int = 0,
+        component_rotation: float = 0,
     ) -> Tuple[float, float, float]:
         """
         Calculate property position relative to component, accounting for component rotation.

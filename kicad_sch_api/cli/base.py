@@ -18,6 +18,7 @@ from kicad_sch_api.cli.types import ExecutionMode
 @dataclass
 class ExecutorInfo:
     """Information about available execution modes."""
+
     local_available: bool
     local_version: Optional[str]
     docker_available: bool
@@ -114,7 +115,9 @@ class KiCadExecutor:
         except (FileNotFoundError, subprocess.TimeoutExpired):
             cls._docker_available = False
 
-    def _run_local(self, args: List[str], cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
+    def _run_local(
+        self, args: List[str], cwd: Optional[Path] = None
+    ) -> subprocess.CompletedProcess:
         """Run kicad-cli locally."""
         if not KiCadExecutor._local_available:
             raise RuntimeError(
@@ -136,7 +139,9 @@ class KiCadExecutor:
 
         return result
 
-    def _run_docker(self, args: List[str], cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
+    def _run_docker(
+        self, args: List[str], cwd: Optional[Path] = None
+    ) -> subprocess.CompletedProcess:
         """Run kicad-cli via Docker."""
         if not KiCadExecutor._docker_available:
             raise RuntimeError(
@@ -153,10 +158,13 @@ class KiCadExecutor:
 
         # Build Docker command
         docker_cmd = [
-            "docker", "run",
+            "docker",
+            "run",
             "--rm",  # Remove container after execution
-            "-v", f"{work_dir}:/workspace",  # Mount working directory
-            "-w", "/workspace",  # Set working directory
+            "-v",
+            f"{work_dir}:/workspace",  # Mount working directory
+            "-w",
+            "/workspace",  # Set working directory
         ]
 
         # Add user mapping on Linux/Mac to avoid permission issues
@@ -165,10 +173,13 @@ class KiCadExecutor:
             gid = os.getgid()
             docker_cmd.extend(["--user", f"{uid}:{gid}"])
 
-        docker_cmd.extend([
-            self.docker_image,
-            "kicad-cli",
-        ] + args)
+        docker_cmd.extend(
+            [
+                self.docker_image,
+                "kicad-cli",
+            ]
+            + args
+        )
 
         if self.verbose:
             print(f"Running via Docker: {' '.join(docker_cmd)}")

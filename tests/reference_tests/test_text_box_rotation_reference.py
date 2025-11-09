@@ -7,6 +7,7 @@ from manually created schematics with rotated text box elements.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -43,8 +44,12 @@ class TestTextBoxRotationReference:
         assert rotation_90 == 90, f"TEXT_BOX_90 should be at 90° rotation: got {rotation_90}"
         # TEXT_BOX_180 and TEXT_BOX_270 may have different values based on user's manual edits
         # Just verify they exist and have valid rotation values
-        assert isinstance(rotation_180, (int, float)), f"TEXT_BOX_180 should have numeric rotation: got {rotation_180}"
-        assert isinstance(rotation_270, (int, float)), f"TEXT_BOX_270 should have numeric rotation: got {rotation_270}"
+        assert isinstance(
+            rotation_180, (int, float)
+        ), f"TEXT_BOX_180 should have numeric rotation: got {rotation_180}"
+        assert isinstance(
+            rotation_270, (int, float)
+        ), f"TEXT_BOX_270 should have numeric rotation: got {rotation_270}"
 
     def test_text_box_structure(self):
         """Verify text boxes have correct structure after loading."""

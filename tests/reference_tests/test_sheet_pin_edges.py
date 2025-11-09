@@ -5,9 +5,11 @@ This test verifies that our programmatic sheet pin creation produces output
 that exactly matches KiCAD's format when manually creating sheet pins.
 """
 
-import pytest
-import kicad_sch_api as ksa
 from pathlib import Path
+
+import pytest
+
+import kicad_sch_api as ksa
 
 
 class TestSheetPinEdgesReference:

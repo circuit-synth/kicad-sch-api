@@ -7,6 +7,7 @@ from manually created schematics with junctions at wire intersections.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -35,10 +36,8 @@ class TestJunctionReference:
             assert "y" in position, f"Junction {i} position should have 'y'"
 
             # Verify position values are numeric
-            assert isinstance(position["x"], (int, float)), \
-                f"Junction {i} x should be numeric"
-            assert isinstance(position["y"], (int, float)), \
-                f"Junction {i} y should be numeric"
+            assert isinstance(position["x"], (int, float)), f"Junction {i} x should be numeric"
+            assert isinstance(position["y"], (int, float)), f"Junction {i} y should be numeric"
 
     def test_junction_with_wires(self):
         """Verify junction schematic contains both junction and wires."""

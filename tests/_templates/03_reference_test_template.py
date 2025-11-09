@@ -108,9 +108,7 @@ class TestPinPositionAgainstReferences:
 
         # Reference file path
         ref_path = os.path.join(
-            self.REFERENCE_PROJECTS_PATH,
-            "pin_rotation_0deg",
-            "pin_rotation_0deg.kicad_sch"
+            self.REFERENCE_PROJECTS_PATH, "pin_rotation_0deg", "pin_rotation_0deg.kicad_sch"
         )
 
         logger.info(f"Loading reference schematic: {ref_path}")
@@ -154,17 +152,21 @@ class TestPinPositionAgainstReferences:
         TOLERANCE = 0.05
 
         # Assert: Pin positions match reference exactly
-        assert math.isclose(pin1_pos.x, EXPECTED_PIN1_X, abs_tol=TOLERANCE), \
-            f"Pin 1 X mismatch: calculated={pin1_pos.x:.2f}, expected={EXPECTED_PIN1_X}"
+        assert math.isclose(
+            pin1_pos.x, EXPECTED_PIN1_X, abs_tol=TOLERANCE
+        ), f"Pin 1 X mismatch: calculated={pin1_pos.x:.2f}, expected={EXPECTED_PIN1_X}"
 
-        assert math.isclose(pin1_pos.y, EXPECTED_PIN1_Y, abs_tol=TOLERANCE), \
-            f"Pin 1 Y mismatch: calculated={pin1_pos.y:.2f}, expected={EXPECTED_PIN1_Y}"
+        assert math.isclose(
+            pin1_pos.y, EXPECTED_PIN1_Y, abs_tol=TOLERANCE
+        ), f"Pin 1 Y mismatch: calculated={pin1_pos.y:.2f}, expected={EXPECTED_PIN1_Y}"
 
-        assert math.isclose(pin2_pos.x, EXPECTED_PIN2_X, abs_tol=TOLERANCE), \
-            f"Pin 2 X mismatch: calculated={pin2_pos.x:.2f}, expected={EXPECTED_PIN2_X}"
+        assert math.isclose(
+            pin2_pos.x, EXPECTED_PIN2_X, abs_tol=TOLERANCE
+        ), f"Pin 2 X mismatch: calculated={pin2_pos.x:.2f}, expected={EXPECTED_PIN2_X}"
 
-        assert math.isclose(pin2_pos.y, EXPECTED_PIN2_Y, abs_tol=TOLERANCE), \
-            f"Pin 2 Y mismatch: calculated={pin2_pos.y:.2f}, expected={EXPECTED_PIN2_Y}"
+        assert math.isclose(
+            pin2_pos.y, EXPECTED_PIN2_Y, abs_tol=TOLERANCE
+        ), f"Pin 2 Y mismatch: calculated={pin2_pos.y:.2f}, expected={EXPECTED_PIN2_Y}"
 
         logger.info("✓ Pin positions match KiCAD reference")
 
@@ -184,9 +186,7 @@ class TestPinPositionAgainstReferences:
         logger.info("Reference test: Pin position at 90° rotation")
 
         ref_path = os.path.join(
-            self.REFERENCE_PROJECTS_PATH,
-            "pin_rotation_90deg",
-            "pin_rotation_90deg.kicad_sch"
+            self.REFERENCE_PROJECTS_PATH, "pin_rotation_90deg", "pin_rotation_90deg.kicad_sch"
         )
 
         if not os.path.exists(ref_path):
@@ -208,34 +208,41 @@ class TestPinPositionAgainstReferences:
 
         # Expected: Wire endpoints from reference file
         # At 90°, resistor pins are on left and right
-        EXPECTED_PIN1_X = 94.615    # Left side
+        EXPECTED_PIN1_X = 94.615  # Left side
         EXPECTED_PIN1_Y = 102.235
-        EXPECTED_PIN2_X = 102.235   # Right side
+        EXPECTED_PIN2_X = 102.235  # Right side
         EXPECTED_PIN2_Y = 102.235
 
         TOLERANCE = 0.05
 
         # Assert: Pin positions match
-        assert math.isclose(pin1_pos.x, EXPECTED_PIN1_X, abs_tol=TOLERANCE), \
-            f"Pin 1 X at 90°: {pin1_pos.x:.2f} vs expected {EXPECTED_PIN1_X}"
+        assert math.isclose(
+            pin1_pos.x, EXPECTED_PIN1_X, abs_tol=TOLERANCE
+        ), f"Pin 1 X at 90°: {pin1_pos.x:.2f} vs expected {EXPECTED_PIN1_X}"
 
-        assert math.isclose(pin1_pos.y, EXPECTED_PIN1_Y, abs_tol=TOLERANCE), \
-            f"Pin 1 Y at 90°: {pin1_pos.y:.2f} vs expected {EXPECTED_PIN1_Y}"
+        assert math.isclose(
+            pin1_pos.y, EXPECTED_PIN1_Y, abs_tol=TOLERANCE
+        ), f"Pin 1 Y at 90°: {pin1_pos.y:.2f} vs expected {EXPECTED_PIN1_Y}"
 
-        assert math.isclose(pin2_pos.x, EXPECTED_PIN2_X, abs_tol=TOLERANCE), \
-            f"Pin 2 X at 90°: {pin2_pos.x:.2f} vs expected {EXPECTED_PIN2_X}"
+        assert math.isclose(
+            pin2_pos.x, EXPECTED_PIN2_X, abs_tol=TOLERANCE
+        ), f"Pin 2 X at 90°: {pin2_pos.x:.2f} vs expected {EXPECTED_PIN2_X}"
 
-        assert math.isclose(pin2_pos.y, EXPECTED_PIN2_Y, abs_tol=TOLERANCE), \
-            f"Pin 2 Y at 90°: {pin2_pos.y:.2f} vs expected {EXPECTED_PIN2_Y}"
+        assert math.isclose(
+            pin2_pos.y, EXPECTED_PIN2_Y, abs_tol=TOLERANCE
+        ), f"Pin 2 Y at 90°: {pin2_pos.y:.2f} vs expected {EXPECTED_PIN2_Y}"
 
         logger.info("✓ 90° rotation pin positions match KiCAD reference")
 
-    @pytest.mark.parametrize("rotation,description", [
-        (0, "0° - vertical"),
-        (90, "90° - horizontal right"),
-        (180, "180° - vertical flipped"),
-        (270, "270° - horizontal left"),
-    ])
+    @pytest.mark.parametrize(
+        "rotation,description",
+        [
+            (0, "0° - vertical"),
+            (90, "90° - horizontal right"),
+            (180, "180° - vertical flipped"),
+            (270, "270° - horizontal left"),
+        ],
+    )
     def test_all_rotation_angles_reference(self, rotation, description):
         """
         Test: Pin positions at all rotation angles against references.
@@ -253,11 +260,7 @@ class TestPinPositionAgainstReferences:
         }
 
         ref_dir = rotation_to_dir.get(rotation)
-        ref_path = os.path.join(
-            self.REFERENCE_PROJECTS_PATH,
-            ref_dir,
-            f"{ref_dir}.kicad_sch"
-        )
+        ref_path = os.path.join(self.REFERENCE_PROJECTS_PATH, ref_dir, f"{ref_dir}.kicad_sch")
 
         if not os.path.exists(ref_path):
             pytest.skip(f"Reference file not found: {ref_path}")
@@ -268,8 +271,9 @@ class TestPinPositionAgainstReferences:
 
         # Assert: Component found with correct rotation
         assert comp is not None, f"R1 not found for {rotation}°"
-        assert math.isclose(comp.rotation, rotation, abs_tol=0.1), \
-            f"Rotation mismatch: {comp.rotation} vs expected {rotation}"
+        assert math.isclose(
+            comp.rotation, rotation, abs_tol=0.1
+        ), f"Rotation mismatch: {comp.rotation} vs expected {rotation}"
 
         # Act: Get pins
         pin1_pos = comp.get_pin_position("1")
@@ -280,15 +284,16 @@ class TestPinPositionAgainstReferences:
         assert pin2_pos is not None, f"Pin 2 not found at {rotation}°"
 
         # Assert: Distance between pins consistent (resistor spacing invariant)
-        distance = math.sqrt(
-            (pin2_pos.x - pin1_pos.x)**2 + (pin2_pos.y - pin1_pos.y)**2
-        )
+        distance = math.sqrt((pin2_pos.x - pin1_pos.x) ** 2 + (pin2_pos.y - pin1_pos.y) ** 2)
 
         # Resistor pins are ~3.81mm apart (standard KiCAD grid)
-        assert 3.7 < distance < 3.9, \
-            f"Pin spacing should be ~3.81mm at {rotation}°, got {distance:.2f}mm"
+        assert (
+            3.7 < distance < 3.9
+        ), f"Pin spacing should be ~3.81mm at {rotation}°, got {distance:.2f}mm"
 
-        logger.info(f"✓ {rotation}° rotation: pins={pin1_pos}, {pin2_pos}, distance={distance:.2f}mm")
+        logger.info(
+            f"✓ {rotation}° rotation: pins={pin1_pos}, {pin2_pos}, distance={distance:.2f}mm"
+        )
 
 
 class TestWireEndpointsToPins:
@@ -331,8 +336,9 @@ class TestWireEndpointsToPins:
             for pin_num, pin_pos in comp_pins.items():
                 for point in wire.points:
                     # Check if wire endpoint matches pin position (within tolerance)
-                    if (math.isclose(point.x, pin_pos.x, abs_tol=0.1) and
-                        math.isclose(point.y, pin_pos.y, abs_tol=0.1)):
+                    if math.isclose(point.x, pin_pos.x, abs_tol=0.1) and math.isclose(
+                        point.y, pin_pos.y, abs_tol=0.1
+                    ):
                         connected_wires.append((wire, pin_num, point))
                         logger.debug(f"  Wire connects to pin {pin_num}")
                         break
@@ -352,7 +358,7 @@ class TestWireEndpointsToPins:
             "tests",
             "reference_kicad_projects",
             "simple_connections",
-            "simple_connections.kicad_sch"
+            "simple_connections.kicad_sch",
         )
 
         if not os.path.exists(ref_path):
@@ -384,10 +390,12 @@ class TestWireEndpointsToPins:
             logger.debug(f"Wire to pin {pin_num}: endpoint={endpoint}, pin_pos={pin_pos}")
 
             assert pin_pos is not None
-            assert math.isclose(endpoint.x, pin_pos.x, abs_tol=0.05), \
-                f"Wire to pin {pin_num} X mismatch: {endpoint.x} vs {pin_pos.x}"
-            assert math.isclose(endpoint.y, pin_pos.y, abs_tol=0.05), \
-                f"Wire to pin {pin_num} Y mismatch: {endpoint.y} vs {pin_pos.y}"
+            assert math.isclose(
+                endpoint.x, pin_pos.x, abs_tol=0.05
+            ), f"Wire to pin {pin_num} X mismatch: {endpoint.x} vs {pin_pos.x}"
+            assert math.isclose(
+                endpoint.y, pin_pos.y, abs_tol=0.05
+            ), f"Wire to pin {pin_num} Y mismatch: {endpoint.y} vs {pin_pos.y}"
 
         logger.info("✓ All wires connect to correct pin positions")
 

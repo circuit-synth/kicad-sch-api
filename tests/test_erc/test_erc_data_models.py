@@ -20,7 +20,7 @@ class TestERCViolation:
             severity="error",
             message="Output pin connected to another output pin",
             component_refs=["U1", "U2"],
-            error_code="E001"
+            error_code="E001",
         )
 
         assert violation.violation_type == "pin_conflict"
@@ -44,7 +44,7 @@ class TestERCViolation:
             pin_numbers=["1", "2"],
             location=Point(100.0, 100.0),
             suggested_fix="Remove one output or add buffer",
-            error_code="E001"
+            error_code="E001",
         )
 
         assert violation.net_name == "NET1"
@@ -59,7 +59,7 @@ class TestERCViolation:
             severity="error",
             message="Test message",
             component_refs=["U1"],
-            error_code="E001"
+            error_code="E001",
         )
 
         data = violation.to_dict()
@@ -77,21 +77,21 @@ class TestERCViolation:
             severity="error",
             message="Error",
             component_refs=[],
-            error_code="E001"
+            error_code="E001",
         )
         warning = ERCViolation(
             violation_type="test",
             severity="warning",
             message="Warning",
             component_refs=[],
-            error_code="W001"
+            error_code="W001",
         )
         info = ERCViolation(
             violation_type="test",
             severity="info",
             message="Info",
             component_refs=[],
-            error_code="I001"
+            error_code="I001",
         )
 
         assert error.severity == "error"
@@ -105,12 +105,7 @@ class TestERCResult:
     def test_create_empty_result(self):
         """Test creating empty ERC result."""
         result = ERCResult(
-            errors=[],
-            warnings=[],
-            info=[],
-            total_checks=10,
-            passed_checks=10,
-            duration_ms=5.2
+            errors=[], warnings=[], info=[], total_checks=10, passed_checks=10, duration_ms=5.2
         )
 
         assert len(result.errors) == 0
@@ -124,12 +119,7 @@ class TestERCResult:
         """Test has_errors() method."""
         # No errors
         result = ERCResult(
-            errors=[],
-            warnings=[],
-            info=[],
-            total_checks=5,
-            passed_checks=5,
-            duration_ms=1.0
+            errors=[], warnings=[], info=[], total_checks=5, passed_checks=5, duration_ms=1.0
         )
         assert result.has_errors() is False
 
@@ -139,15 +129,10 @@ class TestERCResult:
             severity="error",
             message="Test",
             component_refs=[],
-            error_code="E001"
+            error_code="E001",
         )
         result = ERCResult(
-            errors=[error],
-            warnings=[],
-            info=[],
-            total_checks=5,
-            passed_checks=4,
-            duration_ms=1.0
+            errors=[error], warnings=[], info=[], total_checks=5, passed_checks=4, duration_ms=1.0
         )
         assert result.has_errors() is True
 
@@ -158,21 +143,21 @@ class TestERCResult:
             severity="error",
             message="Error",
             component_refs=[],
-            error_code="E001"
+            error_code="E001",
         )
         warning1 = ERCViolation(
             violation_type="test",
             severity="warning",
             message="Warning 1",
             component_refs=[],
-            error_code="W001"
+            error_code="W001",
         )
         warning2 = ERCViolation(
             violation_type="test",
             severity="warning",
             message="Warning 2",
             component_refs=[],
-            error_code="W002"
+            error_code="W002",
         )
 
         result = ERCResult(
@@ -181,7 +166,7 @@ class TestERCResult:
             info=[],
             total_checks=10,
             passed_checks=7,
-            duration_ms=10.5
+            duration_ms=10.5,
         )
 
         summary = result.summary()
@@ -195,14 +180,14 @@ class TestERCResult:
             severity="error",
             message="Error",
             component_refs=[],
-            error_code="E001"
+            error_code="E001",
         )
         warning = ERCViolation(
             violation_type="test",
             severity="warning",
             message="Warning",
             component_refs=[],
-            error_code="W001"
+            error_code="W001",
         )
 
         result = ERCResult(
@@ -211,7 +196,7 @@ class TestERCResult:
             info=[],
             total_checks=5,
             passed_checks=3,
-            duration_ms=1.0
+            duration_ms=1.0,
         )
 
         errors_only = result.filter_by_severity("error")
@@ -229,21 +214,21 @@ class TestERCResult:
             severity="error",
             message="Error on U1",
             component_refs=["U1"],
-            error_code="E001"
+            error_code="E001",
         )
         violation2 = ERCViolation(
             violation_type="test",
             severity="error",
             message="Error on U2",
             component_refs=["U2"],
-            error_code="E002"
+            error_code="E002",
         )
         violation3 = ERCViolation(
             violation_type="test",
             severity="error",
             message="Error on U1 and U2",
             component_refs=["U1", "U2"],
-            error_code="E003"
+            error_code="E003",
         )
 
         result = ERCResult(
@@ -252,7 +237,7 @@ class TestERCResult:
             info=[],
             total_checks=5,
             passed_checks=2,
-            duration_ms=1.0
+            duration_ms=1.0,
         )
 
         u1_violations = result.filter_by_component("U1")
@@ -268,16 +253,11 @@ class TestERCResult:
             severity="error",
             message="Test",
             component_refs=["U1"],
-            error_code="E001"
+            error_code="E001",
         )
 
         result = ERCResult(
-            errors=[error],
-            warnings=[],
-            info=[],
-            total_checks=5,
-            passed_checks=4,
-            duration_ms=10.5
+            errors=[error], warnings=[], info=[], total_checks=5, passed_checks=4, duration_ms=10.5
         )
 
         data = result.to_dict()
@@ -298,16 +278,11 @@ class TestERCResult:
             severity="error",
             message="Test",
             component_refs=["U1"],
-            error_code="E001"
+            error_code="E001",
         )
 
         result = ERCResult(
-            errors=[error],
-            warnings=[],
-            info=[],
-            total_checks=5,
-            passed_checks=4,
-            duration_ms=10.5
+            errors=[error], warnings=[], info=[], total_checks=5, passed_checks=4, duration_ms=10.5
         )
 
         json_str = result.to_json()

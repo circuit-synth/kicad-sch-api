@@ -115,7 +115,6 @@ class SheetParser(BaseElementParser):
 
         return sheet_data
 
-
     def _parse_sheet_pin_for_read(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a sheet pin (for reading during sheet parsing)."""
         # Format: (pin "name" type (at x y rotation) (uuid ...) (effects ...))
@@ -160,7 +159,6 @@ class SheetParser(BaseElementParser):
 
         return pin_data
 
-
     def _parse_sheet_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
         """Parse sheet_instances section."""
         sheet_instances = []
@@ -180,7 +178,6 @@ class SheetParser(BaseElementParser):
                             sheet_data["page"] = element[1]
                 sheet_instances.append(sheet_data)
         return sheet_instances
-
 
     def _sheet_to_sexp(self, sheet_data: Dict[str, Any], schematic_uuid: str) -> List[Any]:
         """Convert hierarchical sheet to S-expression."""
@@ -266,7 +263,10 @@ class SheetParser(BaseElementParser):
         name_prop.append(
             [
                 sexpdata.Symbol("effects"),
-                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), config.defaults.font_size, config.defaults.font_size]],
+                [
+                    sexpdata.Symbol("font"),
+                    [sexpdata.Symbol("size"), config.defaults.font_size, config.defaults.font_size],
+                ],
                 [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("bottom")],
             ]
         )
@@ -280,7 +280,10 @@ class SheetParser(BaseElementParser):
         file_prop.append(
             [
                 sexpdata.Symbol("effects"),
-                [sexpdata.Symbol("font"), [sexpdata.Symbol("size"), config.defaults.font_size, config.defaults.font_size]],
+                [
+                    sexpdata.Symbol("font"),
+                    [sexpdata.Symbol("size"), config.defaults.font_size, config.defaults.font_size],
+                ],
                 [sexpdata.Symbol("justify"), sexpdata.Symbol("left"), sexpdata.Symbol("top")],
             ]
         )
@@ -304,7 +307,6 @@ class SheetParser(BaseElementParser):
             sexp.append(instances_sexp)
 
         return sexp
-
 
     def _sheet_pin_to_sexp(self, pin_data: Dict[str, Any]) -> List[Any]:
         """Convert sheet pin to S-expression."""
@@ -335,7 +337,6 @@ class SheetParser(BaseElementParser):
 
         return pin_sexp
 
-
     def _sheet_instances_to_sexp(self, sheet_instances: List[Dict[str, Any]]) -> List[Any]:
         """Convert sheet_instances to S-expression."""
         sexp = [sexpdata.Symbol("sheet_instances")]
@@ -348,5 +349,3 @@ class SheetParser(BaseElementParser):
             ]
             sexp.append(sheet_sexp)
         return sexp
-
-

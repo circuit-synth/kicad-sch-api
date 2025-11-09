@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
 from .geometry import points_equal
-from .types import Point, SchematicSymbol, Wire, Junction, Label, LabelType
+from .types import Junction, Label, LabelType, Point, SchematicSymbol, Wire
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,7 @@ class PinConnection:
         return hash((self.reference, self.pin_number))
 
     def __eq__(self, other):
-        return (self.reference == other.reference and
-                self.pin_number == other.pin_number)
+        return self.reference == other.reference and self.pin_number == other.pin_number
 
     def __repr__(self):
         return f"{self.reference}.{self.pin_number}@({self.position.x:.2f},{self.position.y:.2f})"
@@ -125,8 +124,11 @@ class ConnectivityAnalyzer:
 
         # Step 2: Create initial nets from wire-to-pin connections
         for sch in schematics:
-            sch_pins = {pc: pos for pc, pos in all_pin_positions.items()
-                       if any(c.reference == pc.reference for c in sch.components)}
+            sch_pins = {
+                pc: pos
+                for pc, pos in all_pin_positions.items()
+                if any(c.reference == pc.reference for c in sch.components)
+            }
             self._trace_wire_connections(sch, sch_pins)
         logger.info(f"Created {len(self.nets)} nets from wire connections")
 
@@ -182,9 +184,7 @@ class ConnectivityAnalyzer:
             for pin_number, pin_position in pins:
                 if pin_position is not None:
                     pin_conn = PinConnection(
-                        reference=component.reference,
-                        pin_number=pin_number,
-                        position=pin_position
+                        reference=component.reference, pin_number=pin_number, position=pin_position
                     )
                     pin_positions[pin_conn] = pin_position
                     logger.debug(f"  {pin_conn}")
@@ -359,8 +359,11 @@ class ConnectivityAnalyzer:
             schematic: Schematic to analyze
         """
         # Process local labels only (global labels handled separately)
-        local_labels = [label for label in schematic.labels
-                        if hasattr(label, '_data') and label._data.label_type == LabelType.LOCAL]
+        local_labels = [
+            label
+            for label in schematic.labels
+            if hasattr(label, "_data") and label._data.label_type == LabelType.LOCAL
+        ]
 
         for label in local_labels:
             label_pos = label.position
@@ -418,7 +421,7 @@ class ConnectivityAnalyzer:
 
         for component in schematic.components:
             # Identify power symbols by lib_id pattern
-            if component.lib_id.startswith('power:'):
+            if component.lib_id.startswith("power:"):
                 power_value = component.value
 
                 logger.debug(f"Found power symbol: {component.reference} (value={power_value})")
@@ -534,16 +537,16 @@ class ConnectivityAnalyzer:
         schematics = [root_schematic]
 
         # Check if root schematic has hierarchical sheets
-        if not hasattr(root_schematic, '_data') or 'sheets' not in root_schematic._data:
+        if not hasattr(root_schematic, "_data") or "sheets" not in root_schematic._data:
             return schematics
 
-        sheets = root_schematic._data.get('sheets', [])
+        sheets = root_schematic._data.get("sheets", [])
 
         # Load each child schematic
         root_path = Path(root_schematic.file_path) if root_schematic.file_path else None
 
         for sheet in sheets:
-            sheet_filename = sheet.get('filename')
+            sheet_filename = sheet.get("filename")
             if not sheet_filename:
                 continue
 
@@ -557,6 +560,7 @@ class ConnectivityAnalyzer:
                 try:
                     # Import Schematic class - use absolute import to avoid circular dependency
                     import kicad_sch_api as ksa
+
                     child_sch = ksa.Schematic.load(str(child_path))
                     schematics.append(child_sch)
                     logger.info(f"Loaded child schematic: {sheet_filename}")
@@ -579,14 +583,14 @@ class ConnectivityAnalyzer:
         """
         from pathlib import Path
 
-        if not hasattr(root_schematic, '_data') or 'sheets' not in root_schematic._data:
+        if not hasattr(root_schematic, "_data") or "sheets" not in root_schematic._data:
             return
 
-        sheets = root_schematic._data.get('sheets', [])
+        sheets = root_schematic._data.get("sheets", [])
 
         for sheet_data in sheets:
-            sheet_filename = sheet_data.get('filename')
-            sheet_pins = sheet_data.get('pins', [])
+            sheet_filename = sheet_data.get("filename")
+            sheet_pins = sheet_data.get("pins", [])
 
             if not sheet_filename or not sheet_pins:
                 continue
@@ -604,13 +608,13 @@ class ConnectivityAnalyzer:
 
             # For each sheet pin, find matching hierarchical label in child
             for pin_data in sheet_pins:
-                pin_name = pin_data.get('name')
-                pin_position = pin_data.get('position')
+                pin_name = pin_data.get("name")
+                pin_position = pin_data.get("position")
 
                 if not pin_name or not pin_position:
                     continue
 
-                pin_pos = Point(pin_position['x'], pin_position['y'])
+                pin_pos = Point(pin_position["x"], pin_position["y"])
 
                 # Find net at sheet pin position in parent
                 parent_net = None
@@ -635,7 +639,9 @@ class ConnectivityAnalyzer:
                         child_net = None
                         for net in self.nets:
                             for point in net.points:
-                                if points_equal(Point(point[0], point[1]), label_pos, self.tolerance):
+                                if points_equal(
+                                    Point(point[0], point[1]), label_pos, self.tolerance
+                                ):
                                     child_net = net
                                     break
                             if child_net:
@@ -688,5 +694,8 @@ class ConnectivityAnalyzer:
         if not net:
             return []
 
-        return [(pin.reference, pin.pin_number) for pin in net.pins
-                if not (pin.reference == reference and pin.pin_number == pin_number)]
+        return [
+            (pin.reference, pin.pin_number)
+            for pin in net.pins
+            if not (pin.reference == reference and pin.pin_number == pin_number)
+        ]

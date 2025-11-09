@@ -6,6 +6,7 @@ reference schematic with custom properties and mixed visibility states.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -187,9 +188,7 @@ class TestPropertyPreservationFileFormat:
 
     def test_hide_flag_format_in_reference(self):
         """Reference file should use (hide yes) format, not (hide no)."""
-        with open(
-            "tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r"
-        ) as f:
+        with open("tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r") as f:
             content = f.read()
 
         # Should contain (hide yes)
@@ -200,9 +199,7 @@ class TestPropertyPreservationFileFormat:
 
     def test_property_ordering_in_reference(self):
         """Properties should appear in standard order in file."""
-        with open(
-            "tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r"
-        ) as f:
+        with open("tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r") as f:
             content = f.read()
 
         # Find property positions
@@ -218,9 +215,7 @@ class TestPropertyPreservationFileFormat:
 
     def test_effects_section_structure(self):
         """Effects sections should have consistent structure."""
-        with open(
-            "tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r"
-        ) as f:
+        with open("tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r") as f:
             content = f.read()
 
         # All properties should have effects section with font
@@ -230,9 +225,7 @@ class TestPropertyPreservationFileFormat:
 
     def test_justification_preserved_in_reference(self):
         """User-set justification should be preserved in reference."""
-        with open(
-            "tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r"
-        ) as f:
+        with open("tests/reference_kicad_projects/property_preservation/test.kicad_sch", "r") as f:
             content = f.read()
 
         # Manufacturer has (justify right top) - user set this
