@@ -278,6 +278,55 @@ class SymbolLibraryCache:
         self._cache_misses += 1
         return self._load_symbol(lib_id)
 
+    def get_symbol_info(self, lib_id: str):
+        """
+        Get symbol metadata for library introspection.
+
+        Returns SymbolInfo with unit count, names, and other metadata.
+        Used by LLMs to query multi-unit component information before adding.
+
+        Args:
+            lib_id: Library identifier (e.g., "Amplifier_Operational:TL072")
+
+        Returns:
+            SymbolInfo object with symbol metadata
+
+        Raises:
+            LibraryError: If symbol not found
+
+        Example:
+            info = cache.get_symbol_info("Amplifier_Operational:TL072")
+            print(f"Units: {info.unit_count}")  # 3
+            print(f"Unit names: {info.unit_names}")  # {1: "A", 2: "B", 3: "C"}
+        """
+        from ..core.types import SymbolInfo
+        from ..core.exceptions import LibraryError
+
+        symbol_def = self.get_symbol(lib_id)
+
+        if not symbol_def:
+            library_name = lib_id.split(":")[0] if ":" in lib_id else "unknown"
+            raise LibraryError(
+                f"Symbol '{lib_id}' not found in KiCAD libraries. "
+                f"Please verify the library name '{library_name}' and symbol name are correct.",
+                field="lib_id",
+                value=lib_id,
+            )
+
+        return SymbolInfo(
+            lib_id=symbol_def.lib_id,
+            name=symbol_def.name,
+            library=symbol_def.library,
+            reference_prefix=symbol_def.reference_prefix,
+            description=symbol_def.description,
+            keywords=symbol_def.keywords,
+            datasheet=symbol_def.datasheet,
+            unit_count=symbol_def.units if symbol_def.units > 0 else 1,
+            unit_names=symbol_def.unit_names.copy(),
+            pins=symbol_def.pins.copy(),
+            power_symbol=symbol_def.power_symbol,
+        )
+
     def search_symbols(
         self, query: str, library: Optional[str] = None, limit: int = 50
     ) -> List[SymbolDefinition]:

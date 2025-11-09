@@ -285,6 +285,20 @@ class Schematic:
         return self._components
 
     @property
+    def library(self):
+        """
+        Access to symbol library cache for introspection.
+
+        Provides get_symbol_info() for querying multi-unit component metadata.
+
+        Example:
+            info = sch.library.get_symbol_info("Amplifier_Operational:TL072")
+            print(f"Units: {info.unit_count}")
+        """
+        from ..library.cache import get_symbol_cache
+        return get_symbol_cache()
+
+    @property
     def wires(self) -> WireCollection:
         """Collection of all wires in the schematic."""
         return self._wires

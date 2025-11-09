@@ -667,7 +667,7 @@ class ComponentCollection(BaseCollection[Component]):
             IndexSpec(
                 name="reference",
                 key_func=lambda c: c.reference,
-                unique=True,
+                unique=False,  # Allow duplicate references for multi-unit components
                 description="Reference designator index (R1, U2, etc.)",
             ),
         ]
@@ -681,12 +681,14 @@ class ComponentCollection(BaseCollection[Component]):
         position: Optional[Union[Point, Tuple[float, float]]] = None,
         footprint: Optional[str] = None,
         unit: int = 1,
+        add_all_units: bool = False,
+        unit_spacing: float = 25.4,
         rotation: float = 0.0,
         component_uuid: Optional[str] = None,
         grid_units: Optional[bool] = None,
         grid_size: Optional[float] = None,
         **properties,
-    ) -> Component:
+    ) -> Union[Component, "MultiUnitComponentGroup"]:
         """
         Add a new component to the schematic.
 
@@ -696,7 +698,9 @@ class ComponentCollection(BaseCollection[Component]):
             value: Component value
             position: Component position in mm (or grid units if grid_units=True)
             footprint: Component footprint
-            unit: Unit number for multi-unit components (1-based)
+            unit: Unit number for multi-unit components (1-based, default: 1)
+            add_all_units: If True, add all units with automatic layout (default: False)
+            unit_spacing: Horizontal spacing between units in mm (default: 25.4mm = 1 inch)
             rotation: Component rotation in degrees (0, 90, 180, 270)
             component_uuid: Specific UUID for component (auto-generated if None)
             grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
@@ -704,18 +708,25 @@ class ComponentCollection(BaseCollection[Component]):
             **properties: Additional component properties
 
         Returns:
-            Newly created Component
+            Component if adding single unit, MultiUnitComponentGroup if add_all_units=True
 
         Raises:
             ValidationError: If component data is invalid
             LibraryError: If symbol library not found
 
         Examples:
-            # Position in millimeters (default)
+            # Single unit (default behavior)
             sch.components.add('Device:R', 'R1', '10k', position=(25.4, 50.8))
 
-            # Position in grid units (cleaner for parametric design)
-            sch.components.add('Device:R', 'R1', '10k', position=(20, 40), grid_units=True)
+            # Multi-unit automatic (all units with one call)
+            group = sch.components.add('Amplifier_Operational:TL072', 'U1', 'TL072',
+                                       position=(100, 100), add_all_units=True)
+
+            # Multi-unit manual (add each unit individually)
+            sch.components.add('Amplifier_Operational:TL072', 'U1', 'TL072',
+                              position=(100, 100), unit=1)
+            sch.components.add('Amplifier_Operational:TL072', 'U1', 'TL072',
+                              position=(150, 100), unit=2)
         """
         # Validate lib_id
         validator = SchematicValidator()
@@ -730,10 +741,11 @@ class ComponentCollection(BaseCollection[Component]):
         if not validator.validate_reference(reference):
             raise ValidationError(f"Invalid reference format: {reference}")
 
-        # Check for duplicate reference
-        self._ensure_indexes_current()
-        if self._index_registry.has_key("reference", reference):
-            raise ValidationError(f"Reference {reference} already exists")
+        # Validate multi-unit add (allows duplicate reference with different units)
+        if not add_all_units:
+            # For manual unit addition, validate unit number and reference consistency
+            self._validate_multi_unit_add(lib_id, reference, unit)
+        # For add_all_units=True, validation happens in _add_multi_unit()
 
         # Use config defaults if not explicitly provided
         from ..core.config import config
@@ -764,6 +776,21 @@ class ComponentCollection(BaseCollection[Component]):
         logger.debug(
             f"Component {reference} position snapped to grid: ({position.x:.3f}, {position.y:.3f})"
         )
+
+        # Handle add_all_units=True: add all units with automatic layout
+        if add_all_units:
+            return self._add_multi_unit(
+                lib_id=lib_id,
+                reference=reference,
+                value=value,
+                position=position,
+                unit_spacing=unit_spacing,
+                rotation=rotation,
+                footprint=footprint,
+                **properties
+            )
+
+        # Continue with single unit addition below
 
         # Normalize and validate rotation
         rotation = rotation % 360
@@ -1728,6 +1755,142 @@ class ComponentCollection(BaseCollection[Component]):
             if new_value not in self._value_index:
                 self._value_index[new_value] = []
             self._value_index[new_value].append(component)
+
+    def _validate_multi_unit_add(self, lib_id: str, reference: str, unit: int):
+        """
+        Validate that adding a specific unit of a reference is allowed.
+
+        Checks for:
+        - Duplicate unit numbers for same reference
+        - Mismatched lib_id for same reference
+        - Invalid unit numbers for the symbol
+
+        Args:
+            lib_id: Library identifier
+            reference: Component reference
+            unit: Unit number to add
+
+        Raises:
+            ValidationError: If validation fails
+        """
+        # Check unit number is valid (>= 1)
+        if unit < 1:
+            raise ValidationError(f"Unit number must be >= 1, got {unit}")
+
+        # Get symbol definition to check valid unit range
+        # NOTE: Only enforce if symbol library reports multi-unit (units > 1)
+        # If library reports units=1, it may be a parsing limitation, so allow manual addition
+        symbol_cache = get_symbol_cache()
+        symbol_def = symbol_cache.get_symbol(lib_id)
+        if symbol_def and symbol_def.units > 1:
+            # Symbol library detected multi-unit - enforce range
+            if unit > symbol_def.units:
+                raise ValidationError(
+                    f"Unit {unit} invalid for symbol '{lib_id}' "
+                    f"(valid units: 1-{symbol_def.units})"
+                )
+        # If symbol_def.units == 1 or 0, allow any unit number (manual override)
+
+        # Check for existing components with same reference
+        existing_components = self.filter(reference_pattern=f"^{reference}$")
+
+        if existing_components:
+            # Verify lib_id matches
+            existing_lib_id = existing_components[0].lib_id
+            if existing_lib_id != lib_id:
+                raise ValidationError(
+                    f"Reference '{reference}' already exists with different lib_id "
+                    f"'{existing_lib_id}' (attempting to add '{lib_id}')"
+                )
+
+            # Check for duplicate unit
+            existing_units = [c._data.unit for c in existing_components]
+            if unit in existing_units:
+                raise ValidationError(
+                    f"Unit {unit} of reference '{reference}' already exists in schematic"
+                )
+
+        logger.debug(f"Validation passed for {reference} unit {unit}")
+
+    def _add_multi_unit(
+        self,
+        lib_id: str,
+        reference: str,
+        value: str,
+        position: Point,
+        unit_spacing: float,
+        rotation: float = 0.0,
+        footprint: Optional[str] = None,
+        **properties
+    ):
+        """
+        Add all units of a multi-unit component with automatic horizontal layout.
+
+        Args:
+            lib_id: Library identifier
+            reference: Component reference (shared by all units)
+            value: Component value
+            position: Starting position for unit 1
+            unit_spacing: Horizontal spacing between units (mm)
+            rotation: Rotation for all units
+            footprint: Footprint for all units
+            **properties: Properties for all units
+
+        Returns:
+            MultiUnitComponentGroup with all units
+
+        Raises:
+            LibraryError: If symbol not found
+        """
+        from ..core.multi_unit import MultiUnitComponentGroup
+        from ..core.exceptions import LibraryError
+
+        # Get symbol definition to determine unit count
+        symbol_cache = get_symbol_cache()
+        symbol_def = symbol_cache.get_symbol(lib_id)
+        if not symbol_def:
+            library_name = lib_id.split(":")[0] if ":" in lib_id else "unknown"
+            raise LibraryError(
+                f"Symbol '{lib_id}' not found in KiCAD libraries. "
+                f"Please verify the library name '{library_name}' and symbol name are correct.",
+                field="lib_id",
+                value=lib_id,
+            )
+
+        unit_count = symbol_def.units if symbol_def.units > 0 else 1
+
+        logger.info(
+            f"Adding {unit_count} units of {reference} ({lib_id}) "
+            f"with {unit_spacing}mm spacing"
+        )
+
+        # Add each unit
+        components = []
+        for unit_num in range(1, unit_count + 1):
+            # Calculate position for this unit (horizontal layout)
+            unit_x = position.x + (unit_num - 1) * unit_spacing
+            unit_position = Point(unit_x, position.y)
+
+            # Add unit using existing add() method with unit parameter
+            comp = self.add(
+                lib_id=lib_id,
+                reference=reference,
+                value=value,
+                position=unit_position,
+                unit=unit_num,
+                rotation=rotation,
+                footprint=footprint,
+                add_all_units=False,  # Prevent recursion
+                **properties
+            )
+
+            components.append(comp)
+            logger.debug(f"Added {reference} unit {unit_num} at {unit_position}")
+
+        # Return MultiUnitComponentGroup
+        group = MultiUnitComponentGroup(reference, lib_id, components)
+        logger.info(f"Created MultiUnitComponentGroup for {reference} with {len(group)} units")
+        return group
 
     def _generate_reference(self, lib_id: str) -> str:
         """
