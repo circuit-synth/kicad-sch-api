@@ -69,7 +69,6 @@ class WireParser(BaseElementParser):
             logger.warning(f"Wire has insufficient points: {len(wire_data['points'])}")
             return None
 
-
     def _parse_junction(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a junction definition."""
         junction_data = {
@@ -110,7 +109,6 @@ class WireParser(BaseElementParser):
 
         return junction_data
 
-
     def _parse_no_connect(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a no_connect symbol."""
         # Format: (no_connect (at x y) (uuid ...))
@@ -129,7 +127,6 @@ class WireParser(BaseElementParser):
                 no_connect_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
 
         return no_connect_data
-
 
     def _wire_to_sexp(self, wire_data: Dict[str, Any]) -> List[Any]:
         """Convert wire to S-expression."""
@@ -176,7 +173,6 @@ class WireParser(BaseElementParser):
 
         return sexp
 
-
     def _junction_to_sexp(self, junction_data: Dict[str, Any]) -> List[Any]:
         """Convert junction to S-expression."""
         sexp = [sexpdata.Symbol("junction")]
@@ -216,7 +212,6 @@ class WireParser(BaseElementParser):
 
         return sexp
 
-
     def _no_connect_to_sexp(self, no_connect_data: Dict[str, Any]) -> List[Any]:
         """Convert no_connect to S-expression."""
         sexp = [sexpdata.Symbol("no_connect")]
@@ -238,5 +233,3 @@ class WireParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), no_connect_data["uuid"]])
 
         return sexp
-
-

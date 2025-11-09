@@ -6,8 +6,10 @@ Tests that Reference and Value text fields are positioned correctly
 at all rotation angles (0°, 90°, 180°, 270°).
 """
 
-import pytest
 import math
+
+import pytest
+
 from kicad_sch_api.core.config import config
 
 
@@ -148,7 +150,9 @@ class TestRotationAwarePositioning:
             positions.append((round(x, 2), round(y, 2)))
 
         # All 4 positions should be unique
-        assert len(set(positions)) == 4, f"Positions should be unique for each rotation: {positions}"
+        assert (
+            len(set(positions)) == 4
+        ), f"Positions should be unique for each rotation: {positions}"
 
     def test_footprint_position_unaffected_by_rotation(self, component_pos):
         """Test that Footprint property positioning is not affected by component rotation.

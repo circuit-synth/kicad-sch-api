@@ -40,7 +40,9 @@ class PinTypeValidator(BaseValidator):
     Checks all nets for pin type compatibility using the pin conflict matrix.
     """
 
-    def __init__(self, schematic: "Schematic", pin_matrix: Optional[PinConflictMatrix] = None) -> None:
+    def __init__(
+        self, schematic: "Schematic", pin_matrix: Optional[PinConflictMatrix] = None
+    ) -> None:
         """Initialize pin type validator.
 
         Args:
@@ -79,7 +81,9 @@ class PinTypeValidator(BaseValidator):
         # This will be implemented when we have full net connectivity analysis
         return {}
 
-    def _check_net_pins(self, net_name: str, pins: List[Tuple[str, str, str]]) -> List[ERCViolation]:
+    def _check_net_pins(
+        self, net_name: str, pins: List[Tuple[str, str, str]]
+    ) -> List[ERCViolation]:
         """Check all pin pairs on a net for conflicts.
 
         Args:
@@ -93,31 +97,35 @@ class PinTypeValidator(BaseValidator):
 
         # Check all pairs of pins
         for i, (ref1, pin1_num, pin1_type) in enumerate(pins):
-            for ref2, pin2_num, pin2_type in pins[i + 1:]:
+            for ref2, pin2_num, pin2_type in pins[i + 1 :]:
                 severity = self.pin_matrix.check_connection(pin1_type, pin2_type)
 
                 if severity == PinSeverity.ERROR:
-                    violations.append(ERCViolation(
-                        violation_type="pin_conflict",
-                        severity="error",
-                        message=f"Pin conflict: {pin1_type} ({ref1}) connected to {pin2_type} ({ref2})",
-                        component_refs=[ref1, ref2],
-                        net_name=net_name,
-                        pin_numbers=[pin1_num, pin2_num],
-                        error_code="E001",
-                        suggested_fix=f"Remove one output or add buffer between {ref1} and {ref2}"
-                    ))
+                    violations.append(
+                        ERCViolation(
+                            violation_type="pin_conflict",
+                            severity="error",
+                            message=f"Pin conflict: {pin1_type} ({ref1}) connected to {pin2_type} ({ref2})",
+                            component_refs=[ref1, ref2],
+                            net_name=net_name,
+                            pin_numbers=[pin1_num, pin2_num],
+                            error_code="E001",
+                            suggested_fix=f"Remove one output or add buffer between {ref1} and {ref2}",
+                        )
+                    )
                 elif severity == PinSeverity.WARNING:
-                    violations.append(ERCViolation(
-                        violation_type="pin_conflict",
-                        severity="warning",
-                        message=f"Pin warning: {pin1_type} ({ref1}) connected to {pin2_type} ({ref2})",
-                        component_refs=[ref1, ref2],
-                        net_name=net_name,
-                        pin_numbers=[pin1_num, pin2_num],
-                        error_code="W005",
-                        suggested_fix="Verify this connection is intentional"
-                    ))
+                    violations.append(
+                        ERCViolation(
+                            violation_type="pin_conflict",
+                            severity="warning",
+                            message=f"Pin warning: {pin1_type} ({ref1}) connected to {pin2_type} ({ref2})",
+                            component_refs=[ref1, ref2],
+                            net_name=net_name,
+                            pin_numbers=[pin1_num, pin2_num],
+                            error_code="W005",
+                            suggested_fix="Verify this connection is intentional",
+                        )
+                    )
 
         return violations
 
@@ -156,15 +164,17 @@ class ConnectivityValidator(BaseValidator):
             end_connections = self._count_connections_at_point(wire.end)
 
             if start_connections < 2 or end_connections < 2:
-                violations.append(ERCViolation(
-                    violation_type="dangling_wire",
-                    severity="warning",
-                    message=f"Wire has unconnected endpoint at ({wire.start.x}, {wire.start.y})",
-                    component_refs=[],
-                    location=wire.start if start_connections < 2 else wire.end,
-                    error_code="W002",
-                    suggested_fix="Connect wire to component pin or remove if unused"
-                ))
+                violations.append(
+                    ERCViolation(
+                        violation_type="dangling_wire",
+                        severity="warning",
+                        message=f"Wire has unconnected endpoint at ({wire.start.x}, {wire.start.y})",
+                        component_refs=[],
+                        location=wire.start if start_connections < 2 else wire.end,
+                        error_code="W002",
+                        suggested_fix="Connect wire to component pin or remove if unused",
+                    )
+                )
 
         return violations
 
@@ -217,7 +227,7 @@ class ComponentValidator(BaseValidator):
     """
 
     # Valid reference format: Letter(s) followed by number(s)
-    REFERENCE_PATTERN = re.compile(r'^[A-Z]+[0-9]+$', re.IGNORECASE)
+    REFERENCE_PATTERN = re.compile(r"^[A-Z]+[0-9]+$", re.IGNORECASE)
 
     def validate(self) -> List[ERCViolation]:
         """Validate components.
@@ -252,14 +262,16 @@ class ComponentValidator(BaseValidator):
         # Find duplicates
         for ref, components in ref_to_components.items():
             if len(components) > 1:
-                violations.append(ERCViolation(
-                    violation_type="duplicate_reference",
-                    severity="error",
-                    message=f"Duplicate reference designator: {ref}",
-                    component_refs=[ref] * len(components),
-                    error_code="E004",
-                    suggested_fix=f"Rename duplicate components (e.g., {ref}, {ref}A, {ref}B)"
-                ))
+                violations.append(
+                    ERCViolation(
+                        violation_type="duplicate_reference",
+                        severity="error",
+                        message=f"Duplicate reference designator: {ref}",
+                        component_refs=[ref] * len(components),
+                        error_code="E004",
+                        suggested_fix=f"Rename duplicate components (e.g., {ref}, {ref}A, {ref}B)",
+                    )
+                )
 
         return violations
 
@@ -274,36 +286,42 @@ class ComponentValidator(BaseValidator):
         for component in self.schematic.components:
             # Check for missing value
             if not component.value or component.value.strip() == "":
-                violations.append(ERCViolation(
-                    violation_type="missing_value",
-                    severity="warning",
-                    message=f"Component {component.reference} has no value",
-                    component_refs=[component.reference],
-                    error_code="W008",
-                    suggested_fix=f"Add value to {component.reference}"
-                ))
+                violations.append(
+                    ERCViolation(
+                        violation_type="missing_value",
+                        severity="warning",
+                        message=f"Component {component.reference} has no value",
+                        component_refs=[component.reference],
+                        error_code="W008",
+                        suggested_fix=f"Add value to {component.reference}",
+                    )
+                )
 
             # Check for missing footprint
             if not component.footprint or component.footprint.strip() == "":
-                violations.append(ERCViolation(
-                    violation_type="missing_footprint",
-                    severity="warning",
-                    message=f"Component {component.reference} has no footprint",
-                    component_refs=[component.reference],
-                    error_code="W007",
-                    suggested_fix=f"Assign footprint to {component.reference}"
-                ))
+                violations.append(
+                    ERCViolation(
+                        violation_type="missing_footprint",
+                        severity="warning",
+                        message=f"Component {component.reference} has no footprint",
+                        component_refs=[component.reference],
+                        error_code="W007",
+                        suggested_fix=f"Assign footprint to {component.reference}",
+                    )
+                )
 
             # Check reference format
             if not self.REFERENCE_PATTERN.match(component.reference):
-                violations.append(ERCViolation(
-                    violation_type="invalid_reference",
-                    severity="error",
-                    message=f"Invalid reference format: {component.reference}",
-                    component_refs=[component.reference],
-                    error_code="E005",
-                    suggested_fix="Use format like R1, U1, C1 (letter + number)"
-                ))
+                violations.append(
+                    ERCViolation(
+                        violation_type="invalid_reference",
+                        severity="error",
+                        message=f"Invalid reference format: {component.reference}",
+                        component_refs=[component.reference],
+                        error_code="E005",
+                        suggested_fix="Use format like R1, U1, C1 (letter + number)",
+                    )
+                )
 
         return violations
 
@@ -316,8 +334,18 @@ class PowerValidator(BaseValidator):
 
     # Common power net names
     POWER_NET_NAMES = {
-        "VCC", "VDD", "V+", "+5V", "+3V3", "+12V", "+24V",
-        "GND", "GNDA", "GNDD", "VSS", "V-",
+        "VCC",
+        "VDD",
+        "V+",
+        "+5V",
+        "+3V3",
+        "+12V",
+        "+24V",
+        "GND",
+        "GNDA",
+        "GNDD",
+        "VSS",
+        "V-",
     }
 
     def validate(self) -> List[ERCViolation]:
@@ -385,7 +413,7 @@ class PowerValidator(BaseValidator):
             return True
 
         # Check for voltage patterns (+5V, +3.3V, etc.)
-        if re.match(r'^\+?\d+\.?\d*V$', net_upper):
+        if re.match(r"^\+?\d+\.?\d*V$", net_upper):
             return True
 
         return False

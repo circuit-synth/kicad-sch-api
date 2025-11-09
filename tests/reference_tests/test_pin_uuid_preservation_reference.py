@@ -1,10 +1,12 @@
 """Reference schematic validation for pin UUID preservation."""
 
-import pytest
-import kicad_sch_api as ksa
-import tempfile
 import os
 import re
+import tempfile
+
+import pytest
+
+import kicad_sch_api as ksa
 
 
 class TestPinUUIDReferenceSchematic:
@@ -29,7 +31,7 @@ class TestPinUUIDReferenceSchematic:
         resistor = components[0]
 
         # Verify pin UUIDs were extracted
-        assert hasattr(resistor, 'pin_uuids'), "Component should have pin_uuids field"
+        assert hasattr(resistor, "pin_uuids"), "Component should have pin_uuids field"
         assert len(resistor.pin_uuids) == 2, "Resistor should have 2 pin UUIDs"
         assert "1" in resistor.pin_uuids, "Should have UUID for pin 1"
         assert "2" in resistor.pin_uuids, "Should have UUID for pin 2"
@@ -47,9 +49,9 @@ class TestPinUUIDReferenceSchematic:
             sch.save(temp_path)
 
             # Compare pin UUID sections
-            with open(ref_path, 'r') as f:
+            with open(ref_path, "r") as f:
                 original = f.read()
-            with open(temp_path, 'r') as f:
+            with open(temp_path, "r") as f:
                 output = f.read()
 
             # Extract pin sections for comparison
@@ -57,17 +59,19 @@ class TestPinUUIDReferenceSchematic:
             output_pins = self._extract_pin_sections(output)
 
             # Should have same pin entries
-            assert len(original_pins) == len(output_pins), \
-                f"Pin count mismatch in {ref_path}"
+            assert len(original_pins) == len(output_pins), f"Pin count mismatch in {ref_path}"
 
             # Compare each pin entry
             for i, (orig, out) in enumerate(zip(original_pins, output_pins)):
-                assert orig == out, \
-                    f"Pin {i+1} entry mismatch in {ref_path}:\nOriginal: {orig}\nOutput: {out}"
+                assert (
+                    orig == out
+                ), f"Pin {i+1} entry mismatch in {ref_path}:\nOriginal: {orig}\nOutput: {out}"
 
     def test_rotated_resistor_0deg_exact_uuids(self):
         """Validates: Exact UUIDs for rotated_resistor_0deg reference"""
-        ref_path = "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        ref_path = (
+            "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        )
         sch = ksa.Schematic.load(ref_path)
 
         resistor = list(sch.components)[0]
@@ -78,12 +82,15 @@ class TestPinUUIDReferenceSchematic:
             "2": "ff5e718a-93af-455d-84a2-eecf78f3f816",
         }
 
-        assert resistor.pin_uuids == expected_uuids, \
-            f"Pin UUIDs should match reference exactly: expected {expected_uuids}, got {resistor.pin_uuids}"
+        assert (
+            resistor.pin_uuids == expected_uuids
+        ), f"Pin UUIDs should match reference exactly: expected {expected_uuids}, got {resistor.pin_uuids}"
 
     def test_rotated_resistor_90deg_exact_uuids(self):
         """Validates: Exact UUIDs for rotated_resistor_90deg reference"""
-        ref_path = "tests/reference_kicad_projects/rotated_resistor_90deg/rotated_resistor_90deg.kicad_sch"
+        ref_path = (
+            "tests/reference_kicad_projects/rotated_resistor_90deg/rotated_resistor_90deg.kicad_sch"
+        )
         sch = ksa.Schematic.load(ref_path)
 
         resistor = list(sch.components)[0]
@@ -94,13 +101,14 @@ class TestPinUUIDReferenceSchematic:
             "2": "ff5e718a-93af-455d-84a2-eecf78f3f816",
         }
 
-        assert resistor.pin_uuids == expected_uuids, \
-            "Pin UUIDs should match reference exactly"
+        assert resistor.pin_uuids == expected_uuids, "Pin UUIDs should match reference exactly"
 
     @pytest.mark.format
     def test_roundtrip_byte_perfect_preservation(self):
         """Validates: Byte-perfect preservation on round-trip"""
-        ref_path = "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        ref_path = (
+            "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        )
 
         # Load
         sch = ksa.Schematic.load(ref_path)
@@ -111,9 +119,9 @@ class TestPinUUIDReferenceSchematic:
             sch.save(temp_path)
 
             # Compare files
-            with open(ref_path, 'r') as f:
+            with open(ref_path, "r") as f:
                 original = f.read()
-            with open(temp_path, 'r') as f:
+            with open(temp_path, "r") as f:
                 output = f.read()
 
             # For pin UUID preservation, we specifically check pin sections
@@ -121,12 +129,15 @@ class TestPinUUIDReferenceSchematic:
             original_pins = self._extract_pin_sections(original)
             output_pins = self._extract_pin_sections(output)
 
-            assert original_pins == output_pins, \
-                "Pin sections should be byte-perfect after round-trip"
+            assert (
+                original_pins == output_pins
+            ), "Pin sections should be byte-perfect after round-trip"
 
     def test_multiple_roundtrips_stable_uuids(self):
         """Validates: Pin UUIDs remain stable across multiple round-trips"""
-        ref_path = "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        ref_path = (
+            "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        )
 
         # First round-trip
         sch1 = ksa.Schematic.load(ref_path)
@@ -150,8 +161,9 @@ class TestPinUUIDReferenceSchematic:
             resistor3 = list(sch3.components)[0]
 
             # All should have identical pin UUIDs
-            assert resistor1.pin_uuids == resistor2.pin_uuids == resistor3.pin_uuids, \
-                "Pin UUIDs should remain stable across multiple round-trips"
+            assert (
+                resistor1.pin_uuids == resistor2.pin_uuids == resistor3.pin_uuids
+            ), "Pin UUIDs should remain stable across multiple round-trips"
 
     def _extract_pin_sections(self, content: str) -> list:
         """Extract pin sections from schematic content for comparison."""
@@ -165,9 +177,11 @@ class TestPinUUIDFormatValidation:
 
     def test_reference_pin_uuids_are_valid_format(self):
         """Validates: Reference schematics have valid UUID format"""
-        ref_path = "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        ref_path = (
+            "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        )
 
-        with open(ref_path, 'r') as f:
+        with open(ref_path, "r") as f:
             content = f.read()
 
         # Extract all pin UUID values
@@ -178,6 +192,7 @@ class TestPinUUIDFormatValidation:
 
         # Validate each UUID format
         import uuid
+
         for pin_uuid in pin_uuids:
             try:
                 uuid.UUID(pin_uuid)
@@ -186,12 +201,15 @@ class TestPinUUIDFormatValidation:
 
     def test_pin_uuids_unique_within_component(self):
         """Validates: Each pin has unique UUID within component"""
-        ref_path = "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        ref_path = (
+            "tests/reference_kicad_projects/rotated_resistor_0deg/rotated_resistor_0deg.kicad_sch"
+        )
         sch = ksa.Schematic.load(ref_path)
 
         resistor = list(sch.components)[0]
 
         # All pin UUIDs should be unique
         uuid_values = list(resistor.pin_uuids.values())
-        assert len(uuid_values) == len(set(uuid_values)), \
-            "Pin UUIDs should be unique within component"
+        assert len(uuid_values) == len(
+            set(uuid_values)
+        ), "Pin UUIDs should be unique within component"

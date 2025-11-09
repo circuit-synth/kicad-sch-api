@@ -11,8 +11,8 @@ This module provides a unified collection framework with:
 
 from .base import (
     BaseCollection,
-    IndexSpec,
     IndexRegistry,
+    IndexSpec,
     PropertyDict,
     ValidationLevel,
 )

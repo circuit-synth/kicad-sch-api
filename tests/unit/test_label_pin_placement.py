@@ -6,6 +6,7 @@ and rotates labels based on pin location and orientation.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 

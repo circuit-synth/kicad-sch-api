@@ -8,11 +8,12 @@ positions, electrical types, and error handling.
 
 import logging
 import math
+
 import pytest
+
 import kicad_sch_api as ksa
 from kicad_sch_api import PinInfo
 from kicad_sch_api.core.exceptions import LibraryError
-
 
 logger = logging.getLogger(__name__)
 

@@ -12,6 +12,7 @@ Related:
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -470,4 +471,6 @@ class TestFormatPreservationAcrossAllReferences:
 
         # Files should be byte-identical (or semantically equivalent)
         # Note: Some whitespace/formatting differences may be acceptable
-        assert filecmp.cmp(ref_path, str(temp_file), shallow=False), f"Round-trip failed for {ref_file}"
+        assert filecmp.cmp(
+            ref_path, str(temp_file), shallow=False
+        ), f"Round-trip failed for {ref_file}"

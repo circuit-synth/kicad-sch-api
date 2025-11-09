@@ -36,9 +36,7 @@ class TestRoutingWithRealComponents:
         r2_pin1 = next(p for p in r2_pins if p.number == "1")
 
         result = create_orthogonal_routing(
-            r1_pin2.position,
-            r2_pin1.position,
-            corner_direction=CornerDirection.AUTO
+            r1_pin2.position, r2_pin1.position, corner_direction=CornerDirection.AUTO
         )
 
         # Should create L-shaped routing
@@ -65,10 +63,7 @@ class TestRoutingWithRealComponents:
         r1_pin2 = next(p for p in r1_pins if p.number == "2")
         r2_pin1 = next(p for p in r2_pins if p.number == "1")
 
-        result = create_orthogonal_routing(
-            r1_pin2.position,
-            r2_pin1.position
-        )
+        result = create_orthogonal_routing(r1_pin2.position, r2_pin1.position)
 
         # Should have valid routing
         validate_routing_result(result)
@@ -128,9 +123,7 @@ class TestRoutingWithWireAddition:
 
         # Create routing
         result = create_orthogonal_routing(
-            r1_pin2.position,
-            r2_pin1.position,
-            corner_direction=CornerDirection.HORIZONTAL_FIRST
+            r1_pin2.position, r2_pin1.position, corner_direction=CornerDirection.HORIZONTAL_FIRST
         )
 
         # Add wires to schematic (returns UUIDs)
@@ -163,10 +156,7 @@ class TestRoutingWithWireAddition:
         r2_pin1 = next(p for p in r2_pins if p.number == "1")
 
         # Create L-shaped routing
-        result = create_orthogonal_routing(
-            r1_pin2.position,
-            r2_pin1.position
-        )
+        result = create_orthogonal_routing(r1_pin2.position, r2_pin1.position)
 
         # Add wires
         wire_uuids = []
@@ -196,10 +186,7 @@ class TestRoutingPerformance:
         resistors = []
         for i in range(num_resistors):
             r = sch.components.add(
-                "Device:R",
-                f"R{i+1}",
-                "10k",
-                position=(100.0 + i * 25.0, 100.0 + (i % 2) * 25.0)
+                "Device:R", f"R{i+1}", "10k", position=(100.0 + i * 25.0, 100.0 + (i % 2) * 25.0)
             )
             resistors.append(r)
 
@@ -304,10 +291,10 @@ class TestRoutingSaveLoad:
         for orig_seg in original_segments:
             # Check if this segment exists in loaded wires
             found = any(
-                abs(ls[0] - orig_seg[0]) < 0.01 and
-                abs(ls[1] - orig_seg[1]) < 0.01 and
-                abs(ls[2] - orig_seg[2]) < 0.01 and
-                abs(ls[3] - orig_seg[3]) < 0.01
+                abs(ls[0] - orig_seg[0]) < 0.01
+                and abs(ls[1] - orig_seg[1]) < 0.01
+                and abs(ls[2] - orig_seg[2]) < 0.01
+                and abs(ls[3] - orig_seg[3]) < 0.01
                 for ls in loaded_segments
             )
             assert found, f"Segment {orig_seg} not found in loaded schematic"
@@ -332,12 +319,10 @@ class TestRoutingDirectionModes:
         for direction in [
             CornerDirection.AUTO,
             CornerDirection.HORIZONTAL_FIRST,
-            CornerDirection.VERTICAL_FIRST
+            CornerDirection.VERTICAL_FIRST,
         ]:
             result = create_orthogonal_routing(
-                r1_pin2.position,
-                r2_pin1.position,
-                corner_direction=direction
+                r1_pin2.position, r2_pin1.position, corner_direction=direction
             )
 
             # All should produce valid routing
@@ -364,15 +349,11 @@ class TestRoutingDirectionModes:
 
         # Get routing with different directions
         result_h_first = create_orthogonal_routing(
-            r1_pin2.position,
-            r2_pin1.position,
-            corner_direction=CornerDirection.HORIZONTAL_FIRST
+            r1_pin2.position, r2_pin1.position, corner_direction=CornerDirection.HORIZONTAL_FIRST
         )
 
         result_v_first = create_orthogonal_routing(
-            r1_pin2.position,
-            r2_pin1.position,
-            corner_direction=CornerDirection.VERTICAL_FIRST
+            r1_pin2.position, r2_pin1.position, corner_direction=CornerDirection.VERTICAL_FIRST
         )
 
         # If not direct routing, corners should be different

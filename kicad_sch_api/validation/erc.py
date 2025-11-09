@@ -38,11 +38,7 @@ class ElectricalRulesChecker:
         ...         print(f"ERROR: {error.message}")
     """
 
-    def __init__(
-        self,
-        schematic: "Schematic",
-        config: Optional[ERCConfig] = None
-    ) -> None:
+    def __init__(self, schematic: "Schematic", config: Optional[ERCConfig] = None) -> None:
         """Initialize ERC checker.
 
         Args:

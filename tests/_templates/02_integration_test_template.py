@@ -54,8 +54,7 @@ class TestPinConnectionWorkflow:
         """
         # Create temporary file
         with tempfile.NamedTemporaryFile(
-            suffix=".kicad_sch",
-            delete=False  # We'll delete manually in cleanup
+            suffix=".kicad_sch", delete=False  # We'll delete manually in cleanup
         ) as f:
             temp_path = f.name
 
@@ -84,18 +83,12 @@ class TestPinConnectionWorkflow:
         logger.info("Created schematic")
 
         r1 = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0)
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0)
         )
         logger.info(f"Added R1: {r1.position}")
 
         r2 = sch.components.add(
-            lib_id="Device:R",
-            reference="R2",
-            value="20k",
-            position=(150.0, 100.0)  # Next to R1
+            lib_id="Device:R", reference="R2", value="20k", position=(150.0, 100.0)  # Next to R1
         )
         logger.info(f"Added R2: {r2.position}")
 
@@ -121,12 +114,8 @@ class TestPinConnectionWorkflow:
         assert r1.position != r2.position, "Components should be at different positions"
 
         # Assert: Pin spacing should be consistent
-        r1_pin_distance = math.sqrt(
-            (r1_pin2.x - r1_pin1.x)**2 + (r1_pin2.y - r1_pin1.y)**2
-        )
-        r2_pin_distance = math.sqrt(
-            (r2_pin2.x - r2_pin1.x)**2 + (r2_pin2.y - r2_pin1.y)**2
-        )
+        r1_pin_distance = math.sqrt((r1_pin2.x - r1_pin1.x) ** 2 + (r1_pin2.y - r1_pin1.y) ** 2)
+        r2_pin_distance = math.sqrt((r2_pin2.x - r2_pin1.x) ** 2 + (r2_pin2.y - r2_pin1.y) ** 2)
         logger.debug(f"R1 pin distance: {r1_pin_distance:.2f}mm")
         logger.debug(f"R2 pin distance: {r2_pin_distance:.2f}mm")
 
@@ -149,7 +138,7 @@ class TestPinConnectionWorkflow:
             reference="R1",
             value="10k",
             position=(100.0, 100.0),
-            rotation=90  # Include rotation for complexity
+            rotation=90,  # Include rotation for complexity
         )
         logger.info(f"Created R1 at {r1.position} with {r1.rotation}° rotation")
 
@@ -212,39 +201,25 @@ class TestPinConnectionWorkflow:
 
         # Add VCC power supply (top)
         vcc = sch.components.add(
-            lib_id="power:VCC",
-            reference="#PWR01",
-            value="VCC",
-            position=(100.0, 50.0)
+            lib_id="power:VCC", reference="#PWR01", value="VCC", position=(100.0, 50.0)
         )
         logger.info(f"Added VCC at {vcc.position}")
 
         # Add resistor 1 (vertical orientation, 0°)
         r1 = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0),
-            rotation=0
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0), rotation=0
         )
         logger.info(f"Added R1 at {r1.position}, rotation {r1.rotation}°")
 
         # Add resistor 2 (vertical orientation, 0°)
         r2 = sch.components.add(
-            lib_id="Device:R",
-            reference="R2",
-            value="10k",
-            position=(100.0, 150.0),
-            rotation=0
+            lib_id="Device:R", reference="R2", value="10k", position=(100.0, 150.0), rotation=0
         )
         logger.info(f"Added R2 at {r2.position}, rotation {r2.rotation}°")
 
         # Add GND ground symbol (bottom)
         gnd = sch.components.add(
-            lib_id="power:GND",
-            reference="#PWR02",
-            value="GND",
-            position=(100.0, 200.0)
+            lib_id="power:GND", reference="#PWR02", value="GND", position=(100.0, 200.0)
         )
         logger.info(f"Added GND at {gnd.position}")
 
@@ -271,15 +246,14 @@ class TestPinConnectionWorkflow:
         assert r2_pin1.y < r2_pin2.y, "R2 pin1 should be above pin2"
 
         # Assert: R1 pin2 and R2 pin1 are close (they connect)
-        connection_distance = math.sqrt(
-            (r2_pin1.x - r1_pin2.x)**2 + (r2_pin1.y - r1_pin2.y)**2
-        )
+        connection_distance = math.sqrt((r2_pin1.x - r1_pin2.x) ** 2 + (r2_pin1.y - r1_pin2.y) ** 2)
         logger.info(f"Distance between R1 pin2 and R2 pin1: {connection_distance:.2f}mm")
 
         # Distance should be related to component spacing
         expected_spacing = 50.0  # Components are 50mm apart
-        assert 40 < connection_distance < 60, \
-            f"Connection distance should be near {expected_spacing}mm, got {connection_distance:.2f}mm"
+        assert (
+            40 < connection_distance < 60
+        ), f"Connection distance should be near {expected_spacing}mm, got {connection_distance:.2f}mm"
 
     def test_component_rotation_affects_pin_orientation(self):
         """
@@ -299,7 +273,7 @@ class TestPinConnectionWorkflow:
                 reference="R1",
                 value="10k",
                 position=(100.0, 100.0),
-                rotation=rotation
+                rotation=rotation,
             )
 
             pin1 = comp.get_pin_position("1")
@@ -312,12 +286,13 @@ class TestPinConnectionWorkflow:
             logger.debug(f"Rotation {rotation}°: pin1={pin1}, pin2={pin2}")
 
             # Assert: Distance between pins remains constant
-            distance = math.sqrt((pin2.x - pin1.x)**2 + (pin2.y - pin1.y)**2)
+            distance = math.sqrt((pin2.x - pin1.x) ** 2 + (pin2.y - pin1.y) ** 2)
             logger.debug(f"Distance at {rotation}°: {distance:.2f}mm")
 
             # Resistor pins should always be ~3.81mm apart (standard KiCAD spacing)
-            assert 3.0 < distance < 4.0, \
-                f"Pin distance should be ~3.81mm, got {distance:.2f}mm at {rotation}°"
+            assert (
+                3.0 < distance < 4.0
+            ), f"Pin distance should be ~3.81mm, got {distance:.2f}mm at {rotation}°"
 
 
 class TestPinConnectionErrorHandling:
@@ -343,7 +318,7 @@ class TestPinConnectionErrorHandling:
                 reference="R1",
                 value="10k",
                 position=(100.0, 100.0),
-                rotation=45  # Invalid: not 0, 90, 180, or 270
+                rotation=45,  # Invalid: not 0, 90, 180, or 270
             )
             logger.info(f"Component added with rotation: {comp.rotation}")
             # If no error, rotation might be snapped to nearest valid value
@@ -369,10 +344,7 @@ class TestPinConnectionErrorHandling:
 
             sch = ksa.create_schematic(f"{description} Test")
             comp = sch.components.add(
-                lib_id="Device:R",
-                reference="R1",
-                value="10k",
-                position=position
+                lib_id="Device:R", reference="R1", value="10k", position=position
             )
 
             pin1 = comp.get_pin_position("1")
@@ -402,7 +374,7 @@ class TestPinConnectionErrorHandling:
                 lib_id="Device:R",
                 reference=f"R{i+1}",
                 value="10k",
-                position=(100.0 + i * 10.0, 100.0)  # Spread horizontally
+                position=(100.0 + i * 10.0, 100.0),  # Spread horizontally
             )
             components.append(comp)
 

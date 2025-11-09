@@ -31,7 +31,12 @@ class GraphicsParser(BaseElementParser):
     def _parse_polyline(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a polyline graphical element."""
         # Format: (polyline (pts (xy x1 y1) (xy x2 y2) ...) (stroke ...) (uuid ...))
-        polyline_data = {"points": [], "stroke_width": config.defaults.stroke_width, "stroke_type": config.defaults.stroke_type, "uuid": None}
+        polyline_data = {
+            "points": [],
+            "stroke_width": config.defaults.stroke_width,
+            "stroke_type": config.defaults.stroke_type,
+            "uuid": None,
+        }
 
         for elem in item[1:]:
             if not isinstance(elem, list):
@@ -55,7 +60,6 @@ class GraphicsParser(BaseElementParser):
                 polyline_data["uuid"] = str(elem[1]) if len(elem) > 1 else None
 
         return polyline_data if polyline_data["points"] else None
-
 
     def _parse_arc(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse an arc graphical element."""
@@ -99,7 +103,6 @@ class GraphicsParser(BaseElementParser):
 
         return arc_data
 
-
     def _parse_circle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a circle graphical element."""
         # Format: (circle (center x y) (radius r) (stroke ...) (fill ...) (uuid ...))
@@ -141,7 +144,6 @@ class GraphicsParser(BaseElementParser):
 
         return circle_data
 
-
     def _parse_bezier(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a bezier curve graphical element."""
         # Format: (bezier (pts (xy x1 y1) (xy x2 y2) ...) (stroke ...) (fill ...) (uuid ...))
@@ -182,7 +184,6 @@ class GraphicsParser(BaseElementParser):
 
         return bezier_data if bezier_data["points"] else None
 
-
     def _parse_rectangle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a rectangle graphical element."""
         rectangle = {}
@@ -216,7 +217,6 @@ class GraphicsParser(BaseElementParser):
 
         return rectangle if rectangle else None
 
-
     def _parse_image(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse an image element."""
         # Format: (image (at x y) (uuid "...") (data "base64..."))
@@ -242,7 +242,6 @@ class GraphicsParser(BaseElementParser):
                 image["uuid"] = str(elem[1]).strip('"')
 
         return image if image.get("uuid") and image.get("data") else None
-
 
     def _polyline_to_sexp(self, polyline_data: Dict[str, Any]) -> List[Any]:
         """Convert polyline to S-expression."""
@@ -275,7 +274,6 @@ class GraphicsParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), polyline_data["uuid"]])
 
         return sexp
-
 
     def _arc_to_sexp(self, arc_data: Dict[str, Any]) -> List[Any]:
         """Convert arc to S-expression."""
@@ -311,7 +309,6 @@ class GraphicsParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), arc_data["uuid"]])
 
         return sexp
-
 
     def _circle_to_sexp(self, circle_data: Dict[str, Any]) -> List[Any]:
         """Convert circle to S-expression."""
@@ -351,7 +348,6 @@ class GraphicsParser(BaseElementParser):
 
         return sexp
 
-
     def _bezier_to_sexp(self, bezier_data: Dict[str, Any]) -> List[Any]:
         """Convert bezier curve to S-expression."""
         sexp = [sexpdata.Symbol("bezier")]
@@ -389,7 +385,6 @@ class GraphicsParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), bezier_data["uuid"]])
 
         return sexp
-
 
     def _rectangle_to_sexp(self, rectangle_data: Dict[str, Any]) -> List[Any]:
         """Convert rectangle element to S-expression."""
@@ -433,7 +428,6 @@ class GraphicsParser(BaseElementParser):
 
         return sexp
 
-
     def _image_to_sexp(self, image_data: Dict[str, Any]) -> List[Any]:
         """Convert image element to S-expression."""
         sexp = [sexpdata.Symbol("image")]
@@ -465,7 +459,6 @@ class GraphicsParser(BaseElementParser):
             sexp.append(data_sexp)
 
         return sexp
-
 
     def _graphic_to_sexp(self, graphic_data: Dict[str, Any]) -> List[Any]:
         """Convert graphics (rectangles, etc.) to S-expression."""
@@ -560,5 +553,3 @@ class GraphicsParser(BaseElementParser):
             sexp.append([sexpdata.Symbol("uuid"), sexpdata.Symbol(uuid_clean)])
 
         return sexp
-
-

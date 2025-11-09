@@ -67,9 +67,13 @@ def export_netlist(
 
     # Build command
     args = [
-        "sch", "export", "netlist",
-        "--format", format,
-        "--output", str(output_path),
+        "sch",
+        "export",
+        "netlist",
+        "--format",
+        format,
+        "--output",
+        str(output_path),
         str(schematic_path),
     ]
 

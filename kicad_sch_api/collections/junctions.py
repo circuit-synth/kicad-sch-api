@@ -109,6 +109,7 @@ class JunctionCollection(BaseCollection[Junction]):
 
         # Use config defaults if not explicitly provided
         from ..core.config import config
+
         if grid_units is None:
             grid_units = config.positioning.use_grid_units
         if grid_size is None:
@@ -189,26 +190,30 @@ class JunctionCollection(BaseCollection[Junction]):
         """
         if not self._items:
             base_stats = super().get_statistics()
-            base_stats.update({
-                "total_junctions": 0,
-                "avg_diameter": 0,
-                "positions": [],
-                "unique_diameters": 0,
-                "unique_colors": 0,
-            })
+            base_stats.update(
+                {
+                    "total_junctions": 0,
+                    "avg_diameter": 0,
+                    "positions": [],
+                    "unique_diameters": 0,
+                    "unique_colors": 0,
+                }
+            )
             return base_stats
 
         avg_diameter = sum(j.diameter for j in self._items) / len(self._items)
         positions = [(j.position.x, j.position.y) for j in self._items]
 
         base_stats = super().get_statistics()
-        base_stats.update({
-            "total_junctions": len(self._items),
-            "avg_diameter": avg_diameter,
-            "positions": positions,
-            "unique_diameters": len(set(j.diameter for j in self._items)),
-            "unique_colors": len(set(j.color for j in self._items)),
-        })
+        base_stats.update(
+            {
+                "total_junctions": len(self._items),
+                "avg_diameter": avg_diameter,
+                "positions": positions,
+                "unique_diameters": len(set(j.diameter for j in self._items)),
+                "unique_colors": len(set(j.color for j in self._items)),
+            }
+        )
 
         return base_stats
 

@@ -70,7 +70,7 @@ class SExpressionParser:
         """Set project name on parser and propagate to sub-parsers."""
         self._project_name = value
         # Propagate to symbol parser which needs it for instances
-        if hasattr(self, '_symbol_parser'):
+        if hasattr(self, "_symbol_parser"):
             self._symbol_parser.project_name = value
 
     def parse_file(self, filepath: Union[str, Path]) -> Dict[str, Any]:
@@ -444,66 +444,87 @@ class SExpressionParser:
     def _parse_title_block(self, item: List[Any]) -> Dict[str, Any]:
         """Parse title block information."""
         return self._metadata_parser._parse_title_block(item)
+
     def _parse_symbol(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a symbol (component) definition."""
         return self._symbol_parser._parse_symbol(item)
+
     def _parse_property(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a property definition."""
         return self._symbol_parser._parse_property(item)
+
     def _parse_wire(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a wire definition."""
         return self._wire_parser._parse_wire(item)
+
     def _parse_junction(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a junction definition."""
         return self._wire_parser._parse_junction(item)
+
     def _parse_label(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a label definition."""
         return self._label_parser._parse_label(item)
+
     def _parse_hierarchical_label(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a hierarchical label definition."""
         return self._label_parser._parse_hierarchical_label(item)
+
     def _parse_no_connect(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a no_connect symbol."""
         return self._wire_parser._parse_no_connect(item)
+
     def _parse_text(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a text element."""
         return self._text_parser._parse_text(item)
+
     def _parse_text_box(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a text_box element."""
         return self._text_parser._parse_text_box(item)
+
     def _parse_sheet(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a hierarchical sheet."""
         return self._sheet_parser._parse_sheet(item)
+
     def _parse_sheet_pin_for_read(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a sheet pin (for reading during sheet parsing)."""
         return self._sheet_parser._parse_sheet_pin_for_read(item)
+
     def _parse_polyline(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a polyline graphical element."""
         return self._graphics_parser._parse_polyline(item)
+
     def _parse_arc(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse an arc graphical element."""
         return self._graphics_parser._parse_arc(item)
+
     def _parse_circle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a circle graphical element."""
         return self._graphics_parser._parse_circle(item)
+
     def _parse_bezier(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a bezier curve graphical element."""
         return self._graphics_parser._parse_bezier(item)
+
     def _parse_rectangle(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a rectangle graphical element."""
         return self._graphics_parser._parse_rectangle(item)
+
     def _parse_image(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse an image element."""
         return self._graphics_parser._parse_image(item)
+
     def _parse_lib_symbols(self, item: List[Any]) -> Dict[str, Any]:
         """Parse lib_symbols section."""
         return self._library_parser._parse_lib_symbols(item)
+
     def _title_block_to_sexp(self, title_block: Dict[str, Any]) -> List[Any]:
         """Convert title block to S-expression."""
         return self._metadata_parser._title_block_to_sexp(title_block)
+
     def _symbol_to_sexp(self, symbol_data: Dict[str, Any], schematic_uuid: str = None) -> List[Any]:
         """Convert symbol to S-expression."""
         return self._symbol_parser._symbol_to_sexp(symbol_data, schematic_uuid)
+
     def _create_property_with_positioning(
         self,
         prop_name: str,
@@ -588,66 +609,87 @@ class SExpressionParser:
     def _wire_to_sexp(self, wire_data: Dict[str, Any]) -> List[Any]:
         """Convert wire to S-expression."""
         return self._wire_parser._wire_to_sexp(wire_data)
+
     def _junction_to_sexp(self, junction_data: Dict[str, Any]) -> List[Any]:
         """Convert junction to S-expression."""
         return self._wire_parser._junction_to_sexp(junction_data)
+
     def _label_to_sexp(self, label_data: Dict[str, Any]) -> List[Any]:
         """Convert local label to S-expression."""
         return self._label_parser._label_to_sexp(label_data)
+
     def _hierarchical_label_to_sexp(self, hlabel_data: Dict[str, Any]) -> List[Any]:
         """Convert hierarchical label to S-expression."""
         return self._label_parser._hierarchical_label_to_sexp(hlabel_data)
+
     def _no_connect_to_sexp(self, no_connect_data: Dict[str, Any]) -> List[Any]:
         """Convert no_connect to S-expression."""
         return self._wire_parser._no_connect_to_sexp(no_connect_data)
+
     def _polyline_to_sexp(self, polyline_data: Dict[str, Any]) -> List[Any]:
         """Convert polyline to S-expression."""
         return self._graphics_parser._polyline_to_sexp(polyline_data)
+
     def _arc_to_sexp(self, arc_data: Dict[str, Any]) -> List[Any]:
         """Convert arc to S-expression."""
         return self._graphics_parser._arc_to_sexp(arc_data)
+
     def _circle_to_sexp(self, circle_data: Dict[str, Any]) -> List[Any]:
         """Convert circle to S-expression."""
         return self._graphics_parser._circle_to_sexp(circle_data)
+
     def _bezier_to_sexp(self, bezier_data: Dict[str, Any]) -> List[Any]:
         """Convert bezier curve to S-expression."""
         return self._graphics_parser._bezier_to_sexp(bezier_data)
+
     def _sheet_to_sexp(self, sheet_data: Dict[str, Any], schematic_uuid: str) -> List[Any]:
         """Convert hierarchical sheet to S-expression."""
         return self._sheet_parser._sheet_to_sexp(sheet_data, schematic_uuid)
+
     def _sheet_pin_to_sexp(self, pin_data: Dict[str, Any]) -> List[Any]:
         """Convert sheet pin to S-expression."""
         return self._sheet_parser._sheet_pin_to_sexp(pin_data)
+
     def _text_to_sexp(self, text_data: Dict[str, Any]) -> List[Any]:
         """Convert text element to S-expression."""
         return self._text_parser._text_to_sexp(text_data)
+
     def _text_box_to_sexp(self, text_box_data: Dict[str, Any]) -> List[Any]:
         """Convert text box element to S-expression."""
         return self._text_parser._text_box_to_sexp(text_box_data)
+
     def _rectangle_to_sexp(self, rectangle_data: Dict[str, Any]) -> List[Any]:
         """Convert rectangle element to S-expression."""
         return self._graphics_parser._rectangle_to_sexp(rectangle_data)
+
     def _image_to_sexp(self, image_data: Dict[str, Any]) -> List[Any]:
         """Convert image element to S-expression."""
         return self._graphics_parser._image_to_sexp(image_data)
+
     def _lib_symbols_to_sexp(self, lib_symbols: Dict[str, Any]) -> List[Any]:
         """Convert lib_symbols to S-expression."""
         return self._library_parser._lib_symbols_to_sexp(lib_symbols)
+
     def _create_basic_symbol_definition(self, lib_id: str) -> List[Any]:
         """Create a basic symbol definition for KiCAD compatibility."""
         return self._library_parser._create_basic_symbol_definition(lib_id)
+
     def _parse_sheet_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
         """Parse sheet_instances section."""
         return self._sheet_parser._parse_sheet_instances(item)
+
     def _parse_symbol_instances(self, item: List[Any]) -> List[Any]:
         """Parse symbol_instances section."""
         return self._metadata_parser._parse_symbol_instances(item)
+
     def _sheet_instances_to_sexp(self, sheet_instances: List[Dict[str, Any]]) -> List[Any]:
         """Convert sheet_instances to S-expression."""
         return self._sheet_parser._sheet_instances_to_sexp(sheet_instances)
+
     def _graphic_to_sexp(self, graphic_data: Dict[str, Any]) -> List[Any]:
         """Convert graphics (rectangles, etc.) to S-expression."""
         return self._graphics_parser._graphic_to_sexp(graphic_data)
+
     def _color_to_rgba(self, color_name: str) -> List[float]:
         """Convert color name to RGBA values (0.0-1.0) for KiCAD compatibility."""
         return color_to_rgba(color_name)

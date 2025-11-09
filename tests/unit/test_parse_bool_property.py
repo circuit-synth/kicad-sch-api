@@ -19,35 +19,35 @@ class TestParseBoolProperty:
 
     def test_symbol_yes(self):
         """Test that Symbol('yes') returns True."""
-        result = parse_bool_property(sexpdata.Symbol('yes'))
+        result = parse_bool_property(sexpdata.Symbol("yes"))
         assert result is True
 
     def test_symbol_no(self):
         """Test that Symbol('no') returns False."""
-        result = parse_bool_property(sexpdata.Symbol('no'))
+        result = parse_bool_property(sexpdata.Symbol("no"))
         assert result is False
 
     def test_string_yes(self):
         """Test that string 'yes' returns True."""
-        result = parse_bool_property('yes')
+        result = parse_bool_property("yes")
         assert result is True
 
     def test_string_no(self):
         """Test that string 'no' returns False."""
-        result = parse_bool_property('no')
+        result = parse_bool_property("no")
         assert result is False
 
     def test_case_insensitive_yes(self):
         """Test that YES, Yes, yes all return True."""
-        assert parse_bool_property('YES') is True
-        assert parse_bool_property('Yes') is True
-        assert parse_bool_property('yes') is True
+        assert parse_bool_property("YES") is True
+        assert parse_bool_property("Yes") is True
+        assert parse_bool_property("yes") is True
 
     def test_case_insensitive_no(self):
         """Test that NO, No, no all return False."""
-        assert parse_bool_property('NO') is False
-        assert parse_bool_property('No') is False
-        assert parse_bool_property('no') is False
+        assert parse_bool_property("NO") is False
+        assert parse_bool_property("No") is False
+        assert parse_bool_property("no") is False
 
     def test_none_with_default_true(self):
         """Test that None with default=True returns True."""
@@ -79,7 +79,7 @@ class TestParseBoolProperty:
 
     def test_empty_string_returns_false(self):
         """Test that empty string returns False (not 'yes')."""
-        result = parse_bool_property('')
+        result = parse_bool_property("")
         assert result is False
 
     def test_symbol_regression_bug(self):
@@ -93,7 +93,7 @@ class TestParseBoolProperty:
         parse_bool_property correctly handles Symbol objects.
         """
         # This is what sexpdata returns when parsing (in_bom yes)
-        sexp = sexpdata.loads('(in_bom yes)')
+        sexp = sexpdata.loads("(in_bom yes)")
         value = sexp[1]  # Symbol('yes')
 
         # Before fix: Symbol('yes') == 'yes' returned False ❌
@@ -102,7 +102,7 @@ class TestParseBoolProperty:
         assert result is True
 
         # Same for 'no'
-        sexp_no = sexpdata.loads('(in_bom no)')
+        sexp_no = sexpdata.loads("(in_bom no)")
         value_no = sexp_no[1]  # Symbol('no')
         result_no = parse_bool_property(value_no)
         assert result_no is False

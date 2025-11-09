@@ -7,6 +7,7 @@ from manually created schematics with no-connect markers.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -35,10 +36,8 @@ class TestNoConnectReference:
             assert "y" in position, f"No-connect {i} position should have 'y'"
 
             # Verify position values are numeric
-            assert isinstance(position["x"], (int, float)), \
-                f"No-connect {i} x should be numeric"
-            assert isinstance(position["y"], (int, float)), \
-                f"No-connect {i} y should be numeric"
+            assert isinstance(position["x"], (int, float)), f"No-connect {i} x should be numeric"
+            assert isinstance(position["y"], (int, float)), f"No-connect {i} y should be numeric"
 
     def test_no_connect_loading(self):
         """Verify no-connects can be loaded successfully."""

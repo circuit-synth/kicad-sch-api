@@ -48,18 +48,19 @@ __email__ = "info@circuit-synth.com"
 
 from .core.components import Component, ComponentCollection
 from .core.config import KiCADConfig, config
-from .core.types import PinInfo
+
+# Commonly-used exceptions (ValidationError re-exported from utils for backward compat)
+from .core.exceptions import (
+    DuplicateElementError,
+    ElementNotFoundError,
+    KiCadSchError,
+)
 
 # Core imports for public API
 from .core.schematic import Schematic
+from .core.types import PinInfo
 from .library.cache import SymbolLibraryCache, get_symbol_cache
 from .utils.validation import ValidationError, ValidationIssue
-# Commonly-used exceptions (ValidationError re-exported from utils for backward compat)
-from .core.exceptions import (
-    KiCadSchError,
-    ElementNotFoundError,
-    DuplicateElementError,
-)
 
 # Version info
 VERSION_INFO = (0, 4, 0)
@@ -126,10 +127,10 @@ def create_schematic(name: str = "Untitled") -> "Schematic":
 def schematic_to_python(
     input_path: str,
     output_path: str,
-    template: str = 'default',
+    template: str = "default",
     include_hierarchy: bool = True,
     format_code: bool = True,
-    add_comments: bool = True
+    add_comments: bool = True,
 ):
     """
     Convert KiCad schematic to Python code (one-line convenience function).
@@ -173,7 +174,7 @@ def schematic_to_python(
         template=template,
         include_hierarchy=include_hierarchy,
         format_code=format_code,
-        add_comments=add_comments
+        add_comments=add_comments,
     )
 
 

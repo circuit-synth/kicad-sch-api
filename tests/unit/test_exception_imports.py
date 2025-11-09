@@ -4,13 +4,12 @@
 def test_all_import_paths_work():
     """Test exceptions can be imported from multiple valid paths."""
     # Core location (canonical)
+    # Package level (convenience)
+    from kicad_sch_api import ValidationError as PkgVE
     from kicad_sch_api.core.exceptions import ValidationError as CoreVE
 
     # Utils location (backward compatibility)
     from kicad_sch_api.utils.validation import ValidationError as UtilsVE
-
-    # Package level (convenience)
-    from kicad_sch_api import ValidationError as PkgVE
 
     # All should be the same class
     assert CoreVE is UtilsVE, "utils.validation should re-export core.exceptions.ValidationError"
@@ -23,30 +22,30 @@ def test_core_exports_all_exceptions():
     from kicad_sch_api.core import exceptions as exc
 
     # Should be able to access all exception classes
-    assert hasattr(exc, 'KiCadSchError')
-    assert hasattr(exc, 'ValidationError')
-    assert hasattr(exc, 'ReferenceError')
-    assert hasattr(exc, 'LibraryError')
-    assert hasattr(exc, 'GeometryError')
-    assert hasattr(exc, 'NetError')
-    assert hasattr(exc, 'ParseError')
-    assert hasattr(exc, 'FormatError')
-    assert hasattr(exc, 'CollectionError')
-    assert hasattr(exc, 'ElementNotFoundError')
-    assert hasattr(exc, 'DuplicateElementError')
-    assert hasattr(exc, 'CollectionOperationError')
-    assert hasattr(exc, 'FileOperationError')
-    assert hasattr(exc, 'CLIError')
-    assert hasattr(exc, 'SchematicStateError')
+    assert hasattr(exc, "KiCadSchError")
+    assert hasattr(exc, "ValidationError")
+    assert hasattr(exc, "ReferenceError")
+    assert hasattr(exc, "LibraryError")
+    assert hasattr(exc, "GeometryError")
+    assert hasattr(exc, "NetError")
+    assert hasattr(exc, "ParseError")
+    assert hasattr(exc, "FormatError")
+    assert hasattr(exc, "CollectionError")
+    assert hasattr(exc, "ElementNotFoundError")
+    assert hasattr(exc, "DuplicateElementError")
+    assert hasattr(exc, "CollectionOperationError")
+    assert hasattr(exc, "FileOperationError")
+    assert hasattr(exc, "CLIError")
+    assert hasattr(exc, "SchematicStateError")
 
 
 def test_core_init_exports():
     """Test exceptions can be imported from core package."""
     from kicad_sch_api.core import (
+        DuplicateElementError,
+        ElementNotFoundError,
         KiCadSchError,
         ValidationError,
-        ElementNotFoundError,
-        DuplicateElementError,
     )
 
     # Should all be importable
@@ -59,10 +58,10 @@ def test_core_init_exports():
 def test_package_level_common_exceptions():
     """Test commonly-used exceptions are exported at package level."""
     from kicad_sch_api import (
+        DuplicateElementError,
+        ElementNotFoundError,
         KiCadSchError,
         ValidationError,
-        ElementNotFoundError,
-        DuplicateElementError,
     )
 
     # Should all be importable
@@ -87,8 +86,8 @@ def test_exception_attributes_work():
 
     # Backward compat: old code doesn't access new attributes
     error3 = ValidationError("test")
-    assert hasattr(error3, 'field')
-    assert hasattr(error3, 'value')
+    assert hasattr(error3, "field")
+    assert hasattr(error3, "value")
     assert error3.field == ""
     assert error3.value is None
 
@@ -98,16 +97,8 @@ def test_validation_issue_integration():
     from kicad_sch_api import ValidationError, ValidationIssue
     from kicad_sch_api.utils.validation import ValidationLevel
 
-    issue1 = ValidationIssue(
-        category="test",
-        message="Issue 1",
-        level=ValidationLevel.ERROR
-    )
-    issue2 = ValidationIssue(
-        category="test",
-        message="Issue 2",
-        level=ValidationLevel.WARNING
-    )
+    issue1 = ValidationIssue(category="test", message="Issue 1", level=ValidationLevel.ERROR)
+    issue2 = ValidationIssue(category="test", message="Issue 2", level=ValidationLevel.WARNING)
 
     error = ValidationError("Validation failed", issues=[issue1, issue2])
     assert len(error.issues) == 2
@@ -124,15 +115,15 @@ def test_validation_issue_integration():
 def test_specialized_exceptions_importable():
     """Test specialized exceptions can be imported from core.exceptions."""
     from kicad_sch_api.core.exceptions import (
-        ReferenceError,
-        LibraryError,
-        GeometryError,
-        NetError,
-        ParseError,
-        FormatError,
+        CLIError,
         CollectionOperationError,
         FileOperationError,
-        CLIError,
+        FormatError,
+        GeometryError,
+        LibraryError,
+        NetError,
+        ParseError,
+        ReferenceError,
         SchematicStateError,
     )
 
@@ -153,11 +144,7 @@ def test_element_not_found_error_usage():
     """Test ElementNotFoundError works as expected."""
     from kicad_sch_api import ElementNotFoundError
 
-    error = ElementNotFoundError(
-        "Component not found",
-        element_type="component",
-        identifier="R1"
-    )
+    error = ElementNotFoundError("Component not found", element_type="component", identifier="R1")
 
     assert str(error) == "Component not found"
     assert error.element_type == "component"
@@ -178,9 +165,7 @@ def test_duplicate_element_error_usage():
     from kicad_sch_api import DuplicateElementError
 
     error = DuplicateElementError(
-        "Component already exists",
-        element_type="component",
-        identifier="R1"
+        "Component already exists", element_type="component", identifier="R1"
     )
 
     assert str(error) == "Component already exists"
@@ -200,9 +185,9 @@ def test_duplicate_element_error_usage():
 def test_inheritance_chain():
     """Test exception inheritance works correctly."""
     from kicad_sch_api import (
+        ElementNotFoundError,
         KiCadSchError,
         ValidationError,
-        ElementNotFoundError,
     )
     from kicad_sch_api.core.exceptions import (
         CollectionError,

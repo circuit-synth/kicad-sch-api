@@ -148,11 +148,7 @@ class TestComponentCollection:
 
         # Try to add component with non-existent symbol
         with pytest.raises(LibraryError) as exc_info:
-            collection.add(
-                lib_id="NonExistent:FakeSymbol",
-                reference="U1",
-                value="test"
-            )
+            collection.add(lib_id="NonExistent:FakeSymbol", reference="U1", value="test")
 
         # Verify error message contains helpful information
         error_msg = str(exc_info.value)
@@ -184,7 +180,7 @@ class TestComponentCollection:
             collection.add(
                 lib_id="Connector:Conn_01x04",  # Should be Connector_Generic
                 reference="J1",
-                value="Header"
+                value="Header",
             )
 
         # Verify error message mentions common libraries

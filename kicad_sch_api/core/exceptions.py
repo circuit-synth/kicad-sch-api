@@ -5,7 +5,7 @@ Provides a structured exception hierarchy for better error handling and debuggin
 All exceptions inherit from the base KiCadSchError class.
 """
 
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List, Optional
 
 # Import validation types for type hints
 # ValidationLevel is imported at runtime in methods that need it
@@ -60,7 +60,8 @@ class ValidationError(KiCadSchError):
         return [
             issue
             for issue in self.issues
-            if hasattr(issue, 'level') and issue.level in (ValidationLevel.ERROR, ValidationLevel.CRITICAL)
+            if hasattr(issue, "level")
+            and issue.level in (ValidationLevel.ERROR, ValidationLevel.CRITICAL)
         ]
 
     def get_warnings(self) -> List["ValidationIssue"]:
@@ -68,7 +69,11 @@ class ValidationError(KiCadSchError):
         # Import here to avoid circular dependency
         from ..utils.validation import ValidationLevel
 
-        return [issue for issue in self.issues if hasattr(issue, 'level') and issue.level == ValidationLevel.WARNING]
+        return [
+            issue
+            for issue in self.issues
+            if hasattr(issue, "level") and issue.level == ValidationLevel.WARNING
+        ]
 
 
 class ReferenceError(ValidationError):

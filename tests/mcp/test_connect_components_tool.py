@@ -6,9 +6,12 @@ Tests the new connect_components functionality with real schematic operations.
 """
 
 import asyncio
-import kicad_sch_api as ksa
+
 from mcp_server.tools.connectivity_tools import connect_components
 from mcp_server.tools.pin_discovery import set_current_schematic
+
+import kicad_sch_api as ksa
+
 
 async def test_connect_components():
     """Test connect_components with various scenarios."""
@@ -44,10 +47,7 @@ async def test_connect_components():
     sch2.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
     sch2.components.add("Device:R", "R2", "10k", position=(150.0, 125.0))
 
-    result = await connect_components(
-        "R1", "2", "R2", "1",
-        add_label="VCC"
-    )
+    result = await connect_components("R1", "2", "R2", "1", add_label="VCC")
 
     assert result["success"], f"Test 2 failed: {result.get('message')}"
     assert result["label_uuid"] is not None, "Expected label to be added"
@@ -62,10 +62,7 @@ async def test_connect_components():
     sch3.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
     sch3.components.add("Device:R", "R2", "10k", position=(150.0, 125.0))
 
-    result = await connect_components(
-        "R1", "2", "R2", "1",
-        corner_direction="horizontal_first"
-    )
+    result = await connect_components("R1", "2", "R2", "1", corner_direction="horizontal_first")
 
     assert result["success"], f"Test 3 failed: {result.get('message')}"
     corner = result["routing"]["corner"]
@@ -83,10 +80,7 @@ async def test_connect_components():
     sch4.components.add("Device:R", "R1", "10k", position=(100.0, 100.0))
     sch4.components.add("Device:R", "R2", "10k", position=(150.0, 125.0))
 
-    result = await connect_components(
-        "R1", "2", "R2", "1",
-        corner_direction="vertical_first"
-    )
+    result = await connect_components("R1", "2", "R2", "1", corner_direction="vertical_first")
 
     assert result["success"], f"Test 4 failed: {result.get('message')}"
     corner = result["routing"]["corner"]
@@ -124,8 +118,10 @@ async def test_connect_components():
 
     assert not result["success"], "Expected failure for non-existent component"
     # Should get either COMPONENT_NOT_FOUND or PIN_INFO_ERROR depending on timing
-    assert result["error"] in ["COMPONENT_NOT_FOUND", "PIN_INFO_ERROR"], \
-        f"Expected component error, got {result['error']}"
+    assert result["error"] in [
+        "COMPONENT_NOT_FOUND",
+        "PIN_INFO_ERROR",
+    ], f"Expected component error, got {result['error']}"
     print(f"   ✅ Success: Correctly caught error - {result['message']}")
 
     # Test 7: Complete circuit with save
@@ -138,10 +134,7 @@ async def test_connect_components():
     sch7.components.add("Device:R", "R2", "10k", position=(127.0, 114.3))
 
     # Connect with label
-    result1 = await connect_components(
-        "R1", "2", "R2", "1",
-        add_label="VOUT"
-    )
+    result1 = await connect_components("R1", "2", "R2", "1", add_label="VOUT")
 
     assert result1["success"], f"Test 7a failed: {result1.get('message')}"
 

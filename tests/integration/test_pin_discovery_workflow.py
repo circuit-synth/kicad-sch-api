@@ -8,10 +8,11 @@ and validating positions across component rotations.
 
 import logging
 import math
-import pytest
-import kicad_sch_api as ksa
-from mcp_server.models import PinInfoOutput, ComponentPinsOutput
 
+import pytest
+from mcp_server.models import ComponentPinsOutput, PinInfoOutput
+
+import kicad_sch_api as ksa
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,7 @@ class TestPinDiscoveryWorkflow:
         num_components = 20
         for i in range(num_components):
             schematic.components.add(
-                "Device:R", f"R{i+1}", f"{10*(i+1)}k", position=(100.0 + i*5, 100.0)
+                "Device:R", f"R{i+1}", f"{10*(i+1)}k", position=(100.0 + i * 5, 100.0)
             )
 
         # Verify we can get pins for each

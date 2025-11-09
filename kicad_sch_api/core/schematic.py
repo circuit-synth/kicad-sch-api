@@ -584,10 +584,10 @@ class Schematic:
     def export_to_python(
         self,
         output_path: Union[str, Path],
-        template: str = 'default',
+        template: str = "default",
         include_hierarchy: bool = True,
         format_code: bool = True,
-        add_comments: bool = True
+        add_comments: bool = True,
     ) -> Path:
         """
         Export schematic to executable Python code.
@@ -621,15 +621,11 @@ class Schematic:
         from ..exporters.python_generator import PythonCodeGenerator
 
         generator = PythonCodeGenerator(
-            template=template,
-            format_code=format_code,
-            add_comments=add_comments
+            template=template, format_code=format_code, add_comments=add_comments
         )
 
         generator.generate(
-            schematic=self,
-            include_hierarchy=include_hierarchy,
-            output_path=Path(output_path)
+            schematic=self, include_hierarchy=include_hierarchy, output_path=Path(output_path)
         )
 
         return Path(output_path)
@@ -656,6 +652,7 @@ class Schematic:
         """
         # Use config defaults if not explicitly provided
         from .config import config
+
         if grid_units is None:
             grid_units = config.positioning.use_grid_units
         if grid_size is None:
@@ -815,10 +812,10 @@ class Schematic:
         Raises:
             ValueError: If neither position nor pin is provided, or if pin is not found
         """
-        from .pin_utils import get_component_pin_info
-
         # Use config defaults if not explicitly provided
         from .config import config
+        from .pin_utils import get_component_pin_info
+
         if grid_units is None:
             grid_units = config.positioning.use_grid_units
         if grid_size is None:
@@ -881,7 +878,9 @@ class Schematic:
             elif pin_rotation == 270:  # Pin points down into component
                 justify_h = "left"
                 justify_v = "bottom"
-            logger.info(f"Auto-calculated justification: {justify_h} {justify_v} (pin angle: {pin_rotation}°)")
+            logger.info(
+                f"Auto-calculated justification: {justify_h} {justify_v} (pin angle: {pin_rotation}°)"
+            )
 
         # Use default rotation if still not set
         if rotation is None:
@@ -891,8 +890,13 @@ class Schematic:
         if size is None:
             size = 1.27  # Default size
         label = self._labels.add(
-            text, position, rotation=rotation, size=size,
-            justify_h=justify_h, justify_v=justify_v, uuid=uuid
+            text,
+            position,
+            rotation=rotation,
+            size=size,
+            justify_h=justify_h,
+            justify_v=justify_v,
+            uuid=uuid,
         )
         self._sync_labels_to_data()  # Sync immediately
         self._format_sync_manager.mark_dirty("label", "add", {"uuid": label.uuid})
@@ -928,6 +932,7 @@ class Schematic:
         """
         # Use config defaults if not explicitly provided
         from .config import config
+
         if grid_units is None:
             grid_units = config.positioning.use_grid_units
         if grid_size is None:
@@ -1237,6 +1242,7 @@ class Schematic:
         """
         # Use config defaults if not explicitly provided
         from .config import config
+
         if grid_units is None:
             grid_units = config.positioning.use_grid_units
         if grid_size is None:

@@ -393,14 +393,20 @@ class ComponentCollection(BaseCollection[Component]):
             if grid_units:
                 logger.debug(f"Component {reference}: Converting grid position {position} to mm")
                 position = Point(position[0] * grid_size, position[1] * grid_size)
-                logger.debug(f"Component {reference}: After conversion: ({position.x:.3f}, {position.y:.3f}) mm")
+                logger.debug(
+                    f"Component {reference}: After conversion: ({position.x:.3f}, {position.y:.3f}) mm"
+                )
             else:
                 position = Point(position[0], position[1])
         elif grid_units and isinstance(position, Point):
             # Convert Point from grid units to mm
-            logger.debug(f"Component {reference}: Converting Point grid position ({position.x}, {position.y}) to mm")
+            logger.debug(
+                f"Component {reference}: Converting Point grid position ({position.x}, {position.y}) to mm"
+            )
             position = Point(position.x * grid_size, position.y * grid_size)
-            logger.debug(f"Component {reference}: After conversion: ({position.x:.3f}, {position.y:.3f}) mm")
+            logger.debug(
+                f"Component {reference}: After conversion: ({position.x:.3f}, {position.y:.3f}) mm"
+            )
 
         # Always snap component position to KiCAD grid (1.27mm = 50mil)
         from .geometry import snap_to_grid
@@ -426,10 +432,10 @@ class ComponentCollection(BaseCollection[Component]):
 
         # Check if parent schematic has hierarchy context set
         # If so, add hierarchy_path to properties for proper KiCad instance paths
-        if self._parent_schematic and hasattr(self._parent_schematic, '_hierarchy_path'):
+        if self._parent_schematic and hasattr(self._parent_schematic, "_hierarchy_path"):
             if self._parent_schematic._hierarchy_path:
                 properties = dict(properties)  # Make a copy to avoid modifying caller's dict
-                properties['hierarchy_path'] = self._parent_schematic._hierarchy_path
+                properties["hierarchy_path"] = self._parent_schematic._hierarchy_path
                 logger.debug(
                     f"Setting hierarchy_path for component {reference}: "
                     f"{self._parent_schematic._hierarchy_path}"
@@ -459,7 +465,7 @@ class ComponentCollection(BaseCollection[Component]):
                 f"Please verify the library name '{library_name}' and symbol name are correct. "
                 f"Common libraries include: Device, Connector_Generic, Regulator_Linear, RF_Module",
                 field="lib_id",
-                value=lib_id
+                value=lib_id,
             )
         component_data.pins = symbol_def.pins.copy()
 
@@ -689,9 +695,7 @@ class ComponentCollection(BaseCollection[Component]):
 
     def filter_by_type(self, component_type: str) -> List[Component]:
         """Filter components by type (e.g., 'R' for resistors)."""
-        return [
-            c for c in self._items if c.symbol_name.upper().startswith(component_type.upper())
-        ]
+        return [c for c in self._items if c.symbol_name.upper().startswith(component_type.upper())]
 
     def in_area(self, x1: float, y1: float, x2: float, y2: float) -> List[Component]:
         """Get components within rectangular area."""

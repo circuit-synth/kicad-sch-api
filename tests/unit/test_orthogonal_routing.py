@@ -21,10 +21,7 @@ class TestDirectRouting:
 
     def test_horizontal_direct_routing(self):
         """Test direct horizontal routing when Y coordinates are aligned."""
-        result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(150.0, 100.0)
-        )
+        result = create_orthogonal_routing(Point(100.0, 100.0), Point(150.0, 100.0))
 
         assert result.is_direct
         assert len(result.segments) == 1
@@ -41,10 +38,7 @@ class TestDirectRouting:
 
     def test_vertical_direct_routing(self):
         """Test direct vertical routing when X coordinates are aligned."""
-        result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(100.0, 150.0)
-        )
+        result = create_orthogonal_routing(Point(100.0, 100.0), Point(100.0, 150.0))
 
         assert result.is_direct
         assert len(result.segments) == 1
@@ -62,27 +56,21 @@ class TestDirectRouting:
     def test_direct_routing_negative_direction(self):
         """Test direct routing works in negative direction (right-to-left, bottom-to-top)."""
         # Right to left
-        result = create_orthogonal_routing(
-            Point(150.0, 100.0),
-            Point(100.0, 100.0)
-        )
+        result = create_orthogonal_routing(Point(150.0, 100.0), Point(100.0, 100.0))
         assert result.is_direct
         assert len(result.segments) == 1
 
         # Bottom to top (remember: lower Y = visually higher in KiCAD!)
         result = create_orthogonal_routing(
             Point(100.0, 150.0),  # Higher Y = visually lower
-            Point(100.0, 100.0)   # Lower Y = visually higher
+            Point(100.0, 100.0),  # Lower Y = visually higher
         )
         assert result.is_direct
         assert len(result.segments) == 1
 
     def test_zero_distance_routing(self):
         """Test routing between same point (zero distance)."""
-        result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(100.0, 100.0)
-        )
+        result = create_orthogonal_routing(Point(100.0, 100.0), Point(100.0, 100.0))
 
         assert result.is_direct
         assert len(result.segments) == 1
@@ -100,7 +88,7 @@ class TestLShapedRouting:
         result = create_orthogonal_routing(
             Point(100.0, 100.0),
             Point(150.0, 125.0),
-            corner_direction=CornerDirection.HORIZONTAL_FIRST
+            corner_direction=CornerDirection.HORIZONTAL_FIRST,
         )
 
         assert not result.is_direct
@@ -133,7 +121,7 @@ class TestLShapedRouting:
         result = create_orthogonal_routing(
             Point(100.0, 100.0),
             Point(150.0, 125.0),
-            corner_direction=CornerDirection.VERTICAL_FIRST
+            corner_direction=CornerDirection.VERTICAL_FIRST,
         )
 
         assert not result.is_direct
@@ -165,9 +153,7 @@ class TestLShapedRouting:
         """Test AUTO routing prefers horizontal when dx >= dy."""
         # Horizontal distance (50) >= vertical distance (25)
         result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(150.0, 125.0),
-            corner_direction=CornerDirection.AUTO
+            Point(100.0, 100.0), Point(150.0, 125.0), corner_direction=CornerDirection.AUTO
         )
 
         assert not result.is_direct
@@ -185,9 +171,7 @@ class TestLShapedRouting:
         """Test AUTO routing prefers vertical when dy > dx."""
         # Vertical distance (50) > horizontal distance (25)
         result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(125.0, 150.0),
-            corner_direction=CornerDirection.AUTO
+            Point(100.0, 100.0), Point(125.0, 150.0), corner_direction=CornerDirection.AUTO
         )
 
         assert not result.is_direct
@@ -205,9 +189,7 @@ class TestLShapedRouting:
         """Test AUTO routing when distances are equal (should prefer horizontal)."""
         # Equal distances: dx = dy = 50
         result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(150.0, 150.0),
-            corner_direction=CornerDirection.AUTO
+            Point(100.0, 100.0), Point(150.0, 150.0), corner_direction=CornerDirection.AUTO
         )
 
         assert not result.is_direct
@@ -227,7 +209,7 @@ class TestRoutingInvertedYAxis:
         result = create_orthogonal_routing(
             Point(100.0, 125.0),  # Starting point (visually lower)
             Point(150.0, 100.0),  # End point (visually higher - lower Y!)
-            corner_direction=CornerDirection.HORIZONTAL_FIRST
+            corner_direction=CornerDirection.HORIZONTAL_FIRST,
         )
 
         assert not result.is_direct
@@ -245,7 +227,7 @@ class TestRoutingInvertedYAxis:
         result = create_orthogonal_routing(
             Point(100.0, 100.0),  # Starting point (visually higher)
             Point(150.0, 125.0),  # End point (visually lower - higher Y!)
-            corner_direction=CornerDirection.HORIZONTAL_FIRST
+            corner_direction=CornerDirection.HORIZONTAL_FIRST,
         )
 
         assert not result.is_direct
@@ -265,7 +247,7 @@ class TestRoutingNegativeDirections:
         result = create_orthogonal_routing(
             Point(150.0, 125.0),
             Point(100.0, 100.0),
-            corner_direction=CornerDirection.HORIZONTAL_FIRST
+            corner_direction=CornerDirection.HORIZONTAL_FIRST,
         )
 
         assert not result.is_direct
@@ -282,7 +264,7 @@ class TestRoutingNegativeDirections:
         result = create_orthogonal_routing(
             Point(100.0, 100.0),
             Point(150.0, 125.0),
-            corner_direction=CornerDirection.VERTICAL_FIRST
+            corner_direction=CornerDirection.VERTICAL_FIRST,
         )
 
         assert not result.is_direct
@@ -300,18 +282,12 @@ class TestRoutingValidation:
 
     def test_validate_direct_routing(self):
         """Test validation passes for direct routing."""
-        result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(150.0, 100.0)
-        )
+        result = create_orthogonal_routing(Point(100.0, 100.0), Point(150.0, 100.0))
         assert validate_routing_result(result)
 
     def test_validate_l_shaped_routing(self):
         """Test validation passes for L-shaped routing."""
-        result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(150.0, 125.0)
-        )
+        result = create_orthogonal_routing(Point(100.0, 100.0), Point(150.0, 125.0))
         assert validate_routing_result(result)
 
     def test_validate_rejects_diagonal_segment(self):
@@ -320,7 +296,7 @@ class TestRoutingValidation:
         invalid_result = RoutingResult(
             segments=[(Point(100.0, 100.0), Point(150.0, 125.0))],  # Diagonal!
             corner=None,
-            is_direct=True
+            is_direct=True,
         )
 
         with pytest.raises(ValueError, match="not orthogonal"):
@@ -332,10 +308,10 @@ class TestRoutingValidation:
         invalid_result = RoutingResult(
             segments=[
                 (Point(100.0, 100.0), Point(150.0, 100.0)),  # First segment
-                (Point(150.0, 110.0), Point(150.0, 125.0))   # Gap! Not connected
+                (Point(150.0, 110.0), Point(150.0, 125.0)),  # Gap! Not connected
             ],
             corner=Point(150.0, 100.0),
-            is_direct=False
+            is_direct=False,
         )
 
         with pytest.raises(ValueError, match="not connected"):
@@ -347,10 +323,10 @@ class TestRoutingValidation:
         invalid_result = RoutingResult(
             segments=[
                 (Point(100.0, 100.0), Point(150.0, 100.0)),
-                (Point(150.0, 100.0), Point(150.0, 125.0))
+                (Point(150.0, 100.0), Point(150.0, 125.0)),
             ],
             corner=Point(140.0, 100.0),  # Wrong X!
-            is_direct=False
+            is_direct=False,
         )
 
         with pytest.raises(ValueError, match="does not match segment endpoints"):
@@ -358,11 +334,7 @@ class TestRoutingValidation:
 
     def test_validate_rejects_empty_segments(self):
         """Test validation rejects empty segment list."""
-        invalid_result = RoutingResult(
-            segments=[],
-            corner=None,
-            is_direct=True
-        )
+        invalid_result = RoutingResult(segments=[], corner=None, is_direct=True)
 
         with pytest.raises(ValueError, match="at least one segment"):
             validate_routing_result(invalid_result)
@@ -376,7 +348,7 @@ class TestRoutingRealWorldScenarios:
         # R1 at (127.0, 88.9), R2 at (127.0, 114.3)
         # Both rotated 0 degrees, pins aligned vertically
         r1_pin2 = Point(127.0, 92.71)  # R1 pin 2 (bottom)
-        r2_pin1 = Point(127.0, 110.49) # R2 pin 1 (top)
+        r2_pin1 = Point(127.0, 110.49)  # R2 pin 1 (top)
 
         result = create_orthogonal_routing(r1_pin2, r2_pin1)
 
@@ -389,11 +361,7 @@ class TestRoutingRealWorldScenarios:
         r1_pin2 = Point(100.0, 103.81)
         r2_pin1 = Point(150.0, 121.19)
 
-        result = create_orthogonal_routing(
-            r1_pin2,
-            r2_pin1,
-            corner_direction=CornerDirection.AUTO
-        )
+        result = create_orthogonal_routing(r1_pin2, r2_pin1, corner_direction=CornerDirection.AUTO)
 
         assert not result.is_direct
         assert len(result.segments) == 2
@@ -426,10 +394,7 @@ class TestRoutingEdgeCases:
 
     def test_routing_with_very_small_distances(self):
         """Test routing with sub-millimeter distances."""
-        result = create_orthogonal_routing(
-            Point(100.0, 100.0),
-            Point(100.1, 100.1)
-        )
+        result = create_orthogonal_routing(Point(100.0, 100.0), Point(100.1, 100.1))
 
         assert not result.is_direct
         assert len(result.segments) == 2
@@ -437,10 +402,7 @@ class TestRoutingEdgeCases:
 
     def test_routing_with_large_distances(self):
         """Test routing with large distances."""
-        result = create_orthogonal_routing(
-            Point(0.0, 0.0),
-            Point(1000.0, 1000.0)
-        )
+        result = create_orthogonal_routing(Point(0.0, 0.0), Point(1000.0, 1000.0))
 
         assert not result.is_direct
         assert len(result.segments) == 2
@@ -448,10 +410,7 @@ class TestRoutingEdgeCases:
 
     def test_routing_with_negative_coordinates(self):
         """Test routing with negative coordinates."""
-        result = create_orthogonal_routing(
-            Point(-100.0, -100.0),
-            Point(100.0, 100.0)
-        )
+        result = create_orthogonal_routing(Point(-100.0, -100.0), Point(100.0, 100.0))
 
         assert not result.is_direct
         assert len(result.segments) == 2

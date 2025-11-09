@@ -1,6 +1,7 @@
 """Unit tests for WireWrapper class."""
 
 import pytest
+
 from kicad_sch_api.core.types import Point, Wire, WireType
 from kicad_sch_api.wrappers.wire import WireWrapper
 
@@ -124,9 +125,7 @@ class TestWireWrapper:
 
     def test_stroke_width_property(self):
         """Test stroke_width property."""
-        wire = Wire(
-            uuid="wire-1", points=[Point(0, 0), Point(10, 10)], stroke_width=0.5
-        )
+        wire = Wire(uuid="wire-1", points=[Point(0, 0), Point(10, 10)], stroke_width=0.5)
         collection = MockWireCollection()
         wrapper = WireWrapper(wire, collection)
 
@@ -134,9 +133,7 @@ class TestWireWrapper:
 
     def test_stroke_width_setter(self):
         """Test stroke_width setter."""
-        wire = Wire(
-            uuid="wire-1", points=[Point(0, 0), Point(10, 10)], stroke_width=0.5
-        )
+        wire = Wire(uuid="wire-1", points=[Point(0, 0), Point(10, 10)], stroke_width=0.5)
         collection = MockWireCollection()
         wrapper = WireWrapper(wire, collection)
 
@@ -157,9 +154,7 @@ class TestWireWrapper:
     def test_is_simple_property(self):
         """Test is_simple property delegates to wire."""
         wire_simple = Wire(uuid="wire-1", points=[Point(0, 0), Point(10, 10)])
-        wire_complex = Wire(
-            uuid="wire-2", points=[Point(0, 0), Point(10, 10), Point(20, 20)]
-        )
+        wire_complex = Wire(uuid="wire-2", points=[Point(0, 0), Point(10, 10), Point(20, 20)])
         collection = MockWireCollection()
 
         wrapper_simple = WireWrapper(wire_simple, collection)
