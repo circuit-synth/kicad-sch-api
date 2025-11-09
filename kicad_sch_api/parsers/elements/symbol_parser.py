@@ -38,6 +38,7 @@ class SymbolParser(BaseElementParser):
                 "properties": {},
                 "pins": [],
                 "pin_uuids": {},  # Maps pin number to UUID
+                "hidden_properties": set(),  # Properties with (hide yes) flag
                 "in_bom": True,
                 "on_board": True,
                 "instances": [],
@@ -68,6 +69,10 @@ class SymbolParser(BaseElementParser):
                         # Store original S-expression for format preservation
                         sexp_key = f"__sexp_{prop_name}"
                         symbol_data["properties"][sexp_key] = sub_item
+
+                        # Check if property is hidden
+                        if prop_data.get("hidden", False):
+                            symbol_data["hidden_properties"].add(prop_name)
 
                         if prop_name == "Reference":
                             symbol_data["reference"] = prop_data.get("value")
@@ -112,14 +117,98 @@ class SymbolParser(BaseElementParser):
             return None
 
 
+    def _update_property_hide_flag(self, property_sexp: List[Any], should_hide: bool) -> List[Any]:
+        """
+        Update the hide flag in a property S-expression.
+
+        Args:
+            property_sexp: Property S-expression list
+            should_hide: True to add (hide yes), False to remove hide flag
+
+        Returns:
+            Updated property S-expression
+        """
+        # Make a copy to avoid modifying original
+        prop = list(property_sexp)
+
+        # Find effects section
+        effects_index = None
+        for i, item in enumerate(prop):
+            if isinstance(item, list) and len(item) > 0:
+                if isinstance(item[0], sexpdata.Symbol) and str(item[0]) == "effects":
+                    effects_index = i
+                    break
+
+        if effects_index is None:
+            # No effects section - if we need to hide, we'd need to create one
+            # For now, just return as-is (this shouldn't happen with valid KiCAD files)
+            return prop
+
+        # Get effects section
+        effects = list(prop[effects_index])
+
+        # Find hide clause within effects
+        hide_index = None
+        for i, item in enumerate(effects):
+            if isinstance(item, list) and len(item) > 0:
+                if isinstance(item[0], sexpdata.Symbol) and str(item[0]) == "hide":
+                    hide_index = i
+                    break
+
+        if should_hide:
+            # Add hide flag if not present
+            if hide_index is None:
+                effects.append([sexpdata.Symbol("hide"), sexpdata.Symbol("yes")])
+        else:
+            # Remove hide flag if present
+            if hide_index is not None:
+                effects.pop(hide_index)
+
+        # Update effects in property
+        prop[effects_index] = effects
+
+        return prop
+
     def _parse_property(self, item: List[Any]) -> Optional[Dict[str, Any]]:
-        """Parse a property definition."""
+        """Parse a property definition and extract hide flag."""
         if len(item) < 3:
             return None
 
+        # Extract name and value
+        prop_name = item[1] if len(item) > 1 else None
+        prop_value = item[2] if len(item) > 2 else None
+
+        # Look for effects section to extract hide flag
+        is_hidden = False
+        for sub_item in item[3:]:
+            if not isinstance(sub_item, list) or len(sub_item) == 0:
+                continue
+
+            element_type = str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
+
+            if element_type == "effects":
+                # Search for (hide yes) within effects
+                for effect_item in sub_item[1:]:
+                    if not isinstance(effect_item, list) or len(effect_item) == 0:
+                        continue
+
+                    effect_type = str(effect_item[0]) if isinstance(effect_item[0], sexpdata.Symbol) else None
+
+                    if effect_type == "hide":
+                        # Check if value is "yes"
+                        if len(effect_item) > 1:
+                            hide_value = str(effect_item[1])
+                            is_hidden = hide_value.lower() in ["yes", "true"]
+                        else:
+                            # Just (hide) with no value defaults to yes
+                            is_hidden = True
+                        break
+                break
+
         return {
-            "name": item[1] if len(item) > 1 else None,
-            "value": item[2] if len(item) > 2 else None,
+            "name": prop_name,
+            "value": prop_value,
+            "hidden": is_hidden,
         }
 
     def _parse_instances(self, item: List[Any]) -> List[Dict[str, Any]]:
@@ -261,18 +350,25 @@ class SymbolParser(BaseElementParser):
         is_power_symbol = "power:" in lib_id
         rotation = symbol_data.get("rotation", 0)
 
+        # Get hidden_properties set for visibility control
+        hidden_props = symbol_data.get("hidden_properties", set())
+
         if symbol_data.get("reference"):
             # Check for preserved S-expression
             preserved_ref = symbol_data.get("properties", {}).get("__sexp_Reference")
             if preserved_ref:
-                # Use preserved format but update the value
+                # Use preserved format but update value and hide flag
                 ref_prop = list(preserved_ref)
                 if len(ref_prop) >= 3:
                     ref_prop[2] = symbol_data["reference"]
+                # Update hide flag based on hidden_properties set
+                ref_should_hide = "Reference" in hidden_props
+                ref_prop = self._update_property_hide_flag(ref_prop, ref_should_hide)
                 sexp.append(ref_prop)
             else:
                 # No preserved format - create new (for newly added components)
-                ref_hide = is_power_symbol
+                # Default: hide for power symbols, otherwise visible
+                ref_hide = "Reference" in hidden_props if "Reference" in hidden_props or not is_power_symbol else is_power_symbol
                 ref_prop = self._create_property_with_positioning(
                     "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide, rotation=rotation
                 )
@@ -282,20 +378,24 @@ class SymbolParser(BaseElementParser):
             # Check for preserved S-expression
             preserved_val = symbol_data.get("properties", {}).get("__sexp_Value")
             if preserved_val:
-                # Use preserved format but update the value
+                # Use preserved format but update value and hide flag
                 val_prop = list(preserved_val)
                 if len(val_prop) >= 3:
                     val_prop[2] = symbol_data["value"]
+                # Update hide flag based on hidden_properties set
+                val_should_hide = "Value" in hidden_props
+                val_prop = self._update_property_hide_flag(val_prop, val_should_hide)
                 sexp.append(val_prop)
             else:
                 # No preserved format - create new (for newly added components)
+                val_hide = "Value" in hidden_props
                 if is_power_symbol:
                     val_prop = self._create_power_symbol_value_property(
                         symbol_data["value"], pos, lib_id, rotation
                     )
                 else:
                     val_prop = self._create_property_with_positioning(
-                        "Value", symbol_data["value"], pos, 1, "left", rotation=rotation
+                        "Value", symbol_data["value"], pos, 1, "left", hide=val_hide, rotation=rotation
                     )
                 sexp.append(val_prop)
 
@@ -304,38 +404,60 @@ class SymbolParser(BaseElementParser):
             # Check for preserved S-expression
             preserved_fp = symbol_data.get("properties", {}).get("__sexp_Footprint")
             if preserved_fp:
-                # Use preserved format but update the value
+                # Use preserved format but update value and hide flag
                 fp_prop = list(preserved_fp)
                 if len(fp_prop) >= 3:
                     fp_prop[2] = footprint
+                # Update hide flag based on hidden_properties set
+                fp_should_hide = "Footprint" in hidden_props
+                fp_prop = self._update_property_hide_flag(fp_prop, fp_should_hide)
                 sexp.append(fp_prop)
             else:
                 # No preserved format - create new (for newly added components)
+                # Default: Footprint is usually hidden
+                fp_hide = "Footprint" in hidden_props if "Footprint" in hidden_props else True
                 fp_prop = self._create_property_with_positioning(
-                    "Footprint", footprint, pos, 2, "left", hide=True
+                    "Footprint", footprint, pos, 2, "left", hide=fp_hide
                 )
                 sexp.append(fp_prop)
+
+        # Standard properties that are typically hidden by KiCAD (unless explicitly made visible)
+        STANDARD_HIDDEN_PROPS = {"Datasheet", "Description", "ki_keywords", "ki_description", "ki_fp_filters"}
 
         for prop_name, prop_value in symbol_data.get("properties", {}).items():
             # Skip internal preservation keys
             if prop_name.startswith("__sexp_"):
                 continue
 
+            # Determine hide state:
+            # 1. If explicitly in hidden_props -> hide
+            # 2. Else if standard property -> default to hidden
+            # 3. Else custom property -> default to visible
+            if prop_name in hidden_props:
+                should_hide = True
+            elif prop_name in STANDARD_HIDDEN_PROPS:
+                should_hide = True
+            else:
+                should_hide = False
+
             # Check if we have a preserved S-expression for this custom property
             preserved_prop = symbol_data.get("properties", {}).get(f"__sexp_{prop_name}")
             if preserved_prop:
-                # Use preserved format but update the value
+                # Use preserved format but update value and hide flag
                 prop = list(preserved_prop)
                 if len(prop) >= 3:
                     # Re-escape quotes when saving
                     escaped_value = str(prop_value).replace('"', '\\"')
                     prop[2] = escaped_value
+
+                # Update hide flag based on hidden_properties set
+                prop = self._update_property_hide_flag(prop, should_hide)
                 sexp.append(prop)
             else:
                 # No preserved format - create new (for newly added properties)
                 escaped_value = str(prop_value).replace('"', '\\"')
                 prop = self._create_property_with_positioning(
-                    prop_name, escaped_value, pos, 3, "left", hide=True
+                    prop_name, escaped_value, pos, 3, "left", hide=should_hide
                 )
                 sexp.append(prop)
 
