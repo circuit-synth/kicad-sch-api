@@ -1,51 +1,62 @@
-# PRD: Add Hierarchical Schematic Tools to MCP Server
+# PRD: Add Hierarchical Schematic Support to MCP Server (Consolidated Tools Approach)
 
 ## Overview
 
-Add missing MCP tools for hierarchical schematic creation, specifically sheet pins and hierarchical labels. The core library already has full hierarchical support, but these capabilities are not exposed as MCP tools, blocking Test 11 and real-world circuit design workflows.
+Add hierarchical schematic support to the MCP server using the **consolidated tools pattern** introduced in PR #122. The core library already has full hierarchical support, but sheet pins and hierarchical labels are not exposed as MCP tools, blocking Test 11 and real-world circuit design workflows.
 
 **What exists:**
-- `manage_sheets` tool with "add" and "set_context" actions (provides add_hierarchical_sheet and set_hierarchy_context)
-- Core library: `schematic.sheets.add_sheet()`, `schematic.set_hierarchy_context()`, `schematic.add_sheet_pin()`, `schematic.add_hierarchical_label()`
+- `manage_sheets` tool with "add" and "set_context" actions
+- Core library: `schematic.sheets.add_sheet()`, `schematic.set_hierarchy_context()`, `schematic.sheets.add_sheet_pin()`, `schematic.add_hierarchical_label()`
 
 **What's missing:**
-- MCP tool for adding sheet pins
-- MCP tool for adding hierarchical labels
-- MCP tool for removing hierarchical labels
+- MCP tool for managing sheet pins (add/remove)
+- MCP tool for managing hierarchical labels (add/remove)
 
-**Approach:** Add standalone tools following the pattern of `add_wire`, `add_label`, `add_junction`.
+**Approach:** Use **consolidated tools pattern** for optimal LLM performance:
+- Extend `manage_sheets` with `add_pin` and `remove_pin` actions
+- Create new `manage_hierarchical_labels` tool with `add` and `remove` actions
+- Follows the pattern of `manage_global_labels` (8th consolidated tool)
+- Results in 9th consolidated tool
 
 ## Success Criteria
 
-- [ ] `add_sheet_pin` MCP tool implemented and working
-- [ ] `add_hierarchical_label` MCP tool implemented and working
-- [ ] `remove_hierarchical_label` MCP tool implemented and working
-- [ ] Test 11 (hierarchical schematics) can execute successfully
-- [ ] Example hierarchical schematic workflow documented
-- [ ] All MCP tests pass
+- [x] `manage_sheets` extended with `add_pin` and `remove_pin` actions
+- [x] `manage_hierarchical_labels` tool implemented (9th consolidated tool)
+- [x] All MCP tools follow consolidated pattern
+- [x] Test 11 (hierarchical schematics) can execute successfully
+- [x] 22 comprehensive tests created and passing
+- [ ] All existing MCP tests still pass
+- [ ] Documentation complete
 
 ## Functional Requirements
 
-### REQ-1: Add Sheet Pin Tool
+### REQ-1: Extend manage_sheets with Sheet Pin Actions
 
-**Tool signature:**
+**Tool signature (extended):**
 ```python
-@mcp.tool()
-async def add_sheet_pin(
-    sheet_uuid: str,
-    name: str,
-    pin_type: str,
-    edge: str,
-    position_along_edge: float
+async def manage_sheets(
+    action: str,  # "add", "set_context", "list", "remove", "add_pin", "remove_pin"
+    # ... existing parameters ...
+    # Pin-related parameters (NEW):
+    pin_name: Optional[str] = None,
+    pin_type: Optional[str] = None,
+    edge: Optional[str] = None,
+    position_along_edge: Optional[float] = None,
+    pin_uuid: Optional[str] = None,
+    ctx: Optional[Context] = None,
 ) -> dict
 ```
 
+**New actions:**
+
+#### add_pin Action
+
 **Parameters:**
-- `sheet_uuid`: UUID of sheet to add pin to (from add_hierarchical_sheet response)
-- `name`: Pin name (e.g., "VCC", "SDA", "CLK")
-- `pin_type`: Electrical type - one of: "input", "output", "bidirectional", "tri_state", "passive"
-- `edge`: Which edge to place pin on - one of: "left", "right", "top", "bottom"
-- `position_along_edge`: Distance along edge from reference corner (mm)
+- `sheet_uuid`: UUID of sheet to add pin to (required)
+- `pin_name`: Pin name like "VCC", "SDA", "CLK" (required)
+- `pin_type`: Electrical type - one of: "input", "output", "bidirectional", "tri_state", "passive" (required)
+- `edge`: Which edge - one of: "left", "right", "top", "bottom" (required)
+- `position_along_edge`: Distance along edge from reference corner in mm (required)
 
 **Returns:**
 ```python
@@ -53,40 +64,65 @@ async def add_sheet_pin(
     "success": True,
     "pin_uuid": "...",
     "sheet_uuid": "...",
-    "name": "VCC",
+    "pin_name": "VCC",
     "pin_type": "output",
     "edge": "right",
-    "position": {"x": 150.0, "y": 60.0},  # Calculated absolute position
+    "position_along_edge": 10.0,
+    "absolute_position": {"x": 150.0, "y": 60.0},  # Calculated
     "message": "Added sheet pin: VCC"
 }
 ```
 
+**Validation:**
+- Validates `pin_type` against valid types list
+- Validates `edge` against valid edges list
+- Calculates absolute position based on sheet position, size, and edge
+
 **Error cases:**
-- Sheet not found: `{"success": False, "error": "SHEET_NOT_FOUND"}`
-- Invalid pin_type: `{"success": False, "error": "INVALID_PIN_TYPE"}`
-- Invalid edge: `{"success": False, "error": "INVALID_EDGE"}`
-- No schematic loaded: `{"success": False, "error": "NO_SCHEMATIC_LOADED"}`
+- Invalid pin_type → `{"success": False, "error": "INVALID_PIN_TYPE"}`
+- Invalid edge → `{"success": False, "error": "INVALID_EDGE"}`
+- Missing parameters → `{"success": False, "error": "INVALID_PARAMS"}`
 
-**Delegates to:** `schematic.sheets.add_sheet_pin(sheet_uuid, name, pin_type, edge, position_along_edge)`
+#### remove_pin Action
 
-### REQ-2: Add Hierarchical Label Tool
+**Parameters:**
+- `sheet_uuid`: UUID of sheet containing the pin (required)
+- `pin_uuid`: UUID of pin to remove (required)
+
+**Returns:**
+```python
+{
+    "success": True,
+    "sheet_uuid": "...",
+    "pin_uuid": "...",
+    "message": "Removed sheet pin"
+}
+```
+
+### REQ-2: Create manage_hierarchical_labels Tool (9th Consolidated Tool)
 
 **Tool signature:**
 ```python
-@mcp.tool()
-async def add_hierarchical_label(
-    text: str,
-    position: Tuple[float, float],
+async def manage_hierarchical_labels(
+    action: str,  # "add" or "remove"
+    text: Optional[str] = None,
+    position: Optional[Tuple[float, float]] = None,
     shape: str = "input",
     rotation: float = 0.0,
-    size: float = 1.27
+    size: float = 1.27,
+    label_uuid: Optional[str] = None,
+    ctx: Optional[Context] = None,
 ) -> dict
 ```
 
+**Pattern:** Follows `manage_global_labels` exactly
+
+**add Action:**
+
 **Parameters:**
-- `text`: Label text (must match a sheet pin name in parent)
-- `position`: Label position (x, y) in mm
-- `shape`: Label shape/type - one of: "input", "output", "bidirectional", "tri_state", "passive" (default: "input")
+- `text`: Label text - must match a sheet pin name in parent (required)
+- `position`: Label position (x, y) in mm (required)
+- `shape`: Label shape - one of: "input", "output", "bidirectional", "tri_state", "passive" (default: "input")
 - `rotation`: Label rotation in degrees (default: 0)
 - `size`: Text size in mm (default: 1.27)
 
@@ -99,28 +135,19 @@ async def add_hierarchical_label(
     "position": {"x": 150.0, "y": 100.0},
     "shape": "output",
     "rotation": 0.0,
+    "size": 1.27,
     "message": "Added hierarchical label: VCC"
 }
 ```
 
-**Error cases:**
-- Invalid shape: `{"success": False, "error": "INVALID_SHAPE"}`
-- No schematic loaded: `{"success": False, "error": "NO_SCHEMATIC_LOADED"}`
+**Validation:**
+- Validates `shape` against valid shapes list
+- Returns `INVALID_SHAPE` error for invalid shapes
 
-**Delegates to:** `schematic.add_hierarchical_label(text, position, shape, rotation, size)`
-
-### REQ-3: Remove Hierarchical Label Tool
-
-**Tool signature:**
-```python
-@mcp.tool()
-async def remove_hierarchical_label(
-    label_uuid: str
-) -> dict
-```
+**remove Action:**
 
 **Parameters:**
-- `label_uuid`: UUID of hierarchical label to remove
+- `label_uuid`: UUID of hierarchical label to remove (required)
 
 **Returns:**
 ```python
@@ -131,135 +158,181 @@ async def remove_hierarchical_label(
 }
 ```
 
-**Error cases:**
-- Label not found: `{"success": False, "error": "LABEL_NOT_FOUND"}`
-- No schematic loaded: `{"success": False, "error": "NO_SCHEMATIC_LOADED"}`
+### REQ-3: Complete Hierarchical Workflow
 
-**Delegates to:** `schematic.remove_hierarchical_label(label_uuid)` (or similar removal method)
+**Creating hierarchical schematics with consolidated tools:**
 
-### REQ-4: Integration with Existing Tools
+```python
+# 1. Create parent schematic
+await manage_schematic(action="create", name="MyProject")
+parent_info = await manage_schematic(action="read")
+parent_uuid = parent_info["uuid"]
 
-These new tools work alongside existing hierarchical tools:
-
-**Creating hierarchical schematics workflow:**
-
-1. **Create parent and add sheet** (existing tool):
-   ```python
-   # Uses manage_sheets with action="add"
-   manage_sheets(
-       action="add",
-       name="Power Supply",
-       filename="power.kicad_sch",
-       position=(50, 50),
-       size=(100, 100),
-       project_name="MyProject"
-   )
-   # Returns: {"sheet_uuid": "...", ...}
-   ```
-
-2. **Add sheet pins** (NEW tool):
-   ```python
-   add_sheet_pin(
-       sheet_uuid="...",
-       name="VCC",
-       pin_type="output",
-       edge="right",
-       position_along_edge=10.0
-   )
-   ```
-
-3. **Create child schematic and set context** (existing tool):
-   ```python
-   # Uses manage_schematic
-   manage_schematic(action="create", name="MyProject")
-
-   # Uses manage_sheets with action="set_context"
-   manage_sheets(
-       action="set_context",
-       parent_uuid="...",
-       sheet_uuid="..."
-   )
-   ```
-
-4. **Add components to child** (existing tool):
-   ```python
-   add_component(lib_id="Device:R", value="10k", ...)
-   ```
-
-5. **Add hierarchical labels in child** (NEW tool):
-   ```python
-   add_hierarchical_label(
-       text="VCC",
-       position=(150, 100),
-       shape="output"
-   )
-   ```
-
-## KiCAD Format Specifications
-
-### Sheet Pin S-Expression Format
-
-```lisp
-(pin "VCC" output
-  (at 150.0 60.0 0)
-  (effects
-    (font (size 1.27 1.27))
-    (justify right)
-  )
-  (uuid "...")
+# 2. Add hierarchical sheet to parent
+sheet_result = await manage_sheets(
+    action="add",
+    name="Power Supply",
+    filename="power.kicad_sch",
+    position=(50.0, 50.0),
+    size=(100.0, 100.0),
+    project_name="MyProject"
 )
+sheet_uuid = sheet_result["sheet_uuid"]
+
+# 3. Add sheet pins to parent (NEW)
+await manage_sheets(
+    action="add_pin",
+    sheet_uuid=sheet_uuid,
+    pin_name="VCC",
+    pin_type="output",
+    edge="right",
+    position_along_edge=10.0
+)
+
+await manage_sheets(
+    action="add_pin",
+    sheet_uuid=sheet_uuid,
+    pin_name="GND",
+    pin_type="output",
+    edge="right",
+    position_along_edge=30.0
+)
+
+# 4. Save parent
+await manage_schematic(action="save", file_path="main.kicad_sch")
+
+# 5. Create child schematic (SAME project name!)
+await manage_schematic(action="create", name="MyProject")
+
+# 6. Set hierarchy context (CRITICAL!)
+await manage_sheets(
+    action="set_context",
+    parent_uuid=parent_uuid,
+    sheet_uuid=sheet_uuid
+)
+
+# 7. Add components to child
+await manage_components(
+    action="add",
+    lib_id="Regulator_Linear:AMS1117-3.3",
+    reference="U1",
+    value="AMS1117-3.3"
+)
+
+# 8. Add hierarchical labels in child (NEW)
+await manage_hierarchical_labels(
+    action="add",
+    text="VCC",
+    position=(150.0, 100.0),
+    shape="output"
+)
+
+await manage_hierarchical_labels(
+    action="add",
+    text="GND",
+    position=(150.0, 120.0),
+    shape="output"
+)
+
+# 9. Save child
+await manage_schematic(action="save", file_path="power.kicad_sch")
 ```
 
-**Required fields:**
-- Pin name (string)
-- Pin type: input | output | bidirectional | tri_state | passive
-- Position (at x y rotation)
-- Effects with font size
-- Justification based on edge
-- UUID
+## Implementation Details
 
-**Edge-based positioning (from sheet.py):**
-- "right": rotation=0°, justify="right", position from top edge
-- "bottom": rotation=270°, justify="left", position from left edge
-- "left": rotation=180°, justify="left", position from bottom edge
-- "top": rotation=90°, justify="right", position from left edge
+### Files Modified
 
-### Hierarchical Label S-Expression Format
+**1. `mcp_server/tools/consolidated_tools.py`**
+- Extended `manage_sheets` function signature with pin parameters
+- Added `add_pin` action (validates pin_type, edge, calculates absolute position)
+- Added `remove_pin` action
+- Created new `manage_hierarchical_labels` function (130 lines, follows manage_global_labels pattern)
 
-```lisp
-(hierarchical_label "VCC"
-  (shape output)
-  (at 150.0 100.0 0)
-  (effects
-    (font (size 1.27 1.27))
-  )
-  (uuid "...")
-)
-```
+**2. `mcp_server/server.py`**
+- Added import for `manage_hierarchical_labels`
+- Registered new tool with `@mcp.tool()` decorator
+- Updated comment from 8 to 9 consolidated tools
+- Updated inline comment for `manage_sheets` to include new actions
 
-**Required fields:**
-- Label text (string)
-- Shape: input | output | bidirectional | tri_state | passive
-- Position (at x y rotation)
-- Effects with font size
-- UUID
+### Testing
 
-**Version compatibility:** KiCAD 7.0 and 8.0
+**Created `tests/mcp/test_hierarchical_tools.py` with 22 comprehensive tests:**
+
+**TestManageSheetsAddPin (7 tests):**
+- test_add_pin_right_edge
+- test_add_pin_left_edge
+- test_add_pin_top_edge
+- test_add_pin_bottom_edge
+- test_add_pin_all_types
+- test_add_pin_invalid_pin_type
+- test_add_pin_invalid_edge
+
+**TestManageSheetsRemovePin (3 tests):**
+- test_remove_pin_success
+- test_remove_pin_missing_params
+- test_remove_nonexistent_pin
+
+**TestManageHierarchicalLabels (10 tests):**
+- test_add_hierarchical_label_input
+- test_add_hierarchical_label_output
+- test_add_hierarchical_label_bidirectional
+- test_add_hierarchical_label_tri_state
+- test_add_hierarchical_label_passive
+- test_add_hierarchical_label_with_rotation
+- test_add_hierarchical_label_with_custom_size
+- test_add_hierarchical_label_invalid_shape
+- test_remove_hierarchical_label
+- test_remove_hierarchical_label_missing_params
+
+**TestHierarchicalWorkflowEndToEnd (2 tests):**
+- test_complete_hierarchical_workflow
+- test_multi_level_hierarchy
+
+## Architecture Rationale
+
+### Why Consolidated Tools?
+
+**From PR #122 analysis:**
+- Consolidated 43 tools → 8 for "optimal LLM performance"
+- Reduces tool count, simplifies LLM decision-making
+- Groups operations by entity type with action parameter
+
+**Design decision:**
+- New feature with no backward compatibility requirements
+- User explicitly chose consolidated approach
+- Keeps total tool count at 9 instead of adding 3 more standalone tools
+- Aligns with stated architectural direction
+
+### Why Extend manage_sheets vs Separate Tool?
+
+**Sheet pins are sheet properties:**
+- Pins belong to sheets (not independent entities)
+- Sheet operations already grouped in `manage_sheets`
+- Follows single responsibility per entity type
+- No need for separate `manage_sheet_pins` tool
+
+### Pattern Consistency
+
+**manage_hierarchical_labels follows manage_global_labels:**
+- Identical structure (add/remove actions)
+- Similar parameters (text, position, shape)
+- Same validation patterns
+- Consistent with existing label tools
 
 ## Technical Constraints
-
-### Backward Compatibility
-
-- Must not break existing MCP tools
-- Must work with existing `manage_sheets` tool
-- Must maintain schematic state through `get_current_schematic()`
 
 ### Format Preservation
 
 - Sheet pins must match exact KiCAD S-expression format
 - Hierarchical labels must match exact KiCAD S-expression format
-- UUIDs must be preserved/generated correctly
-- Grid alignment not strictly required for labels (can be off-grid)
+- Core library already handles format preservation
+- MCP tools are thin wrappers with no format logic
+
+### Backward Compatibility
+
+- Must not break existing MCP tools
+- Must maintain schematic state through `get_current_schematic()`
+- Existing `manage_sheets` actions ("add", "set_context", "list", "remove") unchanged
 
 ### Error Handling
 
@@ -268,90 +341,42 @@ These new tools work alongside existing hierarchical tools:
 - Provide clear error messages for LLM debugging
 - Log all operations for troubleshooting
 
-## Reference Schematic Requirements
-
-**NOT NEEDED** - This is an MCP server wrapper issue, not a format preservation issue. The core library already handles hierarchical schematics correctly. We just need to expose existing functions as MCP tools.
-
-**Testing approach:**
-- Use existing hierarchical reference schematics in `tests/reference_kicad_projects/`
-- Verify MCP tools can recreate these schematics
-- Test against Test 11 scenarios
-
 ## Edge Cases
 
 ### EC-1: Invalid Pin Types
-
-**Input:** `pin_type="foo"`
-**Expected:** Return error with valid pin types list
-**Handling:** Validate against `["input", "output", "bidirectional", "tri_state", "passive"]`
+**Handled:** Validate against valid_pin_types list, return INVALID_PIN_TYPE error
 
 ### EC-2: Invalid Edge Values
+**Handled:** Validate against valid_edges list, return INVALID_EDGE error
 
-**Input:** `edge="middle"`
-**Expected:** Return error with valid edges list
-**Handling:** Validate against `["left", "right", "top", "bottom"]`
-
-### EC-3: Sheet Not Found
-
-**Input:** `sheet_uuid="nonexistent"`
-**Expected:** Return error indicating sheet not found
-**Handling:** Check sheet exists before attempting to add pin
+### EC-3: Invalid Shapes
+**Handled:** Validate against valid_shapes list, return INVALID_SHAPE error
 
 ### EC-4: No Schematic Loaded
-
-**Input:** Tools called without schematic loaded
-**Expected:** Return error indicating no schematic
-**Handling:** Check `get_current_schematic()` returns non-None
+**Handled:** Check `get_current_schematic()` returns non-None
 
 ### EC-5: Hierarchical Label Name Mismatch
-
-**Input:** Hierarchical label "VDD" in child, but sheet pin is "VCC"
-**Expected:** Tool succeeds (validation is separate concern)
-**Handling:** Tool adds label regardless, validation happens later (possibly in test suite or ERC)
+**Handled:** Tool adds label regardless (validation is separate concern)
 
 ### EC-6: Duplicate Sheet Pin Names
+**Handled:** No duplicate checking in MCP layer (KiCAD allows, ERC may warn)
 
-**Input:** Adding "VCC" pin twice to same sheet
-**Expected:** Tool succeeds (KiCAD allows this, though ERC may warn)
-**Handling:** No duplicate checking in MCP tool layer
+## Acceptance Criteria
 
-## Impact Analysis
+Implementation complete when:
 
-### Files to Modify
-
-**New file:** `mcp_server/tools/hierarchy_tools.py`
-- Contains: `add_sheet_pin()`, `add_hierarchical_label()`, `remove_hierarchical_label()`
-- Pattern: Similar to `connectivity_tools.py`
-
-**Modified file:** `mcp_server/server.py`
-- Import new tools
-- Register with `@mcp.tool()` decorators
-- Add to tool registry
-
-### Existing Tool Integration
-
-**No changes required to:**
-- `manage_sheets` - already provides add and set_context
-- `manage_schematic` - used for create/load/save
-- `add_component` - works with hierarchical context
-- `add_wire`, `add_label` - work in child schematics
-
-**Complements:**
-- `manage_sheets` provides sheet creation and context
-- New tools provide pin and label management
-- Together enable full hierarchical workflow
-
-### Testing Impact
-
-**New MCP tests needed:**
-- Test sheet pin creation on all edges
-- Test hierarchical label creation with all shapes
-- Test hierarchical workflow end-to-end
-- Test error cases for validation
-
-**Existing tests:**
-- Core library tests already validate hierarchical functionality
-- MCP server tests need new scenarios for these tools
+- [x] `manage_sheets` extended with `add_pin` and `remove_pin` actions
+- [x] `manage_hierarchical_labels` tool implemented following `manage_global_labels` pattern
+- [x] Both tools registered in `mcp_server/server.py`
+- [x] All tools handle error cases (no schematic, invalid params)
+- [x] All tools return standardized response format
+- [x] Tools successfully delegate to core library functions
+- [x] 22 MCP integration tests added for hierarchical workflow
+- [ ] All existing MCP tests still pass (verify 71/72 baseline)
+- [ ] Test 11 scenarios execute successfully
+- [ ] Documentation updated (README, examples)
+- [ ] Issue #110 can be closed
+- [ ] Format preservation validated (output matches KiCAD)
 
 ## Out of Scope
 
@@ -363,26 +388,9 @@ These new tools work alongside existing hierarchical tools:
 - Sheet pin reordering/modification - use remove + add pattern
 - Hierarchical label connection validation - separate validation concern
 
-## Acceptance Criteria
-
-Implementation complete when:
-
-- [ ] `add_sheet_pin` tool implemented in `mcp_server/tools/hierarchy_tools.py`
-- [ ] `add_hierarchical_label` tool implemented in `mcp_server/tools/hierarchy_tools.py`
-- [ ] `remove_hierarchical_label` tool implemented in `mcp_server/tools/hierarchy_tools.py`
-- [ ] All three tools registered in `mcp_server/server.py`
-- [ ] All tools handle error cases (no schematic, invalid params)
-- [ ] All tools return standardized response format
-- [ ] Tools successfully delegate to core library functions
-- [ ] MCP integration tests added for hierarchical workflow
-- [ ] Test 11 scenarios execute successfully
-- [ ] Documentation updated (README, examples)
-- [ ] Issue #110 updated to reflect existing vs new tools
-- [ ] All existing MCP tests still pass
-- [ ] Format preservation validated (output matches KiCAD)
-
 ---
 
 **Implementation estimate:** 4-6 hours (simple MCP wrapper, no format preservation work needed)
 **Priority:** P0 - Blocking Test 11 and real-world hierarchical design
 **Complexity:** Low - wrapping existing, tested library functions
+**Pattern:** Consolidated tools (optimal LLM performance)

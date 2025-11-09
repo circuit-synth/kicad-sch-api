@@ -11,9 +11,31 @@ from pathlib import Path
 from typing import Optional
 
 from fastmcp import FastMCP
-
-import kicad_sch_api as ksa
 from mcp_server.models import ErrorOutput
+from mcp_server.tools.component_tools import (
+    add_component,
+    filter_components,
+    list_components,
+    remove_component,
+    update_component,
+)
+from mcp_server.tools.connectivity_tools import (
+    add_junction,
+    add_label,
+    add_wire,
+    connect_components,
+)
+from mcp_server.tools.consolidated_tools import (
+    manage_components,
+    manage_global_labels,
+    manage_hierarchical_labels,
+    manage_labels,
+    manage_power,
+    manage_schematic,
+    manage_sheets,
+    manage_text_boxes,
+    manage_wires,
+)
 from mcp_server.tools.pin_discovery import (
     find_pins_by_name,
     find_pins_by_type,
@@ -21,30 +43,8 @@ from mcp_server.tools.pin_discovery import (
     get_current_schematic,
     set_current_schematic,
 )
-from mcp_server.tools.component_tools import (
-    add_component,
-    list_components,
-    update_component,
-    remove_component,
-    filter_components,
-)
-from mcp_server.tools.connectivity_tools import (
-    add_wire,
-    add_label,
-    add_junction,
-    connect_components,
-)
-from mcp_server.tools.consolidated_tools import (
-    manage_schematic,
-    manage_components,
-    manage_wires,
-    manage_labels,
-    manage_text_boxes,
-    manage_power,
-    manage_sheets,
-    manage_global_labels,
-)
 
+import kicad_sch_api as ksa
 
 # Configure logging
 logging.basicConfig(
@@ -318,16 +318,17 @@ mcp.tool()(connect_components)
 
 # ========== Register Consolidated Tools ==========
 
-# Register the 8 consolidated CRUD tools for schematic management
+# Register the 9 consolidated CRUD tools for schematic management
 # These tools consolidate all operations by entity type with action parameters
-mcp.tool()(manage_schematic)      # Schematic: create, read, save, load
-mcp.tool()(manage_components)     # Components: add, list, get_pins, update, remove
-mcp.tool()(manage_wires)          # Wires: add, remove
-mcp.tool()(manage_labels)         # Labels: add, remove
-mcp.tool()(manage_text_boxes)     # TextBoxes: add, update, remove
-mcp.tool()(manage_power)          # Power: add, list, remove
-mcp.tool()(manage_sheets)         # Sheets: add, set_context, list, remove
+mcp.tool()(manage_schematic)  # Schematic: create, read, save, load
+mcp.tool()(manage_components)  # Components: add, list, get_pins, update, remove
+mcp.tool()(manage_wires)  # Wires: add, remove
+mcp.tool()(manage_labels)  # Labels: add, remove
+mcp.tool()(manage_text_boxes)  # TextBoxes: add, update, remove
+mcp.tool()(manage_power)  # Power: add, list, remove
+mcp.tool()(manage_sheets)  # Sheets: add, set_context, list, remove, add_pin, remove_pin
 mcp.tool()(manage_global_labels)  # GlobalLabels: add, remove
+mcp.tool()(manage_hierarchical_labels)  # HierarchicalLabels: add, remove
 
 
 # ========== Server Entry Point ==========

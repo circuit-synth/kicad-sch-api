@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 # Import global schematic state
 from mcp_server.tools.pin_discovery import get_current_schematic, set_current_schematic
 
-
 # ============================================================================
 # 1. MANAGE SCHEMATIC (create, read, save, load)
 # ============================================================================
@@ -77,7 +76,7 @@ async def manage_schematic(
             logger.info(f"[MCP] Created schematic: {name}")
             return {
                 "success": True,
-                "project_name": sch.title_block.get('title') or name,
+                "project_name": sch.title_block.get("title") or name,
                 "uuid": str(sch.uuid),
                 "message": f"Created schematic: {name}",
             }
@@ -99,12 +98,10 @@ async def manage_schematic(
             }
 
         try:
-            component_refs = [
-                c.reference for c in schematic.components
-            ]
+            component_refs = [c.reference for c in schematic.components]
             return {
                 "success": True,
-                "project_name": schematic.title_block.get('title') or "Untitled",
+                "project_name": schematic.title_block.get("title") or "Untitled",
                 "uuid": str(schematic.uuid),
                 "component_count": len(schematic.components),
                 "component_references": component_refs,
@@ -171,7 +168,7 @@ async def manage_schematic(
             logger.info(f"[MCP] Loaded schematic from: {file_path}")
             return {
                 "success": True,
-                "project_name": sch.title_block.get('title') or "Untitled",
+                "project_name": sch.title_block.get("title") or "Untitled",
                 "uuid": str(sch.uuid),
                 "component_count": len(sch.components),
                 "file_path": file_path,
@@ -281,14 +278,16 @@ async def manage_components(
         try:
             components = []
             for comp in schematic.components:
-                components.append({
-                    "reference": comp.reference,
-                    "lib_id": comp.lib_id,
-                    "value": comp.value,
-                    "position": {"x": comp.position.x, "y": comp.position.y},
-                    "rotation": comp.rotation,
-                    "uuid": str(comp.uuid),
-                })
+                components.append(
+                    {
+                        "reference": comp.reference,
+                        "lib_id": comp.lib_id,
+                        "value": comp.value,
+                        "position": {"x": comp.position.x, "y": comp.position.y},
+                        "rotation": comp.rotation,
+                        "uuid": str(comp.uuid),
+                    }
+                )
 
             logger.info(f"[MCP] Listed {len(components)} components")
             return {
@@ -324,16 +323,24 @@ async def manage_components(
 
             pins = []
             for pin in pins_data:
-                pins.append({
-                    "number": str(pin.number),
-                    "name": pin.name,
-                    "position": {
-                        "x": pin.position.x,
-                        "y": pin.position.y,
-                    },
-                    "electrical_type": pin.electrical_type.value if hasattr(pin.electrical_type, 'value') else str(pin.electrical_type),
-                    "pin_type": pin.shape.value if hasattr(pin.shape, 'value') else str(pin.shape),
-                })
+                pins.append(
+                    {
+                        "number": str(pin.number),
+                        "name": pin.name,
+                        "position": {
+                            "x": pin.position.x,
+                            "y": pin.position.y,
+                        },
+                        "electrical_type": (
+                            pin.electrical_type.value
+                            if hasattr(pin.electrical_type, "value")
+                            else str(pin.electrical_type)
+                        ),
+                        "pin_type": (
+                            pin.shape.value if hasattr(pin.shape, "value") else str(pin.shape)
+                        ),
+                    }
+                )
 
             logger.info(f"[MCP] Got pins for {reference}: {len(pins)} pins")
             return {
@@ -343,9 +350,7 @@ async def manage_components(
                 "pins": pins,
             }
         except Exception as e:
-            logger.error(
-                f"[MCP] Error getting pins for {reference}: {e}", exc_info=True
-            )
+            logger.error(f"[MCP] Error getting pins for {reference}: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": "GET_PINS_ERROR",
@@ -848,7 +853,7 @@ async def manage_power(
             logger.info(f"[MCP] Added power symbol: {power_net}")
             return {
                 "success": True,
-                "symbol_uuid": str(symbol.uuid) if hasattr(symbol, 'uuid') else power_net,
+                "symbol_uuid": str(symbol.uuid) if hasattr(symbol, "uuid") else power_net,
                 "power_net": power_net,
                 "position": {"x": position[0], "y": position[1]},
                 "message": f"Added power symbol: {power_net}",
@@ -868,11 +873,13 @@ async def manage_power(
             # This is a placeholder; actual implementation depends on Python API
             try:
                 for power_net in schematic.power_nets:  # If method exists
-                    power_nets.append({
-                        "name": power_net.name,
-                        "position": {"x": power_net.position.x, "y": power_net.position.y},
-                        "uuid": str(power_net.uuid),
-                    })
+                    power_nets.append(
+                        {
+                            "name": power_net.name,
+                            "position": {"x": power_net.position.x, "y": power_net.position.y},
+                            "uuid": str(power_net.uuid),
+                        }
+                    )
             except AttributeError:
                 # Fallback: return empty list if power_nets not available
                 power_nets = []
@@ -938,20 +945,31 @@ async def manage_sheets(
     project_name: Optional[str] = None,
     parent_uuid: Optional[str] = None,
     sheet_uuid: Optional[str] = None,
+    # Pin-related parameters
+    pin_name: Optional[str] = None,
+    pin_type: Optional[str] = None,
+    edge: Optional[str] = None,
+    position_along_edge: Optional[float] = None,
+    pin_uuid: Optional[str] = None,
     ctx: Optional[Context] = None,
 ) -> dict:
     """
-    Manage hierarchical sheets (add, set_context, list, remove).
+    Manage hierarchical sheets (add, set_context, list, remove, add_pin, remove_pin).
 
     Args:
-        action: Operation ("add", "set_context", "list", "remove")
+        action: Operation ("add", "set_context", "list", "remove", "add_pin", "remove_pin")
         name: Sheet name (required for "add")
         filename: Filename (required for "add")
         position: Position (required for "add")
         size: Size (required for "add")
         project_name: Project name (optional for "add")
         parent_uuid: Parent UUID (required for "set_context")
-        sheet_uuid: Sheet UUID (required for "set_context"/"remove")
+        sheet_uuid: Sheet UUID (required for "set_context"/"remove"/"add_pin"/"remove_pin")
+        pin_name: Pin name (required for "add_pin")
+        pin_type: Pin electrical type (required for "add_pin")
+        edge: Pin edge placement (required for "add_pin")
+        position_along_edge: Distance along edge in mm (required for "add_pin")
+        pin_uuid: Pin UUID (required for "remove_pin")
         ctx: MCP context (optional)
 
     Returns:
@@ -984,7 +1002,7 @@ async def manage_sheets(
                 filename=filename,
                 position=position,
                 size=size,
-                project_name=project_name or schematic.title_block.get('title'),
+                project_name=project_name or schematic.title_block.get("title"),
             )
 
             if ctx:
@@ -1046,13 +1064,22 @@ async def manage_sheets(
             # Try to iterate through sheets - handle different API versions
             try:
                 # Try getting all sheets
-                for sheet in schematic.sheets.values() if hasattr(schematic.sheets, 'values') else schematic.sheets:
-                    sheets.append({
-                        "uuid": str(sheet.uuid) if hasattr(sheet, 'uuid') else str(sheet),
-                        "name": sheet.name if hasattr(sheet, 'name') else '',
-                        "filename": sheet.filename if hasattr(sheet, 'filename') else '',
-                        "position": {"x": sheet.position.x if hasattr(sheet, 'position') else 0, "y": sheet.position.y if hasattr(sheet, 'position') else 0},
-                    })
+                for sheet in (
+                    schematic.sheets.values()
+                    if hasattr(schematic.sheets, "values")
+                    else schematic.sheets
+                ):
+                    sheets.append(
+                        {
+                            "uuid": str(sheet.uuid) if hasattr(sheet, "uuid") else str(sheet),
+                            "name": sheet.name if hasattr(sheet, "name") else "",
+                            "filename": sheet.filename if hasattr(sheet, "filename") else "",
+                            "position": {
+                                "x": sheet.position.x if hasattr(sheet, "position") else 0,
+                                "y": sheet.position.y if hasattr(sheet, "position") else 0,
+                            },
+                        }
+                    )
             except (TypeError, AttributeError):
                 # If iteration doesn't work, try using a method
                 pass
@@ -1096,11 +1123,120 @@ async def manage_sheets(
                 "message": f"Failed to remove sheet: {str(e)}",
             }
 
+    elif action == "add_pin":
+        if (
+            not sheet_uuid
+            or not pin_name
+            or not pin_type
+            or not edge
+            or position_along_edge is None
+        ):
+            return {
+                "success": False,
+                "error": "INVALID_PARAMS",
+                "message": "sheet_uuid, pin_name, pin_type, edge, and position_along_edge are required for add_pin action",
+            }
+
+        # Validate pin_type
+        valid_pin_types = ["input", "output", "bidirectional", "tri_state", "passive"]
+        if pin_type not in valid_pin_types:
+            return {
+                "success": False,
+                "error": "INVALID_PIN_TYPE",
+                "message": f"pin_type must be one of: {', '.join(valid_pin_types)}. Got: {pin_type}",
+            }
+
+        # Validate edge
+        valid_edges = ["left", "right", "top", "bottom"]
+        if edge not in valid_edges:
+            return {
+                "success": False,
+                "error": "INVALID_EDGE",
+                "message": f"edge must be one of: {', '.join(valid_edges)}. Got: {edge}",
+            }
+
+        try:
+            if ctx:
+                await ctx.report_progress(0, 100, f"Adding sheet pin: {pin_name}")
+
+            # Add the pin (core library calculates absolute position)
+            pin_uuid = schematic.sheets.add_sheet_pin(
+                sheet_uuid=sheet_uuid,
+                name=pin_name,
+                pin_type=pin_type,
+                edge=edge,
+                position_along_edge=position_along_edge,
+            )
+
+            if pin_uuid is None:
+                return {
+                    "success": False,
+                    "error": "SHEET_NOT_FOUND",
+                    "message": f"Sheet not found: {sheet_uuid}",
+                }
+
+            if ctx:
+                await ctx.report_progress(100, 100, f"Sheet pin added: {pin_name}")
+
+            logger.info(f"[MCP] Added sheet pin: {pin_name} to sheet {sheet_uuid}")
+            return {
+                "success": True,
+                "pin_uuid": str(pin_uuid),
+                "sheet_uuid": sheet_uuid,
+                "pin_name": pin_name,
+                "pin_type": pin_type,
+                "edge": edge,
+                "position_along_edge": position_along_edge,
+                "message": f"Added sheet pin: {pin_name}",
+            }
+        except Exception as e:
+            logger.error(f"[MCP] Error adding sheet pin: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": "ADD_PIN_ERROR",
+                "message": f"Failed to add sheet pin: {str(e)}",
+            }
+
+    elif action == "remove_pin":
+        if not sheet_uuid or not pin_uuid:
+            return {
+                "success": False,
+                "error": "INVALID_PARAMS",
+                "message": "sheet_uuid and pin_uuid are required for remove_pin action",
+            }
+
+        try:
+            if ctx:
+                await ctx.report_progress(0, 100, "Removing sheet pin")
+
+            schematic.sheets.remove_sheet_pin(
+                sheet_uuid=sheet_uuid,
+                pin_uuid=pin_uuid,
+            )
+
+            if ctx:
+                await ctx.report_progress(100, 100, "Sheet pin removed")
+
+            logger.info(f"[MCP] Removed sheet pin: {pin_uuid} from sheet {sheet_uuid}")
+            return {
+                "success": True,
+                "sheet_uuid": sheet_uuid,
+                "pin_uuid": pin_uuid,
+                "message": "Removed sheet pin",
+            }
+        except Exception as e:
+            logger.error(f"[MCP] Error removing sheet pin: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": "REMOVE_PIN_ERROR",
+                "message": f"Failed to remove sheet pin: {str(e)}",
+            }
+
     else:
         return {
             "success": False,
             "error": "INVALID_ACTION",
-            "message": f"Unknown action: {action}. Valid actions: add, set_context, list, remove",
+            "message": f"Unknown action: {action}. Valid actions: add, set_context, list, remove, add_pin, remove_pin",
         }
 
 
@@ -1206,6 +1342,134 @@ async def manage_global_labels(
                 "success": False,
                 "error": "REMOVE_ERROR",
                 "message": f"Failed to remove global label: {str(e)}",
+            }
+
+    else:
+        return {
+            "success": False,
+            "error": "INVALID_ACTION",
+            "message": f"Unknown action: {action}. Valid actions: add, remove",
+        }
+
+
+# ============================================================================
+# 9. MANAGE HIERARCHICAL LABELS (add, remove)
+# ============================================================================
+
+
+async def manage_hierarchical_labels(
+    action: str,
+    text: Optional[str] = None,
+    position: Optional[Tuple[float, float]] = None,
+    shape: str = "input",
+    rotation: float = 0.0,
+    size: float = 1.27,
+    label_uuid: Optional[str] = None,
+    ctx: Optional[Context] = None,
+) -> dict:
+    """
+    Manage hierarchical labels (add, remove).
+
+    Hierarchical labels connect child schematics to parent sheet pins.
+    They enable signal routing through hierarchical sheet boundaries.
+
+    Args:
+        action: Operation ("add", "remove")
+        text: Label text (required for "add")
+        position: Position (required for "add")
+        shape: Label shape - "input", "output", "bidirectional", "tri_state", "passive" (optional)
+        rotation: Rotation in degrees (optional)
+        size: Text size in mm (optional, default: 1.27)
+        label_uuid: Label UUID (required for "remove")
+        ctx: MCP context (optional)
+
+    Returns:
+        Dictionary with label data or error
+    """
+    logger.info(f"[MCP] manage_hierarchical_labels called: action={action}")
+
+    schematic = get_current_schematic()
+    if schematic is None:
+        return {
+            "success": False,
+            "error": "NO_SCHEMATIC_LOADED",
+            "message": "No schematic is currently loaded",
+        }
+
+    if action == "add":
+        if not text or not position:
+            return {
+                "success": False,
+                "error": "INVALID_PARAMS",
+                "message": "text and position parameters required for add action",
+            }
+
+        # Validate shape
+        valid_shapes = ["input", "output", "bidirectional", "tri_state", "passive"]
+        if shape not in valid_shapes:
+            return {
+                "success": False,
+                "error": "INVALID_SHAPE",
+                "message": f"Shape must be one of: {', '.join(valid_shapes)}. Got: {shape}",
+            }
+
+        try:
+            if ctx:
+                await ctx.report_progress(0, 100, f"Adding hierarchical label: {text}")
+
+            label_uuid = schematic.add_hierarchical_label(
+                text=text,
+                position=position,
+                shape=shape,
+                rotation=rotation,
+                size=size,
+            )
+
+            if ctx:
+                await ctx.report_progress(100, 100, f"Hierarchical label added: {text}")
+
+            logger.info(f"[MCP] Added hierarchical label: {text}")
+            return {
+                "success": True,
+                "label_uuid": str(label_uuid),
+                "text": text,
+                "position": {"x": position[0], "y": position[1]},
+                "shape": shape,
+                "rotation": rotation,
+                "size": size,
+                "message": f"Added hierarchical label: {text}",
+            }
+        except Exception as e:
+            logger.error(f"[MCP] Error adding hierarchical label: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": "ADD_ERROR",
+                "message": f"Failed to add hierarchical label: {str(e)}",
+            }
+
+    elif action == "remove":
+        if not label_uuid:
+            return {
+                "success": False,
+                "error": "INVALID_PARAMS",
+                "message": "label_uuid parameter required for remove action",
+            }
+
+        try:
+            schematic.remove_hierarchical_label(label_uuid)
+
+            logger.info(f"[MCP] Removed hierarchical label: {label_uuid}")
+            return {
+                "success": True,
+                "label_uuid": label_uuid,
+                "message": "Removed hierarchical label",
+            }
+        except Exception as e:
+            logger.error(f"[MCP] Error removing hierarchical label: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": "REMOVE_ERROR",
+                "message": f"Failed to remove hierarchical label: {str(e)}",
             }
 
     else:
