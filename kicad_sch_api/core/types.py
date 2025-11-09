@@ -277,6 +277,148 @@ class SchematicSymbol:
         # Add to component position to get absolute position
         return Point(self.position.x + rotated_x, self.position.y + rotated_y)
 
+    def get_property_effects(self, property_name: str) -> Dict[str, Any]:
+        """
+        Get text effects for a component property.
+
+        Extracts and parses the effects (font, position, rotation, color, etc.)
+        from the property's S-expression.
+
+        Args:
+            property_name: Name of property ("Reference", "Value", "Footprint", etc.)
+
+        Returns:
+            Dictionary with effect properties:
+            {
+                'position': (x, y),
+                'rotation': float,
+                'font_face': str or None,
+                'font_size': (height, width),
+                'font_thickness': float or None,
+                'bold': bool,
+                'italic': bool,
+                'color': (r, g, b, a) or None,
+                'justify_h': str or None,
+                'justify_v': str or None,
+                'visible': bool,
+            }
+
+        Raises:
+            ValueError: If property doesn't exist
+
+        Example:
+            >>> comp = sch.components[0]
+            >>> effects = comp.get_property_effects("Reference")
+            >>> print(effects['font_size'])
+            (1.27, 1.27)
+            >>> print(effects['bold'])
+            False
+        """
+        from ..utils.text_effects import parse_effects_from_sexp
+
+        # Check if property exists
+        sexp_key = f"__sexp_{property_name}"
+        if sexp_key not in self.properties:
+            raise ValueError(
+                f"Property '{property_name}' not found. "
+                f"Available properties: {[k.replace('__sexp_', '') for k in self.properties.keys() if k.startswith('__sexp_')]}"
+            )
+
+        # Parse effects from preserved S-expression
+        property_sexp = self.properties[sexp_key]
+        return parse_effects_from_sexp(property_sexp)
+
+    def set_property_effects(self, property_name: str, effects: Dict[str, Any]) -> None:
+        """
+        Set text effects for a component property.
+
+        Modifies the property's text effects (font, position, rotation, color, etc.).
+        Only specified effects are changed - others are preserved.
+
+        Args:
+            property_name: Name of property ("Reference", "Value", "Footprint", etc.)
+            effects: Dictionary with effect properties to change:
+                     {
+                         'position': (x, y),           # Optional
+                         'rotation': float,            # Optional
+                         'font_face': str,             # Optional
+                         'font_size': (h, w),          # Optional
+                         'font_thickness': float,      # Optional
+                         'bold': bool,                 # Optional
+                         'italic': bool,               # Optional
+                         'color': (r, g, b, a),        # Optional
+                         'justify_h': str,             # Optional ('left', 'right', 'center')
+                         'justify_v': str,             # Optional ('top', 'bottom')
+                         'visible': bool,              # Optional
+                     }
+
+        Raises:
+            ValueError: If property doesn't exist
+
+        Example:
+            >>> comp = sch.components[0]
+            >>> # Make Reference bold and larger
+            >>> comp.set_property_effects("Reference", {
+            ...     'bold': True,
+            ...     'font_size': (2.0, 2.0)
+            ... })
+            >>> # Hide Footprint
+            >>> comp.set_property_effects("Footprint", {'visible': False})
+        """
+        from ..utils.text_effects import (
+            parse_effects_from_sexp,
+            merge_effects,
+            update_property_sexp_with_effects,
+            create_effects_sexp
+        )
+        from sexpdata import Symbol
+
+        # Check if property exists
+        sexp_key = f"__sexp_{property_name}"
+
+        # If S-expression doesn't exist, create a default one for standard properties
+        if sexp_key not in self.properties:
+            # Only allow standard properties (Reference, Value, Footprint)
+            if property_name not in ["Reference", "Value", "Footprint"]:
+                raise ValueError(
+                    f"Property '{property_name}' not found. "
+                    f"Can only set effects for standard properties (Reference, Value, Footprint) or existing custom properties."
+                )
+
+            # Get the property value
+            prop_value = getattr(self, property_name.lower(), "")
+            if prop_value is None:
+                prop_value = ""
+
+            # Create default S-expression structure
+            # Format: (property "Name" "Value" (at x y rotation) (effects ...))
+            property_sexp = [
+                Symbol('property'),
+                property_name,
+                str(prop_value),
+                [Symbol('at'), self.position.x, self.position.y, 0],
+                create_effects_sexp({
+                    'font_size': (1.27, 1.27),
+                    'visible': True
+                })
+            ]
+
+            # Store it
+            self.properties[sexp_key] = property_sexp
+
+        # Get current effects
+        property_sexp = self.properties[sexp_key]
+        current_effects = parse_effects_from_sexp(property_sexp)
+
+        # Merge with updates
+        merged_effects = merge_effects(current_effects, effects)
+
+        # Update S-expression with new effects
+        updated_sexp = update_property_sexp_with_effects(property_sexp, merged_effects)
+
+        # Store updated S-expression
+        self.properties[sexp_key] = updated_sexp
+
 
 class WireType(Enum):
     """Wire types in KiCAD schematics."""

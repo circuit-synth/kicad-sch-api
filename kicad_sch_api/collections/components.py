@@ -218,6 +218,74 @@ class Component:
             return True
         return False
 
+    # Text effects (position, font, color, etc.)
+    def get_property_effects(self, property_name: str) -> Dict[str, Any]:
+        """
+        Get text effects for a component property.
+
+        Returns a dictionary with all text effects for the specified property
+        (Reference, Value, Footprint, etc.), including position, rotation, font
+        properties, color, justification, and visibility.
+
+        Args:
+            property_name: Property name (e.g., "Reference", "Value", "Footprint")
+
+        Returns:
+            Dictionary with effect properties:
+            {
+                'position': (x, y),           # Position relative to component
+                'rotation': float,            # Rotation in degrees
+                'font_face': str,             # Font family name (or None for default)
+                'font_size': (h, w),          # Font size (height, width) in mm
+                'font_thickness': float,      # Font line thickness (or None)
+                'bold': bool,                 # Bold flag
+                'italic': bool,               # Italic flag
+                'color': (r, g, b, a),        # RGBA color (or None)
+                'justify_h': str,             # Horizontal justification (or None)
+                'justify_v': str,             # Vertical justification (or None)
+                'visible': bool,              # Visibility (True = visible, False = hidden)
+            }
+
+        Raises:
+            ValueError: If property doesn't exist
+
+        Example:
+            >>> r1 = sch.components.get("R1")
+            >>> effects = r1.get_property_effects("Reference")
+            >>> print(f"Font size: {effects['font_size']}")
+            >>> print(f"Bold: {effects['bold']}")
+        """
+        return self._data.get_property_effects(property_name)
+
+    def set_property_effects(self, property_name: str, effects: Dict[str, Any]) -> None:
+        """
+        Set text effects for a component property.
+
+        Updates text effects for the specified property. Only provided properties
+        are updated - existing properties not specified in `effects` are preserved.
+
+        Args:
+            property_name: Property name (e.g., "Reference", "Value", "Footprint")
+            effects: Dictionary with effect updates (partial updates supported)
+
+        Raises:
+            ValueError: If property doesn't exist
+
+        Example:
+            >>> r1 = sch.components.get("R1")
+            >>> # Make Reference bold and larger
+            >>> r1.set_property_effects("Reference", {
+            ...     "bold": True,
+            ...     "font_size": (2.0, 2.0)
+            ... })
+            >>>
+            >>> # Hide Footprint property
+            >>> r1.set_property_effects("Footprint", {"visible": False})
+        """
+        self._data.set_property_effects(property_name, effects)
+        self._collection._mark_modified()
+        logger.debug(f"Updated effects for {self.reference}.{property_name}")
+
     # Pin access
     @property
     def pins(self) -> List[SchematicPin]:

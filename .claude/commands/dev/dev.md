@@ -127,7 +127,14 @@ This is a **critical phase** - the reference schematic becomes the source of tru
 
 ### Step 2.1: Create Initial Schematic
 
-**Agent creates schematic** with elements from PRD (components, wires, labels, edge cases). Use grid-aligned positions (multiples of 1.27mm), generic positioning like (100,100), (150,100). Functional > beautiful.
+**Agent creates schematic** with elements from PRD. **IMPORTANT: Keep references MINIMAL - one component per reference schematic whenever possible.** This makes debugging easier, tests clearer, and references more focused.
+
+**Reference Schematic Guidelines:**
+- **One component per schematic** - simpler is better
+- **Minimal elements** - only what's needed to demonstrate the feature
+- **Grid-aligned positions** (multiples of 1.27mm)
+- **Generic positioning** like (100, 100) - functional > beautiful
+- **Multiple references** - create separate schematics for different test cases rather than one complex schematic
 
 If human should create: provide blank schematic instead.
 
