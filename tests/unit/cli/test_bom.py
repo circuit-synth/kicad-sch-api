@@ -16,7 +16,7 @@ class TestBOMExport:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.bom.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.bom.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
@@ -37,14 +37,14 @@ class TestBOMExport:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.bom.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.bom.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
             export_bom(
                 sch_file,
-                fields=['Reference', 'Value', 'Footprint', 'MPN'],
-                labels=['Refs', 'Value', 'Footprint', 'Part Number'],
+                fields=["Reference", "Value", "Footprint", "MPN"],
+                labels=["Refs", "Value", "Footprint", "Part Number"],
             )
 
             args = mock_executor.run.call_args[0][0]
@@ -58,13 +58,13 @@ class TestBOMExport:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.bom.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.bom.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
             export_bom(
                 sch_file,
-                group_by=['Value', 'Footprint'],
+                group_by=["Value", "Footprint"],
             )
 
             args = mock_executor.run.call_args[0][0]
@@ -76,7 +76,7 @@ class TestBOMExport:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.bom.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.bom.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
@@ -90,13 +90,13 @@ class TestBOMExport:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.bom.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.bom.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
             export_bom(
                 sch_file,
-                sort_field='Value',
+                sort_field="Value",
                 sort_asc=True,
             )
 
@@ -110,16 +110,16 @@ class TestBOMExport:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.bom.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.bom.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
             export_bom(
                 sch_file,
-                field_delimiter=';',
+                field_delimiter=";",
                 string_delimiter="'",
-                ref_delimiter=',',
-                ref_range_delimiter='-',
+                ref_delimiter=",",
+                ref_range_delimiter="-",
             )
 
             args = mock_executor.run.call_args[0][0]
@@ -142,7 +142,7 @@ class TestBOMExport:
         sch_file.write_text("(kicad_sch (version 20230121))")
         output_file = tmp_path / "custom_bom.csv"
 
-        with patch('kicad_sch_api.cli.bom.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.bom.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 

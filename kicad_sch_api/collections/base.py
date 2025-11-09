@@ -30,11 +30,12 @@ class ValidationLevel(Enum):
     Controls the amount of validation performed during collection operations.
     Higher levels provide more safety but lower performance.
     """
-    NONE = 0        # No validation (maximum performance)
-    BASIC = 1       # Basic checks (duplicates, nulls)
-    NORMAL = 2      # Standard validation (default)
-    STRICT = 3      # Strict validation (referential integrity)
-    PARANOID = 4    # Maximum validation (everything, very slow)
+
+    NONE = 0  # No validation (maximum performance)
+    BASIC = 1  # Basic checks (duplicates, nulls)
+    NORMAL = 2  # Standard validation (default)
+    STRICT = 3  # Strict validation (referential integrity)
+    PARANOID = 4  # Maximum validation (everything, very slow)
 
     def __lt__(self, other):
         """Compare validation levels by value."""
@@ -50,6 +51,7 @@ class IndexSpec:
 
     Defines how to build and maintain an index for fast lookups.
     """
+
     name: str
     key_func: Callable[[Any], Any]
     unique: bool = True
@@ -85,7 +87,9 @@ class IndexRegistry:
         self.indexes: Dict[str, Dict[Any, Any]] = {spec.name: {} for spec in specs}
         self._dirty = False
 
-        logger.debug(f"IndexRegistry initialized with {len(specs)} indexes: {list(self.specs.keys())}")
+        logger.debug(
+            f"IndexRegistry initialized with {len(specs)} indexes: {list(self.specs.keys())}"
+        )
 
     def mark_dirty(self) -> None:
         """Mark all indexes as needing rebuild."""
@@ -138,9 +142,7 @@ class IndexRegistry:
 
                 if spec.unique:
                     if key in index:
-                        raise ValueError(
-                            f"Duplicate key '{key}' in unique index '{spec.name}'"
-                        )
+                        raise ValueError(f"Duplicate key '{key}' in unique index '{spec.name}'")
                     index[key] = i
                 else:
                     # Non-unique index: multiple items per key
@@ -213,7 +215,9 @@ class PropertyDict(MutableMapping):
     Implements the full MutableMapping interface.
     """
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, on_modify: Optional[Callable[[], None]] = None):
+    def __init__(
+        self, data: Optional[Dict[str, Any]] = None, on_modify: Optional[Callable[[], None]] = None
+    ):
         """
         Initialize property dictionary.
 
@@ -277,7 +281,7 @@ class BaseCollection(Generic[T], ABC):
     def __init__(
         self,
         items: Optional[List[T]] = None,
-        validation_level: ValidationLevel = ValidationLevel.NORMAL
+        validation_level: ValidationLevel = ValidationLevel.NORMAL,
     ):
         """
         Initialize base collection.
@@ -441,6 +445,7 @@ class BaseCollection(Generic[T], ABC):
         Returns:
             List of matching items
         """
+
         def matches_criteria(item: T) -> bool:
             for attr, value in criteria.items():
                 if not hasattr(item, attr) or getattr(item, attr) != value:

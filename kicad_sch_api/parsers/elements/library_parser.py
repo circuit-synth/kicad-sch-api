@@ -44,7 +44,6 @@ class LibraryParser(BaseElementParser):
 
         return sexp
 
-
     def _create_basic_symbol_definition(self, lib_id: str) -> List[Any]:
         """Create a basic symbol definition for KiCAD compatibility."""
         symbol_sexp = [sexpdata.Symbol("symbol"), lib_id]
@@ -161,5 +160,3 @@ class LibraryParser(BaseElementParser):
         symbol_sexp.append([sexpdata.Symbol("embedded_fonts"), sexpdata.Symbol("no")])
 
         return symbol_sexp
-
-

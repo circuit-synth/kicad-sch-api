@@ -10,16 +10,17 @@ Tests:
 - BatchContext
 """
 
-import pytest
-from typing import List
 from dataclasses import dataclass
+from typing import List
+
+import pytest
 
 from kicad_sch_api.collections.base import (
-    ValidationLevel,
-    IndexSpec,
-    IndexRegistry,
-    PropertyDict,
     BaseCollection,
+    IndexRegistry,
+    IndexSpec,
+    PropertyDict,
+    ValidationLevel,
 )
 
 
@@ -27,6 +28,7 @@ from kicad_sch_api.collections.base import (
 @dataclass
 class MockItem:
     """Mock item for testing collections."""
+
     uuid: str
     reference: str
     value: str
@@ -47,22 +49,19 @@ class MockCollection(BaseCollection[MockItem]):
         """Get index specifications for mock collection."""
         return [
             IndexSpec(
-                name="uuid",
-                key_func=lambda item: item.uuid,
-                unique=True,
-                description="UUID index"
+                name="uuid", key_func=lambda item: item.uuid, unique=True, description="UUID index"
             ),
             IndexSpec(
                 name="reference",
                 key_func=lambda item: item.reference,
                 unique=True,
-                description="Reference designator index"
+                description="Reference designator index",
             ),
             IndexSpec(
                 name="value",
                 key_func=lambda item: item.value,
                 unique=False,
-                description="Component value index (non-unique)"
+                description="Component value index (non-unique)",
             ),
         ]
 
@@ -99,10 +98,7 @@ class TestIndexSpec:
     def test_create_valid_index_spec(self):
         """Test creating a valid index specification."""
         spec = IndexSpec(
-            name="uuid",
-            key_func=lambda x: x.uuid,
-            unique=True,
-            description="UUID index"
+            name="uuid", key_func=lambda x: x.uuid, unique=True, description="UUID index"
         )
         assert spec.name == "uuid"
         assert callable(spec.key_func)
@@ -111,10 +107,7 @@ class TestIndexSpec:
 
     def test_create_index_spec_with_defaults(self):
         """Test creating index spec with default values."""
-        spec = IndexSpec(
-            name="ref",
-            key_func=lambda x: x.reference
-        )
+        spec = IndexSpec(name="ref", key_func=lambda x: x.reference)
         assert spec.name == "ref"
         assert spec.unique is True  # Default
         assert spec.description == ""  # Default
@@ -246,7 +239,7 @@ class TestIndexRegistry:
             registry.add_spec(duplicate_spec)
 
 
-# PropertyDict tests  
+# PropertyDict tests
 class TestPropertyDict:
     """Test PropertyDict class."""
 
@@ -488,10 +481,7 @@ class TestBaseCollection:
 
     def test_batch_mode_context(self, empty_collection):
         """Test batch mode context manager."""
-        items = [
-            MockItem(uuid=f"uuid{i}", reference=f"R{i}", value="10k")
-            for i in range(100)
-        ]
+        items = [MockItem(uuid=f"uuid{i}", reference=f"R{i}", value="10k") for i in range(100)]
 
         with empty_collection.batch_mode():
             for item in items:

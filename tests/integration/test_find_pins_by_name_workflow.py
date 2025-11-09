@@ -7,9 +7,10 @@ Tests complete workflows and performance characteristics.
 
 import logging
 import time
-import pytest
-import kicad_sch_api as ksa
 
+import pytest
+
+import kicad_sch_api as ksa
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,9 @@ class TestSemanticPinLookupPerformance:
         """Test performance with many lookups."""
         # Add 10 components
         for i in range(10):
-            schematic.components.add("Device:R", f"R{i+1}", f"{10*(i+1)}k", position=(100.0 + i*5, 100.0))
+            schematic.components.add(
+                "Device:R", f"R{i+1}", f"{10*(i+1)}k", position=(100.0 + i * 5, 100.0)
+            )
 
         # Do 50 lookups
         start = time.time()

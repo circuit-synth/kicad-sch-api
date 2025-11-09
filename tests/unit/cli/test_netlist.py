@@ -16,7 +16,7 @@ class TestNetlistExport:
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.netlist.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.netlist.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
@@ -29,9 +29,13 @@ class TestNetlistExport:
             mock_executor.run.assert_called_once()
             args = mock_executor.run.call_args[0][0]
             assert args == [
-                "sch", "export", "netlist",
-                "--format", "kicadsexpr",
-                "--output", str(sch_file.with_suffix(".net")),
+                "sch",
+                "export",
+                "netlist",
+                "--format",
+                "kicadsexpr",
+                "--output",
+                str(sch_file.with_suffix(".net")),
                 str(sch_file),
             ]
 
@@ -40,7 +44,7 @@ class TestNetlistExport:
         sch_file = tmp_path / "circuit.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.netlist.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.netlist.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
@@ -60,7 +64,7 @@ class TestNetlistExport:
         sch_file.write_text("(kicad_sch (version 20230121))")
         output_file = tmp_path / "custom_netlist.net"
 
-        with patch('kicad_sch_api.cli.netlist.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.netlist.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 
@@ -101,16 +105,25 @@ class TestNetlistExport:
         assert _get_extension_for_format("pads") == ".asc"
         assert _get_extension_for_format("allegro") == ".alg"
 
-    @pytest.mark.parametrize("format", [
-        "kicadsexpr", "kicadxml", "cadstar", "orcadpcb2",
-        "spice", "spicemodel", "pads", "allegro"
-    ])
+    @pytest.mark.parametrize(
+        "format",
+        [
+            "kicadsexpr",
+            "kicadxml",
+            "cadstar",
+            "orcadpcb2",
+            "spice",
+            "spicemodel",
+            "pads",
+            "allegro",
+        ],
+    )
     def test_all_netlist_formats(self, format, tmp_path):
         """Test all supported netlist formats."""
         sch_file = tmp_path / "test.kicad_sch"
         sch_file.write_text("(kicad_sch (version 20230121))")
 
-        with patch('kicad_sch_api.cli.netlist.KiCadExecutor') as mock_executor_class:
+        with patch("kicad_sch_api.cli.netlist.KiCadExecutor") as mock_executor_class:
             mock_executor = Mock()
             mock_executor_class.return_value = mock_executor
 

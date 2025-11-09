@@ -143,11 +143,7 @@ class LabelElement:
         # Validate text is not empty
         if not self.text or not self.text.strip():
             issues.append(
-                ValidationIssue(
-                    category="label",
-                    message="Label text is empty",
-                    level="error"
-                )
+                ValidationIssue(category="label", message="Label text is empty", level="error")
             )
 
         # Validate size is positive
@@ -156,7 +152,7 @@ class LabelElement:
                 ValidationIssue(
                     category="label",
                     message=f"Label size must be positive, got {self.size}",
-                    level="error"
+                    level="error",
                 )
             )
 
@@ -447,23 +443,29 @@ class LabelCollection(BaseCollection[LabelElement]):
         """
         if not self._items:
             base_stats = super().get_statistics()
-            base_stats.update({
-                "total_labels": 0,
-                "unique_texts": 0,
-                "avg_size": 0,
-            })
+            base_stats.update(
+                {
+                    "total_labels": 0,
+                    "unique_texts": 0,
+                    "avg_size": 0,
+                }
+            )
             return base_stats
 
         unique_texts = len(self._text_index)
         avg_size = sum(l.size for l in self._items) / len(self._items)
 
         base_stats = super().get_statistics()
-        base_stats.update({
-            "total_labels": len(self._items),
-            "unique_texts": unique_texts,
-            "avg_size": avg_size,
-            "text_distribution": {text: len(labels) for text, labels in self._text_index.items()},
-        })
+        base_stats.update(
+            {
+                "total_labels": len(self._items),
+                "unique_texts": unique_texts,
+                "avg_size": avg_size,
+                "text_distribution": {
+                    text: len(labels) for text, labels in self._text_index.items()
+                },
+            }
+        )
 
         return base_stats
 

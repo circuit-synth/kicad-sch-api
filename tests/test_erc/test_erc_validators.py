@@ -371,5 +371,7 @@ class TestElectricalRulesChecker:
         if len(duplicates) > 0:
             # Should suggest renaming one of them
             assert duplicates[0].suggested_fix is not None
-            assert "rename" in duplicates[0].suggested_fix.lower() or \
-                   "change" in duplicates[0].suggested_fix.lower()
+            assert (
+                "rename" in duplicates[0].suggested_fix.lower()
+                or "change" in duplicates[0].suggested_fix.lower()
+            )

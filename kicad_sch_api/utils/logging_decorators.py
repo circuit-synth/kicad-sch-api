@@ -8,13 +8,13 @@ This module provides decorators for:
 - Retry logic with logging
 """
 
-import logging
 import functools
+import logging
 import time
 import traceback
 from contextlib import contextmanager
-from typing import Any, Callable, Optional, TypeVar, List, Dict
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 # Type definitions
 T = TypeVar("T")
@@ -256,9 +256,7 @@ def log_retry(
             for attempt in range(1, max_attempts + 1):
                 try:
                     if attempt > 1:
-                        logger.info(
-                            f"Retry {attempt}/{max_attempts} for {func.__name__}"
-                        )
+                        logger.info(f"Retry {attempt}/{max_attempts} for {func.__name__}")
 
                     return func(*args, **kwargs)
 
@@ -273,9 +271,7 @@ def log_retry(
                         time.sleep(current_delay / 1000)
                         current_delay *= backoff
                     else:
-                        logger.error(
-                            f"All {max_attempts} attempts failed for {func.__name__}"
-                        )
+                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}")
 
             # All attempts exhausted
             raise last_exception
@@ -334,8 +330,7 @@ def log_context(
     except Exception as e:
         elapsed = (time.time() - start) * 1000
         logger.error(
-            f"EXCEPTION in {context_name} ({elapsed:.2f}ms): "
-            f"{e.__class__.__name__}: {e}",
+            f"EXCEPTION in {context_name} ({elapsed:.2f}ms): " f"{e.__class__.__name__}: {e}",
             exc_info=True,
         )
         raise
@@ -566,15 +561,11 @@ def trace_calls(
             kwarg_strs = [f"{k}={v!r}" for k, v in kwargs.items()]
             all_args = ", ".join(arg_strs + kwarg_strs)
 
-            logger.log(
-                log_level, f"TRACE: {func.__name__} called with {all_args}"
-            )
+            logger.log(log_level, f"TRACE: {func.__name__} called with {all_args}")
 
             # Execute and log return
             result = func(*args, **kwargs)
-            logger.log(
-                log_level, f"TRACE: {func.__name__} returned {result!r}"
-            )
+            logger.log(log_level, f"TRACE: {func.__name__} returned {result!r}")
 
             return result
 

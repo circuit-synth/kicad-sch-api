@@ -83,13 +83,11 @@ class SymbolParser(BaseElementParser):
                             symbol_data["properties"][prop_name] = prop_value
                 elif element_type == "in_bom":
                     symbol_data["in_bom"] = parse_bool_property(
-                        sub_item[1] if len(sub_item) > 1 else None,
-                        default=True
+                        sub_item[1] if len(sub_item) > 1 else None, default=True
                     )
                 elif element_type == "on_board":
                     symbol_data["on_board"] = parse_bool_property(
-                        sub_item[1] if len(sub_item) > 1 else None,
-                        default=True
+                        sub_item[1] if len(sub_item) > 1 else None, default=True
                     )
                 elif element_type == "instances":
                     # Parse instances section
@@ -110,7 +108,6 @@ class SymbolParser(BaseElementParser):
         except Exception as e:
             logger.warning(f"Error parsing symbol: {e}")
             return None
-
 
     def _parse_property(self, item: List[Any]) -> Optional[Dict[str, Any]]:
         """Parse a property definition."""
@@ -152,7 +149,9 @@ class SymbolParser(BaseElementParser):
                     if not isinstance(project_sub, list) or len(project_sub) == 0:
                         continue
 
-                    path_type = str(project_sub[0]) if isinstance(project_sub[0], sexpdata.Symbol) else None
+                    path_type = (
+                        str(project_sub[0]) if isinstance(project_sub[0], sexpdata.Symbol) else None
+                    )
 
                     if path_type == "path":
                         # Extract path value
@@ -165,7 +164,11 @@ class SymbolParser(BaseElementParser):
                             if not isinstance(path_sub, list) or len(path_sub) == 0:
                                 continue
 
-                            path_sub_type = str(path_sub[0]) if isinstance(path_sub[0], sexpdata.Symbol) else None
+                            path_sub_type = (
+                                str(path_sub[0])
+                                if isinstance(path_sub[0], sexpdata.Symbol)
+                                else None
+                            )
 
                             if path_sub_type == "reference":
                                 reference = path_sub[1] if len(path_sub) > 1 else None
@@ -174,11 +177,7 @@ class SymbolParser(BaseElementParser):
 
                         # Create instance
                         if path and reference:
-                            instance = SymbolInstance(
-                                path=path,
-                                reference=reference,
-                                unit=unit
-                            )
+                            instance = SymbolInstance(path=path, reference=reference, unit=unit)
                             instances.append(instance)
 
         return instances
@@ -206,7 +205,9 @@ class SymbolParser(BaseElementParser):
                 if not isinstance(sub_item, list) or len(sub_item) == 0:
                     continue
 
-                element_type = str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
+                element_type = (
+                    str(sub_item[0]) if isinstance(sub_item[0], sexpdata.Symbol) else None
+                )
                 if element_type == "uuid":
                     pin_uuid = sub_item[1] if len(sub_item) > 1 else None
                     break
@@ -274,7 +275,13 @@ class SymbolParser(BaseElementParser):
                 # No preserved format - create new (for newly added components)
                 ref_hide = is_power_symbol
                 ref_prop = self._create_property_with_positioning(
-                    "Reference", symbol_data["reference"], pos, 0, "left", hide=ref_hide, rotation=rotation
+                    "Reference",
+                    symbol_data["reference"],
+                    pos,
+                    0,
+                    "left",
+                    hide=ref_hide,
+                    rotation=rotation,
                 )
                 sexp.append(ref_prop)
 
@@ -346,13 +353,17 @@ class SymbolParser(BaseElementParser):
         # If we have stored pin UUIDs, use those (loaded from file)
         if pin_uuids_dict:
             for pin_number, pin_uuid in pin_uuids_dict.items():
-                sexp.append([sexpdata.Symbol("pin"), str(pin_number), [sexpdata.Symbol("uuid"), pin_uuid]])
+                sexp.append(
+                    [sexpdata.Symbol("pin"), str(pin_number), [sexpdata.Symbol("uuid"), pin_uuid]]
+                )
         # Otherwise, generate UUIDs for pins from library definition (newly added components)
         elif pins_list:
             for pin in pins_list:
                 pin_number = str(pin.number)
                 pin_uuid = str(uuid.uuid4())
-                sexp.append([sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]])
+                sexp.append(
+                    [sexpdata.Symbol("pin"), pin_number, [sexpdata.Symbol("uuid"), pin_uuid]]
+                )
 
         # Add instances section (required by KiCAD)
         from ...core.config import config
@@ -361,31 +372,39 @@ class SymbolParser(BaseElementParser):
         # If so, preserve them exactly as-is (don't generate!)
         user_instances = symbol_data.get("instances")
         if user_instances:
-            logger.debug(f"🔍 HIERARCHICAL FIX: Component {symbol_data.get('reference')} has {len(user_instances)} user-set instance(s)")
+            logger.debug(
+                f"🔍 HIERARCHICAL FIX: Component {symbol_data.get('reference')} has {len(user_instances)} user-set instance(s)"
+            )
             # Build instances sexp from user data
             instances_sexp = [sexpdata.Symbol("instances")]
             for inst in user_instances:
-                project = inst.get('project', getattr(self, 'project_name', 'circuit'))
-                path = inst.get('path', '/')
-                reference = inst.get('reference', symbol_data.get('reference', 'U?'))
-                unit = inst.get('unit', 1)
+                project = inst.get("project", getattr(self, "project_name", "circuit"))
+                path = inst.get("path", "/")
+                reference = inst.get("reference", symbol_data.get("reference", "U?"))
+                unit = inst.get("unit", 1)
 
-                logger.debug(f"   Instance: project={project}, path={path}, ref={reference}, unit={unit}")
+                logger.debug(
+                    f"   Instance: project={project}, path={path}, ref={reference}, unit={unit}"
+                )
 
-                instances_sexp.append([
-                    sexpdata.Symbol("project"),
-                    project,
+                instances_sexp.append(
                     [
-                        sexpdata.Symbol("path"),
-                        path,  # PRESERVE user-set hierarchical path!
-                        [sexpdata.Symbol("reference"), reference],
-                        [sexpdata.Symbol("unit"), unit],
-                    ],
-                ])
+                        sexpdata.Symbol("project"),
+                        project,
+                        [
+                            sexpdata.Symbol("path"),
+                            path,  # PRESERVE user-set hierarchical path!
+                            [sexpdata.Symbol("reference"), reference],
+                            [sexpdata.Symbol("unit"), unit],
+                        ],
+                    ]
+                )
             sexp.append(instances_sexp)
         else:
             # No user-set instances - generate default (backward compatibility)
-            logger.debug(f"🔍 HIERARCHICAL FIX: Component {symbol_data.get('reference')} has NO user instances, generating default")
+            logger.debug(
+                f"🔍 HIERARCHICAL FIX: Component {symbol_data.get('reference')} has NO user instances, generating default"
+            )
 
             # Get project name from config or properties
             project_name = symbol_data.get("properties", {}).get("project_name")
@@ -437,7 +456,6 @@ class SymbolParser(BaseElementParser):
 
         return sexp
 
-
     def _create_property_with_positioning(
         self,
         prop_name: str,
@@ -484,7 +502,6 @@ class SymbolParser(BaseElementParser):
 
         return prop_sexp
 
-
     def _create_power_symbol_value_property(
         self, value: str, component_pos: Point, lib_id: str, rotation: float = 0
     ) -> List[Any]:
@@ -498,9 +515,15 @@ class SymbolParser(BaseElementParser):
         # Rotation-aware positioning (matching circuit-synth logic)
         if rotation == 0:
             if is_gnd_type:
-                prop_x, prop_y = component_pos.x, component_pos.y + offset  # GND points down, text below
+                prop_x, prop_y = (
+                    component_pos.x,
+                    component_pos.y + offset,
+                )  # GND points down, text below
             else:
-                prop_x, prop_y = component_pos.x, component_pos.y - offset  # VCC points up, text above
+                prop_x, prop_y = (
+                    component_pos.x,
+                    component_pos.y - offset,
+                )  # VCC points up, text above
         elif rotation == 90:
             if is_gnd_type:
                 prop_x, prop_y = component_pos.x - offset, component_pos.y  # GND left, text left
@@ -508,9 +531,15 @@ class SymbolParser(BaseElementParser):
                 prop_x, prop_y = component_pos.x + offset, component_pos.y  # VCC right, text right
         elif rotation == 180:
             if is_gnd_type:
-                prop_x, prop_y = component_pos.x, component_pos.y - offset  # GND inverted up, text above
+                prop_x, prop_y = (
+                    component_pos.x,
+                    component_pos.y - offset,
+                )  # GND inverted up, text above
             else:
-                prop_x, prop_y = component_pos.x, component_pos.y + offset  # VCC inverted down, text below
+                prop_x, prop_y = (
+                    component_pos.x,
+                    component_pos.y + offset,
+                )  # VCC inverted down, text below
         elif rotation == 270:
             if is_gnd_type:
                 prop_x, prop_y = component_pos.x + offset, component_pos.y  # GND right, text right
@@ -518,7 +547,9 @@ class SymbolParser(BaseElementParser):
                 prop_x, prop_y = component_pos.x - offset, component_pos.y  # VCC left, text left
         else:
             # Fallback for non-standard rotations
-            prop_x, prop_y = component_pos.x, component_pos.y - offset if not is_gnd_type else component_pos.y + offset
+            prop_x, prop_y = component_pos.x, (
+                component_pos.y - offset if not is_gnd_type else component_pos.y + offset
+            )
 
         prop_sexp = [
             sexpdata.Symbol("property"),
@@ -537,5 +568,3 @@ class SymbolParser(BaseElementParser):
         ]
 
         return prop_sexp
-
-

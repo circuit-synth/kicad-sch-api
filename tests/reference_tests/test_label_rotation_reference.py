@@ -7,6 +7,7 @@ from manually created schematics with rotated labels.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 
@@ -42,12 +43,15 @@ class TestLabelRotationReference:
         assert rotation_180 == 180, f"LABEL_180 should be at 180° rotation: got {rotation_180}"
         assert rotation_270 == 270, f"LABEL_270 should be at 270° rotation: got {rotation_270}"
 
-    @pytest.mark.parametrize("label_name,expected_rotation", [
-        ("LABEL_0", 0),
-        ("LABEL_90", 90),
-        ("LABEL_180", 180),
-        ("LABEL_270", 270),
-    ])
+    @pytest.mark.parametrize(
+        "label_name,expected_rotation",
+        [
+            ("LABEL_0", 0),
+            ("LABEL_90", 90),
+            ("LABEL_180", 180),
+            ("LABEL_270", 270),
+        ],
+    )
     def test_individual_label_rotations(self, label_name, expected_rotation):
         """Verify each label rotation individually."""
         sch_path = "tests/reference_kicad_projects/label_rotations/label_rotations.kicad_sch"
@@ -66,8 +70,9 @@ class TestLabelRotationReference:
         # Extract rotation from label data
         rotation = label_data.get("rotation", 0)
 
-        assert rotation == expected_rotation, \
-            f"{label_name} should be at {expected_rotation}° rotation: got {rotation}"
+        assert (
+            rotation == expected_rotation
+        ), f"{label_name} should be at {expected_rotation}° rotation: got {rotation}"
 
 
 if __name__ == "__main__":

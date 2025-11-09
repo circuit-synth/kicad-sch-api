@@ -23,8 +23,7 @@ executor_info = get_executor_info()
 kicad_available = executor_info.local_available or executor_info.docker_available
 
 skip_if_no_kicad = pytest.mark.skipif(
-    not kicad_available,
-    reason="KiCad CLI not available (neither local nor Docker)"
+    not kicad_available, reason="KiCad CLI not available (neither local nor Docker)"
 )
 
 
@@ -55,11 +54,7 @@ class TestCLIIntegration:
         """Test exporting KiCad S-expression netlist."""
         output = tmp_path / "test.net"
 
-        result = export_netlist(
-            simple_schematic,
-            output_path=output,
-            format="kicadsexpr"
-        )
+        result = export_netlist(simple_schematic, output_path=output, format="kicadsexpr")
 
         assert result == output
         assert output.exists()
@@ -181,11 +176,7 @@ class TestCLIIntegration:
         for fmt in formats_to_test:
             output = tmp_path / f"test_{fmt}.net"
 
-            result = export_netlist(
-                simple_schematic,
-                output_path=output,
-                format=fmt
-            )
+            result = export_netlist(simple_schematic, output_path=output, format=fmt)
 
             assert result == output
             assert output.exists(), f"Failed to export {fmt} format"
@@ -200,9 +191,9 @@ class TestExecutorModes:
         """Test getting executor information."""
         info = get_executor_info()
 
-        assert hasattr(info, 'local_available')
-        assert hasattr(info, 'docker_available')
-        assert hasattr(info, 'active_mode')
+        assert hasattr(info, "local_available")
+        assert hasattr(info, "docker_available")
+        assert hasattr(info, "active_mode")
 
         # At least one should be available if tests are running
         assert info.local_available or info.docker_available
@@ -222,7 +213,7 @@ class TestExecutorModes:
         # Force local mode
         from kicad_sch_api.cli.base import KiCadExecutor
 
-        executor = KiCadExecutor(mode='local', verbose=True)
+        executor = KiCadExecutor(mode="local", verbose=True)
         result = export_netlist(sch_path, executor=executor)
 
         assert result.exists()
@@ -242,7 +233,7 @@ class TestExecutorModes:
         # Force Docker mode
         from kicad_sch_api.cli.base import KiCadExecutor
 
-        executor = KiCadExecutor(mode='docker', verbose=True)
+        executor = KiCadExecutor(mode="docker", verbose=True)
         result = export_netlist(sch_path, executor=executor)
 
         assert result.exists()

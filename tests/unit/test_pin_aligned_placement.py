@@ -29,7 +29,7 @@ class TestCalculatePositionForPin:
             pin_local_position=pin_local,
             desired_pin_position=desired_pos,
             rotation=0,
-            grid_size=1.27
+            grid_size=1.27,
         )
 
         # Should be snapped to grid (1.27mm)
@@ -53,7 +53,7 @@ class TestCalculatePositionForPin:
             pin_local_position=pin_local,
             desired_pin_position=desired_pos,
             rotation=90,
-            grid_size=1.27
+            grid_size=1.27,
         )
 
         # Verify it's grid-aligned
@@ -69,7 +69,7 @@ class TestCalculatePositionForPin:
             pin_local_position=pin_local,
             desired_pin_position=desired_pos,
             rotation=180,
-            grid_size=1.27
+            grid_size=1.27,
         )
 
         # Verify it's grid-aligned
@@ -85,7 +85,7 @@ class TestCalculatePositionForPin:
             pin_local_position=pin_local,
             desired_pin_position=desired_pos,
             rotation=270,
-            grid_size=1.27
+            grid_size=1.27,
         )
 
         # Verify it's grid-aligned
@@ -98,7 +98,7 @@ class TestCalculatePositionForPin:
             pin_local_position=(2.54, 0),
             desired_pin_position=(150, 100),
             rotation=0,
-            grid_size=1.27
+            grid_size=1.27,
         )
 
         assert isinstance(comp_pos, Point)
@@ -114,10 +114,7 @@ class TestAddWithPinAt:
 
         # Add resistor with pin 2 at (150, 100)
         r1 = sch.components.add_with_pin_at(
-            lib_id="Device:R",
-            pin_number="2",
-            pin_position=(150, 100),
-            value="10k"
+            lib_id="Device:R", pin_number="2", pin_position=(150, 100), value="10k"
         )
 
         # Note: Resistor has reference prefix 'U' in this KiCAD installation
@@ -137,18 +134,12 @@ class TestAddWithPinAt:
 
         # Add at 0 degrees
         r1 = sch.components.add_with_pin_at(
-            lib_id="Device:R",
-            pin_number="1",
-            pin_position=(100, 100),
-            rotation=0
+            lib_id="Device:R", pin_number="1", pin_position=(100, 100), rotation=0
         )
 
         # Add at 90 degrees
         r2 = sch.components.add_with_pin_at(
-            lib_id="Device:R",
-            pin_number="1",
-            pin_position=(150, 100),
-            rotation=90
+            lib_id="Device:R", pin_number="1", pin_position=(150, 100), rotation=90
         )
 
         # Verify both pins are at correct positions
@@ -166,18 +157,12 @@ class TestAddWithPinAt:
 
         # Add resistor with pin 2 at (150, 100)
         r1 = sch.components.add_with_pin_at(
-            lib_id="Device:R",
-            pin_number="2",
-            pin_position=(150, 100),
-            value="10k"
+            lib_id="Device:R", pin_number="2", pin_position=(150, 100), value="10k"
         )
 
         # Add capacitor with pin 1 at same Y position
         c1 = sch.components.add_with_pin_at(
-            lib_id="Device:C",
-            pin_number="1",
-            pin_position=(200, 100),  # Same Y
-            value="100nF"
+            lib_id="Device:C", pin_number="1", pin_position=(200, 100), value="100nF"  # Same Y
         )
 
         # Verify pins are on same horizontal line
@@ -198,7 +183,7 @@ class TestAddWithPinAt:
             sch.components.add_with_pin_at(
                 lib_id="Device:R",
                 pin_number="99",  # Resistor only has pins 1 and 2
-                pin_position=(100, 100)
+                pin_position=(100, 100),
             )
 
     def test_invalid_lib_id(self):
@@ -207,9 +192,7 @@ class TestAddWithPinAt:
 
         with pytest.raises(Exception):  # Should raise LibraryError
             sch.components.add_with_pin_at(
-                lib_id="InvalidLib:InvalidComponent",
-                pin_number="1",
-                pin_position=(100, 100)
+                lib_id="InvalidLib:InvalidComponent", pin_number="1", pin_position=(100, 100)
             )
 
 
@@ -221,11 +204,7 @@ class TestAlignPin:
         sch = ksa.create_schematic("Test")
 
         # Add component at some position
-        r1 = sch.components.add(
-            lib_id="Device:R",
-            position=(100, 100),
-            value="10k"
-        )
+        r1 = sch.components.add(lib_id="Device:R", position=(100, 100), value="10k")
 
         # Get initial pin 2 position
         initial_pin2 = r1.get_pin_position("2")
@@ -245,12 +224,7 @@ class TestAlignPin:
         sch = ksa.create_schematic("Test")
 
         # Add component with rotation
-        r1 = sch.components.add(
-            lib_id="Device:R",
-            position=(100, 100),
-            rotation=90,
-            value="10k"
-        )
+        r1 = sch.components.add(lib_id="Device:R", position=(100, 100), rotation=90, value="10k")
 
         initial_rotation = r1.rotation
 
@@ -323,18 +297,12 @@ class TestPinAlignmentIntegration:
 
         # Add R1 with pin 2 on signal line
         r1 = sch.components.add_with_pin_at(
-            lib_id="Device:R",
-            pin_number="2",
-            pin_position=(100, signal_line_y),
-            value="10k"
+            lib_id="Device:R", pin_number="2", pin_position=(100, signal_line_y), value="10k"
         )
 
         # Add R2 with pin 1 on signal line (continuing the chain)
         r2 = sch.components.add_with_pin_at(
-            lib_id="Device:R",
-            pin_number="1",
-            pin_position=(150, signal_line_y),
-            value="10k"
+            lib_id="Device:R", pin_number="1", pin_position=(150, signal_line_y), value="10k"
         )
 
         # Verify perfect horizontal alignment
@@ -357,19 +325,13 @@ class TestPinAlignmentIntegration:
 
         # Add resistor with pin 2 at signal line (pin 2 is the output side)
         r1 = sch.components.add_with_pin_at(
-            lib_id="Device:R",
-            pin_number="2",
-            pin_position=(100, input_y),
-            value="1k"
+            lib_id="Device:R", pin_number="2", pin_position=(100, input_y), value="1k"
         )
 
         # Add capacitor with pin 1 at same signal line
         # Use pin 2 to match the same side as resistor pin 2
         c1 = sch.components.add_with_pin_at(
-            lib_id="Device:C",
-            pin_number="2",
-            pin_position=(150, input_y),
-            value="100nF"
+            lib_id="Device:C", pin_number="2", pin_position=(150, input_y), value="100nF"
         )
 
         # Verify alignment - both pin 2s should be on same horizontal line

@@ -125,7 +125,9 @@ class HierarchyManager(BaseManager):
         self._loaded_schematics: Dict[str, Any] = {}
         self._pin_connections: List[SheetPinConnection] = []
 
-    def build_hierarchy_tree(self, root_schematic, root_path: Optional[Path] = None) -> HierarchyNode:
+    def build_hierarchy_tree(
+        self, root_schematic, root_path: Optional[Path] = None
+    ) -> HierarchyNode:
         """
         Build complete hierarchy tree from root schematic.
 
@@ -141,7 +143,7 @@ class HierarchyManager(BaseManager):
         # Create root node
         root_node = HierarchyNode(
             path="/",
-            name=getattr(root_schematic, 'name', 'Root') or "Root",
+            name=getattr(root_schematic, "name", "Root") or "Root",
             filename=str(root_path) if root_path else None,
             schematic=root_schematic,
             is_root=True,
@@ -166,7 +168,9 @@ class HierarchyManager(BaseManager):
     ):
         """Recursively build hierarchy tree."""
         # Get sheets from parent schematic
-        sheets = self._data.get("sheets", []) if parent_schematic == self._get_root_schematic() else []
+        sheets = (
+            self._data.get("sheets", []) if parent_schematic == self._get_root_schematic() else []
+        )
 
         if hasattr(parent_schematic, "_data"):
             sheets = parent_schematic._data.get("sheets", [])
@@ -214,9 +218,11 @@ class HierarchyManager(BaseManager):
                             parent_path=current_path,
                             schematic=child_sch,
                             sheet_pins=sheet.get("pins", []),
-                            position=Point(
-                                sheet["position"]["x"], sheet["position"]["y"]
-                            ) if "position" in sheet else None,
+                            position=(
+                                Point(sheet["position"]["x"], sheet["position"]["y"])
+                                if "position" in sheet
+                                else None
+                            ),
                         )
                         self._sheet_instances[sheet_filename].append(sheet_instance)
 
@@ -332,9 +338,7 @@ class HierarchyManager(BaseManager):
                     )
         return errors
 
-    def trace_signal_path(
-        self, signal_name: str, start_path: str = "/"
-    ) -> List[SignalPath]:
+    def trace_signal_path(self, signal_name: str, start_path: str = "/") -> List[SignalPath]:
         """
         Trace a signal through the hierarchy.
 
@@ -379,9 +383,7 @@ class HierarchyManager(BaseManager):
         logger.info(f"Found {len(paths)} signal paths for '{signal_name}'")
         return paths
 
-    def flatten_hierarchy(
-        self, prefix_references: bool = True
-    ) -> Dict[str, Any]:
+    def flatten_hierarchy(self, prefix_references: bool = True) -> Dict[str, Any]:
         """
         Flatten hierarchical design into a single schematic representation.
 
@@ -514,17 +516,14 @@ class HierarchyManager(BaseManager):
             "max_hierarchy_depth": max_depth,
             "reused_sheets_count": len(reused_sheets),
             "reused_sheets": {
-                filename: len(instances)
-                for filename, instances in reused_sheets.items()
+                filename: len(instances) for filename, instances in reused_sheets.items()
             },
             "total_components": total_components,
             "total_wires": total_wires,
             "total_labels": total_labels,
             "loaded_schematics": len(self._loaded_schematics),
             "sheet_pin_connections": len(self._pin_connections),
-            "valid_connections": sum(
-                1 for c in self._pin_connections if c.validated
-            ),
+            "valid_connections": sum(1 for c in self._pin_connections if c.validated),
         }
 
     def visualize_hierarchy(self, include_stats: bool = False) -> str:
@@ -562,7 +561,9 @@ class HierarchyManager(BaseManager):
             node_str += f" [{node.filename}]"
 
         if include_stats and node.schematic:
-            comp_count = len(list(node.schematic.components)) if hasattr(node.schematic, "components") else 0
+            comp_count = (
+                len(list(node.schematic.components)) if hasattr(node.schematic, "components") else 0
+            )
             node_str += f" ({comp_count} components)"
 
         lines.append(node_str)

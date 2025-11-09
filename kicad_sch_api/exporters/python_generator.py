@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 
 try:
     from jinja2 import Environment, PackageLoader, select_autoescape
+
     JINJA2_AVAILABLE = True
 except ImportError:
     JINJA2_AVAILABLE = False
@@ -19,11 +20,13 @@ except ImportError:
 
 class CodeGenerationError(Exception):
     """Error during Python code generation."""
+
     pass
 
 
 class TemplateNotFoundError(CodeGenerationError):
     """Template file not found."""
+
     pass
 
 
@@ -41,10 +44,7 @@ class PythonCodeGenerator:
     """
 
     def __init__(
-        self,
-        template: str = 'default',
-        format_code: bool = True,
-        add_comments: bool = True
+        self, template: str = "default", format_code: bool = True, add_comments: bool = True
     ):
         """
         Initialize code generator.
@@ -61,13 +61,13 @@ class PythonCodeGenerator:
         # Initialize Jinja2 environment if available
         if JINJA2_AVAILABLE:
             self.jinja_env = Environment(
-                loader=PackageLoader('kicad_sch_api', 'exporters/templates'),
+                loader=PackageLoader("kicad_sch_api", "exporters/templates"),
                 trim_blocks=True,
                 lstrip_blocks=True,
-                autoescape=select_autoescape(['html', 'xml'])
+                autoescape=select_autoescape(["html", "xml"]),
             )
             # Register custom filters
-            self.jinja_env.filters['sanitize'] = self._sanitize_variable_name
+            self.jinja_env.filters["sanitize"] = self._sanitize_variable_name
         else:
             self.jinja_env = None
 
@@ -75,7 +75,7 @@ class PythonCodeGenerator:
         self,
         schematic,  # Type: Schematic (avoid circular import)
         include_hierarchy: bool = True,
-        output_path: Optional[Path] = None
+        output_path: Optional[Path] = None,
     ) -> str:
         """
         Generate Python code from schematic.
@@ -96,7 +96,7 @@ class PythonCodeGenerator:
         data = self._extract_schematic_data(schematic, include_hierarchy)
 
         # Generate code using template or fallback
-        if self.jinja_env and self.template != 'minimal':
+        if self.jinja_env and self.template != "minimal":
             code = self._generate_with_template(data)
         else:
             # Use simple string-based generation for minimal or if Jinja2 unavailable
@@ -112,7 +112,7 @@ class PythonCodeGenerator:
         # Write to file if path provided
         if output_path:
             output_path = Path(output_path)
-            output_path.write_text(code, encoding='utf-8')
+            output_path.write_text(code, encoding="utf-8")
             # Make executable on Unix-like systems
             try:
                 output_path.chmod(0o755)
@@ -121,11 +121,7 @@ class PythonCodeGenerator:
 
         return code
 
-    def _extract_schematic_data(
-        self,
-        schematic,
-        include_hierarchy: bool
-    ) -> Dict[str, Any]:
+    def _extract_schematic_data(self, schematic, include_hierarchy: bool) -> Dict[str, Any]:
         """
         Extract all data from schematic for code generation.
 
@@ -137,15 +133,12 @@ class PythonCodeGenerator:
             Dictionary with all template data
         """
         return {
-            'metadata': self._extract_metadata(schematic),
-            'components': self._extract_components(schematic),
-            'wires': self._extract_wires(schematic),
-            'labels': self._extract_labels(schematic),
-            'sheets': self._extract_sheets(schematic) if include_hierarchy else [],
-            'options': {
-                'add_comments': self.add_comments,
-                'include_hierarchy': include_hierarchy
-            }
+            "metadata": self._extract_metadata(schematic),
+            "components": self._extract_components(schematic),
+            "wires": self._extract_wires(schematic),
+            "labels": self._extract_labels(schematic),
+            "sheets": self._extract_sheets(schematic) if include_hierarchy else [],
+            "options": {"add_comments": self.add_comments, "include_hierarchy": include_hierarchy},
         }
 
     def _extract_metadata(self, schematic) -> Dict[str, Any]:
@@ -153,22 +146,26 @@ class PythonCodeGenerator:
         import kicad_sch_api
 
         # Get project name from schematic
-        name = getattr(schematic, 'name', None) or 'untitled'
+        name = getattr(schematic, "name", None) or "untitled"
 
         # Get title from title block if available
-        title = ''
-        if hasattr(schematic, 'title_block') and schematic.title_block:
-            title = getattr(schematic.title_block, 'title', '')
+        title = ""
+        if hasattr(schematic, "title_block") and schematic.title_block:
+            title = getattr(schematic.title_block, "title", "")
 
         if not title:
             title = name
 
         return {
-            'name': name,
-            'title': title,
-            'version': kicad_sch_api.__version__,
-            'date': datetime.now().isoformat(),
-            'source_file': str(schematic.filepath) if hasattr(schematic, 'filepath') and schematic.filepath else 'unknown'
+            "name": name,
+            "title": title,
+            "version": kicad_sch_api.__version__,
+            "date": datetime.now().isoformat(),
+            "source_file": (
+                str(schematic.filepath)
+                if hasattr(schematic, "filepath") and schematic.filepath
+                else "unknown"
+            ),
         }
 
     def _extract_components(self, schematic) -> List[Dict[str, Any]]:
@@ -181,36 +178,36 @@ class PythonCodeGenerator:
         components = []
 
         # Access components collection
-        comp_collection = schematic.components if hasattr(schematic, 'components') else []
+        comp_collection = schematic.components if hasattr(schematic, "components") else []
 
         for comp in comp_collection:
             # Extract component properties
-            ref = getattr(comp, 'reference', '') or getattr(comp, 'ref', '')
-            lib_id = getattr(comp, 'lib_id', '') or getattr(comp, 'symbol', '')
-            value = getattr(comp, 'value', '')
-            footprint = getattr(comp, 'footprint', '')
+            ref = getattr(comp, "reference", "") or getattr(comp, "ref", "")
+            lib_id = getattr(comp, "lib_id", "") or getattr(comp, "symbol", "")
+            value = getattr(comp, "value", "")
+            footprint = getattr(comp, "footprint", "")
 
             # Get position
-            pos = getattr(comp, 'position', None)
+            pos = getattr(comp, "position", None)
             if pos:
-                x = getattr(pos, 'x', 0.0)
-                y = getattr(pos, 'y', 0.0)
+                x = getattr(pos, "x", 0.0)
+                y = getattr(pos, "y", 0.0)
             else:
                 x, y = 0.0, 0.0
 
             # Get rotation
-            rotation = getattr(comp, 'rotation', 0)
+            rotation = getattr(comp, "rotation", 0)
 
             comp_data = {
-                'ref': ref,
-                'variable': self._sanitize_variable_name(ref),
-                'lib_id': lib_id,
-                'value': value,
-                'footprint': footprint,
-                'x': x,
-                'y': y,
-                'rotation': rotation,
-                'properties': self._extract_custom_properties(comp)
+                "ref": ref,
+                "variable": self._sanitize_variable_name(ref),
+                "lib_id": lib_id,
+                "value": value,
+                "footprint": footprint,
+                "x": x,
+                "y": y,
+                "rotation": rotation,
+                "properties": self._extract_custom_properties(comp),
             }
             components.append(comp_data)
 
@@ -226,20 +223,20 @@ class PythonCodeGenerator:
         wires = []
 
         # Access wires collection
-        wire_collection = schematic.wires if hasattr(schematic, 'wires') else []
+        wire_collection = schematic.wires if hasattr(schematic, "wires") else []
 
         for wire in wire_collection:
             # Get start and end points
-            start = getattr(wire, 'start', None)
-            end = getattr(wire, 'end', None)
+            start = getattr(wire, "start", None)
+            end = getattr(wire, "end", None)
 
             if start and end:
                 wire_data = {
-                    'start_x': getattr(start, 'x', 0.0),
-                    'start_y': getattr(start, 'y', 0.0),
-                    'end_x': getattr(end, 'x', 0.0),
-                    'end_y': getattr(end, 'y', 0.0),
-                    'style': getattr(wire, 'style', 'solid')
+                    "start_x": getattr(start, "x", 0.0),
+                    "start_y": getattr(start, "y", 0.0),
+                    "end_x": getattr(end, "x", 0.0),
+                    "end_y": getattr(end, "y", 0.0),
+                    "style": getattr(wire, "style", "solid"),
                 }
                 wires.append(wire_data)
 
@@ -255,29 +252,23 @@ class PythonCodeGenerator:
         labels = []
 
         # Access labels collection
-        label_collection = schematic.labels if hasattr(schematic, 'labels') else []
+        label_collection = schematic.labels if hasattr(schematic, "labels") else []
 
         for label in label_collection:
             # Get label properties
-            text = getattr(label, 'text', '')
-            pos = getattr(label, 'position', None)
+            text = getattr(label, "text", "")
+            pos = getattr(label, "position", None)
 
             if pos:
-                x = getattr(pos, 'x', 0.0)
-                y = getattr(pos, 'y', 0.0)
+                x = getattr(pos, "x", 0.0)
+                y = getattr(pos, "y", 0.0)
             else:
                 x, y = 0.0, 0.0
 
-            label_type = getattr(label, 'label_type', 'local')
-            rotation = getattr(label, 'rotation', 0)
+            label_type = getattr(label, "label_type", "local")
+            rotation = getattr(label, "rotation", 0)
 
-            label_data = {
-                'text': text,
-                'x': x,
-                'y': y,
-                'type': label_type,
-                'rotation': rotation
-            }
+            label_data = {"text": text, "x": x, "y": y, "type": label_type, "rotation": rotation}
             labels.append(label_data)
 
         return labels
@@ -292,7 +283,7 @@ class PythonCodeGenerator:
         sheets = []
 
         # Access sheets collection if available
-        if not hasattr(schematic, 'sheets'):
+        if not hasattr(schematic, "sheets"):
             return sheets
 
         # SheetManager doesn't support direct iteration
@@ -301,46 +292,48 @@ class PythonCodeGenerator:
         return sheets
 
         # The code below is for future when SheetManager is iterable:
-        for sheet in getattr(schematic.sheets, 'data', []):
+        for sheet in getattr(schematic.sheets, "data", []):
             # Get sheet properties
-            name = getattr(sheet, 'name', '')
-            filename = getattr(sheet, 'filename', '')
+            name = getattr(sheet, "name", "")
+            filename = getattr(sheet, "filename", "")
 
-            pos = getattr(sheet, 'position', None)
-            size = getattr(sheet, 'size', None)
+            pos = getattr(sheet, "position", None)
+            size = getattr(sheet, "size", None)
 
             if pos:
-                x = getattr(pos, 'x', 0.0)
-                y = getattr(pos, 'y', 0.0)
+                x = getattr(pos, "x", 0.0)
+                y = getattr(pos, "y", 0.0)
             else:
                 x, y = 0.0, 0.0
 
             if size:
-                width = getattr(size, 'width', 100.0)
-                height = getattr(size, 'height', 100.0)
+                width = getattr(size, "width", 100.0)
+                height = getattr(size, "height", 100.0)
             else:
                 width, height = 100.0, 100.0
 
             # Extract pins
             pins = []
-            if hasattr(sheet, 'pins'):
+            if hasattr(sheet, "pins"):
                 for pin in sheet.pins:
-                    pin_pos = getattr(pin, 'position', None)
-                    pins.append({
-                        'name': getattr(pin, 'name', ''),
-                        'type': getattr(pin, 'pin_type', 'input'),
-                        'x': getattr(pin_pos, 'x', 0.0) if pin_pos else 0.0,
-                        'y': getattr(pin_pos, 'y', 0.0) if pin_pos else 0.0
-                    })
+                    pin_pos = getattr(pin, "position", None)
+                    pins.append(
+                        {
+                            "name": getattr(pin, "name", ""),
+                            "type": getattr(pin, "pin_type", "input"),
+                            "x": getattr(pin_pos, "x", 0.0) if pin_pos else 0.0,
+                            "y": getattr(pin_pos, "y", 0.0) if pin_pos else 0.0,
+                        }
+                    )
 
             sheet_data = {
-                'name': name,
-                'filename': filename,
-                'x': x,
-                'y': y,
-                'width': width,
-                'height': height,
-                'pins': pins
+                "name": name,
+                "filename": filename,
+                "x": x,
+                "y": y,
+                "width": width,
+                "height": height,
+                "pins": pins,
             }
             sheets.append(sheet_data)
 
@@ -355,33 +348,35 @@ class PythonCodeGenerator:
         """
         # Standard properties to exclude
         standard_props = {
-            'Reference', 'Value', 'Footprint', 'Datasheet',
-            'ki_keywords', 'ki_description', 'ki_fp_filters',
-            'Description'  # Also exclude Description as it's often auto-generated
+            "Reference",
+            "Value",
+            "Footprint",
+            "Datasheet",
+            "ki_keywords",
+            "ki_description",
+            "ki_fp_filters",
+            "Description",  # Also exclude Description as it's often auto-generated
         }
 
         properties = []
 
         # Get properties if available
-        if hasattr(component, 'properties'):
+        if hasattr(component, "properties"):
             comp_props = component.properties
             if isinstance(comp_props, dict):
                 for prop_name, prop_value in comp_props.items():
                     # Skip internal properties (start with __)
-                    if prop_name.startswith('__'):
+                    if prop_name.startswith("__"):
                         continue
                     # Skip standard properties
                     if prop_name in standard_props:
                         continue
                     # Skip if value contains non-serializable content
                     str_value = str(prop_value)
-                    if 'Symbol(' in str_value or '[Symbol(' in str_value:
+                    if "Symbol(" in str_value or "[Symbol(" in str_value:
                         continue
 
-                    properties.append({
-                        'name': prop_name,
-                        'value': str_value
-                    })
+                    properties.append({"name": prop_name, "value": str_value})
 
         return properties
 
@@ -408,18 +403,18 @@ class PythonCodeGenerator:
 
         # Handle special power net cases
         power_nets = {
-            '3V3': '_3v3',
-            '3.3V': '_3v3',
-            '+3V3': '_3v3',
-            '+3.3V': '_3v3',
-            '5V': '_5v',
-            '+5V': '_5v',
-            '12V': '_12v',
-            '+12V': '_12v',
-            'VCC': 'vcc',
-            'VDD': 'vdd',
-            'GND': 'gnd',
-            'VSS': 'vss'
+            "3V3": "_3v3",
+            "3.3V": "_3v3",
+            "+3V3": "_3v3",
+            "+3.3V": "_3v3",
+            "5V": "_5v",
+            "+5V": "_5v",
+            "12V": "_12v",
+            "+12V": "_12v",
+            "VCC": "vcc",
+            "VDD": "vdd",
+            "GND": "gnd",
+            "VSS": "vss",
         }
 
         if name in power_nets:
@@ -429,25 +424,25 @@ class PythonCodeGenerator:
         var_name = name.lower()
 
         # Replace invalid characters
-        var_name = var_name.replace('$', '_')
-        var_name = var_name.replace('+', 'p')
-        var_name = var_name.replace('-', 'n')
-        var_name = var_name.replace('.', '_')
-        var_name = re.sub(r'[^a-z0-9_]', '_', var_name)
+        var_name = var_name.replace("$", "_")
+        var_name = var_name.replace("+", "p")
+        var_name = var_name.replace("-", "n")
+        var_name = var_name.replace(".", "_")
+        var_name = re.sub(r"[^a-z0-9_]", "_", var_name)
 
         # Remove consecutive underscores
-        var_name = re.sub(r'_+', '_', var_name)
+        var_name = re.sub(r"_+", "_", var_name)
 
         # Strip leading/trailing underscores
-        var_name = var_name.strip('_')
+        var_name = var_name.strip("_")
 
         # Prefix if starts with digit or is empty
         if not var_name or var_name[0].isdigit():
-            var_name = '_' + var_name
+            var_name = "_" + var_name
 
         # Ensure not a Python keyword
         if keyword.iskeyword(var_name):
-            var_name = var_name + '_'
+            var_name = var_name + "_"
 
         return var_name
 
@@ -465,7 +460,7 @@ class PythonCodeGenerator:
             TemplateNotFoundError: If template not found
         """
         try:
-            template = self.jinja_env.get_template(f'{self.template}.py.jinja2')
+            template = self.jinja_env.get_template(f"{self.template}.py.jinja2")
             code = template.render(**data)
             return code
         except Exception as e:
@@ -500,7 +495,7 @@ class PythonCodeGenerator:
         lines.append("")
 
         # Function definition
-        func_name = self._sanitize_variable_name(data['metadata']['name'])
+        func_name = self._sanitize_variable_name(data["metadata"]["name"])
         lines.append(f"def create_{func_name}():")
         lines.append(f'    """Create {data["metadata"]["title"]} schematic."""')
         lines.append("")
@@ -511,27 +506,29 @@ class PythonCodeGenerator:
         lines.append("")
 
         # Add components
-        if data['components']:
+        if data["components"]:
             lines.append("    # Add components")
-            for comp in data['components']:
+            for comp in data["components"]:
                 lines.append(f"    {comp['variable']} = sch.components.add(")
                 lines.append(f"        '{comp['lib_id']}',")
                 lines.append(f"        reference='{comp['ref']}',")
                 lines.append(f"        value='{comp['value']}',")
                 lines.append(f"        position=({comp['x']}, {comp['y']})")
-                if comp['rotation'] != 0:
+                if comp["rotation"] != 0:
                     lines.append(f"        rotation={comp['rotation']}")
                 lines.append("    )")
-                if comp['footprint']:
+                if comp["footprint"]:
                     lines.append(f"    {comp['variable']}.footprint = '{comp['footprint']}'")
-                for prop in comp['properties']:
-                    lines.append(f"    {comp['variable']}.set_property('{prop['name']}', '{prop['value']}')")
+                for prop in comp["properties"]:
+                    lines.append(
+                        f"    {comp['variable']}.set_property('{prop['name']}', '{prop['value']}')"
+                    )
                 lines.append("")
 
         # Add wires
-        if data['wires']:
+        if data["wires"]:
             lines.append("    # Add wires")
-            for wire in data['wires']:
+            for wire in data["wires"]:
                 lines.append(f"    sch.add_wire(")
                 lines.append(f"        start=({wire['start_x']}, {wire['start_y']}),")
                 lines.append(f"        end=({wire['end_x']}, {wire['end_y']})")
@@ -539,9 +536,9 @@ class PythonCodeGenerator:
             lines.append("")
 
         # Add labels
-        if data['labels']:
+        if data["labels"]:
             lines.append("    # Add labels")
-            for label in data['labels']:
+            for label in data["labels"]:
                 lines.append(f"    sch.add_label(")
                 lines.append(f"        '{label['text']}',")
                 lines.append(f"        position=({label['x']}, {label['y']})")
@@ -560,7 +557,7 @@ class PythonCodeGenerator:
         lines.append(f"    print('✅ Schematic generated: {data['metadata']['name']}.kicad_sch')")
         lines.append("")
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def _format_with_black(self, code: str) -> str:
         """
@@ -578,7 +575,7 @@ class PythonCodeGenerator:
             mode = black.Mode(
                 target_versions={black.TargetVersion.PY38},
                 line_length=88,
-                string_normalization=True
+                string_normalization=True,
             )
 
             formatted = black.format_str(code, mode=mode)
@@ -603,7 +600,7 @@ class PythonCodeGenerator:
             CodeGenerationError: If code has syntax errors
         """
         try:
-            compile(code, '<generated>', 'exec')
+            compile(code, "<generated>", "exec")
         except SyntaxError as e:
             raise CodeGenerationError(
                 f"Generated code has syntax error at line {e.lineno}: {e.msg}"

@@ -435,15 +435,15 @@ class ExactFormatter:
     def _escape_string(self, text: str) -> str:
         """Escape special characters in string for S-expression formatting."""
         # Escape backslashes first (must be done before other replacements)
-        text = text.replace('\\', '\\\\')
+        text = text.replace("\\", "\\\\")
         # Escape double quotes
         text = text.replace('"', '\\"')
         # Escape newlines (convert actual newlines to escaped representation)
-        text = text.replace('\n', '\\n')
+        text = text.replace("\n", "\\n")
         # Escape carriage returns
-        text = text.replace('\r', '\\r')
+        text = text.replace("\r", "\\r")
         # Escape tabs
-        text = text.replace('\t', '\\t')
+        text = text.replace("\t", "\\t")
         return text
 
     def _needs_quoting(self, text: str) -> bool:
@@ -483,7 +483,10 @@ class ExactFormatter:
             for item in lst[1:]:
                 if isinstance(item, list) and len(item) >= 1:
                     tag = str(item[0])
-                    if tag in ["version", "generator", "generator_version", "uuid"] and len(item) >= 2:
+                    if (
+                        tag in ["version", "generator", "generator_version", "uuid"]
+                        and len(item) >= 2
+                    ):
                         if tag in ["generator", "generator_version", "uuid"]:
                             header_parts.append(f'({tag} "{item[1]}")')
                         else:

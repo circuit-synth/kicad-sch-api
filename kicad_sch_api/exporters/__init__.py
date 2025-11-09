@@ -7,4 +7,4 @@ starting with Python code export.
 
 from .python_generator import PythonCodeGenerator
 
-__all__ = ['PythonCodeGenerator']
+__all__ = ["PythonCodeGenerator"]

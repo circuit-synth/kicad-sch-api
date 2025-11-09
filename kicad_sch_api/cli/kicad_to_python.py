@@ -17,9 +17,9 @@ from typing import Optional
 
 import kicad_sch_api as ksa
 from kicad_sch_api.exporters.python_generator import (
-    PythonCodeGenerator,
     CodeGenerationError,
-    TemplateNotFoundError
+    PythonCodeGenerator,
+    TemplateNotFoundError,
 )
 
 
@@ -34,55 +34,37 @@ def main(argv: Optional[list] = None) -> int:
         Exit code (0 = success, 1 = error)
     """
     parser = argparse.ArgumentParser(
-        prog='kicad-to-python',
-        description='Convert KiCad schematics to Python code',
-        epilog='For more information: https://github.com/circuit-synth/kicad-sch-api'
+        prog="kicad-to-python",
+        description="Convert KiCad schematics to Python code",
+        epilog="For more information: https://github.com/circuit-synth/kicad-sch-api",
     )
 
     # Positional arguments
     parser.add_argument(
-        'input',
-        type=Path,
-        help='Input KiCad schematic (.kicad_sch) or project (.kicad_pro)'
+        "input", type=Path, help="Input KiCad schematic (.kicad_sch) or project (.kicad_pro)"
     )
 
     parser.add_argument(
-        'output',
-        type=Path,
-        help='Output Python file (.py) or directory (for hierarchical)'
+        "output", type=Path, help="Output Python file (.py) or directory (for hierarchical)"
     )
 
     # Options
     parser.add_argument(
-        '--template',
-        choices=['minimal', 'default', 'verbose', 'documented'],
-        default='default',
-        help='Code template style (default: default)'
+        "--template",
+        choices=["minimal", "default", "verbose", "documented"],
+        default="default",
+        help="Code template style (default: default)",
     )
 
     parser.add_argument(
-        '--include-hierarchy',
-        action='store_true',
-        help='Include hierarchical sheets'
+        "--include-hierarchy", action="store_true", help="Include hierarchical sheets"
     )
 
-    parser.add_argument(
-        '--no-format',
-        action='store_true',
-        help='Skip Black code formatting'
-    )
+    parser.add_argument("--no-format", action="store_true", help="Skip Black code formatting")
 
-    parser.add_argument(
-        '--no-comments',
-        action='store_true',
-        help='Skip explanatory comments'
-    )
+    parser.add_argument("--no-comments", action="store_true", help="Skip explanatory comments")
 
-    parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Verbose output'
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args(argv)
 
@@ -92,11 +74,8 @@ def main(argv: Optional[list] = None) -> int:
             print(f"❌ Error: Input file not found: {args.input}", file=sys.stderr)
             return 1
 
-        if args.input.suffix not in ['.kicad_sch', '.kicad_pro']:
-            print(
-                f"❌ Error: Input must be .kicad_sch or .kicad_pro file",
-                file=sys.stderr
-            )
+        if args.input.suffix not in [".kicad_sch", ".kicad_pro"]:
+            print(f"❌ Error: Input must be .kicad_sch or .kicad_pro file", file=sys.stderr)
             return 1
 
         # Load schematic
@@ -120,17 +99,15 @@ def main(argv: Optional[list] = None) -> int:
         generator = PythonCodeGenerator(
             template=args.template,
             format_code=not args.no_format,
-            add_comments=not args.no_comments
+            add_comments=not args.no_comments,
         )
 
         code = generator.generate(
-            schematic=schematic,
-            include_hierarchy=args.include_hierarchy,
-            output_path=args.output
+            schematic=schematic, include_hierarchy=args.include_hierarchy, output_path=args.output
         )
 
         # Report success
-        lines = len(code.split('\n'))
+        lines = len(code.split("\n"))
         print(f"✅ Generated {args.output} ({lines} lines)")
 
         if args.verbose:
@@ -156,6 +133,7 @@ def main(argv: Optional[list] = None) -> int:
         print(f"❌ Unexpected error: {e}", file=sys.stderr)
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         return 1
 
@@ -165,5 +143,5 @@ def entry_point():
     sys.exit(main())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

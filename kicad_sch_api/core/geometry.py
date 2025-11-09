@@ -190,7 +190,9 @@ def calculate_position_for_pin(
     component_x = target_x - rotated_x
     component_y = target_y - rotated_y
 
-    logger.debug(f"Calculated component position (before grid snap): ({component_x:.3f}, {component_y:.3f})")
+    logger.debug(
+        f"Calculated component position (before grid snap): ({component_x:.3f}, {component_y:.3f})"
+    )
 
     # Snap to grid for proper KiCAD connectivity
     snapped_x, snapped_y = snap_to_grid((component_x, component_y), grid_size=grid_size)

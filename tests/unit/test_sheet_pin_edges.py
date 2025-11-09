@@ -6,6 +6,7 @@ based on the edge parameter (right, bottom, left, top).
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 

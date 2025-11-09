@@ -1,6 +1,7 @@
 """Unit tests for BaseManager abstract class."""
 
 import pytest
+
 from kicad_sch_api.core.managers.base import BaseManager
 from kicad_sch_api.utils.validation import ValidationIssue
 
@@ -10,7 +11,7 @@ class ConcreteManager(BaseManager):
 
     def __init__(self, schematic_data=None, **kwargs):
         super().__init__(schematic_data, **kwargs)
-        self.custom_attr = kwargs.get('custom_attr', 'default')
+        self.custom_attr = kwargs.get("custom_attr", "default")
 
 
 def test_base_manager_initialization_no_data():
@@ -23,7 +24,7 @@ def test_base_manager_initialization_no_data():
 
 def test_base_manager_initialization_with_data():
     """Test BaseManager can be initialized with schematic data."""
-    test_data = {'version': '20230121', 'uuid': 'test-uuid'}
+    test_data = {"version": "20230121", "uuid": "test-uuid"}
     manager = ConcreteManager(test_data)
 
     assert manager.data == test_data
@@ -35,7 +36,7 @@ def test_base_manager_set_schematic():
     manager = ConcreteManager()
 
     # Mock schematic object
-    mock_schematic = type('MockSchematic', (), {})()
+    mock_schematic = type("MockSchematic", (), {})()
 
     manager.set_schematic(mock_schematic)
 
@@ -45,7 +46,7 @@ def test_base_manager_set_schematic():
 def test_base_manager_schematic_property():
     """Test schematic property getter."""
     manager = ConcreteManager()
-    mock_schematic = type('MockSchematic', (), {})()
+    mock_schematic = type("MockSchematic", (), {})()
 
     assert manager.schematic is None
 
@@ -56,7 +57,7 @@ def test_base_manager_schematic_property():
 
 def test_base_manager_data_property():
     """Test data property getter."""
-    test_data = {'test': 'value'}
+    test_data = {"test": "value"}
     manager = ConcreteManager(test_data)
 
     assert manager.data == test_data
@@ -74,11 +75,11 @@ def test_base_manager_validate_default():
 
 def test_base_manager_with_kwargs():
     """Test BaseManager passes through additional kwargs."""
-    test_data = {'version': '20230121'}
-    manager = ConcreteManager(test_data, custom_attr='custom_value')
+    test_data = {"version": "20230121"}
+    manager = ConcreteManager(test_data, custom_attr="custom_value")
 
     assert manager.data == test_data
-    assert manager.custom_attr == 'custom_value'
+    assert manager.custom_attr == "custom_value"
 
 
 def test_base_manager_inheritance():
@@ -86,10 +87,10 @@ def test_base_manager_inheritance():
     manager = ConcreteManager()
 
     assert isinstance(manager, BaseManager)
-    assert hasattr(manager, 'data')
-    assert hasattr(manager, 'schematic')
-    assert hasattr(manager, 'set_schematic')
-    assert hasattr(manager, 'validate')
+    assert hasattr(manager, "data")
+    assert hasattr(manager, "schematic")
+    assert hasattr(manager, "set_schematic")
+    assert hasattr(manager, "validate")
 
 
 def test_base_manager_validate_override():
@@ -98,24 +99,24 @@ def test_base_manager_validate_override():
 
     class CustomManager(BaseManager):
         def validate(self):
-            return [ValidationIssue(
-                category='test',
-                message='Custom validation',
-                level=ValidationLevel.WARNING
-            )]
+            return [
+                ValidationIssue(
+                    category="test", message="Custom validation", level=ValidationLevel.WARNING
+                )
+            ]
 
     manager = CustomManager()
     issues = manager.validate()
 
     assert len(issues) == 1
     assert issues[0].level == ValidationLevel.WARNING
-    assert issues[0].message == 'Custom validation'
+    assert issues[0].message == "Custom validation"
 
 
 def test_base_manager_multiple_managers_independent():
     """Test that multiple manager instances are independent."""
-    data1 = {'uuid': 'uuid-1'}
-    data2 = {'uuid': 'uuid-2'}
+    data1 = {"uuid": "uuid-1"}
+    data2 = {"uuid": "uuid-2"}
 
     manager1 = ConcreteManager(data1)
     manager2 = ConcreteManager(data2)
@@ -130,8 +131,8 @@ def test_base_manager_schematic_independence():
     manager1 = ConcreteManager()
     manager2 = ConcreteManager()
 
-    schematic1 = type('Schematic1', (), {})()
-    schematic2 = type('Schematic2', (), {})()
+    schematic1 = type("Schematic1", (), {})()
+    schematic2 = type("Schematic2", (), {})()
 
     manager1.set_schematic(schematic1)
     manager2.set_schematic(schematic2)

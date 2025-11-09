@@ -7,7 +7,7 @@ Tests the Text dataclass, parser, and API for bold, italic, thickness, color, an
 import pytest
 
 import kicad_sch_api as ksa
-from kicad_sch_api.core.types import Text, Point
+from kicad_sch_api.core.types import Point, Text
 
 
 class TestTextDataclass:

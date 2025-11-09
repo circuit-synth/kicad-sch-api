@@ -20,37 +20,23 @@ class TestHierarchicalInstances:
     def test_instances_field_exists(self):
         """Test that SchematicSymbol has instances field."""
         sch = Schematic(name="test_project")
-        comp = sch.components.add(
-            "Device:R",
-            "R1",
-            "10k",
-            (100, 100)
-        )
+        comp = sch.components.add("Device:R", "R1", "10k", (100, 100))
 
         # Should have instances field (even if empty)
-        assert hasattr(comp._data, 'instances')
+        assert hasattr(comp._data, "instances")
         assert isinstance(comp._data.instances, list)
 
     def test_set_hierarchical_instance(self):
         """Test setting a hierarchical instance path."""
         sch = Schematic(name="test_project")
-        comp = sch.components.add(
-            "Device:R",
-            "R1",
-            "10k",
-            (100, 100)
-        )
+        comp = sch.components.add("Device:R", "R1", "10k", (100, 100))
 
         # Set hierarchical instance
         root_uuid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         child_uuid = "11111111-2222-3333-4444-555555555555"
         hierarchical_path = f"/{root_uuid}/{child_uuid}"
 
-        inst = SymbolInstance(
-            path=hierarchical_path,
-            reference="R1",
-            unit=1
-        )
+        inst = SymbolInstance(path=hierarchical_path, reference="R1", unit=1)
         comp._data.instances = [inst]
 
         # Verify it was set
@@ -65,23 +51,14 @@ class TestHierarchicalInstances:
 
             # Create schematic with hierarchical instance
             sch = Schematic(name="test_project")
-            comp = sch.components.add(
-                "Device:R",
-            "R1",
-                "10k",
-                (100, 100)
-            )
+            comp = sch.components.add("Device:R", "R1", "10k", (100, 100))
 
             # Set hierarchical path
             root_uuid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
             child_uuid = "11111111-2222-3333-4444-555555555555"
             hierarchical_path = f"/{root_uuid}/{child_uuid}"
 
-            inst = SymbolInstance(
-                path=hierarchical_path,
-                reference="R1",
-                unit=1
-            )
+            inst = SymbolInstance(path=hierarchical_path, reference="R1", unit=1)
             comp._data.instances = [inst]
 
             # Save
@@ -95,7 +72,7 @@ class TestHierarchicalInstances:
             reloaded_comp = list(reloaded.components)[0]
 
             # Verify instances preserved
-            assert hasattr(reloaded_comp._data, 'instances')
+            assert hasattr(reloaded_comp._data, "instances")
             assert len(reloaded_comp._data.instances) == 1
 
             # THE CRITICAL TEST: Path must be preserved exactly
@@ -109,12 +86,7 @@ class TestHierarchicalInstances:
             output_path = Path(tmpdir) / "test_multi_instance.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.components.add(
-                "Device:R",
-            "R1",
-                "10k",
-                (100, 100)
-            )
+            comp = sch.components.add("Device:R", "R1", "10k", (100, 100))
 
             # Set multiple instances
             root_uuid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -142,12 +114,7 @@ class TestHierarchicalInstances:
 
             # Create component without setting instances
             sch = Schematic(name="test_project")
-            comp = sch.components.add(
-                "Device:R",
-            "R1",
-                "10k",
-                (100, 100)
-            )
+            comp = sch.components.add("Device:R", "R1", "10k", (100, 100))
 
             # Don't set instances - should get auto-generated path
             # Save and reload
@@ -162,12 +129,7 @@ class TestHierarchicalInstances:
     def test_empty_instances_list(self):
         """Test component with empty instances list."""
         sch = Schematic(name="test_project")
-        comp = sch.components.add(
-            "Device:R",
-            "R1",
-            "10k",
-            (100, 100)
-        )
+        comp = sch.components.add("Device:R", "R1", "10k", (100, 100))
 
         # Explicitly set empty list
         comp._data.instances = []
@@ -185,12 +147,7 @@ class TestHierarchicalPaths:
             output_path = Path(tmpdir) / "test_root.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.components.add(
-                "Device:R",
-            "R1",
-                "10k",
-                (100, 100)
-            )
+            comp = sch.components.add("Device:R", "R1", "10k", (100, 100))
 
             inst = SymbolInstance(path="/", reference="R1", unit=1)
             comp._data.instances = [inst]
@@ -207,12 +164,7 @@ class TestHierarchicalPaths:
             output_path = Path(tmpdir) / "test_two_level.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.components.add(
-                "Device:R",
-            "R2",
-                "4.7k",
-                (100, 100)
-            )
+            comp = sch.components.add("Device:R", "R2", "4.7k", (100, 100))
 
             path = "/b0893f52-599b-414d-923c-1b56f2f78600/6c965abc-eb03-4248-b925-eaa4d33b8832"
             inst = SymbolInstance(path=path, reference="R2", unit=1)
@@ -230,12 +182,7 @@ class TestHierarchicalPaths:
             output_path = Path(tmpdir) / "test_three_level.kicad_sch"
 
             sch = Schematic(name="test_project")
-            comp = sch.components.add(
-                "Device:R",
-            "R3",
-                "1k",
-                (100, 100)
-            )
+            comp = sch.components.add("Device:R", "R3", "1k", (100, 100))
 
             # Three-level path
             path = "/root-uuid/child-uuid/grandchild-uuid"

@@ -162,8 +162,10 @@ class WireCollection(BaseCollection[Wire]):
         matching_wires = []
         for wire in self._items:
             # Check first and last point (endpoints)
-            if (wire.points[0].distance_to(point) <= tolerance or
-                wire.points[-1].distance_to(point) <= tolerance):
+            if (
+                wire.points[0].distance_to(point) <= tolerance
+                or wire.points[-1].distance_to(point) <= tolerance
+            ):
                 matching_wires.append(wire)
 
         return matching_wires
@@ -249,15 +251,17 @@ class WireCollection(BaseCollection[Wire]):
         """
         if not self._items:
             base_stats = super().get_statistics()
-            base_stats.update({
-                "total_wires": 0,
-                "total_segments": 0,
-                "wire_count": 0,
-                "bus_count": 0,
-                "horizontal_count": 0,
-                "vertical_count": 0,
-                "avg_points_per_wire": 0,
-            })
+            base_stats.update(
+                {
+                    "total_wires": 0,
+                    "total_segments": 0,
+                    "wire_count": 0,
+                    "bus_count": 0,
+                    "horizontal_count": 0,
+                    "vertical_count": 0,
+                    "avg_points_per_wire": 0,
+                }
+            )
             return base_stats
 
         wire_count = sum(1 for w in self._items if w.wire_type == WireType.WIRE)
@@ -269,15 +273,17 @@ class WireCollection(BaseCollection[Wire]):
         vertical = len(self.get_vertical())
 
         base_stats = super().get_statistics()
-        base_stats.update({
-            "total_wires": len(self._items),
-            "total_segments": total_segments,
-            "wire_count": wire_count,
-            "bus_count": bus_count,
-            "horizontal_count": horizontal,
-            "vertical_count": vertical,
-            "avg_points_per_wire": avg_points,
-        })
+        base_stats.update(
+            {
+                "total_wires": len(self._items),
+                "total_segments": total_segments,
+                "wire_count": wire_count,
+                "bus_count": bus_count,
+                "horizontal_count": horizontal,
+                "vertical_count": vertical,
+                "avg_points_per_wire": avg_points,
+            }
+        )
 
         return base_stats
 

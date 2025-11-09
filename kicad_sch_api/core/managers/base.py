@@ -5,7 +5,7 @@ common patterns for validation and data access.
 """
 
 from abc import ABC
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ...utils.validation import ValidationIssue
 

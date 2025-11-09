@@ -25,9 +25,7 @@ class TestEffectsParsing:
         sexp = r1.properties["__sexp_Reference"]
 
         # Should have effects section with font size
-        assert any(
-            isinstance(item, list) and str(item[0]) == "effects" for item in sexp
-        )
+        assert any(isinstance(item, list) and str(item[0]) == "effects" for item in sexp)
 
     def test_parse_bold_flag(self):
         """Parse bold flag from effects."""

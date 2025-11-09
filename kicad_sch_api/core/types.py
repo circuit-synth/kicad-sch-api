@@ -367,13 +367,14 @@ class SchematicSymbol:
             >>> # Hide Footprint
             >>> comp.set_property_effects("Footprint", {'visible': False})
         """
-        from ..utils.text_effects import (
-            parse_effects_from_sexp,
-            merge_effects,
-            update_property_sexp_with_effects,
-            create_effects_sexp,
-        )
         from sexpdata import Symbol
+
+        from ..utils.text_effects import (
+            create_effects_sexp,
+            merge_effects,
+            parse_effects_from_sexp,
+            update_property_sexp_with_effects,
+        )
 
         # Check if property exists
         sexp_key = f"__sexp_{property_name}"

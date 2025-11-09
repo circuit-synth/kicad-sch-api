@@ -12,6 +12,7 @@ from kicad_sch_api.cli.types import ErcFormat, ErcSeverity, Units
 @dataclass
 class ErcViolation:
     """Represents a single ERC violation."""
+
     severity: str
     type: str
     description: str
@@ -22,6 +23,7 @@ class ErcViolation:
 @dataclass
 class ErcReport:
     """ERC report with violations and summary."""
+
     violations: List[ErcViolation]
     error_count: int
     warning_count: int
@@ -122,10 +124,14 @@ def run_erc(
 
     # Build command
     args = [
-        "sch", "erc",
-        "--output", str(output_path),
-        "--format", format,
-        "--units", units,
+        "sch",
+        "erc",
+        "--output",
+        str(output_path),
+        "--format",
+        format,
+        "--units",
+        units,
     ]
 
     # Add severity flags

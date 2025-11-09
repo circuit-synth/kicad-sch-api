@@ -193,7 +193,7 @@ def test_property_rotation_preservation():
 """
 
     # Create temp file with the test schematic
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.kicad_sch', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".kicad_sch", delete=False) as f:
         f.write(test_schematic)
         temp_path = f.name
 
@@ -215,10 +215,12 @@ def test_property_rotation_preservation():
         val_rot_after = extract_property_rotation(saved_content, "Value")
 
         # Check if rotations were preserved
-        assert ref_rot_before == ref_rot_after, \
-            f"Reference rotation changed from {ref_rot_before}° to {ref_rot_after}°"
-        assert val_rot_before == val_rot_after, \
-            f"Value rotation changed from {val_rot_before}° to {val_rot_after}°"
+        assert (
+            ref_rot_before == ref_rot_after
+        ), f"Reference rotation changed from {ref_rot_before}° to {ref_rot_after}°"
+        assert (
+            val_rot_before == val_rot_after
+        ), f"Value rotation changed from {val_rot_before}° to {val_rot_after}°"
 
     finally:
         # Cleanup
@@ -229,12 +231,12 @@ def extract_property_rotation(content: str, prop_name: str) -> int:
     """Extract rotation angle from a property in S-expression format."""
     # First, find the symbol instance (not lib_symbols)
     # Look for the section after lib_symbols
-    parts = content.split('(lib_symbols')
+    parts = content.split("(lib_symbols")
     if len(parts) < 2:
         return 0
 
     # Get the part after lib_symbols section ends
-    after_lib_symbols = parts[1].split('\n\t(symbol')[1] if '\n\t(symbol' in parts[1] else ''
+    after_lib_symbols = parts[1].split("\n\t(symbol")[1] if "\n\t(symbol" in parts[1] else ""
 
     # Now search for the property in the component instance
     pattern = rf'\(property "{prop_name}"[^)]*?"([^"]*)"[^)]*?\(at\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)'

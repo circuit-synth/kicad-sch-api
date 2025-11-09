@@ -29,7 +29,7 @@ Copy and customize for your assertion needs.
 
 import logging
 import math
-from typing import Optional, Tuple, List, Callable
+from typing import Callable, List, Optional, Tuple
 
 import pytest
 
@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # PIN POSITION ASSERTIONS
 # ============================================================================
+
 
 def assert_pin_exists(component, pin_number: str, message: str = ""):
     """
@@ -100,7 +101,7 @@ def assert_pin_position(
     expected_x: float,
     expected_y: float,
     tolerance: float = 0.05,
-    message: str = ""
+    message: str = "",
 ):
     """
     Assert that a pin is at an expected position.
@@ -120,9 +121,7 @@ def assert_pin_position(
         # Test pin 1 is at exactly (100.0, 104.14) ±0.05mm
         assert_pin_position(r1, "1", 100.0, 104.14, tolerance=0.05)
     """
-    logger.debug(
-        f"Checking {component.reference} pin {pin_number} at ({expected_x}, {expected_y})"
-    )
+    logger.debug(f"Checking {component.reference} pin {pin_number} at ({expected_x}, {expected_y})")
 
     pin_pos = component.get_pin_position(pin_number)
 
@@ -133,8 +132,8 @@ def assert_pin_position(
     # Check X coordinate
     if not math.isclose(pin_pos.x, expected_x, abs_tol=tolerance):
         error_msg = (
-            message or
-            f"{component.reference} pin {pin_number} X mismatch: "
+            message
+            or f"{component.reference} pin {pin_number} X mismatch: "
             f"{pin_pos.x:.3f} vs expected {expected_x:.3f} (diff: {abs(pin_pos.x - expected_x):.3f})"
         )
         pytest.fail(error_msg)
@@ -142,8 +141,8 @@ def assert_pin_position(
     # Check Y coordinate
     if not math.isclose(pin_pos.y, expected_y, abs_tol=tolerance):
         error_msg = (
-            message or
-            f"{component.reference} pin {pin_number} Y mismatch: "
+            message
+            or f"{component.reference} pin {pin_number} Y mismatch: "
             f"{pin_pos.y:.3f} vs expected {expected_y:.3f} (diff: {abs(pin_pos.y - expected_y):.3f})"
         )
         pytest.fail(error_msg)
@@ -151,11 +150,7 @@ def assert_pin_position(
     logger.debug(f"✓ Pin {pin_number} at ({pin_pos.x:.3f}, {pin_pos.y:.3f})")
 
 
-def assert_pins_at_positions(
-    component,
-    expected_positions: dict,
-    tolerance: float = 0.05
-):
+def assert_pins_at_positions(component, expected_positions: dict, tolerance: float = 0.05):
     """
     Assert multiple pins are at expected positions in one call.
 
@@ -213,13 +208,14 @@ def assert_pins_differ(component1, component2, pin_number: str = "1"):
 # PIN SPACING AND DISTANCE ASSERTIONS
 # ============================================================================
 
+
 def assert_pin_distance(
     component,
     pin1_number: str,
     pin2_number: str,
     expected_distance: float,
     tolerance: float = 0.1,
-    message: str = ""
+    message: str = "",
 ):
     """
     Assert that two pins are at expected distance from each other.
@@ -237,8 +233,7 @@ def assert_pin_distance(
         assert_pin_distance(r1, "1", "2", 3.81, tolerance=0.1)
     """
     logger.debug(
-        f"Checking distance between {component.reference} pins "
-        f"{pin1_number} and {pin2_number}"
+        f"Checking distance between {component.reference} pins " f"{pin1_number} and {pin2_number}"
     )
 
     pin1 = component.get_pin_position(pin1_number)
@@ -247,12 +242,12 @@ def assert_pin_distance(
     if pin1 is None or pin2 is None:
         pytest.fail(f"Both pins must exist to measure distance")
 
-    actual_distance = math.sqrt((pin2.x - pin1.x)**2 + (pin2.y - pin1.y)**2)
+    actual_distance = math.sqrt((pin2.x - pin1.x) ** 2 + (pin2.y - pin1.y) ** 2)
 
     if not math.isclose(actual_distance, expected_distance, abs_tol=tolerance):
         error_msg = (
-            message or
-            f"{component.reference} pins {pin1_number}-{pin2_number} distance mismatch: "
+            message
+            or f"{component.reference} pins {pin1_number}-{pin2_number} distance mismatch: "
             f"{actual_distance:.3f}mm vs expected {expected_distance:.3f}mm "
             f"(diff: {abs(actual_distance - expected_distance):.3f}mm)"
         )
@@ -291,7 +286,7 @@ def assert_pin_distance_consistent(components: List, pin1: str, pin2: str):
         if pin1_pos is None or pin2_pos is None:
             pytest.fail(f"{comp.reference} missing pins {pin1} or {pin2}")
 
-        distance = math.sqrt((pin2_pos.x - pin1_pos.x)**2 + (pin2_pos.y - pin1_pos.y)**2)
+        distance = math.sqrt((pin2_pos.x - pin1_pos.x) ** 2 + (pin2_pos.y - pin1_pos.y) ** 2)
         distances.append(distance)
         logger.debug(f"{comp.reference}: {distance:.3f}mm")
 
@@ -311,12 +306,9 @@ def assert_pin_distance_consistent(components: List, pin1: str, pin2: str):
 # PIN ORIENTATION ASSERTIONS
 # ============================================================================
 
+
 def assert_pins_vertical(
-    component,
-    pin1_number: str,
-    pin2_number: str,
-    tolerance: float = 0.1,
-    message: str = ""
+    component, pin1_number: str, pin2_number: str, tolerance: float = 0.1, message: str = ""
 ):
     """
     Assert that two pins are vertically aligned (same X coordinate).
@@ -344,8 +336,8 @@ def assert_pins_vertical(
 
     if not math.isclose(pin1.x, pin2.x, abs_tol=tolerance):
         error_msg = (
-            message or
-            f"{component.reference} pins {pin1_number}-{pin2_number} should be vertical "
+            message
+            or f"{component.reference} pins {pin1_number}-{pin2_number} should be vertical "
             f"(same X), but X differs: {pin1.x:.3f} vs {pin2.x:.3f}"
         )
         pytest.fail(error_msg)
@@ -354,11 +346,7 @@ def assert_pins_vertical(
 
 
 def assert_pins_horizontal(
-    component,
-    pin1_number: str,
-    pin2_number: str,
-    tolerance: float = 0.1,
-    message: str = ""
+    component, pin1_number: str, pin2_number: str, tolerance: float = 0.1, message: str = ""
 ):
     """
     Assert that two pins are horizontally aligned (same Y coordinate).
@@ -386,8 +374,8 @@ def assert_pins_horizontal(
 
     if not math.isclose(pin1.y, pin2.y, abs_tol=tolerance):
         error_msg = (
-            message or
-            f"{component.reference} pins {pin1_number}-{pin2_number} should be horizontal "
+            message
+            or f"{component.reference} pins {pin1_number}-{pin2_number} should be horizontal "
             f"(same Y), but Y differs: {pin1.y:.3f} vs {pin2.y:.3f}"
         )
         pytest.fail(error_msg)
@@ -399,12 +387,9 @@ def assert_pins_horizontal(
 # WIRE-TO-PIN ASSERTIONS
 # ============================================================================
 
+
 def assert_wire_endpoint_at_pin(
-    wire,
-    component,
-    pin_number: str,
-    endpoint_index: int = 0,
-    tolerance: float = 0.05
+    wire, component, pin_number: str, endpoint_index: int = 0, tolerance: float = 0.05
 ):
     """
     Assert that a wire endpoint is at a component's pin position.
@@ -432,7 +417,7 @@ def assert_wire_endpoint_at_pin(
         pytest.fail(f"{component.reference} pin {pin_number} not found")
 
     # Check if endpoint matches pin position
-    distance = math.sqrt((endpoint.x - pin_pos.x)**2 + (endpoint.y - pin_pos.y)**2)
+    distance = math.sqrt((endpoint.x - pin_pos.x) ** 2 + (endpoint.y - pin_pos.y) ** 2)
 
     if distance > tolerance:
         pytest.fail(
@@ -445,12 +430,7 @@ def assert_wire_endpoint_at_pin(
 
 
 def assert_wires_form_connection(
-    schematic,
-    component1,
-    pin1_number: str,
-    component2,
-    pin2_number: str,
-    message: str = ""
+    schematic, component1, pin1_number: str, component2, pin2_number: str, message: str = ""
 ):
     """
     Assert that a wire connects two component pins.
@@ -467,8 +447,10 @@ def assert_wires_form_connection(
         # Check if R1 pin 2 and R2 pin 1 are connected by wire
         assert_wires_form_connection(sch, r1, "2", r2, "1")
     """
-    logger.debug(f"Checking wire connects {component1.reference} pin {pin1_number} "
-                 f"to {component2.reference} pin {pin2_number}")
+    logger.debug(
+        f"Checking wire connects {component1.reference} pin {pin1_number} "
+        f"to {component2.reference} pin {pin2_number}"
+    )
 
     pin1_pos = component1.get_pin_position(pin1_number)
     pin2_pos = component2.get_pin_position(pin2_number)
@@ -484,21 +466,24 @@ def assert_wires_form_connection(
 
         if len(endpoints) >= 2:
             # Check both directions
-            if ((math.isclose(endpoints[0][0], pin1_pos.x, abs_tol=0.05) and
-                 math.isclose(endpoints[0][1], pin1_pos.y, abs_tol=0.05) and
-                 math.isclose(endpoints[1][0], pin2_pos.x, abs_tol=0.05) and
-                 math.isclose(endpoints[1][1], pin2_pos.y, abs_tol=0.05)) or
-                (math.isclose(endpoints[0][0], pin2_pos.x, abs_tol=0.05) and
-                 math.isclose(endpoints[0][1], pin2_pos.y, abs_tol=0.05) and
-                 math.isclose(endpoints[1][0], pin1_pos.x, abs_tol=0.05) and
-                 math.isclose(endpoints[1][1], pin1_pos.y, abs_tol=0.05))):
+            if (
+                math.isclose(endpoints[0][0], pin1_pos.x, abs_tol=0.05)
+                and math.isclose(endpoints[0][1], pin1_pos.y, abs_tol=0.05)
+                and math.isclose(endpoints[1][0], pin2_pos.x, abs_tol=0.05)
+                and math.isclose(endpoints[1][1], pin2_pos.y, abs_tol=0.05)
+            ) or (
+                math.isclose(endpoints[0][0], pin2_pos.x, abs_tol=0.05)
+                and math.isclose(endpoints[0][1], pin2_pos.y, abs_tol=0.05)
+                and math.isclose(endpoints[1][0], pin1_pos.x, abs_tol=0.05)
+                and math.isclose(endpoints[1][1], pin1_pos.y, abs_tol=0.05)
+            ):
                 found = True
                 break
 
     if not found:
         error_msg = (
-            message or
-            f"No wire found connecting {component1.reference} pin {pin1_number} "
+            message
+            or f"No wire found connecting {component1.reference} pin {pin1_number} "
             f"to {component2.reference} pin {pin2_number}"
         )
         pytest.fail(error_msg)
@@ -510,6 +495,7 @@ def assert_wires_form_connection(
 # ASSERTION TEST EXAMPLES
 # ============================================================================
 
+
 class TestAssertionHelpers:
     """Examples of using custom assertion helpers."""
 
@@ -519,19 +505,11 @@ class TestAssertionHelpers:
         sch = ksa.create_schematic("Assertion Test")
 
         r1 = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0),
-            rotation=0
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0), rotation=0
         )
 
         r2 = sch.components.add(
-            lib_id="Device:R",
-            reference="R2",
-            value="20k",
-            position=(150.0, 100.0),
-            rotation=90
+            lib_id="Device:R", reference="R2", value="20k", position=(150.0, 100.0), rotation=90
         )
 
         return sch

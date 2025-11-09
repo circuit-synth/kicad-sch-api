@@ -49,10 +49,7 @@ class ERCViolation:
             "error_code": self.error_code,
             "net_name": self.net_name,
             "pin_numbers": self.pin_numbers,
-            "location": {
-                "x": self.location.x,
-                "y": self.location.y
-            } if self.location else None,
+            "location": {"x": self.location.x, "y": self.location.y} if self.location else None,
             "suggested_fix": self.suggested_fix,
         }
 

@@ -24,7 +24,7 @@ Copy and customize for your parametrized pin connection tests.
 
 import logging
 import math
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import pytest
 
@@ -47,16 +47,17 @@ class TestGetPinPositionParametrized:
         return ksa.create_schematic("Parametrized Test")
 
     # Test Case 1: Different component types
-    @pytest.mark.parametrize("lib_id,reference,num_pins", [
-        ("Device:R", "R1", 2),           # Resistor: 2 pins
-        ("Device:C", "C1", 2),           # Capacitor: 2 pins
-        ("Device:D", "D1", 2),           # Diode: 2 pins
-        ("Device:L", "L1", 2),           # Inductor: 2 pins
-        ("Connector_Generic:Conn_01x03_Pin", "J1", 3),  # Header: 3 pins
-    ])
-    def test_get_pin_position_different_components(
-        self, schematic, lib_id, reference, num_pins
-    ):
+    @pytest.mark.parametrize(
+        "lib_id,reference,num_pins",
+        [
+            ("Device:R", "R1", 2),  # Resistor: 2 pins
+            ("Device:C", "C1", 2),  # Capacitor: 2 pins
+            ("Device:D", "D1", 2),  # Diode: 2 pins
+            ("Device:L", "L1", 2),  # Inductor: 2 pins
+            ("Connector_Generic:Conn_01x03_Pin", "J1", 3),  # Header: 3 pins
+        ],
+    )
+    def test_get_pin_position_different_components(self, schematic, lib_id, reference, num_pins):
         """
         Test: get_pin_position works for different component types.
 
@@ -70,10 +71,7 @@ class TestGetPinPositionParametrized:
 
         # Act: Add component
         comp = schematic.components.add(
-            lib_id=lib_id,
-            reference=reference,
-            value="test",
-            position=(100.0, 100.0)
+            lib_id=lib_id, reference=reference, value="test", position=(100.0, 100.0)
         )
 
         # Act: Get pin positions for expected number of pins
@@ -85,8 +83,7 @@ class TestGetPinPositionParametrized:
 
         # Assert: All expected pins should exist
         for i in range(1, num_pins + 1):
-            assert pins[str(i)] is not None, \
-                f"{reference} should have pin {i}"
+            assert pins[str(i)] is not None, f"{reference} should have pin {i}"
 
         # Assert: Pins should be at different positions
         # (at least some should differ)
@@ -95,15 +92,16 @@ class TestGetPinPositionParametrized:
         assert not all_same, f"{reference} pins should be at different positions"
 
     # Test Case 2: Different rotation angles
-    @pytest.mark.parametrize("rotation,description", [
-        (0, "Vertical (0°)"),
-        (90, "Horizontal right (90°)"),
-        (180, "Vertical flipped (180°)"),
-        (270, "Horizontal left (270°)"),
-    ])
-    def test_get_pin_position_all_rotations(
-        self, schematic, rotation, description
-    ):
+    @pytest.mark.parametrize(
+        "rotation,description",
+        [
+            (0, "Vertical (0°)"),
+            (90, "Horizontal right (90°)"),
+            (180, "Vertical flipped (180°)"),
+            (270, "Horizontal left (270°)"),
+        ],
+    )
+    def test_get_pin_position_all_rotations(self, schematic, rotation, description):
         """
         Test: get_pin_position works at all rotation angles.
 
@@ -118,12 +116,13 @@ class TestGetPinPositionParametrized:
             reference="R1",
             value="10k",
             position=(100.0, 100.0),
-            rotation=rotation
+            rotation=rotation,
         )
 
         # Assert: Rotation should be set
-        assert math.isclose(comp.rotation, rotation, abs_tol=0.1), \
-            f"Component rotation should be {rotation}°"
+        assert math.isclose(
+            comp.rotation, rotation, abs_tol=0.1
+        ), f"Component rotation should be {rotation}°"
 
         # Act: Get pin positions
         pin1 = comp.get_pin_position("1")
@@ -134,21 +133,23 @@ class TestGetPinPositionParametrized:
         assert pin2 is not None, f"Pin 2 should exist at {rotation}°"
 
         # Assert: Pin distance should be consistent
-        distance = math.sqrt((pin2.x - pin1.x)**2 + (pin2.y - pin1.y)**2)
-        assert 3.7 < distance < 3.9, \
-            f"Pin distance at {rotation}° should be ~3.81mm, got {distance:.2f}mm"
+        distance = math.sqrt((pin2.x - pin1.x) ** 2 + (pin2.y - pin1.y) ** 2)
+        assert (
+            3.7 < distance < 3.9
+        ), f"Pin distance at {rotation}° should be ~3.81mm, got {distance:.2f}mm"
 
     # Test Case 3: Different position coordinates
-    @pytest.mark.parametrize("position,position_name", [
-        ((0.0, 0.0), "Origin (0, 0)"),
-        ((50.0, 50.0), "Small offset (50, 50)"),
-        ((100.0, 100.0), "Standard (100, 100)"),
-        ((200.0, 200.0), "Large offset (200, 200)"),
-        ((500.0, 500.0), "Very large (500, 500)"),
-    ])
-    def test_get_pin_position_different_locations(
-        self, schematic, position, position_name
-    ):
+    @pytest.mark.parametrize(
+        "position,position_name",
+        [
+            ((0.0, 0.0), "Origin (0, 0)"),
+            ((50.0, 50.0), "Small offset (50, 50)"),
+            ((100.0, 100.0), "Standard (100, 100)"),
+            ((200.0, 200.0), "Large offset (200, 200)"),
+            ((500.0, 500.0), "Very large (500, 500)"),
+        ],
+    )
+    def test_get_pin_position_different_locations(self, schematic, position, position_name):
         """
         Test: get_pin_position works at different component locations.
 
@@ -159,10 +160,7 @@ class TestGetPinPositionParametrized:
 
         # Act: Add component at position
         comp = schematic.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=position
+            lib_id="Device:R", reference="R1", value="10k", position=position
         )
 
         # Assert: Component position should match
@@ -196,16 +194,17 @@ class TestComponentPropertiesParametrized:
     def schematic(self):
         return ksa.create_schematic("Property Test")
 
-    @pytest.mark.parametrize("value,description", [
-        ("1k", "Small value"),
-        ("10k", "Standard value"),
-        ("1M", "Large value"),
-        ("470", "Numeric only"),
-        ("CUSTOM_VALUE", "Custom text"),
-    ])
-    def test_pin_position_with_different_values(
-        self, schematic, value, description
-    ):
+    @pytest.mark.parametrize(
+        "value,description",
+        [
+            ("1k", "Small value"),
+            ("10k", "Standard value"),
+            ("1M", "Large value"),
+            ("470", "Numeric only"),
+            ("CUSTOM_VALUE", "Custom text"),
+        ],
+    )
+    def test_pin_position_with_different_values(self, schematic, value, description):
         """
         Test: Component value doesn't affect pin positions.
 
@@ -216,17 +215,14 @@ class TestComponentPropertiesParametrized:
 
         # Act: Add two components with different values
         comp1 = schematic.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value=value,
-            position=(100.0, 100.0)
+            lib_id="Device:R", reference="R1", value=value, position=(100.0, 100.0)
         )
 
         comp2 = schematic.components.add(
             lib_id="Device:R",
             reference="R2",
             value="10k",  # Different value
-            position=(100.0, 150.0)  # Same relative position
+            position=(100.0, 150.0),  # Same relative position
         )
 
         # Assert: Components have different values
@@ -242,16 +238,15 @@ class TestComponentPropertiesParametrized:
 
         # Assert: Pin distances from component center should be same
         offset1 = math.sqrt(
-            (pin1_comp1.x - comp1.position.x)**2 +
-            (pin1_comp1.y - comp1.position.y)**2
+            (pin1_comp1.x - comp1.position.x) ** 2 + (pin1_comp1.y - comp1.position.y) ** 2
         )
         offset2 = math.sqrt(
-            (pin1_comp2.x - comp2.position.x)**2 +
-            (pin1_comp2.y - comp2.position.y)**2
+            (pin1_comp2.x - comp2.position.x) ** 2 + (pin1_comp2.y - comp2.position.y) ** 2
         )
 
-        assert math.isclose(offset1, offset2, rel_tol=0.01), \
-            f"Same component type should have same pin offset from center"
+        assert math.isclose(
+            offset1, offset2, rel_tol=0.01
+        ), f"Same component type should have same pin offset from center"
 
 
 class TestPinConnectionScenarios:
@@ -294,7 +289,7 @@ class TestPinConnectionScenarios:
             reference="R1",
             value="10k",
             position=(100.0, 100.0),
-            rotation=comp1_rot
+            rotation=comp1_rot,
         )
 
         r2 = schematic.components.add(
@@ -302,7 +297,7 @@ class TestPinConnectionScenarios:
             reference="R2",
             value="20k",
             position=(150.0, 100.0),  # To the right of R1
-            rotation=comp2_rot
+            rotation=comp2_rot,
         )
 
         logger.debug(f"R1 at {r1.position}, R2 at {r2.position}")
@@ -314,17 +309,16 @@ class TestPinConnectionScenarios:
         r2_pin2 = r2.get_pin_position("2")
 
         # Assert: All pins should exist
-        assert all([r1_pin1, r1_pin2, r2_pin1, r2_pin2]), \
-            f"All pins should exist in scenario: {description}"
+        assert all(
+            [r1_pin1, r1_pin2, r2_pin1, r2_pin2]
+        ), f"All pins should exist in scenario: {description}"
 
         # Assert: Pin pairs should have different Y positions for vertical components
         if comp1_rot in [0, 180]:
-            assert r1_pin1.y != r1_pin2.y, \
-                f"R1 pins should have different Y at {comp1_rot}°"
+            assert r1_pin1.y != r1_pin2.y, f"R1 pins should have different Y at {comp1_rot}°"
 
         if comp2_rot in [0, 180]:
-            assert r2_pin1.y != r2_pin2.y, \
-                f"R2 pins should have different Y at {comp2_rot}°"
+            assert r2_pin1.y != r2_pin2.y, f"R2 pins should have different Y at {comp2_rot}°"
 
         # Log for debugging
         logger.debug(f"R1 pins: {r1_pin1}, {r1_pin2}")
@@ -340,16 +334,19 @@ class TestPinErrorCasesParametrized:
     def schematic(self):
         return ksa.create_schematic("Error Case Test")
 
-    @pytest.mark.parametrize("pin_number,should_exist", [
-        ("1", True),
-        ("2", True),
-        ("3", False),
-        ("10", False),
-        ("0", False),
-        ("-1", False),
-        ("A", False),
-        ("", False),
-    ])
+    @pytest.mark.parametrize(
+        "pin_number,should_exist",
+        [
+            ("1", True),
+            ("2", True),
+            ("3", False),
+            ("10", False),
+            ("0", False),
+            ("-1", False),
+            ("A", False),
+            ("", False),
+        ],
+    )
     def test_pin_existence_parametrized(self, schematic, pin_number, should_exist):
         """
         Test: get_pin_position returns correct result for various pin numbers.
@@ -361,10 +358,7 @@ class TestPinErrorCasesParametrized:
 
         # Arrange: Add resistor (has pins 1 and 2)
         comp = schematic.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0)
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0)
         )
 
         # Act: Get pin position
@@ -373,17 +367,18 @@ class TestPinErrorCasesParametrized:
 
         # Assert: Pin existence matches expectation
         if should_exist:
-            assert pin_pos is not None, \
-                f"Pin {pin_number} should exist for resistor"
+            assert pin_pos is not None, f"Pin {pin_number} should exist for resistor"
         else:
-            assert pin_pos is None, \
-                f"Pin {pin_number} should not exist for resistor"
+            assert pin_pos is None, f"Pin {pin_number} should not exist for resistor"
 
-    @pytest.mark.parametrize("component_types", [
-        ("Device:R", "Device:C"),      # Resistor and capacitor
-        ("Device:L", "Device:D"),      # Inductor and diode
-        ("Device:R", "Device:L"),      # Different but same pin count
-    ])
+    @pytest.mark.parametrize(
+        "component_types",
+        [
+            ("Device:R", "Device:C"),  # Resistor and capacitor
+            ("Device:L", "Device:D"),  # Inductor and diode
+            ("Device:R", "Device:L"),  # Different but same pin count
+        ],
+    )
     def test_multiple_component_types(self, schematic, component_types):
         """
         Test: get_pin_position works correctly with multiple component types.
@@ -395,17 +390,11 @@ class TestPinErrorCasesParametrized:
 
         # Act: Add both components
         comp1 = schematic.components.add(
-            lib_id=lib_id1,
-            reference="X1",
-            value="test",
-            position=(100.0, 100.0)
+            lib_id=lib_id1, reference="X1", value="test", position=(100.0, 100.0)
         )
 
         comp2 = schematic.components.add(
-            lib_id=lib_id2,
-            reference="X2",
-            value="test",
-            position=(200.0, 100.0)
+            lib_id=lib_id2, reference="X2", value="test", position=(200.0, 100.0)
         )
 
         # Act: Get pin positions
@@ -417,8 +406,9 @@ class TestPinErrorCasesParametrized:
         assert pin1_x2 is not None, f"{lib_id2} should have pin 1"
 
         # Assert: Pin positions should be different (different component positions)
-        assert pin1_x1 != pin1_x2, \
-            "Pin 1 from different components should be at different positions"
+        assert (
+            pin1_x1 != pin1_x2
+        ), "Pin 1 from different components should be at different positions"
 
 
 # Advanced: Indirect parametrization for complex fixtures
@@ -445,7 +435,7 @@ class TestIndirectParametrization:
             reference=reference,
             value="test",
             position=(100.0, 100.0),
-            rotation=rotation
+            rotation=rotation,
         )
         return sch, comp
 
@@ -456,7 +446,7 @@ class TestIndirectParametrization:
             ("Device:C", "C1", 90),
             ("Device:L", "L1", 180),
         ],
-        indirect=True  # Pass to fixture
+        indirect=True,  # Pass to fixture
     )
     def test_with_indirect_params(self, component_params):
         """

@@ -812,10 +812,9 @@ class Schematic:
         Raises:
             ValueError: If neither position nor pin is provided, or if pin is not found
         """
-        from .pin_utils import get_component_pin_info
-
         # Use config defaults if not explicitly provided
         from .config import config
+        from .pin_utils import get_component_pin_info
 
         if grid_units is None:
             grid_units = config.positioning.use_grid_units

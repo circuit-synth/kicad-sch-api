@@ -7,6 +7,7 @@ from manually created schematics with rectangles.
 """
 
 import pytest
+
 import kicad_sch_api as ksa
 
 

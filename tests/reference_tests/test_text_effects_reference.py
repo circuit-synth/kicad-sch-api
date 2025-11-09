@@ -8,11 +8,11 @@ Tests against the text_effects reference schematic to validate:
 """
 
 import os
-import pytest
 from pathlib import Path
 
-import kicad_sch_api as ksa
+import pytest
 
+import kicad_sch_api as ksa
 
 # Path to reference schematic
 REFERENCE_DIR = Path(__file__).parent.parent / "reference_kicad_projects" / "text_effects"
@@ -58,6 +58,7 @@ class TestTextEffectsReference:
         for item in sexp:
             if isinstance(item, list) and len(item) > 0:
                 from sexpdata import Symbol
+
                 if isinstance(item[0], Symbol) and str(item[0]) == "effects":
                     effects_section = item
                     break
@@ -69,6 +70,7 @@ class TestTextEffectsReference:
         for item in effects_section:
             if isinstance(item, list) and len(item) > 0:
                 from sexpdata import Symbol
+
                 if isinstance(item[0], Symbol) and str(item[0]) == "font":
                     font_section = item
                     break
@@ -80,6 +82,7 @@ class TestTextEffectsReference:
         for item in font_section:
             if isinstance(item, list) and len(item) > 0:
                 from sexpdata import Symbol
+
                 if isinstance(item[0], Symbol) and str(item[0]) == "bold":
                     has_bold = True
                     break
