@@ -105,13 +105,77 @@ class TextElement:
         self._data.exclude_from_sim = bool(value)
         self._collection._mark_modified()
 
+    @property
+    def bold(self) -> bool:
+        """Text bold flag."""
+        return getattr(self._data, 'bold', False)
+
+    @bold.setter
+    def bold(self, value: bool):
+        """Set text bold flag."""
+        self._data.bold = bool(value)
+        self._collection._mark_modified()
+
+    @property
+    def italic(self) -> bool:
+        """Text italic flag."""
+        return getattr(self._data, 'italic', False)
+
+    @italic.setter
+    def italic(self, value: bool):
+        """Set text italic flag."""
+        self._data.italic = bool(value)
+        self._collection._mark_modified()
+
+    @property
+    def thickness(self) -> Optional[float]:
+        """Text stroke thickness."""
+        return getattr(self._data, 'thickness', None)
+
+    @thickness.setter
+    def thickness(self, value: Optional[float]):
+        """Set text stroke thickness."""
+        if value is not None and value <= 0:
+            raise ValidationError(f"Thickness must be positive, got {value}")
+        self._data.thickness = float(value) if value is not None else None
+        self._collection._mark_modified()
+
+    @property
+    def color(self) -> Optional[Tuple[int, int, int, float]]:
+        """Text color (RGBA)."""
+        return getattr(self._data, 'color', None)
+
+    @color.setter
+    def color(self, value: Optional[Tuple[int, int, int, float]]):
+        """Set text color."""
+        if value is not None:
+            if len(value) != 4:
+                raise ValidationError(f"Color must be RGBA tuple (4 values), got {len(value)}")
+            r, g, b, a = value
+            if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255 and 0 <= a <= 1):
+                raise ValidationError(f"Color values out of range: RGB 0-255, A 0-1")
+            value = (int(r), int(g), int(b), float(a))
+        self._data.color = value
+        self._collection._mark_modified()
+
+    @property
+    def face(self) -> Optional[str]:
+        """Font face name."""
+        return getattr(self._data, 'face', None)
+
+    @face.setter
+    def face(self, value: Optional[str]):
+        """Set font face name."""
+        self._data.face = str(value) if value is not None else None
+        self._collection._mark_modified()
+
     def validate(self) -> List[ValidationIssue]:
         """Validate this text element."""
         return self._validator.validate_text(self._data.__dict__)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert text element to dictionary representation."""
-        return {
+        result = {
             "uuid": self.uuid,
             "text": self.text,
             "position": {"x": self.position.x, "y": self.position.y},
@@ -119,6 +183,20 @@ class TextElement:
             "size": self.size,
             "exclude_from_sim": self.exclude_from_sim,
         }
+
+        # Include optional font effects if set
+        if self.bold:
+            result["bold"] = self.bold
+        if self.italic:
+            result["italic"] = self.italic
+        if self.thickness is not None:
+            result["thickness"] = self.thickness
+        if self.color is not None:
+            result["color"] = self.color
+        if self.face is not None:
+            result["face"] = self.face
+
+        return result
 
     def __str__(self) -> str:
         """String representation."""
@@ -161,6 +239,12 @@ class TextCollection(BaseCollection[TextElement]):
         size: float = 1.27,
         exclude_from_sim: bool = False,
         text_uuid: Optional[str] = None,
+        # Font effects (new parameters)
+        bold: bool = False,
+        italic: bool = False,
+        thickness: Optional[float] = None,
+        color: Optional[Tuple[int, int, int, float]] = None,
+        face: Optional[str] = None,
     ) -> TextElement:
         """
         Add a new text element to the schematic.
@@ -172,6 +256,11 @@ class TextCollection(BaseCollection[TextElement]):
             size: Text size
             exclude_from_sim: Whether to exclude from simulation
             text_uuid: Specific UUID for text (auto-generated if None)
+            bold: Bold font flag
+            italic: Italic font flag
+            thickness: Stroke width (None = use default)
+            color: RGBA color tuple (None = use default)
+            face: Font face name (None = use default)
 
         Returns:
             Newly created TextElement
@@ -191,6 +280,19 @@ class TextCollection(BaseCollection[TextElement]):
         if size <= 0:
             raise ValidationError(f"Text size must be positive, got {size}")
 
+        # Validate color if provided
+        if color is not None:
+            if len(color) != 4:
+                raise ValidationError(f"Color must be RGBA tuple (4 values), got {len(color)}")
+            r, g, b, a = color
+            if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255 and 0 <= a <= 1):
+                raise ValidationError(f"Color values out of range: RGB 0-255, A 0-1")
+            color = (int(r), int(g), int(b), float(a))
+
+        # Validate thickness if provided
+        if thickness is not None and thickness <= 0:
+            raise ValidationError(f"Thickness must be positive, got {thickness}")
+
         # Generate UUID if not provided
         if not text_uuid:
             text_uuid = str(uuid.uuid4())
@@ -199,7 +301,7 @@ class TextCollection(BaseCollection[TextElement]):
         if text_uuid in self._uuid_index:
             raise ValidationError(f"Text UUID {text_uuid} already exists")
 
-        # Create text data
+        # Create text data with all properties
         text_data = Text(
             uuid=text_uuid,
             position=position,
@@ -207,6 +309,11 @@ class TextCollection(BaseCollection[TextElement]):
             rotation=rotation,
             size=size,
             exclude_from_sim=exclude_from_sim,
+            bold=bold,
+            italic=italic,
+            thickness=thickness,
+            color=color,
+            face=face,
         )
 
         # Create wrapper and add to collection
