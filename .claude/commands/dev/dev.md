@@ -15,10 +15,15 @@ description: Core development workflow - from problem to PR for KiCAD schematic 
 ```
 /dev (end-to-end development)
   ├─ Phase 1: Generate PRD (research → ask questions → document)
-  ├─ Phase 2: Create Reference Schematic (Interactive)
-  ├─ Phase 3: Generate Tests
-  ├─ Phase 4: Implementation (iterative with logging)
-  └─ Phase 5: Cleanup & PR
+  │   └─ STOP: User reviews PRD
+  ├─ Phase 2: Create Reference Schematic (Interactive - agent creates, user refines)
+  │   └─ STOP: User edits in KiCAD, says "done"
+  ├─ Phase 3: Generate Tests (autonomous - no stop)
+  ├─ Phase 4: Implementation (autonomous + communicative - shows progress)
+  │   └─ STOP if stuck after 8 iterations
+  ├─ Phase 4.5: Manual Validation (Interactive - agent guides, user inspects)
+  │   └─ STOP: User validates in KiCAD
+  └─ Phase 5: Cleanup & PR (autonomous - no stop)
 ```
 
 **Time estimate**: 1-4 hours depending on complexity
@@ -33,12 +38,6 @@ description: Core development workflow - from problem to PR for KiCAD schematic 
 
 # New element support
 /dev "Add support for text box elements with borders and margins"
-
-# API enhancement
-/dev "Add optional standard Y-axis coordinate system"
-
-# Round-trip testing
-/dev "Comprehensive round-trip testing framework for all schematic elements"
 ```
 
 ---
@@ -76,105 +75,30 @@ description: Core development workflow - from problem to PR for KiCAD schematic 
 **After research**, ask targeted questions to fill knowledge gaps:
 
 **Question Guidelines**:
-- **Maximum 5 questions** unless user asks for more detail
-- **Keep questions concise** - use bullet points, not paragraphs
-- **Be specific** - reference code/files you found during research
-- **Offer options** when possible - makes answering easier
-- **Skip obvious questions** - if you can infer from code, don't ask
-
-**Question Format**:
-```
-I've reviewed the codebase and have a few questions:
-
-1. **{Specific question about scope/requirements}**
-   - Option A: {brief description}
-   - Option B: {brief description}
-
-2. **{Question about technical approach}**
-
-3. **{Question about edge cases}**
-
-(Continue up to 5 questions)
-```
-
-**When to ask more than 5 questions**:
-- User explicitly requests detailed discussion
-- Multiple major architectural decisions needed
-- Significant breaking changes involved
-- Complex feature with many unknowns
-
-**Examples of GOOD questions**:
-- ✅ "Should empty pin UUIDs generate new UUIDs or raise an error?"
-- ✅ "Format preservation: byte-perfect or semantic equivalence acceptable?"
-- ✅ "Found 3 similar parsers (A, B, C) - which pattern should I follow?"
-
-**Examples of BAD questions**:
-- ❌ "What is the problem?" (too vague - you should know from research)
-- ❌ "How does KiCAD work?" (research this yourself)
-- ❌ Long paragraphs explaining what you found (user doesn't need your research dump)
+- **Maximum 5 questions** unless user explicitly requests more detail
+- **Keep concise** - use bullet points, not paragraphs
+- **Be specific** - reference code/files found during research
+- **Offer options** when possible (makes answering easier)
+- **Skip obvious** - if you can infer from code, don't ask
+- **Focus on**: scope clarification, user preferences, architectural decisions, edge case handling
 
 **Wait for user responses** before proceeding.
 
 ### Step 1.3: Generate PRD
 
-**IMPORTANT - Writing Guidelines**:
-Following `CLAUDE.md` writing style requirements:
-- ❌ **BANNED**: "professional", "seamless", "revolutionary", "cutting-edge", "powerful", "robust"
-- ✅ **USE**: Specific technical claims ("parses pin UUIDs", "preserves S-expression format", "tested against KiCAD 8.0")
-- 📝 **TONE**: Write like an engineer sharing a useful tool, NOT a startup selling a product
+**IMPORTANT - Writing Guidelines**: Follow `CLAUDE.md` - NO marketing language, engineer tone, specific technical claims only.
 
-**Generate PRD** in this format:
-```markdown
-# PRD: {Feature Name}
-
-## Overview
-{What we're building and why - technical and specific}
-
-## Success Criteria (Measurable)
-- [ ] {Criterion 1 - specific and testable}
-- [ ] {Criterion 2}
-
-## Functional Requirements
-1. {Requirement 1}
-2. {Requirement 2}
-
-## KiCAD Format Specifications
-- S-expression structure: {e.g., (pin "1" (uuid "..."))}
-- KiCAD version compatibility: {7.0, 8.0}
-- Format preservation: {byte-perfect, semantic equivalence}
-- Element hierarchy: {where in schematic structure}
-
-## Technical Constraints
-- Exact format preservation required
-- Maintain backward compatibility with existing API
-- {Other constraints}
-
-## Reference Schematic Requirements
-- Manual schematic contains: {what elements to create}
-- Expected S-expression format: {show example}
-- Validation method: {kicad-cli, diff, visual inspection}
-
-## Edge Cases
-- {Edge case 1 and how to handle}
-- {Edge case 2}
-
-## Impact Analysis
-- Parser changes: {what needs updating}
-- Formatter changes: {what needs updating}
-- Type definitions: {new dataclasses or fields}
-- MCP tools affected: {which tools need updates}
-
-## Out of Scope
-- {What we're NOT doing}
-
-## Acceptance Criteria
-- [ ] {Criterion 1}
-- [ ] {Criterion 2}
-- [ ] All tests pass (unit, integration, reference)
-- [ ] Format preservation validated against KiCAD reference
-```
-
-**Save PRD** to: `docs/prd/{feature-name}-prd.md`
+**PRD Structure** (save to `docs/prd/{feature-name}-prd.md`):
+- Overview (what we're building - technical and specific)
+- Success Criteria (measurable checkboxes)
+- Functional Requirements (numbered list)
+- KiCAD Format Specifications (S-expression structure, version compatibility, preservation requirements)
+- Technical Constraints (backward compatibility, format preservation)
+- Reference Schematic Requirements (what to create, expected format)
+- Edge Cases (specific scenarios and handling)
+- Impact Analysis (parser/formatter/type/MCP changes)
+- Out of Scope
+- Acceptance Criteria (includes "All tests pass", "Format preservation validated")
 
 ### Step 1.4: User Checkpoint
 
@@ -195,30 +119,19 @@ Following `CLAUDE.md` writing style requirements:
 
 This is a **critical phase** - the reference schematic becomes the source of truth for exact KiCAD format.
 
-### Step 2.1: Claude Creates Initial Schematic
+### Step 2.0: Trusted Actions Decision
 
-**Claude creates schematic** based on PRD requirements:
+**Decide who creates reference**:
+- **Agent creates** (most common): Testing format preservation, new elements, API behavior. Agent can reliably use `add_component()`, `add_wire()`, `add_label()`, etc.
+- **Human creates** (rare): Testing those APIs themselves, or when aesthetics matter.
 
-```python
-import kicad_sch_api as ksa
+### Step 2.1: Create Initial Schematic
 
-# Create schematic with elements needed for feature
-sch = ksa.create_schematic("{feature_name}_reference")
+**Agent creates schematic** with elements from PRD (components, wires, labels, edge cases). Use grid-aligned positions (multiples of 1.27mm), generic positioning like (100,100), (150,100). Functional > beautiful.
 
-# Add components, wires, labels, etc. as needed
-# Populate with elements that demonstrate the feature/bug
-# Make it as complete as possible to minimize user editing
+If human should create: provide blank schematic instead.
 
-sch.save("/tmp/{feature_name}_working.kicad_sch")
-```
-
-**Principles for initial schematic creation**:
-- ✅ **DO**: Create all components mentioned in PRD
-- ✅ **DO**: Add basic wiring and connections if relevant
-- ✅ **DO**: Include edge cases (empty values, special characters, etc.)
-- ✅ **DO**: Use grid-aligned positions (multiples of 1.27mm)
-- ❌ **DON'T**: Worry about perfect positioning (user will adjust)
-- ❌ **DON'T**: Add elements not related to the feature being tested
+**Tell user** what was created and open in KiCAD for optional refinement.
 
 ### Step 2.2: Open for User Editing
 
@@ -319,9 +232,9 @@ open /tmp/{feature_name}_working.kicad_sch
    PRD: docs/prd/{feature-name}-prd.md
    ```
 
-### Step 2.5: Reference Checkpoint
+### Step 2.5: Reference Analysis Summary
 
-**Present reference analysis**:
+**Analyze and summarize reference** (informational):
 > ✅ Reference schematic created and saved to `tests/reference_kicad_projects/{reference_name}/`
 >
 > **Contents**:
@@ -340,9 +253,7 @@ open /tmp/{feature_name}_working.kicad_sch
 > 2. Guide implementation to match byte-perfect output
 > 3. Validate format preservation in tests
 >
-> Ready to proceed to test generation?
-
-**Wait for user confirmation** before proceeding to Phase 3.
+> Proceeding to test generation...
 
 ---
 
@@ -365,131 +276,20 @@ open /tmp/{feature_name}_working.kicad_sch
 
 ### Step 3.2: Generate Test Plan
 
-**Test categories** for KiCAD schematic features:
+**Create test files**:
+- **Unit tests** (`tests/unit/test_{feature}.py`): Basic functionality, edge cases (empty/null values), round-trip preservation
+- **Reference tests** (`tests/reference_tests/test_{feature}_reference.py`): Parse reference schematic, exact format preservation (load→save→compare), programmatic replication
+- **Integration tests** (if needed): Connectivity analysis, MCP tools compatibility
 
-**Unit Tests** (`tests/unit/test_{feature}.py`):
-```python
-"""Unit tests for {feature} functionality."""
+**Use pytest markers**: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.format` (CRITICAL for format preservation), `@pytest.mark.validation`
 
-import kicad_sch_api as ksa
-from kicad_sch_api.core.types import Point
+### Step 3.3: Verify Test Coverage
 
-def test_{feature}_basic():
-    """Validates: REQ-1 (basic functionality)"""
-    # Setup: Create schematic
-    sch = ksa.create_schematic("test")
+Map each test to PRD requirements. Ensure all functional requirements, edge cases, and acceptance criteria have corresponding tests.
 
-    # Execute: Add/modify element with feature
-    element = sch.add_{element}(...)
+### Step 3.4: Test Summary (Informational)
 
-    # Assert: Element has expected properties
-    assert element.{property} == expected_value
-
-def test_{feature}_edge_case_empty():
-    """Validates: EDGE-1 (empty/null value handling)"""
-    # Test with empty values, null, special characters
-    pass
-
-def test_{feature}_preserves_on_roundtrip():
-    """Validates: FORMAT-1 (round-trip preservation)"""
-    # Load schematic, save immediately, compare
-    sch = ksa.Schematic.load("path/to/reference")
-    sch.save("/tmp/roundtrip.kicad_sch")
-    # Assert: Files match or semantically equivalent
-    pass
-```
-
-**Reference Tests** (`tests/reference_tests/test_{feature}_reference.py`):
-```python
-"""Reference schematic validation for {feature}."""
-
-import pytest
-import kicad_sch_api as ksa
-
-REFERENCE_PATH = "tests/reference_kicad_projects/{reference_name}/test.kicad_sch"
-
-def test_parse_{feature}_reference():
-    """Validates: Can parse reference schematic with {feature}"""
-    sch = ksa.Schematic.load(REFERENCE_PATH)
-
-    # Assert: Elements parsed correctly
-    assert len(sch.{elements}) == expected_count
-    assert sch.{element}.{property} == expected_value
-
-def test_format_preservation_{feature}():
-    """Validates: FORMAT-2 (exact format preservation against reference)"""
-    # Load reference
-    sch = ksa.Schematic.load(REFERENCE_PATH)
-
-    # Save to temp
-    sch.save("/tmp/test_output.kicad_sch")
-
-    # Compare S-expressions (byte-perfect or semantic)
-    with open(REFERENCE_PATH, 'r') as f:
-        original = f.read()
-    with open("/tmp/test_output.kicad_sch", 'r') as f:
-        output = f.read()
-
-    # Assert: Format preserved
-    assert output == original or semantically_equivalent(output, original)
-
-def test_replicate_{feature}_programmatically():
-    """Validates: Can create reference schematic programmatically"""
-    # Create schematic from scratch
-    sch = ksa.create_schematic("test")
-
-    # Add elements to match reference
-    # ... (replicate reference structure)
-
-    # Save and compare to reference
-    sch.save("/tmp/programmatic.kicad_sch")
-    # Assert: Matches reference format
-```
-
-**Integration Tests** (`tests/integration/test_{feature}_integration.py`):
-```python
-"""Integration tests for {feature} with other components."""
-
-def test_{feature}_with_connectivity():
-    """Validates: Feature works with connectivity analysis"""
-    pass
-
-def test_{feature}_with_mcp_tools():
-    """Validates: MCP tools handle feature correctly"""
-    pass
-```
-
-**Format Preservation Tests** (use pytest marker `@pytest.mark.format`):
-```python
-@pytest.mark.format
-def test_exact_format_preservation():
-    """Critical: Byte-perfect format preservation"""
-    pass
-```
-
-### Step 3.3: Create Test Files
-
-**Create test files with proper structure**:
-```bash
-# Unit tests
-tests/unit/test_{feature}.py
-
-# Reference tests
-tests/reference_tests/test_{feature}_reference.py
-
-# Integration tests (if needed)
-tests/integration/test_{feature}_integration.py
-```
-
-**Use pytest markers** from `pyproject.toml`:
-- `@pytest.mark.unit` - Unit tests
-- `@pytest.mark.integration` - Integration tests
-- `@pytest.mark.format` - Format preservation (CRITICAL)
-- `@pytest.mark.validation` - Validation and error handling
-
-### Step 3.4: Test Plan Checkpoint
-
-**Present test plan**:
+**Summarize test coverage** (informational - no approval needed):
 > ✅ Test suite created with {X} tests:
 >
 > **Unit Tests** ({N} tests):
@@ -511,9 +311,7 @@ tests/integration/test_{feature}_integration.py
 > - [x] REQ-2: {requirement}
 > - All {N} requirements covered
 >
-> Ready to proceed to implementation?
-
-**Wait for user approval** before proceeding to Phase 4.
+> Proceeding to implementation...
 
 ---
 
@@ -590,7 +388,24 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
 
-### Step 4.2: Iterative Development Loop
+### Step 4.2: Iterative Development Loop (Communicative + Log-Driven)
+
+**IMPORTANT**: Be communicative during iteration so human can follow along and interrupt if needed.
+
+**At start of implementation, explain approach**:
+> Starting implementation for {feature}. My approach based on PRD:
+>
+> 1. **Parser changes** (PRD Section X.Y):
+>    - Extract {field} from S-expression
+>    - Handle edge case: {specific edge case}
+>
+> 2. **Type changes** (PRD Section X.Z):
+>    - Add {field} to {dataclass}
+>
+> 3. **Formatter changes** (PRD Section X.W):
+>    - Emit {field} in KiCAD format: `({element} {structure})`
+>
+> Running tests to establish baseline...
 
 **Iteration cycle** (repeat until tests pass):
 
@@ -599,9 +414,9 @@ logging.basicConfig(level=logging.DEBUG)
    - Update type definitions (dataclasses)
    - Update formatter to emit fields in exact KiCAD format
 
-2. **Run tests** with verbose output:
+2. **Run tests** with verbose output and debug logging:
    ```bash
-   # Run specific test file
+   # Run specific test file with debug logs
    uv run pytest tests/unit/test_{feature}.py -v --log-cli-level=DEBUG
 
    # Run reference tests
@@ -611,13 +426,21 @@ logging.basicConfig(level=logging.DEBUG)
    uv run pytest tests/ -k "{feature}" -v
    ```
 
-3. **Analyze logs and failures**:
+3. **Analyze logs and failures** (use debug logs from Step 4.1):
    - What S-expression structure differs from reference?
    - What fields are missing or incorrect?
    - What values don't match expected format?
    - Are there parsing errors or formatting issues?
+   - **Check debug logs** for parser/formatter decisions
 
-4. **Compare against reference schematic**:
+4. **Communicate progress** after each iteration:
+   > **Iteration {N}**:
+   > - Tests: {X} passing, {Y} failing (was {X-1} passing)
+   > - Issue found: {specific problem from logs}
+   > - Fix attempted: {what I'm trying - reference PRD Section X.Y}
+   > - Hypothesis: {why I think this will work}
+
+5. **Compare against reference schematic**:
    ```bash
    # Generate output from current implementation
    python -c "
@@ -626,25 +449,26 @@ logging.basicConfig(level=logging.DEBUG)
    sch.save('/tmp/current_output.kicad_sch')
    "
 
-   # Diff against reference
+   # Diff against reference (use logs to understand differences)
    diff tests/reference_kicad_projects/{ref}/test.kicad_sch /tmp/current_output.kicad_sch
    ```
 
-5. **Form hypothesis** about issue:
-   - "Missing field X in parser"
-   - "Formatter emitting wrong order for fields"
-   - "UUID not being preserved in dataclass"
-   - "Type conversion losing precision"
+6. **Form hypothesis** about issue (based on logs and diff):
+   - "Missing field X in parser" (check parser debug logs)
+   - "Formatter emitting wrong order for fields" (check formatter debug logs)
+   - "UUID not being preserved in dataclass" (check data transformation logs)
+   - "Type conversion losing precision" (check type conversion logs)
 
-6. **Make targeted fix**:
+7. **Make targeted fix**:
    - Update parser to extract missing field
    - Reorder formatter output to match KiCAD
    - Add field to dataclass
    - Fix type conversion
+   - **Add more debug logging** if root cause unclear
 
-7. **Re-run tests** and validate improvement:
+8. **Re-run tests** and validate improvement:
    ```bash
-   uv run pytest tests/reference_tests/test_{feature}_reference.py -v
+   uv run pytest tests/reference_tests/test_{feature}_reference.py -v --log-cli-level=DEBUG
    ```
 
 **Progress indicators** (you're making progress if):
@@ -711,9 +535,9 @@ diff tests/reference_kicad_projects/{ref}/test.kicad_sch /tmp/format_validation.
 - ❌ **Missing fields**: Not acceptable - data loss
 - ❌ **Wrong values**: Not acceptable - incorrect output
 
-### Step 4.4: Implementation Checkpoint
+### Step 4.4: Implementation Complete Summary
 
-**When all tests pass and format preserved**:
+**When all tests pass and format preserved** (informational):
 > ✅ All tests passing:
 > - {N} unit tests ✅
 > - {M} reference tests ✅
@@ -729,12 +553,255 @@ diff tests/reference_kicad_projects/{ref}/test.kicad_sch /tmp/format_validation.
 > {Show diff output - should be minimal or empty}
 > ```
 >
-> Please validate:
-> 1. Open the generated schematic in KiCAD - does it work?
-> 2. Are there any edge cases or scenarios to test?
-> 3. Ready to proceed to cleanup?
+> Tests pass! Now proceeding to interactive manual validation...
 
-**Wait for user confirmation** before proceeding to Phase 5.
+---
+
+## Phase 4.5: Interactive Manual Validation
+
+**Goal**: Prove the feature works through guided manual inspection in KiCAD
+
+This phase creates demo schematics and walks the user through step-by-step verification, proving the feature works before creating the PR.
+
+### Step 4.5.1: Plan Validation Scenario
+
+**Based on the feature**, determine what to demonstrate and help user think about manual tests.
+
+**For format preservation bugs** (e.g., pin UUIDs):
+- Create schematic with feature element
+- Show original values
+- Perform round-trip (load → save → load)
+- Compare values to prove preservation
+- **Manual test questions**: "What should I check in KiCAD to confirm this works? Should I verify the element is editable? Should I check properties panel?"
+
+**For new element support** (e.g., text boxes):
+- Create schematic with new element
+- Show it renders correctly in KiCAD
+- Verify all properties are accessible
+- Prove it can be modified
+- **Manual test questions**: "What visual checks guarantee this works? Can you edit it in KiCAD? Does it export correctly? Are there edge cases to try (empty text, special characters)?"
+
+**For API enhancements** (e.g., new methods):
+- Create schematic using new API
+- Show the result in KiCAD
+- Verify expected behavior
+- Test edge cases interactively
+- **Manual test questions**: "What scenarios prove this API works correctly? What would break if the implementation was wrong? What edge cases should we try?"
+
+**For connectivity/routing features**:
+- Create schematic with connections
+- Show connection data
+- Verify wires connect to correct pins visually
+- Compare netlist output
+- **Manual test questions**: "How can we confirm connectivity is correct? Should we compare netlist with kicad-cli? Should we check ERC in KiCAD?"
+
+**Prompt user to think about manual tests**:
+> Based on this feature, what manual checks would give you confidence it works correctly?
+>
+> Suggestions:
+> - {Suggestion 1 based on feature type}
+> - {Suggestion 2}
+> - {Suggestion 3}
+>
+> Any additional scenarios you want to test?
+
+### Step 4.5.2: Create Validation Script
+
+**Write a Python script** that demonstrates the feature:
+
+```python
+# Example: Pin UUID preservation validation
+import kicad_sch_api as ksa
+import json
+
+print("=" * 70)
+print("INTERACTIVE VALIDATION: {Feature Name}")
+print("=" * 70)
+
+# Step 1: Create demo schematic
+print("\n1️⃣ Creating demo schematic...")
+sch = ksa.create_schematic("validation_demo")
+# Add relevant elements for the feature
+component = sch.components.add(...)
+sch.save("/tmp/validation_demo.kicad_sch")
+print("✅ Saved to /tmp/validation_demo.kicad_sch")
+
+# Step 2: Extract baseline data
+print("\n2️⃣ Extracting baseline data...")
+# Read and display feature-specific data
+# Save baseline for comparison
+
+# Step 3: Prepare for user inspection
+print("\n" + "=" * 70)
+print("📋 BASELINE DATA:")
+print("-" * 70)
+# Display relevant data clearly
+print("-" * 70)
+```
+
+### Step 4.5.3: Guide User Through Validation
+
+**Open schematic and provide clear instructions**:
+
+```python
+# Open in KiCAD
+import subprocess
+subprocess.run(["open", "/tmp/validation_demo.kicad_sch"])
+
+print("\n" + "=" * 70)
+print("✋ WHAT YOU SHOULD SEE:")
+print("=" * 70)
+print("- {Specific element} at position {X, Y}")
+print("- {Property} should be {value}")
+print("- {Other observable characteristics}")
+
+print("\n✋ WHAT TO DO:")
+print("1. Look at {element} - verify it appears correctly")
+print("2. {Optional: inspect properties, modify something}")
+print("3. Close KiCAD (don't save changes)")
+print("4. Tell me 'closed' when ready to continue")
+print("=" * 70)
+```
+
+**Keep instructions simple**:
+- ✅ One schematic at a time
+- ✅ Clear bullet points for what to look for
+- ✅ Simple actions ("close KiCAD", "tell me closed")
+- ❌ Don't overwhelm with technical details
+- ❌ Don't ask user to verify code/UUIDs manually
+
+### Step 4.5.4: Run Validation Tests
+
+**After user inspects**, run automated validation:
+
+```python
+print("\n" + "=" * 70)
+print("🔄 VALIDATION TEST")
+print("=" * 70)
+
+# Perform feature-specific validation
+# Example: Round-trip test
+print("\n1️⃣ Loading original...")
+sch = ksa.Schematic.load("/tmp/validation_demo.kicad_sch")
+
+print("2️⃣ Performing {operation}...")
+# Do the operation that tests the feature
+sch.save("/tmp/validation_roundtrip.kicad_sch")
+
+print("3️⃣ Comparing results...")
+sch2 = ksa.Schematic.load("/tmp/validation_roundtrip.kicad_sch")
+
+# Compare relevant data
+all_passed = True
+print("\n📋 Comparison Results:")
+print("-" * 70)
+# Show clear pass/fail for each check
+if feature_data_matches:
+    print("✅ {Feature}: PRESERVED")
+else:
+    print("❌ {Feature}: CHANGED (BAD!)")
+    all_passed = False
+
+print("-" * 70)
+
+if all_passed:
+    print("\n🎉 SUCCESS: Feature is working correctly!")
+else:
+    print("\n❌ FAILURE: Feature has issues")
+```
+
+### Step 4.5.5: Show File-Level Proof
+
+**For format preservation features**, show byte-level comparison:
+
+```bash
+echo "📄 ORIGINAL FILE - {Feature} section:"
+echo "========================================================"
+grep -A 2 '{pattern}' /tmp/validation_demo.kicad_sch
+
+echo ""
+echo "📄 AFTER OPERATION - {Feature} section:"
+echo "========================================================"
+grep -A 2 '{pattern}' /tmp/validation_roundtrip.kicad_sch
+
+echo ""
+echo "🔍 CHECKING IF IDENTICAL:"
+echo "========================================================"
+if diff <(grep -A 2 '{pattern}' /tmp/validation_demo.kicad_sch) \
+        <(grep -A 2 '{pattern}' /tmp/validation_roundtrip.kicad_sch) > /dev/null 2>&1; then
+    echo "✅ IDENTICAL - Byte-perfect preservation!"
+else
+    echo "❌ DIFFERENT - Format changed"
+fi
+```
+
+### Step 4.5.6: Validation Examples by Feature Type
+
+**Format Preservation (e.g., pin UUIDs, properties)**:
+```
+1. Create schematic with element
+2. Show baseline values
+3. User inspects in KiCAD → closes
+4. Round-trip: load → save → load
+5. Compare values (should be identical)
+6. Show byte-level diff (should be empty)
+```
+
+**New Element Support (e.g., text boxes, shapes)**:
+```
+1. Create schematic with new element
+2. Show element properties
+3. User inspects in KiCAD → verifies rendering
+4. User optionally modifies in KiCAD → saves
+5. Load modified schematic
+6. Verify modifications were preserved
+```
+
+**API Enhancement (e.g., new methods)**:
+```
+1. Use new API to create schematic
+2. Show resulting structure
+3. User inspects in KiCAD → verifies result
+4. Try edge cases (empty values, special chars)
+5. Verify all cases work correctly
+```
+
+**Connectivity/Routing Features**:
+```
+1. Create schematic with connections
+2. Show connection data
+3. User inspects in KiCAD → verifies wires connect correctly
+4. Run netlist comparison vs kicad-cli
+5. Verify nets match exactly
+```
+
+### Step 4.5.7: Validation Checkpoint (USER APPROVAL REQUIRED)
+
+**Present validation summary and request approval**:
+> ✅ Interactive validation complete!
+>
+> **What we proved:**
+> 1. ✅ {Feature aspect 1} works correctly
+> 2. ✅ {Feature aspect 2} is preserved
+> 3. ✅ KiCAD opens and displays correctly
+> 4. ✅ {Format/behavior} matches expectations
+>
+> **Evidence:**
+> - Manual inspection: User confirmed {what}
+> - Automated tests: {N} checks passed
+> - File comparison: Byte-perfect match (if applicable)
+>
+> **Ready to proceed to cleanup and PR?**
+> - Type "yes" to proceed with cleanup and PR creation
+> - Type "no" or describe issues to go back to implementation
+
+**WAIT for user confirmation** before proceeding to Phase 5.
+
+**If user reports issues:**
+- Return to Phase 4 (Implementation)
+- Add more debug logging
+- Fix identified problems
+- Re-run Phase 4.5 validation
 
 ---
 
@@ -777,22 +844,19 @@ uv run flake8 kicad_sch_api/ tests/
 
 ### Step 5.2: Best Practices Review
 
-**Check for**:
-- [ ] **Security**: No hardcoded paths, validate inputs
-- [ ] **Error handling**: All parse/format errors handled gracefully
-- [ ] **Type hints**: All functions have proper type annotations
-- [ ] **Testing**: All tests still pass after cleanup
-- [ ] **Documentation**: Public APIs have docstrings
-- [ ] **Format preservation**: Round-trip tests pass
-- [ ] **Backward compatibility**: No breaking changes to existing API
-- [ ] **MCP compatibility**: If MCP tools affected, verify they still work
-
-**KiCAD-specific checks**:
-- [ ] **S-expression format**: Matches KiCAD exactly
-- [ ] **Field ordering**: Preserves KiCAD's field order
-- [ ] **UUID handling**: UUIDs preserved on round-trip
-- [ ] **Grid alignment**: Positions are grid-aligned (if relevant)
-- [ ] **KiCAD version**: Compatible with 7.0 and 8.0
+**Verify**:
+- [ ] Security (no hardcoded paths, validate inputs)
+- [ ] Error handling (all parse/format errors handled)
+- [ ] Type hints (all functions annotated)
+- [ ] All tests pass after cleanup
+- [ ] Public APIs have docstrings
+- [ ] S-expression format matches KiCAD exactly
+- [ ] Field ordering preserved
+- [ ] UUIDs preserved on round-trip
+- [ ] Grid alignment correct (if relevant)
+- [ ] Compatible with KiCAD 7.0 and 8.0
+- [ ] Backward compatibility maintained
+- [ ] MCP tools still work (if affected)
 
 ### Step 5.3: Commit Message Format
 
@@ -909,10 +973,10 @@ git push origin HEAD
 gh pr create --title "{PR title}" --body "{PR description}"
 ```
 
-### Step 5.5: Final Approval
+### Step 5.5: PR Summary and Completion
 
-**Present PR**:
-> ✅ Pull request created: {PR URL}
+**Present completed PR**:
+> ✅ **Pull request created**: {PR URL}
 >
 > **Summary**:
 > - {N} tests added (all passing)
@@ -928,17 +992,33 @@ gh pr create --title "{PR title}" --body "{PR description}"
 > - `tests/reference_kicad_projects/{ref}/` - Reference schematic
 > - `docs/prd/{feature}-prd.md` - PRD documentation
 >
-> Please review the PR. Any final changes needed?
+> **Development workflow complete!** PR is ready for review.
 
 ---
 
 ## Key Principles
 
-### Reference-Driven Development
-- **Always create reference schematic first** - Claude creates initial, user edits in KiCAD
-- **Parse reference to understand format** - S-expression becomes source of truth
+### Reference-Driven Development (TDD with KiCAD as Oracle)
+- **Reference = source of truth** - Human creates in KiCAD GUI (known-good)
+- **Tests compare against reference** - Agent knows when implementation succeeds
+- **Agent iterates autonomously** - Test pass = exact format match
+- **Parse reference to understand format** - S-expression becomes specification
 - **Replicate exact format in Python** - Byte-perfect or semantically equivalent output
 - **Keep references for regression testing** - Future validation and potential training data
+
+### Trusted Actions (Maximize Automation)
+- **Agent CAN automate**: `add_component()`, `add_wire()`, `add_label()`, basic connectivity
+- **Agent produces ugly but functional**: Complex routing, aesthetic positioning
+- **Human required**: Testing the APIs themselves, beautiful layouts, aesthetic judgment
+- **Decision rule**: If testing API behavior → agent creates reference. If testing aesthetics → human creates.
+- **Most common**: Agent creates functional reference, human optionally refines
+
+### Communicative Implementation
+- **Explain approach** before implementing (reference PRD sections)
+- **Show progress** after each iteration (tests passing, issues found, fixes tried)
+- **Reference PRD** when discussing requirements
+- **Human can interrupt** if agent going wrong direction
+- **Autonomous but transparent** - human follows along without blocking
 
 ### KiCAD Format Preservation
 - **Exact S-expression matching** - Primary goal of the library
@@ -951,12 +1031,21 @@ gh pr create --title "{PR title}" --body "{PR description}"
 - Debug logs during development, comment out before PR
 - Keep warning/error logs for production
 - Log at parse/format decision points
+- Logs drive hypothesis formation
 
-### Iterative Approach
-- Test → Analyze → Fix → Repeat
+### Iterative Approach (Log-Driven)
+- Test → Analyze Logs → Fix → Repeat
 - Maximum 8 iterations before escalating
 - Progress = more tests passing or better format matching
 - Diff against reference constantly
+- Use debug logs to understand failures
+
+### Manual Validation (Belt-and-Suspenders)
+- **Always validate manually** even when tests pass
+- **Help user think** about what to check
+- **Guide step-by-step** - simple, clear instructions
+- **One schematic at a time** - respect human constraints
+- **Prove it works** before creating PR
 
 ### Writing Guidelines (CRITICAL)
 - **NO marketing language** - follow `CLAUDE.md` banned words list
