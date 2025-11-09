@@ -106,6 +106,12 @@ class ElementFactory:
             rotation=text_dict.get("rotation", 0.0),
             size=text_dict.get("size", 1.27),
             exclude_from_sim=text_dict.get("exclude_from_sim", False),
+            # Font effects
+            bold=text_dict.get("bold", False),
+            italic=text_dict.get("italic", False),
+            thickness=text_dict.get("thickness"),
+            color=text_dict.get("color"),
+            face=text_dict.get("face"),
         )
 
     @staticmethod

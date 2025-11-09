@@ -1697,6 +1697,17 @@ class Schematic:
                 "size": text_element.size,
                 "exclude_from_sim": text_element.exclude_from_sim,
             }
+            # Include font effects if set
+            if text_element.bold:
+                text_dict["bold"] = text_element.bold
+            if text_element.italic:
+                text_dict["italic"] = text_element.italic
+            if text_element.thickness is not None:
+                text_dict["thickness"] = text_element.thickness
+            if text_element.color is not None:
+                text_dict["color"] = text_element.color
+            if text_element.face is not None:
+                text_dict["face"] = text_element.face
             text_data.append(text_dict)
 
         self._data["texts"] = text_data
