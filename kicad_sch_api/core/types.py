@@ -220,6 +220,7 @@ class SchematicSymbol:
     rotation: float = 0.0
     in_bom: bool = True
     on_board: bool = True
+    fields_autoplaced: bool = True
     unit: int = 1
     instances: List["SymbolInstance"] = field(default_factory=list)  # FIX: Add instances field for hierarchical support
 
@@ -775,6 +776,7 @@ class SymbolInstance:
     path: str  # Hierarchical path
     reference: str
     unit: int = 1
+    project: str = ""  # Project name (empty string for unnamed projects)
 
 
 @dataclass
