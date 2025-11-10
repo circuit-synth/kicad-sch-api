@@ -1142,9 +1142,6 @@ class ComponentCollection(BaseCollection[Component]):
         self._ensure_indexes_current()
         ref_idx = self._index_registry.get("reference", reference)
         if ref_idx is not None:
-            # Reference index is non-unique, so ref_idx is a list
-            if isinstance(ref_idx, list):
-                return self._items[ref_idx[0]] if ref_idx else None
             return self._items[ref_idx]
         return None
 
