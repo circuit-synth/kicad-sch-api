@@ -8,6 +8,48 @@ kicad-sch-api is a Python library for reading and writing KiCAD schematic files.
 
 **Key Principle**: "Simple is my north star" - prioritize simplicity over features.
 
+---
+
+## Feature Development Workflow
+
+Use the `/FULL_WORKFLOW` command for any feature, bug fix, or enhancement:
+
+```
+/FULL_WORKFLOW
+```
+
+This orchestrates the complete development process:
+1. `/plan` - Analyze issue and create specification
+2. `/ref-gen` - Generate reference files (user confirms)
+3. `/test-gen` - Design and implement tests
+4. `/code` - Implement iteratively (10-20 cycles)
+5. `/review` - Code review + documentation review
+6. `/test-e2e` - Manual testing guide
+7. **IF PASS**: `/open-pr` (create PR)
+   **IF FAIL**: `/update-issue` (document problem, exit)
+
+Individual commands are also available for step-by-step work.
+
+See [shared-library](https://github.com/circuit-synth/shared-library) for complete command documentation.
+
+---
+
+## Professional Quality Standards
+
+All work must meet professional software engineering standards:
+
+- **Testing**: 85%+ coverage, test-first development
+- **Type Safety**: mypy --strict (no Any types)
+- **Code Quality**: black, isort, ruff (automated linting)
+- **Security**: bandit, safety (automated scanning)
+- **CI/CD**: Automated enforcement on every PR
+- **Documentation**: Complete docstrings, examples, guides
+- **Writing**: Technical claims only (see Writing Style Guidelines below)
+
+See [PROFESSIONAL_QUALITY_STANDARDS.md](https://github.com/circuit-synth/claude-files-inventory/blob/main/PROFESSIONAL_QUALITY_STANDARDS.md) for detailed requirements.
+
+---
+
 ## CRITICAL: Writing Style Guidelines
 
 ### ⛔ BANNED WORDS AND PHRASES

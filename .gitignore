@@ -148,3 +148,9 @@ test_*.kicad_sch
 /logs/
 /manual_tests/
 /temp_test_env/
+
+# Synced commands from shared-library (don't commit, always sync)
+.claude/commands/*.md
+
+# Hook logs (runtime generated)
+.claude/hook_logs/

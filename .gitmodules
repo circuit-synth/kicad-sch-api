@@ -1,0 +1,3 @@
+[submodule "shared-library"]
+	path = shared-library
+	url = https://github.com/circuit-synth/shared-library.git
