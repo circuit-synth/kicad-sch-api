@@ -148,3 +148,6 @@ test_*.kicad_sch
 /logs/
 /manual_tests/
 /temp_test_env/
+
+# Hook logs (runtime generated)
+.claude/hook_logs/
