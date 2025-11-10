@@ -283,6 +283,47 @@ ksa.config.grid.component_spacing = 5.0
 
 **📖 See [API Reference](docs/API_REFERENCE.md#configuration) for all configuration options**
 
+#### Library Path Configuration
+
+The library automatically discovers KiCAD symbol libraries from:
+- **Environment variables** (`KICAD_SYMBOL_DIR`, `KICAD8_SYMBOL_DIR`, `KICAD7_SYMBOL_DIR`)
+- **Standard KiCAD installations** (version-flexible detection)
+- **User document directories**
+
+**Set environment variable** (Unix/macOS):
+```bash
+# Single path
+export KICAD_SYMBOL_DIR=/path/to/kicad/symbols
+
+# Multiple paths (colon-separated)
+export KICAD_SYMBOL_DIR=/path/to/symbols:/path/to/custom/symbols
+```
+
+**Set environment variable** (Windows):
+```cmd
+# Single path
+set KICAD_SYMBOL_DIR=C:\KiCad\symbols
+
+# Multiple paths (semicolon-separated)
+set KICAD_SYMBOL_DIR=C:\KiCad\symbols;D:\Custom\symbols
+```
+
+**Add library paths programmatically**:
+```python
+import kicad_sch_api as ksa
+
+# Get cache
+cache = ksa.library.get_symbol_cache()
+
+# Add specific library file
+cache.add_library_path("/path/to/Device.kicad_sym")
+
+# Discover all libraries in directory
+cache.discover_libraries(["/path/to/custom/symbols"])
+```
+
+**📖 See [Library Configuration Guide](docs/LIBRARY_CONFIGURATION.md) for complete documentation**
+
 ## 📝 Examples
 
 Learn by example with our polished reference circuits in the **[examples/](examples/)** directory:

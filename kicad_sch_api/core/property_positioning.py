@@ -8,9 +8,9 @@ Analysis source: docs/PROPERTY_POSITIONING_ANALYSIS.md
 Reference schematics: tests/reference_kicad_projects/property_positioning_*/
 """
 
-from dataclasses import dataclass
-from typing import Tuple, Optional
 import logging
+from dataclasses import dataclass
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PropertyOffset:
     """Offset for a single property at 0° rotation."""
+
     x: float
     y: float
     rotation: float = 0.0  # Text rotation in degrees
@@ -26,6 +27,7 @@ class PropertyOffset:
 @dataclass
 class ComponentPositioningRule:
     """Positioning rules for a component type."""
+
     reference_offset: PropertyOffset
     value_offset: PropertyOffset
     footprint_offset: Optional[PropertyOffset] = None
@@ -39,63 +41,54 @@ POSITIONING_RULES = {
         value_offset=PropertyOffset(x=2.54, y=1.2699, rotation=0),
         footprint_offset=PropertyOffset(x=-1.778, y=0, rotation=90),
     ),
-
     # Capacitor (unpolarized): RIGHT side, vertical stacking (same pattern as resistor)
     "Device:C": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=3.81, y=-1.2701, rotation=0),
         value_offset=PropertyOffset(x=3.81, y=1.2699, rotation=0),
         footprint_offset=PropertyOffset(x=0.9652, y=3.81, rotation=0),
     ),
-
     # Capacitor (polarized): Different Y offsets than unpolarized
     "Device:C_Polarized": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=3.81, y=-2.1591, rotation=0),
         value_offset=PropertyOffset(x=3.81, y=0.3809, rotation=0),
         footprint_offset=PropertyOffset(x=0.9652, y=3.81, rotation=0),
     ),
-
     # Inductor: RIGHT side, vertical stacking (narrower than resistor)
     "Device:L": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=1.27, y=-1.2701, rotation=0),
         value_offset=PropertyOffset(x=1.27, y=1.2699, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
-
     # Diode: CENTERED, both properties ABOVE component
     "Device:D": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=0, y=-6.35, rotation=0),
         value_offset=PropertyOffset(x=0, y=-3.81, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
-
     # LED: LEFT side, both properties ABOVE component
     "Device:LED": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=-1.5875, y=-6.35, rotation=0),
         value_offset=PropertyOffset(x=-1.5875, y=-3.81, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
-
     # BJT Transistor: RIGHT and stacked
     "Transistor_BJT:2N2219": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=5.08, y=-1.2701, rotation=0),
         value_offset=PropertyOffset(x=5.08, y=1.2699, rotation=0),
         footprint_offset=PropertyOffset(x=5.08, y=1.905, rotation=0),
     ),
-
     # Op-Amp: CENTERED, both properties ABOVE component with larger IC spacing
     "Amplifier_Operational:TL072": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=0, y=-10.16, rotation=0),
         value_offset=PropertyOffset(x=0, y=-7.62, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
-
     # Logic IC: SLIGHT RIGHT, both properties ABOVE with very large spacing
     "74xx:74HC595": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=2.1433, y=-17.78, rotation=0),
         value_offset=PropertyOffset(x=2.1433, y=-15.24, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
-
     # Connector: SLIGHT RIGHT, both properties ABOVE
     "Connector:Conn_01x04_Pin": ComponentPositioningRule(
         reference_offset=PropertyOffset(x=0.635, y=-7.62, rotation=0),
@@ -109,7 +102,7 @@ def get_property_position(
     lib_id: str,
     property_name: str,
     component_position: Tuple[float, float],
-    component_rotation: float = 0
+    component_rotation: float = 0,
 ) -> Tuple[float, float, float]:
     """
     Calculate KiCAD-exact property position for a component.
@@ -149,8 +142,7 @@ def get_property_position(
     # Apply rotation transform
     comp_x, comp_y = component_position
     prop_x, prop_y, prop_rotation = _apply_rotation_transform(
-        offset.x, offset.y, offset.rotation,
-        comp_x, comp_y, component_rotation
+        offset.x, offset.y, offset.rotation, comp_x, comp_y, component_rotation
     )
 
     return (prop_x, prop_y, prop_rotation)
@@ -162,7 +154,7 @@ def _apply_rotation_transform(
     text_rotation: float,
     comp_x: float,
     comp_y: float,
-    comp_rotation: float
+    comp_rotation: float,
 ) -> Tuple[float, float, float]:
     """
     Apply rotation transform to property offset.

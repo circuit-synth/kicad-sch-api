@@ -21,7 +21,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from kicad_sch_api.core.parser import SExpressionParser
-from kicad_sch_api.core.types import Point, BusEntry
+from kicad_sch_api.core.types import BusEntry, Point
 
 
 class TestBusEntry:

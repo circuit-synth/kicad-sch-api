@@ -5,10 +5,11 @@ Tests validate that multi-unit components match exact KiCAD format
 by comparing against manually created reference schematic.
 """
 
-import pytest
 from pathlib import Path
-from kicad_sch_api import Schematic, create_schematic
 
+import pytest
+
+from kicad_sch_api import Schematic, create_schematic
 
 # Path to reference schematic
 REFERENCE_DIR = Path(__file__).parent.parent / "reference_kicad_projects" / "multi_unit_tl072"
@@ -178,19 +179,13 @@ class TestTL072ReferenceRoundTrip:
     def test_roundtrip_preserves_positions(self, tmp_path):
         """Test that round-trip preserves component positions."""
         sch = Schematic.load(str(REFERENCE_SCHEMATIC))
-        original_positions = {
-            c._data.unit: (c.position.x, c.position.y)
-            for c in sch.components
-        }
+        original_positions = {c._data.unit: (c.position.x, c.position.y) for c in sch.components}
 
         temp_file = tmp_path / "roundtrip.kicad_sch"
         sch.save(str(temp_file))
 
         sch2 = Schematic.load(str(temp_file))
-        reloaded_positions = {
-            c._data.unit: (c.position.x, c.position.y)
-            for c in sch2.components
-        }
+        reloaded_positions = {c._data.unit: (c.position.x, c.position.y) for c in sch2.components}
 
         # Compare positions with tolerance
         for unit in [1, 2, 3]:
@@ -203,19 +198,13 @@ class TestTL072ReferenceRoundTrip:
     def test_roundtrip_preserves_pin_uuids(self, tmp_path):
         """Test that round-trip preserves pin UUIDs."""
         sch = Schematic.load(str(REFERENCE_SCHEMATIC))
-        original_pin_uuids = {
-            c._data.unit: c.pin_uuids.copy()
-            for c in sch.components
-        }
+        original_pin_uuids = {c._data.unit: c.pin_uuids.copy() for c in sch.components}
 
         temp_file = tmp_path / "roundtrip.kicad_sch"
         sch.save(str(temp_file))
 
         sch2 = Schematic.load(str(temp_file))
-        reloaded_pin_uuids = {
-            c._data.unit: c.pin_uuids.copy()
-            for c in sch2.components
-        }
+        reloaded_pin_uuids = {c._data.unit: c.pin_uuids.copy() for c in sch2.components}
 
         assert reloaded_pin_uuids == original_pin_uuids
 
@@ -242,7 +231,7 @@ class TestProgrammaticReplication:
                 reference="U1",
                 value="TL072",
                 position=ref_positions[unit],
-                unit=unit
+                unit=unit,
             )
 
         # Save programmatically created schematic

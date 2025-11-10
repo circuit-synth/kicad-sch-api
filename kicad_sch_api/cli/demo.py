@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-
 DEMO_TEMPLATE = '''#!/usr/bin/env python3
 """
 kicad-sch-api Interactive Demo
@@ -316,8 +315,7 @@ def main(argv: Optional[list] = None) -> int:
         # Check if file exists
         if output_file.exists() and not args.force:
             print(
-                f"❌ Error: {output_file} already exists. "
-                f"Use --force to overwrite.",
+                f"❌ Error: {output_file} already exists. " f"Use --force to overwrite.",
                 file=sys.stderr,
             )
             return 1

@@ -11,6 +11,7 @@ Related:
 """
 
 import pytest
+
 from kicad_sch_api.core.types import Point
 
 
@@ -211,8 +212,9 @@ class TestRoundTripPreservation:
         Reference schematic: property_positioning_resistor/resistor.kicad_sch
         Round-trip: load → save → load should produce byte-perfect output.
         """
-        import kicad_sch_api as ksa
         import tempfile
+
+        import kicad_sch_api as ksa
 
         ref_path = "tests/reference_kicad_projects/property_positioning_resistor/resistor.kicad_sch"
 
@@ -241,9 +243,10 @@ class TestRoundTripPreservation:
 
         This validates REQ-4: exact format preservation on load/save.
         """
-        import kicad_sch_api as ksa
-        import tempfile
         import filecmp
+        import tempfile
+
+        import kicad_sch_api as ksa
 
         references = [
             "property_positioning_resistor/resistor.kicad_sch",
@@ -270,7 +273,9 @@ class TestRoundTripPreservation:
             sch.save(temp_path)
 
             # Files should be byte-identical
-            assert filecmp.cmp(ref_path, temp_path, shallow=False), f"Round-trip failed for {ref_file}"
+            assert filecmp.cmp(
+                ref_path, temp_path, shallow=False
+            ), f"Round-trip failed for {ref_file}"
 
 
 class TestMultiUnitComponents:

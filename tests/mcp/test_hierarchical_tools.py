@@ -6,13 +6,11 @@ Tests manage_sheets (add_pin, remove_pin actions) and manage_hierarchical_labels
 
 import pytest
 import pytest_asyncio
-
 from mcp_server.tools.consolidated_tools import (
     manage_hierarchical_labels,
     manage_schematic,
     manage_sheets,
 )
-
 
 # ============================================================================
 # Test Fixtures

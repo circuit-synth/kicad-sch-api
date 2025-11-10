@@ -88,8 +88,7 @@ class MultiUnitComponentGroup:
         if unit not in self._units:
             available = sorted(self._units.keys())
             raise KeyError(
-                f"Unit {unit} not found in {self.reference}. "
-                f"Available units: {available}"
+                f"Unit {unit} not found in {self.reference}. " f"Available units: {available}"
             )
 
         # Convert tuple to Point if needed
