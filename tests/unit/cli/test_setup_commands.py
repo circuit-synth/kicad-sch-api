@@ -2,12 +2,13 @@
 Tests for CLI setup commands (ksa_claude_setup and ksa_demo).
 """
 
-import sys
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-import pytest
-import tempfile
 import shutil
+import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def count_source_commands():
@@ -32,7 +33,7 @@ class TestKsaClaudeSetup:
         fake_home = tmp_path / "home"
         fake_home.mkdir()
 
-        with patch('pathlib.Path.home', return_value=fake_home):
+        with patch("pathlib.Path.home", return_value=fake_home):
             result = main([])
 
         assert result == 0
@@ -45,7 +46,7 @@ class TestKsaClaudeSetup:
         fake_home = tmp_path / "home"
         fake_home.mkdir()
 
-        with patch('pathlib.Path.home', return_value=fake_home):
+        with patch("pathlib.Path.home", return_value=fake_home):
             result = main([])
 
         assert result == 0
@@ -76,7 +77,7 @@ class TestKsaClaudeSetup:
         existing_file = existing_commands / "my-command.md"
         existing_file.write_text("# My existing command")
 
-        with patch('pathlib.Path.home', return_value=fake_home):
+        with patch("pathlib.Path.home", return_value=fake_home):
             result = main([])
 
         assert result == 0
@@ -97,8 +98,8 @@ class TestKsaClaudeSetup:
         fake_home = tmp_path / "home"
         fake_home.mkdir()
 
-        with patch('pathlib.Path.home', return_value=fake_home):
-            result = main(['--verbose'])
+        with patch("pathlib.Path.home", return_value=fake_home):
+            result = main(["--verbose"])
 
         assert result == 0
 
@@ -114,8 +115,8 @@ class TestKsaClaudeSetup:
         fake_home.mkdir()
 
         # Make the directory read-only to trigger permission error
-        with patch('pathlib.Path.home', return_value=fake_home):
-            with patch('pathlib.Path.mkdir', side_effect=PermissionError("Permission denied")):
+        with patch("pathlib.Path.home", return_value=fake_home):
+            with patch("pathlib.Path.mkdir", side_effect=PermissionError("Permission denied")):
                 result = main([])
 
         # Should return error code
@@ -136,6 +137,7 @@ class TestKsaDemo:
         original_cwd = Path.cwd()
         try:
             import os
+
             os.chdir(tmp_path)
 
             result = main([])
@@ -152,6 +154,7 @@ class TestKsaDemo:
         original_cwd = Path.cwd()
         try:
             import os
+
             os.chdir(tmp_path)
 
             result = main([])
@@ -179,6 +182,7 @@ class TestKsaDemo:
         original_cwd = Path.cwd()
         try:
             import os
+
             os.chdir(tmp_path)
 
             # Create existing file
@@ -206,6 +210,7 @@ class TestKsaDemo:
         original_cwd = Path.cwd()
         try:
             import os
+
             os.chdir(tmp_path)
 
             # Create existing file
@@ -213,7 +218,7 @@ class TestKsaDemo:
             existing.write_text("# Old content")
 
             # Force overwrite
-            result = main(['--force'])
+            result = main(["--force"])
 
             assert result == 0
 
@@ -231,6 +236,7 @@ class TestKsaDemo:
         original_cwd = Path.cwd()
         try:
             import os
+
             os.chdir(tmp_path)
 
             result = main([])
@@ -249,6 +255,7 @@ class TestKsaDemo:
         original_cwd = Path.cwd()
         try:
             import os
+
             os.chdir(tmp_path)
 
             result = main([])
@@ -261,6 +268,10 @@ class TestKsaDemo:
 
             # Should showcase key features mentioned in requirements
             assert "duplicate" in content.lower() or "array" in content.lower()
-            assert "layout" in content.lower() or "grid" in content.lower() or "parametric" in content.lower()
+            assert (
+                "layout" in content.lower()
+                or "grid" in content.lower()
+                or "parametric" in content.lower()
+            )
         finally:
             os.chdir(original_cwd)

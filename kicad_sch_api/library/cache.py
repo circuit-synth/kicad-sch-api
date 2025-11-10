@@ -5,10 +5,12 @@ This module provides intelligent caching and lookup functionality for KiCAD symb
 significantly improving performance for applications that work with many components.
 """
 
+import glob
 import hashlib
 import json
 import logging
 import os
+import platform
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -226,14 +228,36 @@ class SymbolLibraryCache:
         """
         Automatically discover KiCAD symbol libraries.
 
+        Searches environment variables and system paths for KiCAD symbol libraries.
+        Supports version-flexible discovery across KiCAD 7, 8, 9, and custom installations.
+
+        Environment variables checked:
+        - KICAD_SYMBOL_DIR (generic, supports : or ; separated paths)
+        - KICAD9_SYMBOL_DIR (KiCAD 9 specific)
+        - KICAD8_SYMBOL_DIR (KiCAD 8 specific)
+        - KICAD7_SYMBOL_DIR (KiCAD 7 specific)
+
         Args:
-            search_paths: Directories to search for .kicad_sym files
+            search_paths: Optional custom directories to search for .kicad_sym files.
+                         If None, uses environment variables + default system paths.
 
         Returns:
             Number of libraries discovered and added
         """
         if search_paths is None:
-            search_paths = self._get_default_library_paths()
+            # Merge environment variable paths with system paths
+            env_paths = self._check_environment_variables()
+            system_paths = self._get_default_library_paths()
+
+            # Combine and deduplicate
+            all_paths = list(dict.fromkeys(env_paths + system_paths))
+            search_paths = all_paths
+
+            logger.debug(
+                f"Library discovery: {len(env_paths)} from env vars, "
+                f"{len(system_paths)} from system, "
+                f"{len(search_paths)} total (after dedup)"
+            )
 
         discovered_count = 0
 
@@ -249,7 +273,24 @@ class SymbolLibraryCache:
                 if self.add_library_path(lib_file):
                     discovered_count += 1
 
-        logger.info(f"Discovered {discovered_count} libraries")
+        if discovered_count == 0:
+            logger.warning(
+                "No KiCAD symbol libraries found.\n\n"
+                "Tried the following:\n"
+                "  - Environment variables: KICAD_SYMBOL_DIR, KICAD8_SYMBOL_DIR, KICAD7_SYMBOL_DIR\n"
+                "  - System paths: Default KiCAD installation locations\n\n"
+                "Solutions:\n"
+                "  1. Set environment variable:\n"
+                "     export KICAD_SYMBOL_DIR=/path/to/kicad/symbols\n\n"
+                "  2. Add library path programmatically:\n"
+                "     cache = get_symbol_cache()\n"
+                "     cache.add_library_path('/path/to/library.kicad_sym')\n\n"
+                "  3. Discover libraries manually:\n"
+                "     cache.discover_libraries(['/custom/path'])\n"
+            )
+        else:
+            logger.info(f"Discovered {discovered_count} libraries")
+
         return discovered_count
 
     def get_symbol(self, lib_id: str) -> Optional[SymbolDefinition]:
@@ -299,8 +340,8 @@ class SymbolLibraryCache:
             print(f"Units: {info.unit_count}")  # 3
             print(f"Unit names: {info.unit_names}")  # {1: "A", 2: "B", 3: "C"}
         """
-        from ..core.types import SymbolInfo
         from ..core.exceptions import LibraryError
+        from ..core.types import SymbolInfo
 
         symbol_def = self.get_symbol(lib_id)
 
@@ -816,41 +857,168 @@ class SymbolLibraryCache:
         # Default to 'U' for unknown symbols
         return "U"
 
+    def _check_environment_variables(self) -> List[Path]:
+        """
+        Check environment variables for library paths.
+
+        Supports:
+        - KICAD_SYMBOL_DIR (generic, colon/semicolon-separated)
+        - KICAD9_SYMBOL_DIR (KiCAD 9 specific)
+        - KICAD8_SYMBOL_DIR (KiCAD 8 specific)
+        - KICAD7_SYMBOL_DIR (KiCAD 7 specific)
+
+        Returns:
+            List of valid library paths from environment variables
+        """
+        env_paths = []
+        env_vars = [
+            "KICAD_SYMBOL_DIR",
+            "KICAD9_SYMBOL_DIR",
+            "KICAD8_SYMBOL_DIR",
+            "KICAD7_SYMBOL_DIR",
+        ]
+
+        for env_var in env_vars:
+            env_value = os.environ.get(env_var)
+            if not env_value or env_value.strip() == "":
+                continue
+
+            logger.debug(f"Found environment variable {env_var}={env_value}")
+
+            # Handle path separators (: for Unix, ; for Windows)
+            separator = ";" if os.name == "nt" else ":"
+            paths = env_value.split(separator)
+
+            for path_str in paths:
+                path_str = path_str.strip()
+                if not path_str:
+                    continue
+
+                path = Path(path_str).expanduser()
+                if self._validate_library_path(path):
+                    env_paths.append(path)
+                    logger.info(f"Added library path from {env_var}: {path}")
+                else:
+                    logger.warning(
+                        f"Invalid library path from {env_var}: {path} (does not exist or contains no .kicad_sym files)"
+                    )
+
+        return env_paths
+
+    def _glob_version_paths(self, pattern: str) -> List[Path]:
+        """
+        Use glob to find version-specific library paths.
+
+        Args:
+            pattern: Glob pattern (e.g., "/Applications/KiCad*/symbols")
+
+        Returns:
+            List of matching paths that exist
+        """
+        paths = []
+        try:
+            matches = glob.glob(pattern)
+            for match in matches:
+                path = Path(match)
+                if path.exists() and path.is_dir():
+                    paths.append(path)
+                    logger.debug(f"Glob found: {path}")
+        except Exception as e:
+            logger.debug(f"Error globbing pattern {pattern}: {e}")
+
+        return paths
+
+    def _validate_library_path(self, path: Path) -> bool:
+        """
+        Validate that a path contains KiCAD symbol libraries.
+
+        Args:
+            path: Path to validate
+
+        Returns:
+            True if path exists and contains .kicad_sym files
+        """
+        try:
+            if not path.exists():
+                return False
+
+            # If it's a file, check if it's a .kicad_sym file
+            if path.is_file():
+                return path.suffix == ".kicad_sym"
+
+            # If it's a directory, check if it contains any .kicad_sym files
+            if path.is_dir():
+                return any(path.glob("*.kicad_sym"))
+
+            return False
+
+        except (PermissionError, OSError) as e:
+            logger.warning(f"Permission error accessing {path}: {e}")
+            return False
+
     def _get_default_library_paths(self) -> List[Path]:
-        """Get default KiCAD library search paths."""
+        """
+        Get default KiCAD library search paths with version-flexible discovery.
+
+        Uses glob patterns to find KiCAD installations regardless of version number.
+        """
         search_paths = []
 
-        # Common KiCAD installation paths
-        if os.name == "nt":  # Windows
-            search_paths.extend(
-                [
-                    Path("C:/Program Files/KiCad/9.0/share/kicad/symbols"),
-                    Path("C:/Program Files (x86)/KiCad/9.0/share/kicad/symbols"),
-                ]
-            )
-        elif os.name == "posix":  # Linux/Mac
-            search_paths.extend(
-                [
-                    Path("/usr/share/kicad/symbols"),
-                    Path("/usr/local/share/kicad/symbols"),
-                    Path.home() / ".local/share/kicad/symbols",
-                    # macOS KiCAD.app bundle path
-                    Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols"),
-                ]
-            )
+        # Windows paths - use glob for version flexibility
+        if os.name == "nt":
+            # Search for all KiCAD versions in Program Files
+            for base_path in ["C:/Program Files/KiCad", "C:/Program Files (x86)/KiCad"]:
+                # Glob for version subdirectories (7.0, 8.0, 9.0, etc.)
+                version_paths = self._glob_version_paths(f"{base_path}/*/share/kicad/symbols")
+                search_paths.extend(version_paths)
 
-        # User documents
-        search_paths.extend(
-            [
-                Path.home() / "Documents/KiCad/symbols",
-                Path.home() / "kicad/symbols",
+                # Also check base path without version
+                try:
+                    base_symbols = Path(base_path) / "share" / "kicad" / "symbols"
+                    if base_symbols.exists():
+                        search_paths.append(base_symbols)
+                except (PermissionError, OSError) as e:
+                    logger.debug(f"Permission error accessing {base_symbols}: {e}")
+
+        # Linux/macOS paths
+        elif os.name == "posix":
+            # Standard Linux paths
+            standard_linux_paths = [
+                Path("/usr/share/kicad/symbols"),
+                Path("/usr/local/share/kicad/symbols"),
+                Path.home() / ".local/share/kicad/symbols",
             ]
-        )
+            # Safely check paths with permission error handling
+            for p in standard_linux_paths:
+                try:
+                    if p.exists():
+                        search_paths.append(p)
+                except (PermissionError, OSError) as e:
+                    logger.debug(f"Permission error accessing {p}: {e}")
 
-        logger.debug(f"Potential library search paths: {search_paths}")
-        existing_paths = [path for path in search_paths if path.exists()]
-        logger.debug(f"Existing library search paths: {existing_paths}")
-        return existing_paths
+            # macOS KiCAD.app bundle paths - glob for version flexibility
+            if platform.system() == "Darwin":
+                # Search for KiCad, KiCad7, KiCad8, KiCad806, etc.
+                macos_pattern = "/Applications/KiCad*/KiCad.app/Contents/SharedSupport/symbols"
+                macos_paths = self._glob_version_paths(macos_pattern)
+                search_paths.extend(macos_paths)
+
+        # User document directories (all platforms)
+        user_paths = [
+            Path.home() / "Documents/KiCad/symbols",
+            Path.home() / "Documents/kicad/symbols",
+            Path.home() / "kicad/symbols",
+        ]
+        # Safely check paths with permission error handling
+        for p in user_paths:
+            try:
+                if p.exists():
+                    search_paths.append(p)
+            except (PermissionError, OSError) as e:
+                logger.debug(f"Permission error accessing {p}: {e}")
+
+        logger.debug(f"Discovered {len(search_paths)} default library search paths")
+        return search_paths
 
     def _load_persistent_index(self):
         """Load persistent symbol index from disk."""

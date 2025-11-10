@@ -11,9 +11,10 @@ Tests cover:
 """
 
 import pytest
+
 from kicad_sch_api import create_schematic
+from kicad_sch_api.core.exceptions import LibraryError, ValidationError
 from kicad_sch_api.core.types import Point, SymbolInfo
-from kicad_sch_api.core.exceptions import ValidationError, LibraryError
 
 
 class TestMultiUnitAutomatic:
@@ -29,13 +30,13 @@ class TestMultiUnitAutomatic:
             reference="U1",
             value="TL072",
             position=(100, 100),
-            add_all_units=True
+            add_all_units=True,
         )
 
         # Should return MultiUnitComponentGroup
         assert result is not None
-        assert hasattr(result, 'get_unit')
-        assert hasattr(result, 'place_unit')
+        assert hasattr(result, "get_unit")
+        assert hasattr(result, "place_unit")
         assert len(result) == 3
 
         # Verify all 3 units added to schematic
@@ -63,7 +64,7 @@ class TestMultiUnitAutomatic:
             reference="U1",
             value="TL072",
             position=(100, 100),
-            add_all_units=True
+            add_all_units=True,
             # Default unit_spacing=25.4
         )
 
@@ -92,7 +93,7 @@ class TestMultiUnitAutomatic:
             value="TL072",
             position=(100, 100),
             add_all_units=True,
-            unit_spacing=50.0  # Custom 50mm spacing
+            unit_spacing=50.0,  # Custom 50mm spacing
         )
 
         positions = result.get_all_positions()
@@ -112,11 +113,7 @@ class TestMultiUnitAutomatic:
 
         # Resistor has only 1 unit
         result = sch.components.add(
-            "Device:R",
-            reference="R1",
-            value="10k",
-            position=(100, 100),
-            add_all_units=True
+            "Device:R", reference="R1", value="10k", position=(100, 100), add_all_units=True
         )
 
         # Should behave like normal resistor - just 1 component
@@ -139,7 +136,7 @@ class TestMultiUnitManual:
             reference="U1",
             value="TL072",
             position=(100, 100),
-            unit=1
+            unit=1,
         )
 
         # Add unit 2 (same reference, different unit)
@@ -148,7 +145,7 @@ class TestMultiUnitManual:
             reference="U1",
             value="TL072",
             position=(150, 100),
-            unit=2
+            unit=2,
         )
 
         # Add unit 3
@@ -157,7 +154,7 @@ class TestMultiUnitManual:
             reference="U1",
             value="TL072",
             position=(125, 150),
-            unit=3
+            unit=3,
         )
 
         # Verify all 3 units added
@@ -180,12 +177,13 @@ class TestMultiUnitManual:
         sch = create_schematic("test_positions")
 
         # Custom positions for each unit
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(100, 100), unit=1)
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(175, 80), unit=2)
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(137.5, 130), unit=3)
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=1
+        )
+        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072", position=(175, 80), unit=2)
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(137.5, 130), unit=3
+        )
 
         # Verify exact positions
         comps = sorted(list(sch.components), key=lambda c: c._data.unit)
@@ -215,7 +213,7 @@ class TestMultiUnitComponentGroup:
             reference="U1",
             value="TL072",
             position=(100, 100),
-            add_all_units=True
+            add_all_units=True,
         )
 
         # Override unit 2 position
@@ -240,7 +238,7 @@ class TestMultiUnitComponentGroup:
             value="TL072",
             position=(100, 100),
             add_all_units=True,
-            unit_spacing=25.4
+            unit_spacing=25.4,
         )
 
         positions = group.get_all_positions()
@@ -263,7 +261,7 @@ class TestMultiUnitComponentGroup:
             reference="U1",
             value="TL072",
             position=(100, 100),
-            add_all_units=True
+            add_all_units=True,
         )
 
         # Get each unit
@@ -292,7 +290,7 @@ class TestMultiUnitComponentGroup:
             reference="U1",
             value="TL072",
             position=(100, 100),
-            add_all_units=True
+            add_all_units=True,
         )
 
         # Should be iterable
@@ -311,51 +309,60 @@ class TestReferenceValidation:
         sch = create_schematic("test_duplicate")
 
         # Add U1 unit 1
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(100, 100), unit=1)
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=1
+        )
 
         # Try to add U1 unit 1 again - should fail
         with pytest.raises(ValidationError, match="Unit 1 of reference 'U1' already exists"):
-            sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                              position=(150, 100), unit=1)
+            sch.components.add(
+                "Amplifier_Operational:TL072", "U1", "TL072", position=(150, 100), unit=1
+            )
 
     def test_mismatched_lib_id_raises_error(self):
         """Test that adding same reference with different lib_id raises error."""
         sch = create_schematic("test_mismatch")
 
         # Add U1 as TL072
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(100, 100), unit=1)
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=1
+        )
 
         # Try to add U1 unit 2 as different lib_id - should fail
-        with pytest.raises(ValidationError, match="Reference 'U1' already exists with different lib_id"):
-            sch.components.add("Device:R", "U1", "10k",
-                              position=(150, 100), unit=2)
+        with pytest.raises(
+            ValidationError, match="Reference 'U1' already exists with different lib_id"
+        ):
+            sch.components.add("Device:R", "U1", "10k", position=(150, 100), unit=2)
 
     def test_invalid_unit_number_raises_error(self):
         """Test that invalid unit number raises ValidationError."""
         sch = create_schematic("test_invalid_unit")
 
         # TL072 has 3 units, trying to add unit 99 should fail
-        with pytest.raises(ValidationError, match="Unit 99 invalid for symbol 'Amplifier_Operational:TL072'"):
-            sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                              position=(100, 100), unit=99)
+        with pytest.raises(
+            ValidationError, match="Unit 99 invalid for symbol 'Amplifier_Operational:TL072'"
+        ):
+            sch.components.add(
+                "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=99
+            )
 
     def test_unit_zero_raises_error(self):
         """Test that unit 0 raises ValidationError."""
         sch = create_schematic("test_unit_zero")
 
         with pytest.raises(ValidationError, match="Unit number must be >= 1"):
-            sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                              position=(100, 100), unit=0)
+            sch.components.add(
+                "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=0
+            )
 
     def test_negative_unit_raises_error(self):
         """Test that negative unit number raises ValidationError."""
         sch = create_schematic("test_negative_unit")
 
         with pytest.raises(ValidationError, match="Unit number must be >= 1"):
-            sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                              position=(100, 100), unit=-1)
+            sch.components.add(
+                "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=-1
+            )
 
 
 class TestSymbolIntrospection:
@@ -414,7 +421,7 @@ class TestSymbolIntrospection:
                 reference="U1",
                 value="TL072",
                 position=(100 + unit * 25.4, 100),
-                unit=unit
+                unit=unit,
             )
 
         # Verify all units added
@@ -435,7 +442,7 @@ class TestBackwardCompatibility:
             "Amplifier_Operational:TL072",
             reference="U1",
             value="TL072",
-            position=(100, 100)
+            position=(100, 100),
             # unit defaults to 1
         )
 
@@ -450,7 +457,7 @@ class TestBackwardCompatibility:
             "Amplifier_Operational:TL072",
             reference="U1",
             value="TL072",
-            position=(100, 100)
+            position=(100, 100),
             # add_all_units defaults to False
         )
 
@@ -468,12 +475,15 @@ class TestRoundTripPreservation:
         sch = create_schematic("test_roundtrip")
 
         # Add 3 units manually
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(100, 100), unit=1)
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(150, 100), unit=2)
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(125, 150), unit=3)
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=1
+        )
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(150, 100), unit=2
+        )
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(125, 150), unit=3
+        )
 
         # Save
         filepath = tmp_path / "test.kicad_sch"
@@ -504,10 +514,12 @@ class TestRoundTripPreservation:
         sch = create_schematic("test_uuid_preservation")
 
         # Add units
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(100, 100), unit=1)
-        sch.components.add("Amplifier_Operational:TL072", "U1", "TL072",
-                          position=(150, 100), unit=2)
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(100, 100), unit=1
+        )
+        sch.components.add(
+            "Amplifier_Operational:TL072", "U1", "TL072", position=(150, 100), unit=2
+        )
 
         # Capture original UUIDs
         original_uuids = {c._data.unit: c.uuid for c in sch.components}

@@ -95,8 +95,7 @@ class SymbolParser(BaseElementParser):
                     )
                 elif element_type == "fields_autoplaced":
                     symbol_data["fields_autoplaced"] = parse_bool_property(
-                        sub_item[1] if len(sub_item) > 1 else None,
-                        default=True
+                        sub_item[1] if len(sub_item) > 1 else None, default=True
                     )
                 elif element_type == "instances":
                     # Parse instances section
@@ -390,7 +389,12 @@ class SymbolParser(BaseElementParser):
             [sexpdata.Symbol("on_board"), "yes" if symbol_data.get("on_board", True) else "no"]
         )
         sexp.append([sexpdata.Symbol("dnp"), "no"])
-        sexp.append([sexpdata.Symbol("fields_autoplaced"), "yes" if symbol_data.get("fields_autoplaced", True) else "no"])
+        sexp.append(
+            [
+                sexpdata.Symbol("fields_autoplaced"),
+                "yes" if symbol_data.get("fields_autoplaced", True) else "no",
+            ]
+        )
 
         if symbol_data.get("uuid"):
             sexp.append([sexpdata.Symbol("uuid"), symbol_data["uuid"]])
@@ -687,6 +691,7 @@ class SymbolParser(BaseElementParser):
         else:
             # Fallback for custom properties or when lib_id not available
             from ...core.config import config
+
             prop_x, prop_y, text_rotation = config.get_property_position(
                 prop_name, (component_pos.x, component_pos.y), offset_index, rotation
             )

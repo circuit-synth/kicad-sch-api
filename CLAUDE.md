@@ -382,6 +382,93 @@ ksa.config.tolerance.position_tolerance = 0.05  # Tighter matching
 sch.save()
 ```
 
+## Library Configuration
+
+### Symbol Library Path Discovery
+
+The library automatically discovers KiCAD symbol libraries (`.kicad_sym` files) using environment variables and system paths.
+
+**Common Issue**: Users report "Library not found" or "Symbol not found" errors when creating components.
+
+**Root Cause**: Library cannot find KiCAD symbol library files.
+
+**Solution**: Configure environment variables to point to KiCAD symbol directories.
+
+### Environment Variables (Recommended)
+
+The library checks these environment variables in order:
+- `KICAD_SYMBOL_DIR` - Generic, works for any version
+- `KICAD9_SYMBOL_DIR` - KiCAD 9 specific
+- `KICAD8_SYMBOL_DIR` - KiCAD 8 specific
+- `KICAD7_SYMBOL_DIR` - KiCAD 7 specific
+
+**macOS:**
+```bash
+export KICAD8_SYMBOL_DIR=/Applications/KiCad806/KiCad.app/Contents/SharedSupport/symbols/
+```
+
+**Linux:**
+```bash
+export KICAD8_SYMBOL_DIR=/usr/share/kicad/8.0/symbols/
+```
+
+**Windows:**
+```powershell
+$env:KICAD8_SYMBOL_DIR="C:\Program Files\KiCad\8.0\share\kicad\symbols"
+```
+
+### Programmatic Configuration
+
+Alternatively, add library paths in code:
+
+```python
+import kicad_sch_api as ksa
+
+cache = ksa.SymbolLibraryCache()
+cache.add_library_path("/custom/path/to/symbols")
+cache.discover_libraries()
+
+# Now create schematics
+sch = ksa.create_schematic("MyCircuit")
+```
+
+### Verification
+
+Test library discovery:
+
+```python
+import kicad_sch_api as ksa
+
+cache = ksa.SymbolLibraryCache(enable_persistence=False)
+lib_count = cache.discover_libraries()
+
+print(f"Discovered {lib_count} libraries")
+
+# Test loading a symbol
+symbol = cache.get_symbol("Device:R")
+if symbol:
+    print("✓ Symbol library working")
+else:
+    print("✗ Check environment variables")
+```
+
+### Troubleshooting
+
+If users report library errors:
+1. Check environment variables are set correctly
+2. Verify paths contain `.kicad_sym` files
+3. Test with simple script (see above)
+4. See `docs/LIBRARY_CONFIGURATION.md` for complete guide
+5. Use `/troubleshoot-library` command for interactive help
+
+### When to Help Users with Library Setup
+
+- User reports "library not found" errors
+- Component creation fails with symbol errors
+- User has non-standard KiCAD installation
+- User needs custom library paths
+- First-time setup on new machine
+
 ## Creating Hierarchical Schematics (Issue #100)
 
 **CRITICAL**: For hierarchical designs, child schematics MUST have proper hierarchy context set using `set_hierarchy_context()` or component references will show as "?" in KiCad.

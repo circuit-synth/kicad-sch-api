@@ -788,7 +788,7 @@ class ComponentCollection(BaseCollection[Component]):
                 unit_spacing=unit_spacing,
                 rotation=rotation,
                 footprint=footprint,
-                **properties
+                **properties,
             )
 
         # Continue with single unit addition below
@@ -1814,7 +1814,7 @@ class ComponentCollection(BaseCollection[Component]):
         unit_spacing: float,
         rotation: float = 0.0,
         footprint: Optional[str] = None,
-        **properties
+        **properties,
     ):
         """
         Add all units of a multi-unit component with automatic horizontal layout.
@@ -1835,8 +1835,8 @@ class ComponentCollection(BaseCollection[Component]):
         Raises:
             LibraryError: If symbol not found
         """
-        from ..core.multi_unit import MultiUnitComponentGroup
         from ..core.exceptions import LibraryError
+        from ..core.multi_unit import MultiUnitComponentGroup
 
         # Get symbol definition to determine unit count
         symbol_cache = get_symbol_cache()
@@ -1853,8 +1853,7 @@ class ComponentCollection(BaseCollection[Component]):
         unit_count = symbol_def.units if symbol_def.units > 0 else 1
 
         logger.info(
-            f"Adding {unit_count} units of {reference} ({lib_id}) "
-            f"with {unit_spacing}mm spacing"
+            f"Adding {unit_count} units of {reference} ({lib_id}) " f"with {unit_spacing}mm spacing"
         )
 
         # Add each unit
@@ -1874,7 +1873,7 @@ class ComponentCollection(BaseCollection[Component]):
                 rotation=rotation,
                 footprint=footprint,
                 add_all_units=False,  # Prevent recursion
-                **properties
+                **properties,
             )
 
             components.append(comp)
