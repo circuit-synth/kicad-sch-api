@@ -21,6 +21,18 @@ The kicad-sch-api library cannot find KiCAD symbol libraries (`.kicad_sym` files
 
 ### Step 1: Find Your KiCAD Installation
 
+**✨ NEW: Automatic Library Finder**
+
+The easiest way to find your KiCAD libraries:
+
+```bash
+ksa-find-libraries
+```
+
+This command automatically searches your system and provides setup instructions.
+
+**Manual Search (if needed):**
+
 **macOS:**
 ```bash
 ls /Applications/KiCad*.app/Contents/SharedSupport/symbols/
