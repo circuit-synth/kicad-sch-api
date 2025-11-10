@@ -303,6 +303,7 @@ class Schematic:
             print(f"Units: {info.unit_count}")
         """
         from ..library.cache import get_symbol_cache
+
         return get_symbol_cache()
 
     @property

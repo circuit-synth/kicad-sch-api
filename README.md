@@ -103,6 +103,30 @@ In schematic space (inverted Y-axis):
 - **Higher Y values** = visually LOWER on screen (bottom)
 - **X-axis is normal** (increases to the right)
 
+### Optional: Standard Y-Axis Mode
+
+For users who prefer standard mathematical coordinates (higher Y = higher on screen), you can enable standard Y-axis mode:
+
+```python
+import kicad_sch_api as ksa
+
+# Enable standard Y-axis (higher Y = higher on screen)
+ksa.use_standard_y_axis(True)
+
+sch = ksa.create_schematic("My Circuit")
+
+# Now Y increases upward (intuitive for math/physics users and LLMs)
+sch.components.add('Device:R', 'R1', '10k', position=(50, 100))  # Top (high Y)
+sch.components.add('Device:R', 'R2', '10k', position=(50, 80))   # Middle
+sch.components.add('Device:R', 'R3', '10k', position=(50, 60))   # Bottom (low Y)
+```
+
+Benefits of standard Y-axis mode:
+- More intuitive for users from math/science/engineering backgrounds
+- Better for AI/LLM-assisted circuit generation
+- Natural top-to-bottom ordering with decreasing Y values
+- KiCAD file format remains unchanged (conversion is transparent)
+
 ### Grid Alignment
 
 **ALL positions MUST be grid-aligned:**
