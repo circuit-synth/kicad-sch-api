@@ -66,7 +66,7 @@ def copy_commands_with_prefix(
                 continue
 
             # Ensure it starts with markdown (# or text, not binary)
-            if '\x00' in content:
+            if "\x00" in content:
                 if verbose:
                     print(f"  ⚠ Skipping binary file: {source_file.name}")
                 continue

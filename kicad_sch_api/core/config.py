@@ -57,6 +57,7 @@ class PositioningSettings:
 
     use_grid_units: bool = False  # If True, all positions default to grid units
     grid_size: float = 1.27  # Default grid size in mm (50 mil KiCAD standard)
+    use_standard_y_axis: bool = False  # If True, use standard Y-axis (higher Y = higher on screen)
 
 
 @dataclass
@@ -233,3 +234,39 @@ class KiCADConfig:
 
 # Global configuration instance
 config = KiCADConfig()
+
+
+def convert_y_to_kicad(y: float) -> float:
+    """
+    Convert Y coordinate from API format to KiCAD internal format.
+
+    If use_standard_y_axis is True, flips Y coordinate (negates it).
+    Otherwise, returns Y unchanged.
+
+    Args:
+        y: Y coordinate in API format (standard or inverted depending on config)
+
+    Returns:
+        Y coordinate in KiCAD internal format (always inverted Y-axis)
+    """
+    if config.positioning.use_standard_y_axis:
+        return -y
+    return y
+
+
+def convert_y_from_kicad(y: float) -> float:
+    """
+    Convert Y coordinate from KiCAD internal format to API format.
+
+    If use_standard_y_axis is True, flips Y coordinate (negates it).
+    Otherwise, returns Y unchanged.
+
+    Args:
+        y: Y coordinate in KiCAD internal format (inverted Y-axis)
+
+    Returns:
+        Y coordinate in API format (standard or inverted depending on config)
+    """
+    if config.positioning.use_standard_y_axis:
+        return -y
+    return y
