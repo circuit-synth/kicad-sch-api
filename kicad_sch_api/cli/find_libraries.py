@@ -36,15 +36,12 @@ def fast_search_macos() -> List[Path]:
     try:
         # Search for .kicad_sym files using Spotlight
         result = subprocess.run(
-            ["mdfind", "-name", ".kicad_sym"],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["mdfind", "-name", ".kicad_sym"], capture_output=True, text=True, timeout=10
         )
 
         if result.returncode == 0:
-            for line in result.stdout.strip().split('\n'):
-                if line and line.endswith('.kicad_sym'):
+            for line in result.stdout.strip().split("\n"):
+                if line and line.endswith(".kicad_sym"):
                     # Get parent directory
                     path = Path(line).parent
                     results.add(path)
@@ -71,15 +68,12 @@ def fast_search_linux() -> List[Path]:
 
     try:
         result = subprocess.run(
-            ["locate", "*.kicad_sym"],
-            capture_output=True,
-            text=True,
-            timeout=10
+            ["locate", "*.kicad_sym"], capture_output=True, text=True, timeout=10
         )
 
         if result.returncode == 0:
-            for line in result.stdout.strip().split('\n'):
-                if line and line.endswith('.kicad_sym'):
+            for line in result.stdout.strip().split("\n"):
+                if line and line.endswith(".kicad_sym"):
                     path = Path(line).parent
                     results.add(path)
 
@@ -200,7 +194,7 @@ def filter_library_directories(
 
 
 def prioritize_official_installations(
-    directories: List[Tuple[Path, int]]
+    directories: List[Tuple[Path, int]],
 ) -> List[Tuple[Path, int, str]]:
     """
     Prioritize official KiCAD installations over custom library folders.
@@ -371,7 +365,9 @@ def main(argv: Optional[list] = None) -> int:
     print()
 
     if system in ["Darwin", "Linux"]:
-        shell = Path.home() / ".zshrc" if (Path.home() / ".zshrc").exists() else Path.home() / ".bashrc"
+        shell = (
+            Path.home() / ".zshrc" if (Path.home() / ".zshrc").exists() else Path.home() / ".bashrc"
+        )
         print(f"For permanent configuration, add to {shell}:")
         print(f"  echo '{env_cmd}' >> {shell}")
         print()
@@ -382,7 +378,9 @@ def main(argv: Optional[list] = None) -> int:
 
     # Verification
     print("Verify setup with:")
-    print("  python -c \"import kicad_sch_api as ksa; print(ksa.SymbolLibraryCache().discover_libraries(), 'libraries')\"")
+    print(
+        "  python -c \"import kicad_sch_api as ksa; print(ksa.SymbolLibraryCache().discover_libraries(), 'libraries')\""
+    )
     print()
 
     return 0
