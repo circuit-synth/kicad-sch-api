@@ -303,6 +303,7 @@ class Schematic:
             print(f"Units: {info.unit_count}")
         """
         from ..library.cache import get_symbol_cache
+
         return get_symbol_cache()
 
     @property
@@ -2063,6 +2064,234 @@ class Schematic:
         self.save()
 
         return export_dxf(self._file_path, **kwargs)
+
+    def find_and_replace(
+        self,
+        find: str,
+        replace: str,
+        scope: str = "labels",
+        regex: bool = False,
+        dry_run: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Find and replace text in schematic elements.
+
+        This method supports both literal string replacement and regex pattern
+        replacement across different scopes: labels, component references,
+        component properties, or all elements.
+
+        Args:
+            find: String or regex pattern to find
+            replace: Replacement string (can include backreferences for regex)
+            scope: Where to apply replacements:
+                - "labels": Only wire labels and net names
+                - "components": Only component references (e.g., R1, U2)
+                - "properties": Only component property values
+                - "all": All of the above
+            regex: If True, treat find as regex pattern
+            dry_run: If True, report matches without making changes
+
+        Returns:
+            Dictionary with replacement results:
+                - replaced_count: Number of replacements made
+                - scope: The scope used
+                - regex: Whether regex was used
+                - dry_run: Whether this was a dry run
+                - replacements: List of replacement details
+
+        Raises:
+            ValueError: If find string is empty, scope is invalid,
+                       regex pattern is invalid, or replacement would
+                       create invalid references
+
+        Example:
+            >>> # Simple literal replacement
+            >>> sch.find_and_replace("MOTOR_", "DC_MOTOR_", scope="labels")
+            >>> # Regex with capture groups
+            >>> sch.find_and_replace(r"MOTOR_(\\d)", r"DC_MOTOR_\\1", scope="labels", regex=True)
+        """
+        import re as regex_module
+
+        # Validate inputs
+        if not find:
+            raise ValueError("Find string cannot be empty")
+
+        valid_scopes = ["labels", "components", "properties", "all"]
+        if scope not in valid_scopes:
+            raise ValueError(f"Invalid scope '{scope}'. Must be one of: {valid_scopes}")
+
+        # Compile regex pattern if needed
+        pattern = None
+        if regex:
+            try:
+                pattern = regex_module.compile(find)
+            except regex_module.error as e:
+                raise ValueError(f"Invalid regex pattern: {e}")
+
+        # Track replacements
+        replacements = []
+        replaced_count = 0
+
+        # Helper function to perform replacement
+        def do_replace(text: str) -> str:
+            if regex:
+                return pattern.sub(replace, text)
+            else:
+                return text.replace(find, replace)
+
+        # Replace in labels
+        if scope in ["labels", "all"]:
+            for label in list(self._labels):
+                old_text = label.text
+                new_text = do_replace(old_text)
+
+                if new_text != old_text:
+                    # Validate new text is not empty
+                    if not new_text or not new_text.strip():
+                        raise ValueError(
+                            f"Replacement would result in empty label text: '{old_text}' -> '{new_text}'"
+                        )
+
+                    if not dry_run:
+                        label.text = new_text
+
+                    replacements.append(
+                        {
+                            "element_type": "label",
+                            "old_value": old_text,
+                            "new_value": new_text,
+                        }
+                    )
+                    replaced_count += 1
+
+        # Replace in component references
+        if scope in ["components", "all"]:
+            # Collect all references (both existing and new)
+            all_existing_refs = {comp.reference for comp in list(self._components)}
+            new_references = {}
+            components_to_update = []
+
+            for component in list(self._components):
+                old_ref = component.reference
+                new_ref = do_replace(old_ref)
+
+                if new_ref != old_ref:
+                    # Validate new reference format
+                    if not self._is_valid_component_reference(new_ref):
+                        raise ValueError(
+                            f"Invalid component reference: '{new_ref}'. "
+                            "References must start with a letter and contain only alphanumeric characters."
+                        )
+
+                    new_references[component.uuid] = (old_ref, new_ref)
+                    components_to_update.append((component, old_ref, new_ref))
+
+            # Check for duplicates within new references
+            new_refs_only = [ref for _, ref in new_references.values()]
+            if len(new_refs_only) != len(set(new_refs_only)):
+                raise ValueError("Replacement would create duplicate component references")
+
+            # Check for conflicts with existing references (excluding ones being renamed)
+            refs_being_changed = {old_ref for old_ref, _ in new_references.values()}
+            final_refs = (all_existing_refs - refs_being_changed) | set(new_refs_only)
+
+            # If final count doesn't match, we have duplicates
+            expected_count = len(all_existing_refs)
+            if len(final_refs) != expected_count:
+                raise ValueError("Replacement would create duplicate component references")
+
+            # Apply replacements
+            for component, old_ref, new_ref in components_to_update:
+                if not dry_run:
+                    component.reference = new_ref
+
+                replacements.append(
+                    {
+                        "element_type": "component_reference",
+                        "old_value": old_ref,
+                        "new_value": new_ref,
+                    }
+                )
+                replaced_count += 1
+
+        # Replace in component properties
+        if scope in ["properties", "all"]:
+            for component in list(self._components):
+                # Replace in value
+                old_value = component.value
+                new_value = do_replace(old_value)
+
+                if new_value != old_value:
+                    if not dry_run:
+                        component.value = new_value
+
+                    replacements.append(
+                        {
+                            "element_type": "component_value",
+                            "old_value": old_value,
+                            "new_value": new_value,
+                            "reference": component.reference,
+                        }
+                    )
+                    replaced_count += 1
+
+                # Replace in other properties
+                for prop_name, prop_value in component.properties.items():
+                    if isinstance(prop_value, str):
+                        old_prop = prop_value
+                        new_prop = do_replace(old_prop)
+
+                        if new_prop != old_prop:
+                            if not dry_run:
+                                component.set_property(prop_name, new_prop)
+
+                            replacements.append(
+                                {
+                                    "element_type": "component_property",
+                                    "property_name": prop_name,
+                                    "old_value": old_prop,
+                                    "new_value": new_prop,
+                                    "reference": component.reference,
+                                }
+                            )
+                            replaced_count += 1
+
+        logger.info(
+            f"Find and replace: {replaced_count} replacements made "
+            f"(scope={scope}, regex={regex}, dry_run={dry_run})"
+        )
+
+        return {
+            "replaced_count": replaced_count,
+            "scope": scope,
+            "regex": regex,
+            "dry_run": dry_run,
+            "replacements": replacements,
+        }
+
+    def _is_valid_component_reference(self, reference: str) -> bool:
+        """
+        Check if a component reference is valid.
+
+        Valid references must match KiCad's reference pattern:
+        - Start with letters (optionally prefixed with #)
+        - End with numbers
+        - No underscores or special characters
+
+        Args:
+            reference: Reference to validate
+
+        Returns:
+            True if valid, False otherwise
+        """
+        import re as regex_module
+
+        if not reference:
+            return False
+
+        # KiCad reference pattern: #PWR01, R1, U5, IC? etc.
+        valid_pattern = regex_module.compile(r"^(#[A-Z]+[0-9]+|[A-Z]+[0-9]*[A-Z]?|[A-Z]+\?)$")
+        return bool(valid_pattern.match(reference))
 
     def __str__(self) -> str:
         """String representation."""
