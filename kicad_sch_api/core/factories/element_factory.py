@@ -8,6 +8,7 @@ import uuid
 from typing import Any, Dict, List
 
 from ..types import (
+    BusEntry,
     HierarchicalLabelShape,
     Junction,
     Label,
@@ -143,6 +144,33 @@ class ElementFactory:
         )
 
     @staticmethod
+    def create_bus_entry(bus_entry_dict: Dict[str, Any]) -> BusEntry:
+        """
+        Create BusEntry object from dictionary.
+
+        Args:
+            bus_entry_dict: Dictionary containing bus entry data
+
+        Returns:
+            BusEntry object
+        """
+        position = bus_entry_dict.get("position", {"x": 0, "y": 0})
+        pos = point_from_dict_or_tuple(position)
+
+        # Get size (default to 2.54mm if not provided)
+        size_data = bus_entry_dict.get("size", {"x": 2.54, "y": 2.54})
+        size = point_from_dict_or_tuple(size_data)
+
+        return BusEntry(
+            uuid=bus_entry_dict.get("uuid", str(uuid.uuid4())),
+            position=pos,
+            size=size,
+            rotation=bus_entry_dict.get("rotation", 0),
+            stroke_width=bus_entry_dict.get("stroke_width", 0.0),
+            stroke_type=bus_entry_dict.get("stroke_type", "default"),
+        )
+
+    @staticmethod
     def create_no_connect(no_connect_dict: Dict[str, Any]) -> NoConnect:
         """
         Create NoConnect object from dictionary.
@@ -263,6 +291,25 @@ class ElementFactory:
             if isinstance(no_connect_dict, dict):
                 no_connects.append(ElementFactory.create_no_connect(no_connect_dict))
         return no_connects
+
+    @staticmethod
+    def create_bus_entries_from_list(bus_entry_data: List[Any]) -> List[BusEntry]:
+        """
+        Create list of BusEntry objects from list of dictionaries.
+
+        Args:
+            bus_entry_data: List of bus entry dictionaries
+
+        Returns:
+            List of BusEntry objects
+        """
+        bus_entries = []
+        for bus_entry_dict in bus_entry_data:
+            if isinstance(bus_entry_dict, dict):
+                bus_entries.append(ElementFactory.create_bus_entry(bus_entry_dict))
+            elif isinstance(bus_entry_dict, BusEntry):
+                bus_entries.append(bus_entry_dict)
+        return bus_entries
 
     @staticmethod
     def create_nets_from_list(net_data: List[Any]) -> List[Net]:

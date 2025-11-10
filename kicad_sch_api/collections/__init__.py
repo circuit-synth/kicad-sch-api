@@ -16,6 +16,7 @@ from .base import (
     PropertyDict,
     ValidationLevel,
 )
+from .bus_entries import BusEntryCollection
 from .components import Component, ComponentCollection
 from .junctions import JunctionCollection
 from .labels import LabelCollection, LabelElement
@@ -27,6 +28,7 @@ __all__ = [
     "IndexRegistry",
     "PropertyDict",
     "ValidationLevel",
+    "BusEntryCollection",
     "Component",
     "ComponentCollection",
     "JunctionCollection",

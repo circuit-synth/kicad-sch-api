@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import sexpdata
 
 from ..collections import (
+    BusEntryCollection,
     ComponentCollection,
     JunctionCollection,
     LabelCollection,
@@ -41,6 +42,7 @@ from .no_connects import NoConnectCollection
 from .parser import SExpressionParser
 from .texts import TextCollection
 from .types import (
+    BusEntry,
     HierarchicalLabelShape,
     Junction,
     Label,
@@ -146,6 +148,11 @@ class Schematic:
         no_connect_data = self._data.get("no_connects", [])
         no_connects = ElementFactory.create_no_connects_from_list(no_connect_data)
         self._no_connects = NoConnectCollection(no_connects)
+
+        # Initialize bus entry collection
+        bus_entry_data = self._data.get("bus_entries", [])
+        bus_entries = ElementFactory.create_bus_entries_from_list(bus_entry_data)
+        self._bus_entries = BusEntryCollection(bus_entries)
 
         # Initialize net collection
         net_data = self._data.get("nets", [])
@@ -368,6 +375,11 @@ class Schematic:
     def no_connects(self) -> NoConnectCollection:
         """Collection of all no-connect elements in the schematic."""
         return self._no_connects
+
+    @property
+    def bus_entries(self) -> BusEntryCollection:
+        """Collection of all bus entry elements in the schematic."""
+        return self._bus_entries
 
     @property
     def nets(self) -> NetCollection:
