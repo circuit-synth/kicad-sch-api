@@ -23,7 +23,7 @@ from .exceptions import (
 from .formatter import ExactFormatter
 from .parser import SExpressionParser
 from .schematic import Schematic, create_schematic, load_schematic
-from .types import Junction, Label, Net, PinInfo, Point, SchematicSymbol, Wire
+from .types import BusEntry, Junction, Label, Net, PinInfo, Point, SchematicSymbol, Wire
 
 __all__ = [
     "Schematic",
@@ -32,6 +32,7 @@ __all__ = [
     "Point",
     "SchematicSymbol",
     "Wire",
+    "BusEntry",
     "Junction",
     "Label",
     "Net",

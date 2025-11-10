@@ -547,6 +547,31 @@ class Wire:
 
 
 @dataclass
+class BusEntry:
+    """Bus entry point connecting individual wires to buses."""
+
+    uuid: str
+    position: Point
+    size: Point = None  # Default size set in __post_init__
+    rotation: int = 0  # 0, 90, 180, or 270 degrees
+    stroke_width: float = 0.0
+    stroke_type: str = "default"
+
+    def __post_init__(self) -> None:
+        """Initialize defaults and validate rotation."""
+        if not self.uuid:
+            self.uuid = str(uuid4())
+
+        # Set default size (2.54mm = 100 mil = 0.1 inch)
+        if self.size is None:
+            self.size = Point(2.54, 2.54)
+
+        # Validate rotation
+        if self.rotation not in [0, 90, 180, 270]:
+            raise ValueError(f"Bus entry rotation must be 0, 90, 180, or 270, got {self.rotation}")
+
+
+@dataclass
 class Junction:
     """Junction point where multiple wires meet."""
 
