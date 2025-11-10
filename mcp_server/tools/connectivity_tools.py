@@ -438,9 +438,7 @@ async def connect_components(
 
         # Create orthogonal routing
         routing_result = create_orthogonal_routing(
-            from_pin_obj.position,
-            to_pin_obj.position,
-            corner_direction=direction
+            from_pin_obj.position, to_pin_obj.position, corner_direction=direction
         )
 
         logger.info(
@@ -494,33 +492,31 @@ async def connect_components(
             "from": {
                 "component": from_component,
                 "pin": from_pin,
-                "position": {"x": from_pin_obj.position.x, "y": from_pin_obj.position.y}
+                "position": {"x": from_pin_obj.position.x, "y": from_pin_obj.position.y},
             },
             "to": {
                 "component": to_component,
                 "pin": to_pin,
-                "position": {"x": to_pin_obj.position.x, "y": to_pin_obj.position.y}
+                "position": {"x": to_pin_obj.position.x, "y": to_pin_obj.position.y},
             },
             "routing": {
                 "type": "direct" if routing_result.is_direct else "l_shaped",
                 "segments": len(routing_result.segments),
-                "corner": {
-                    "x": routing_result.corner.x,
-                    "y": routing_result.corner.y
-                } if routing_result.corner else None,
+                "corner": (
+                    {"x": routing_result.corner.x, "y": routing_result.corner.y}
+                    if routing_result.corner
+                    else None
+                ),
             },
             "segments": [
-                {
-                    "start": {"x": s.x, "y": s.y},
-                    "end": {"x": e.x, "y": e.y}
-                }
+                {"start": {"x": s.x, "y": s.y}, "end": {"x": e.x, "y": e.y}}
                 for s, e in routing_result.segments
             ],
             "wire_uuids": wire_uuids,
             "junction_uuid": junction_uuid,
             "label_uuid": label_uuid,
             "message": f"Connected {from_component}:{from_pin} to {to_component}:{to_pin} "
-                      f"with {len(wire_uuids)} wire segment(s)"
+            f"with {len(wire_uuids)} wire segment(s)",
         }
 
     except Exception as e:
@@ -747,7 +743,8 @@ async def add_bus_label(
 
         # Validate bus notation (must contain [...])
         import re
-        if not re.search(r'\[.+\]', text):
+
+        if not re.search(r"\[.+\]", text):
             logger.warning(f"[MCP] Invalid bus notation: {text}")
             return {
                 "success": False,

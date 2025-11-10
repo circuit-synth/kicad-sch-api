@@ -133,7 +133,9 @@ class BusEntryCollection(BaseCollection[BusEntry]):
         # Add to collection using base class method
         super().add(entry)
 
-        logger.debug(f"Added bus entry at ({position.x}, {position.y}), rotation={rotation}, UUID={uuid}")
+        logger.debug(
+            f"Added bus entry at ({position.x}, {position.y}), rotation={rotation}, UUID={uuid}"
+        )
         return uuid
 
     def get_by_position(
