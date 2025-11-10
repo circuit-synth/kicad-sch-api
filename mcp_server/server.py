@@ -20,6 +20,9 @@ from mcp_server.tools.component_tools import (
     update_component,
 )
 from mcp_server.tools.connectivity_tools import (
+    add_bus_entry,
+    add_bus_label,
+    add_bus_wire,
     add_junction,
     add_label,
     add_wire,
@@ -314,6 +317,11 @@ mcp.tool()(add_wire)
 mcp.tool()(add_label)
 mcp.tool()(add_junction)
 mcp.tool()(connect_components)
+
+# Register bus tools
+mcp.tool()(add_bus_wire)
+mcp.tool()(add_bus_entry)
+mcp.tool()(add_bus_label)
 
 
 # ========== Register Consolidated Tools ==========

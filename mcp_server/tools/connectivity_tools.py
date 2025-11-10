@@ -530,3 +530,269 @@ async def connect_components(
             "error": "INTERNAL_ERROR",
             "message": f"Unexpected error connecting components: {str(e)}",
         }
+
+
+async def add_bus_wire(
+    start: Tuple[float, float],
+    end: Tuple[float, float],
+    ctx: Optional[Context] = None,
+) -> dict:
+    """
+    Add a bus wire between two points.
+
+    Bus wires represent multi-bit signal connections (e.g., data buses, address buses).
+    They are visually thicker than regular wires and use different styling in KiCAD.
+
+    Args:
+        start: Start point as (x, y) tuple in mm
+        end: End point as (x, y) tuple in mm
+        ctx: MCP context for progress reporting (optional)
+
+    Returns:
+        Dictionary with success status and bus wire information
+
+    Examples:
+        >>> # Create 8-bit data bus
+        >>> result = await add_bus_wire(
+        ...     start=(50.0, 50.0),
+        ...     end=(100.0, 50.0)
+        ... )
+    """
+    logger.info(f"[MCP] add_bus_wire called: start={start}, end={end}")
+
+    if ctx:
+        await ctx.report_progress(0, 100, "Adding bus wire")
+
+    # Check if schematic is loaded
+    schematic = get_current_schematic()
+    if schematic is None:
+        logger.error("[MCP] No schematic loaded")
+        return {
+            "success": False,
+            "error": "NO_SCHEMATIC_LOADED",
+            "message": "No schematic is currently loaded",
+        }
+
+    try:
+        if ctx:
+            await ctx.report_progress(50, 100, "Creating bus wire connection")
+
+        # Add bus wire using library API
+        wire_uuid = schematic.wires.add(
+            start=start,
+            end=end,
+            wire_type=WireType.BUS,  # This makes it a bus wire
+        )
+
+        if ctx:
+            await ctx.report_progress(100, 100, "Complete: bus wire added")
+
+        logger.info(f"[MCP] Successfully added bus wire {wire_uuid}")
+        return {
+            "success": True,
+            "uuid": wire_uuid,
+            "start": {"x": start[0], "y": start[1]},
+            "end": {"x": end[0], "y": end[1]},
+            "message": f"Added bus wire from ({start[0]}, {start[1]}) to ({end[0]}, {end[1]})",
+        }
+
+    except Exception as e:
+        logger.error(f"[MCP] Unexpected error: {e}", exc_info=True)
+        return {
+            "success": False,
+            "error": "INTERNAL_ERROR",
+            "message": f"Unexpected error adding bus wire: {str(e)}",
+        }
+
+
+async def add_bus_entry(
+    position: Tuple[float, float],
+    rotation: int = 0,
+    ctx: Optional[Context] = None,
+) -> dict:
+    """
+    Add a bus entry to the schematic.
+
+    Bus entries connect individual wires to bus wires. They are typically placed
+    at a 45-degree angle and show where a single signal branches off from a
+    multi-bit bus.
+
+    Args:
+        position: Entry point as (x, y) tuple in mm
+        rotation: Rotation angle in degrees (0, 90, 180, 270), defaults to 0
+        ctx: MCP context for progress reporting (optional)
+
+    Returns:
+        Dictionary with success status and bus entry information
+
+    Examples:
+        >>> # Add bus entry at position with 270 degree rotation
+        >>> result = await add_bus_entry(
+        ...     position=(60.0, 50.0),
+        ...     rotation=270
+        ... )
+    """
+    logger.info(f"[MCP] add_bus_entry called: position={position}, rotation={rotation}")
+
+    if ctx:
+        await ctx.report_progress(0, 100, "Adding bus entry")
+
+    # Check if schematic is loaded
+    schematic = get_current_schematic()
+    if schematic is None:
+        logger.error("[MCP] No schematic loaded")
+        return {
+            "success": False,
+            "error": "NO_SCHEMATIC_LOADED",
+            "message": "No schematic is currently loaded",
+        }
+
+    try:
+        if ctx:
+            await ctx.report_progress(25, 100, "Validating bus entry parameters")
+
+        # Validate rotation (must be 0, 90, 180, or 270)
+        if rotation not in [0, 90, 180, 270]:
+            logger.warning(f"[MCP] Invalid rotation {rotation}")
+            return {
+                "success": False,
+                "error": "VALIDATION_ERROR",
+                "message": f"Rotation must be 0, 90, 180, or 270 degrees, got {rotation}",
+            }
+
+        if ctx:
+            await ctx.report_progress(50, 100, "Creating bus entry")
+
+        # Add bus entry using library API
+        entry_uuid = schematic.bus_entries.add(
+            position=position,
+            rotation=rotation,
+        )
+
+        if ctx:
+            await ctx.report_progress(100, 100, "Complete: bus entry added")
+
+        logger.info(f"[MCP] Successfully added bus entry {entry_uuid}")
+        return {
+            "success": True,
+            "uuid": entry_uuid,
+            "position": {"x": position[0], "y": position[1]},
+            "rotation": rotation,
+            "message": f"Added bus entry at ({position[0]}, {position[1]}) with rotation {rotation}",
+        }
+
+    except Exception as e:
+        logger.error(f"[MCP] Unexpected error: {e}", exc_info=True)
+        return {
+            "success": False,
+            "error": "INTERNAL_ERROR",
+            "message": f"Unexpected error adding bus entry: {str(e)}",
+        }
+
+
+async def add_bus_label(
+    text: str,
+    position: Tuple[float, float],
+    rotation: float = 0.0,
+    size: float = 1.27,
+    ctx: Optional[Context] = None,
+) -> dict:
+    """
+    Add a bus label to the schematic.
+
+    Bus labels identify multi-bit signals using range notation.
+    Examples: "DATA[0..7]", "ADDR[0..15]", "RGB[R,G,B]"
+
+    Args:
+        text: Label text with bus notation (e.g., "DATA[0..7]")
+        position: Label position as (x, y) tuple in mm
+        rotation: Label rotation in degrees (0, 90, 180, 270), defaults to 0
+        size: Text size in mm, defaults to 1.27 (KiCAD standard)
+        ctx: MCP context for progress reporting (optional)
+
+    Returns:
+        Dictionary with success status and bus label information
+
+    Examples:
+        >>> # Add 8-bit data bus label
+        >>> result = await add_bus_label(
+        ...     text="DATA[0..7]",
+        ...     position=(75.0, 48.0)
+        ... )
+
+        >>> # Add RGB bus label
+        >>> result = await add_bus_label(
+        ...     text="RGB[R,G,B]",
+        ...     position=(100.0, 50.0)
+        ... )
+    """
+    logger.info(f"[MCP] add_bus_label called: text={text}, position={position}")
+
+    if ctx:
+        await ctx.report_progress(0, 100, f"Adding bus label {text}")
+
+    # Check if schematic is loaded
+    schematic = get_current_schematic()
+    if schematic is None:
+        logger.error("[MCP] No schematic loaded")
+        return {
+            "success": False,
+            "error": "NO_SCHEMATIC_LOADED",
+            "message": "No schematic is currently loaded",
+        }
+
+    try:
+        if ctx:
+            await ctx.report_progress(25, 100, "Validating bus label parameters")
+
+        # Validate bus notation (must contain [...])
+        import re
+        if not re.search(r'\[.+\]', text):
+            logger.warning(f"[MCP] Invalid bus notation: {text}")
+            return {
+                "success": False,
+                "error": "VALIDATION_ERROR",
+                "message": f"Bus label must contain range notation [...], got: {text}",
+            }
+
+        # Validate rotation (KiCAD supports 0, 90, 180, 270)
+        if rotation not in [0.0, 90.0, 180.0, 270.0]:
+            logger.warning(f"[MCP] Invalid rotation {rotation}")
+            return {
+                "success": False,
+                "error": "VALIDATION_ERROR",
+                "message": f"Rotation must be 0, 90, 180, or 270 degrees, got {rotation}",
+            }
+
+        if ctx:
+            await ctx.report_progress(50, 100, "Creating bus label")
+
+        # Add bus label using library API (same as regular label)
+        label = schematic.labels.add(
+            text=text,
+            position=position,
+            rotation=rotation,
+            size=size,
+        )
+
+        if ctx:
+            await ctx.report_progress(100, 100, f"Complete: bus label {text} added")
+
+        logger.info(f"[MCP] Successfully added bus label {text}")
+        return {
+            "success": True,
+            "uuid": str(label.uuid),
+            "text": text,
+            "position": {"x": position[0], "y": position[1]},
+            "rotation": rotation,
+            "size": size,
+            "message": f"Added bus label '{text}' at ({position[0]}, {position[1]})",
+        }
+
+    except Exception as e:
+        logger.error(f"[MCP] Unexpected error: {e}", exc_info=True)
+        return {
+            "success": False,
+            "error": "INTERNAL_ERROR",
+            "message": f"Unexpected error adding bus label: {str(e)}",
+        }
