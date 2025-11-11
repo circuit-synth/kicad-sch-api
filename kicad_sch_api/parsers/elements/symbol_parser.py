@@ -42,6 +42,7 @@ class SymbolParser(BaseElementParser):
                 "in_bom": True,
                 "on_board": True,
                 "fields_autoplaced": True,
+                "unit": 1,  # Multi-unit component support: unit number (default 1)
                 "instances": [],
             }
 
@@ -62,6 +63,9 @@ class SymbolParser(BaseElementParser):
                             symbol_data["rotation"] = float(sub_item[3])
                 elif element_type == "uuid":
                     symbol_data["uuid"] = sub_item[1] if len(sub_item) > 1 else None
+                elif element_type == "unit":
+                    # Parse unit number for multi-unit components
+                    symbol_data["unit"] = int(sub_item[1]) if len(sub_item) > 1 else 1
                 elif element_type == "property":
                     prop_data = self._parse_property(sub_item)
                     if prop_data:

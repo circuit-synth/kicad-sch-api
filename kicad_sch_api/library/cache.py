@@ -485,10 +485,11 @@ class SymbolLibraryCache:
                 name=symbol_name,
                 library=library_name,
                 reference_prefix=symbol_data.get("reference_prefix", "U"),
-                description=symbol_data.get("description", ""),
+                description=symbol_data.get("Description", symbol_data.get("description", "")),
                 keywords=symbol_data.get("keywords", ""),
-                datasheet=symbol_data.get("datasheet", "~"),
+                datasheet=symbol_data.get("Datasheet", symbol_data.get("datasheet", "~")),
                 pins=symbol_data.get("pins", []),
+                units=symbol_data.get("units", 1),  # Use extracted unit count
                 extends=symbol_data.get("extends"),  # Store extends information
                 load_time=time.time() - start_time,
             )
@@ -580,6 +581,10 @@ class SymbolLibraryCache:
             # Extract pins (this is simplified - pins are in symbol sub-definitions)
             # For now, we'll extract pins from the actual symbol structure
             result["pins"] = self._extract_pins_from_symbol(symbol_data)
+
+            # Extract unit count from symbol structure
+            result["units"] = self._count_symbol_units(symbol_data)
+            logger.debug(f"🔧 PARSE: Symbol has {result['units']} units")
 
             return result
 
@@ -718,6 +723,46 @@ class SymbolLibraryCache:
                     pins.extend(self._extract_pins_from_unit(item))
 
         return pins
+
+    def _count_symbol_units(self, symbol_data: List) -> int:
+        """
+        Count the number of units in a symbol.
+
+        Multi-unit symbols have sub-symbol definitions with names like "Symbol_1_1", "Symbol_1_2", etc.
+        The unit number is the last component before the final "_1" (which is the drawing style).
+
+        Args:
+            symbol_data: Parsed symbol S-expression data
+
+        Returns:
+            Number of units (minimum 1)
+        """
+        unit_numbers = set()
+
+        # Look for symbol sub-definitions
+        for item in symbol_data[1:]:
+            if isinstance(item, list) and len(item) >= 2:
+                if item[0] == sexpdata.Symbol("symbol"):
+                    # Symbol name format: "LibraryName:SymbolName_unit_style"
+                    # Example: "TL072_1_1", "TL072_2_1", "TL072_3_1"
+                    symbol_name = str(item[1]).strip('"')
+
+                    # Extract unit number from symbol name
+                    # Format: Name_UnitNum_StyleNum
+                    parts = symbol_name.split("_")
+                    if len(parts) >= 2:
+                        try:
+                            # The second-to-last part is the unit number
+                            unit_num = int(parts[-2])
+                            unit_numbers.add(unit_num)
+                            logger.debug(f"🔧 COUNT_UNITS: Found unit {unit_num} in {symbol_name}")
+                        except ValueError:
+                            # Not a number, skip
+                            pass
+
+        unit_count = len(unit_numbers) if unit_numbers else 1
+        logger.debug(f"🔧 COUNT_UNITS: Total units found: {unit_count}")
+        return unit_count
 
     def _extract_pins_from_unit(self, unit_data: List) -> List[SchematicPin]:
         """Extract pins from a symbol unit definition."""

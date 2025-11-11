@@ -88,24 +88,33 @@ class ValidationManager(BaseManager):
 
         references = []
         reference_positions = {}
+        reference_unit_pairs = []  # Track (reference, unit) pairs
 
-        # Collect all component references
+        # Collect all component references and units
         for component in self._components:
             ref = component.reference
+            unit = component._data.unit if hasattr(component._data, 'unit') else 1
             references.append(ref)
+            reference_unit_pairs.append((ref, unit))
             reference_positions[ref] = component.position
 
-        # Check for duplicate references
-        duplicates = set([ref for ref in references if references.count(ref) > 1])
-        for duplicate_ref in duplicates:
-            issues.append(
-                ValidationIssue(
-                    category="component_references",
-                    message=f"Duplicate component reference: {duplicate_ref}",
-                    level="error",
-                    context={"reference": duplicate_ref},
+        # Check for duplicate (reference, unit) pairs
+        # Multiple components can have the same reference if they have different unit numbers
+        # (this is how multi-unit components like op-amps work in KiCAD)
+        seen_pairs = {}
+        for ref, unit in reference_unit_pairs:
+            pair_key = (ref, unit)
+            if pair_key in seen_pairs:
+                issues.append(
+                    ValidationIssue(
+                        category="component_references",
+                        message=f"Duplicate component reference and unit: {ref} (unit {unit})",
+                        level="error",
+                        context={"reference": ref, "unit": unit},
+                    )
                 )
-            )
+            else:
+                seen_pairs[pair_key] = True
 
         # Check reference format
         for ref in set(references):

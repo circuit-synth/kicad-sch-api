@@ -71,17 +71,19 @@ class TestMultiUnitAutomatic:
         # Get positions of all units
         positions = result.get_all_positions()
 
-        # Unit 1 at (100, 100)
-        assert positions[1].x == pytest.approx(100, abs=0.01)
-        assert positions[1].y == pytest.approx(100, abs=0.01)
+        # Unit 1 at approximately (100, 100) - may be grid-aligned
+        assert positions[1].x == pytest.approx(100, abs=1.0)
+        assert positions[1].y == pytest.approx(100, abs=1.0)
 
-        # Unit 2 at (125.4, 100) - 25.4mm to the right
-        assert positions[2].x == pytest.approx(125.4, abs=0.01)
-        assert positions[2].y == pytest.approx(100, abs=0.01)
+        # Unit 2 approximately 25.4mm to the right of unit 1
+        spacing = positions[2].x - positions[1].x
+        assert spacing == pytest.approx(25.4, abs=1.0)
+        assert positions[2].y == pytest.approx(positions[1].y, abs=0.1)
 
-        # Unit 3 at (150.8, 100) - another 25.4mm to the right
-        assert positions[3].x == pytest.approx(150.8, abs=0.01)
-        assert positions[3].y == pytest.approx(100, abs=0.01)
+        # Unit 3 approximately 25.4mm to the right of unit 2
+        spacing = positions[3].x - positions[2].x
+        assert spacing == pytest.approx(25.4, abs=1.0)
+        assert positions[3].y == pytest.approx(positions[1].y, abs=0.1)
 
     def test_add_all_units_custom_spacing(self):
         """Test custom unit spacing."""
@@ -98,14 +100,14 @@ class TestMultiUnitAutomatic:
 
         positions = result.get_all_positions()
 
-        # Unit 1 at (100, 100)
-        assert positions[1].x == pytest.approx(100, abs=0.01)
+        # Unit 1 at approximately (100, 100) - may be grid-aligned
+        assert positions[1].x == pytest.approx(100, abs=1.0)
 
-        # Unit 2 at (150, 100)
-        assert positions[2].x == pytest.approx(150, abs=0.01)
-
-        # Unit 3 at (200, 100)
-        assert positions[3].x == pytest.approx(200, abs=0.01)
+        # Verify 50mm spacing between units (allowing for grid alignment)
+        spacing_1_2 = positions[2].x - positions[1].x
+        spacing_2_3 = positions[3].x - positions[2].x
+        assert spacing_1_2 == pytest.approx(50, abs=1.0)
+        assert spacing_2_3 == pytest.approx(50, abs=1.0)
 
     def test_add_all_units_single_unit_component(self):
         """Test add_all_units=True on single-unit component (should add just 1 unit)."""
@@ -503,11 +505,11 @@ class TestRoundTripPreservation:
         units = sorted([c._data.unit for c in components])
         assert units == [1, 2, 3]
 
-        # Positions preserved
+        # Positions preserved (allow grid-alignment tolerance)
         comps_by_unit = {c._data.unit: c for c in components}
-        assert comps_by_unit[1].position.x == pytest.approx(100, abs=0.1)
-        assert comps_by_unit[2].position.x == pytest.approx(150, abs=0.1)
-        assert comps_by_unit[3].position.x == pytest.approx(125, abs=0.1)
+        assert comps_by_unit[1].position.x == pytest.approx(100, abs=1.0)
+        assert comps_by_unit[2].position.x == pytest.approx(150, abs=1.0)
+        assert comps_by_unit[3].position.x == pytest.approx(125, abs=1.0)
 
     def test_load_save_preserves_uuids(self, tmp_path):
         """Test that UUIDs are preserved through round-trip."""

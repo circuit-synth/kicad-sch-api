@@ -287,25 +287,32 @@ class SchematicValidator:
             )
 
     def _validate_unique_references(self, components: List[Dict[str, Any]]):
-        """Validate that all component references are unique."""
-        references = []
+        """
+        Validate that all (reference, unit) pairs are unique.
+
+        Multi-unit components (like op-amps) can share the same reference
+        as long as they have different unit numbers.
+        """
+        reference_unit_pairs = []
         duplicates = set()
 
         for component in components:
             ref = component.get("reference")
+            unit = component.get("unit", 1)  # Default to unit 1 if not specified
             if ref:
-                if ref in references:
-                    duplicates.add(ref)
-                references.append(ref)
+                pair = (ref, unit)
+                if pair in reference_unit_pairs:
+                    duplicates.add(pair)
+                reference_unit_pairs.append(pair)
 
-        for ref in duplicates:
+        for ref, unit in duplicates:
             self.issues.append(
                 ValidationIssue(
                     category="reference",
-                    message=f"Duplicate component reference: {ref}",
+                    message=f"Duplicate component reference and unit: {ref} (unit {unit})",
                     level=ValidationLevel.ERROR,
-                    context={"reference": ref},
-                    suggestion="Each component must have a unique reference",
+                    context={"reference": ref, "unit": unit},
+                    suggestion="Each (reference, unit) pair must be unique. Multi-unit components should have the same reference but different unit numbers.",
                 )
             )
 
