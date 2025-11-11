@@ -37,11 +37,11 @@ class TestPropertyPreservationReference:
         assert r1.footprint == "Resistor_SMD:R_0603_1608Metric"
 
         # Properties dict should contain all properties
-        assert r1.properties["Datasheet"] == "~"
-        assert r1.properties["Description"] == ""
-        assert r1.properties["MPN"] == "C0603FR-0710KL"
-        assert r1.properties["Manufacturer"] == "Yageo"
-        assert r1.properties["Tolearnce"] == "1%"  # Typo from reference
+        assert r1.properties["Datasheet"]["value"] == "~"
+        assert r1.properties["Description"]["value"] == ""
+        assert r1.properties["MPN"]["value"] == "C0603FR-0710KL"
+        assert r1.properties["Manufacturer"]["value"] == "Yageo"
+        assert r1.properties["Tolearnce"]["value"] == "1%"  # Typo from reference
 
     def test_reference_hidden_properties_set(self):
         """Hidden properties should be correctly identified."""
@@ -94,9 +94,9 @@ class TestPropertyPreservationReference:
         assert r1.reference == "R1"
         assert r1.value == "10k"
         assert r1.footprint == "Resistor_SMD:R_0603_1608Metric"
-        assert r1.properties["MPN"] == "C0603FR-0710KL"
-        assert r1.properties["Manufacturer"] == "Yageo"
-        assert r1.properties["Tolearnce"] == "1%"
+        assert r1.properties["MPN"]["value"] == "C0603FR-0710KL"
+        assert r1.properties["Manufacturer"]["value"] == "Yageo"
+        assert r1.properties["Tolearnce"]["value"] == "1%"
 
         # Visibility should match
         assert "MPN" in r1.hidden_properties
@@ -150,7 +150,7 @@ class TestPropertyPreservationReference:
         # Verify structure matches
         assert r1.reference == "R1"
         assert r1.value == "10k"
-        assert r1.properties["MPN"] == "C0603FR-0710KL"
+        assert r1.properties["MPN"]["value"] == "C0603FR-0710KL"
 
         # Verify visibility matches
         assert "MPN" in r1.hidden_properties
