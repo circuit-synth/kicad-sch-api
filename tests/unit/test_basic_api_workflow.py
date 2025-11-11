@@ -34,7 +34,7 @@ class TestBasicAPIWorkflow:
             reference="R1",
             value="10k",
             position=(100.0, 100.0),
-            footprint="Resistor_SMD:R_0603_1608Metric"
+            footprint="Resistor_SMD:R_0603_1608Metric",
         )
 
         assert resistor is not None
@@ -51,17 +51,11 @@ class TestBasicAPIWorkflow:
         sch = ksa.create_schematic("My Circuit")
 
         r1 = sch.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0)
+            lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0)
         )
 
         c1 = sch.components.add(
-            lib_id="Device:C",
-            reference="C1",
-            value="100nF",
-            position=(150.0, 100.0)
+            lib_id="Device:C", reference="C1", value="100nF", position=(150.0, 100.0)
         )
 
         components = list(sch.components)
@@ -101,15 +95,12 @@ class TestBasicAPIWorkflow:
             reference="R1",
             value="10k",
             position=(100.0, 100.0),
-            footprint="Resistor_SMD:R_0603_1608Metric"
+            footprint="Resistor_SMD:R_0603_1608Metric",
         )
 
         # Add capacitor component
         capacitor = sch.components.add(
-            lib_id="Device:C",
-            reference="C1",
-            value="100nF",
-            position=(150.0, 100.0)
+            lib_id="Device:C", reference="C1", value="100nF", position=(150.0, 100.0)
         )
 
         # Add wire between points
@@ -136,18 +127,10 @@ class TestBasicAPIWorkflow:
         # Create and populate schematic
         sch1 = ksa.create_schematic("My Circuit")
 
-        sch1.components.add(
-            lib_id="Device:R",
-            reference="R1",
-            value="10k",
-            position=(100.0, 100.0)
-        )
+        sch1.components.add(lib_id="Device:R", reference="R1", value="10k", position=(100.0, 100.0))
 
         sch1.components.add(
-            lib_id="Device:C",
-            reference="C1",
-            value="100nF",
-            position=(150.0, 100.0)
+            lib_id="Device:C", reference="C1", value="100nF", position=(150.0, 100.0)
         )
 
         sch1.wires.add(start=(100, 110), end=(150, 110))
@@ -180,19 +163,16 @@ class TestBasicAPIWorkflow:
     def test_api_usage_from_documentation(self):
         """Test the exact API usage pattern from documentation."""
         # This is the workflow from CLAUDE.md examples
-        sch = ksa.create_schematic('My Circuit')
+        sch = ksa.create_schematic("My Circuit")
 
         # Add component with all documented parameters
         resistor = sch.components.add(
-            lib_id='Device:R',
-            reference='R1',
-            value='10k',
-            position=(100, 100)
+            lib_id="Device:R", reference="R1", value="10k", position=(100, 100)
         )
 
         # Verify basic properties
-        assert resistor.reference == 'R1'
-        assert resistor.value == '10k'
+        assert resistor.reference == "R1"
+        assert resistor.value == "10k"
 
         # Add wires
         sch.wires.add(start=(100, 110), end=(150, 110))
@@ -213,10 +193,7 @@ class TestComponentCreationVariants:
         """Test component creation with only required parameters."""
         sch = ksa.create_schematic("Test")
 
-        comp = sch.components.add(
-            lib_id="Device:R",
-            value="10k"
-        )
+        comp = sch.components.add(lib_id="Device:R", value="10k")
 
         assert comp is not None
         assert comp.value == "10k"
@@ -226,11 +203,7 @@ class TestComponentCreationVariants:
         """Test that components can be created without explicit position."""
         sch = ksa.create_schematic("Test")
 
-        comp = sch.components.add(
-            lib_id="Device:C",
-            reference="C1",
-            value="100nF"
-        )
+        comp = sch.components.add(lib_id="Device:C", reference="C1", value="100nF")
 
         # Should have some position assigned
         assert comp.position is not None
@@ -241,10 +214,7 @@ class TestComponentCreationVariants:
         """Test that component references are auto-generated if not provided."""
         sch = ksa.create_schematic("Test")
 
-        comp = sch.components.add(
-            lib_id="Device:R",
-            value="10k"
-        )
+        comp = sch.components.add(lib_id="Device:R", value="10k")
 
         # Should have auto-generated reference
         assert comp.reference is not None

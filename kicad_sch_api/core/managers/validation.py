@@ -93,7 +93,7 @@ class ValidationManager(BaseManager):
         # Collect all component references and units
         for component in self._components:
             ref = component.reference
-            unit = component._data.unit if hasattr(component._data, 'unit') else 1
+            unit = component._data.unit if hasattr(component._data, "unit") else 1
             references.append(ref)
             reference_unit_pairs.append((ref, unit))
             reference_positions[ref] = component.position
