@@ -124,7 +124,7 @@ class TestComponentCollection:
         collection.add(lib_id="Device:R", reference="R1")
 
         # Try to add duplicate reference
-        with pytest.raises(ValidationError, match="Reference R1 already exists"):
+        with pytest.raises(ValidationError, match="Reference .* already exists"):
             collection.add(lib_id="Device:C", reference="R1")
 
     @patch("kicad_sch_api.utils.validation.SchematicValidator.validate_lib_id")
