@@ -440,6 +440,8 @@ uv run pytest -m "performance" -v # Large schematic performance
 uv run pytest -m "validation" -v  # Error handling and validation
 ```
 
+**Key Lesson (Issue #171)**: Test abstraction boundaries - if Component A returns data that Component B consumes, test that B handles A's output correctly, not just that A produces correct output (e.g., IndexRegistry returns lists for non-unique indexes, ComponentCollection must handle those lists).
+
 ### New Feature Testing Pattern
 **Standard workflow for implementing new features with exact KiCAD compatibility:**
 
