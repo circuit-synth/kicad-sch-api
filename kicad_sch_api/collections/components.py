@@ -1056,7 +1056,15 @@ class ComponentCollection(BaseCollection[Component]):
         if ref_idx is None:
             return False
 
-        component = self._items[ref_idx]
+        # Handle non-unique index (returns list of indices)
+        if isinstance(ref_idx, list):
+            if len(ref_idx) == 0:
+                return False
+            # For multi-unit components, remove the first one
+            component = self._items[ref_idx[0]]
+        else:
+            # For backward compatibility if index becomes unique
+            component = self._items[ref_idx]
 
         # Remove from manual indexes
         self._remove_from_manual_indexes(component)
@@ -1137,12 +1145,19 @@ class ComponentCollection(BaseCollection[Component]):
             reference: Component reference (e.g., "R1")
 
         Returns:
-            Component if found, None otherwise
+            Component if found, None otherwise. If multiple components have
+            the same reference (e.g., multi-unit components), returns the first one.
         """
         self._ensure_indexes_current()
         ref_idx = self._index_registry.get("reference", reference)
         if ref_idx is not None:
-            return self._items[ref_idx]
+            # Handle non-unique index (returns list of indices)
+            if isinstance(ref_idx, list):
+                if len(ref_idx) > 0:
+                    return self._items[ref_idx[0]]
+            else:
+                # For backward compatibility if index becomes unique
+                return self._items[ref_idx]
         return None
 
     def get_by_uuid(self, component_uuid: str) -> Optional[Component]:
