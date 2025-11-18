@@ -95,6 +95,49 @@ POSITIONING_RULES = {
         value_offset=PropertyOffset(x=0.635, y=-5.08, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
+    # IC Components (Issue #176)
+    # RF Module: ESP32-WROOM-32 - Large RF module (40mm × 86mm)
+    # Properties positioned FAR ABOVE component due to large size
+    "RF_Module:ESP32-WROOM-32": ComponentPositioningRule(
+        reference_offset=PropertyOffset(x=-12.7, y=34.29, rotation=0),
+        value_offset=PropertyOffset(x=1.27, y=34.29, rotation=0),
+        footprint_offset=PropertyOffset(x=0, y=-38.1, rotation=0),
+    ),
+    # Logic IC: 74LS245 - SOIC-20W level shifter
+    # LEFT positioning with large vertical spacing (16-pin IC)
+    "74xx:74LS245": ComponentPositioningRule(
+        reference_offset=PropertyOffset(x=-7.62, y=16.51, rotation=0),
+        value_offset=PropertyOffset(x=-7.62, y=-16.51, rotation=0),
+        footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
+    ),
+    # UART Interface: MAX3485 - SOIC-8 transceiver
+    # Properties ABOVE component with moderate spacing
+    "Interface_UART:MAX3485": ComponentPositioningRule(
+        reference_offset=PropertyOffset(x=-6.985, y=13.97, rotation=0),
+        value_offset=PropertyOffset(x=1.905, y=13.97, rotation=0),
+        footprint_offset=PropertyOffset(x=0, y=-17.78, rotation=0),
+    ),
+    # Linear Regulator: AMS1117-3.3 - SOT-223 LDO
+    # Centered ABOVE component with small spacing
+    "Regulator_Linear:AMS1117-3.3": ComponentPositioningRule(
+        reference_offset=PropertyOffset(x=-3.81, y=3.175, rotation=0),
+        value_offset=PropertyOffset(x=0, y=3.175, rotation=0),
+        footprint_offset=PropertyOffset(x=0, y=5.08, rotation=0),
+    ),
+    # Switching Regulator: TPS54202DDC - SOT-23-6 buck converter
+    # LEFT positioning ABOVE component
+    "Regulator_Switching:TPS54202DDC": ComponentPositioningRule(
+        reference_offset=PropertyOffset(x=-7.62, y=6.35, rotation=0),
+        value_offset=PropertyOffset(x=0, y=6.35, rotation=0),
+        footprint_offset=PropertyOffset(x=1.27, y=-8.89, rotation=0),
+    ),
+    # P-Channel FET: AO3401A - SOT-23 transistor
+    # RIGHT positioning with stacked properties
+    "Transistor_FET:AO3401A": ComponentPositioningRule(
+        reference_offset=PropertyOffset(x=5.08, y=1.905, rotation=0),
+        value_offset=PropertyOffset(x=5.08, y=0, rotation=0),
+        footprint_offset=PropertyOffset(x=5.08, y=-1.905, rotation=0),
+    ),
 }
 
 
