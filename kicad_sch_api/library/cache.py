@@ -189,6 +189,135 @@ class SymbolDefinition:
             pin_type = pin.pin_type.value if hasattr(pin.pin_type, "value") else str(pin.pin_type)
             print(f"{pin.number:<6} {pin.name:<20} {pin_type:<12}")
 
+    def _repr_html_(self) -> str:
+        """
+        Generate rich HTML representation for Jupyter/IPython notebooks.
+
+        Returns:
+            HTML string with symbol information formatted as styled table
+        """
+        # Symbol header with name and library
+        html = f"""
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; font-family: Arial, sans-serif;">
+            <h3 style="margin: 0 0 10px 0; color: #333;">
+                {self.lib_id}
+            </h3>
+            <p style="color: #666; margin: 5px 0;">
+                <strong>Library:</strong> {self.library} &nbsp;&nbsp;
+                <strong>Reference Prefix:</strong> {self.reference_prefix}
+            </p>
+        """
+
+        # Description
+        if self.description:
+            html += f"""
+            <p style="color: #555; margin: 10px 0; font-style: italic;">
+                {self.description}
+            </p>
+            """
+
+        # Keywords
+        if self.keywords:
+            html += f"""
+            <p style="color: #888; font-size: 0.9em; margin: 5px 0;">
+                <strong>Keywords:</strong> {self.keywords}
+            </p>
+            """
+
+        # Datasheet link
+        if self.datasheet:
+            html += f"""
+            <p style="margin: 5px 0;">
+                <strong>Datasheet:</strong> <a href="{self.datasheet}" target="_blank">{self.datasheet}</a>
+            </p>
+            """
+
+        # Symbol properties
+        properties = []
+        if self.power_symbol:
+            properties.append("Power Symbol")
+        if self.units > 1:
+            properties.append(f"{self.units} Units")
+        if self.extends:
+            properties.append(f"Extends: {self.extends}")
+
+        if properties:
+            html += f"""
+            <p style="margin: 5px 0; color: #555;">
+                <strong>Properties:</strong> {", ".join(properties)}
+            </p>
+            """
+
+        # Pins table
+        if self.pins:
+            html += """
+            <h4 style="margin: 15px 0 10px 0; color: #444;">Pins</h4>
+            <table style="border-collapse: collapse; width: 100%; font-size: 0.9em;">
+                <thead>
+                    <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Pin #</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Name</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+
+            for pin in self.pins:
+                pin_type = (
+                    pin.pin_type.value if hasattr(pin.pin_type, "value") else str(pin.pin_type)
+                )
+                # Color code pin types
+                type_color = {
+                    "input": "#4CAF50",
+                    "output": "#2196F3",
+                    "bidirectional": "#9C27B0",
+                    "tri_state": "#9C27B0",
+                    "passive": "#757575",
+                    "unspecified": "#757575",
+                    "power_in": "#F44336",
+                    "power_out": "#FF9800",
+                    "open_collector": "#00BCD4",
+                    "open_emitter": "#00BCD4",
+                    "unconnected": "#9E9E9E",
+                }.get(pin_type, "#333")
+
+                html += f"""
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px; border: 1px solid #ddd; font-family: monospace;">{pin.number}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{pin.name}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: {type_color}; font-weight: 500;">
+                        {pin_type}
+                    </td>
+                </tr>
+                """
+
+            html += """
+                </tbody>
+            </table>
+            """
+        else:
+            html += """
+            <p style="color: #888; font-style: italic; margin: 10px 0;">No pins defined</p>
+            """
+
+        # Metadata footer
+        metadata = []
+        if len(self.pins) > 0:
+            metadata.append(f"{len(self.pins)} pins")
+        if len(self.graphic_elements) > 0:
+            metadata.append(f"{len(self.graphic_elements)} graphic elements")
+
+        if metadata:
+            html += f"""
+            <p style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
+                {" • ".join(metadata)}
+            </p>
+            """
+
+        html += "</div>"
+        return html
+
 
 @dataclass
 class LibraryStats:
