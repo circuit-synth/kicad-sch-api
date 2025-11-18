@@ -95,7 +95,45 @@ POSITIONING_RULES = {
         value_offset=PropertyOffset(x=0.635, y=-5.08, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
+    # NOTE: Additional component positioning rules are loaded dynamically from
+    # KiCAD symbol library files. See _get_offset_from_symbol_library() function.
+    # Hard-coded rules above remain for backward compatibility and fallback.
 }
+
+
+def _get_offset_from_symbol_library(lib_id: str, property_name: str) -> Optional[PropertyOffset]:
+    """
+    Get property offset from symbol library data.
+
+    Attempts to load the symbol from the cache and extract property positions.
+
+    Args:
+        lib_id: Component library ID (e.g., "Device:R")
+        property_name: Property name ("Reference", "Value", "Footprint")
+
+    Returns:
+        PropertyOffset if found in symbol library, None otherwise
+    """
+    try:
+        from ..library.cache import get_symbol_cache
+
+        cache = get_symbol_cache()
+        symbol = cache.get_symbol(lib_id)
+
+        if symbol and symbol.property_positions:
+            position = symbol.property_positions.get(property_name)
+            if position:
+                x, y, rotation = position
+                logger.debug(
+                    f"Using symbol library position for {lib_id}.{property_name}: ({x}, {y}, {rotation})"
+                )
+                return PropertyOffset(x=x, y=y, rotation=rotation)
+
+        return None
+
+    except Exception as e:
+        logger.debug(f"Could not load symbol library data for {lib_id}: {e}")
+        return None
 
 
 def get_property_position(
@@ -106,6 +144,9 @@ def get_property_position(
 ) -> Tuple[float, float, float]:
     """
     Calculate KiCAD-exact property position for a component.
+
+    Property positions are extracted dynamically from KiCAD symbol library files.
+    Hard-coded fallback rules exist only for compatibility with older code paths.
 
     Args:
         lib_id: Component library ID (e.g., "Device:R")
@@ -121,23 +162,27 @@ def get_property_position(
         >>> pos
         (102.54, 98.7299, 0.0)
     """
-    # Get positioning rule for this component type
-    rule = POSITIONING_RULES.get(lib_id)
+    # Try to get property position from symbol library
+    offset = _get_offset_from_symbol_library(lib_id, property_name)
 
-    if rule is None:
-        logger.warning(f"No positioning rule for {lib_id}, using default resistor pattern")
-        rule = POSITIONING_RULES["Device:R"]  # Default fallback
+    if offset is None:
+        # Fall back to hard-coded rules (for backward compatibility)
+        rule = POSITIONING_RULES.get(lib_id)
 
-    # Select offset based on property name
-    if property_name == "Reference":
-        offset = rule.reference_offset
-    elif property_name == "Value":
-        offset = rule.value_offset
-    elif property_name == "Footprint":
-        offset = rule.footprint_offset or PropertyOffset(0, 0, 0)
-    else:
-        logger.warning(f"Unknown property name: {property_name}")
-        offset = PropertyOffset(0, 0, 0)
+        if rule is None:
+            logger.warning(f"No positioning rule for {lib_id}, using default resistor pattern")
+            rule = POSITIONING_RULES["Device:R"]  # Default fallback
+
+        # Select offset based on property name
+        if property_name == "Reference":
+            offset = rule.reference_offset
+        elif property_name == "Value":
+            offset = rule.value_offset
+        elif property_name == "Footprint":
+            offset = rule.footprint_offset or PropertyOffset(0, 0, 0)
+        else:
+            logger.warning(f"Unknown property name: {property_name}")
+            offset = PropertyOffset(0, 0, 0)
 
     # Apply rotation transform
     comp_x, comp_y = component_position
