@@ -220,7 +220,7 @@ class SchematicSymbol:
     rotation: float = 0.0
     in_bom: bool = True
     on_board: bool = True
-    fields_autoplaced: bool = True
+    fields_autoplaced: bool = False
     unit: int = 1
     instances: List["SymbolInstance"] = field(
         default_factory=list

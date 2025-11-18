@@ -193,14 +193,14 @@ class TestFieldsAutoplacedFlag:
     """Test REQ-3: Fields Autoplaced Flag emission."""
 
     def test_generated_component_has_fields_autoplaced(self):
-        """Programmatically generated components should have fields_autoplaced=True."""
+        """Programmatically generated components use symbol library positions (fields_autoplaced=False)."""
         import kicad_sch_api as ksa
 
         sch = ksa.create_schematic("test")
         comp = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
 
-        # Should have fields_autoplaced flag set
-        assert comp.fields_autoplaced is True
+        # Should use symbol library positions, not KiCAD auto-placement
+        assert comp.fields_autoplaced is False
 
 
 class TestRoundTripPreservation:
