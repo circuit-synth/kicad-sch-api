@@ -130,6 +130,65 @@ class SymbolDefinition:
         self.last_accessed = time.time()
         return [pin for pin in self.pins if pin.pin_type == pin_type]
 
+    def list_pins(self) -> List[Dict[str, Any]]:
+        """
+        List all pins for this symbol.
+
+        Returns:
+            List of pin dictionaries with keys:
+            - number: Pin number (str)
+            - name: Pin name (str)
+            - type: Pin electrical type (str)
+            - position: Pin position in symbol space (Point)
+
+        Example:
+            >>> symbol = get_symbol_info("Device:R")
+            >>> pins = symbol.list_pins()
+            >>> print(f"Symbol has {len(pins)} pins")
+            >>> for pin in pins:
+            ...     print(f"Pin {pin['number']}: {pin['name']}")
+        """
+        self.access_count += 1
+        self.last_accessed = time.time()
+        return [
+            {
+                "number": pin.number,
+                "name": pin.name,
+                "type": pin.pin_type.value if hasattr(pin.pin_type, "value") else str(pin.pin_type),
+                "position": pin.position,
+            }
+            for pin in self.pins
+        ]
+
+    def show_pins(self) -> None:
+        """
+        Display pin information in readable table format.
+
+        Prints a formatted table showing pin number, name, and electrical type
+        for all pins in the symbol.
+
+        Example:
+            >>> symbol = get_symbol_info("Device:R")
+            >>> symbol.show_pins()
+            Pins for Device:R:
+            Pin#   Name                 Type
+            ----------------------------------------
+            1      ~                    PASSIVE
+            2      ~                    PASSIVE
+        """
+        self.access_count += 1
+        self.last_accessed = time.time()
+
+        print(f"\nPins for {self.lib_id}:")
+        if self.description:
+            print(f"Description: {self.description}")
+        print(f"{'Pin#':<6} {'Name':<20} {'Type':<12}")
+        print("-" * 40)
+
+        for pin in self.pins:
+            pin_type = pin.pin_type.value if hasattr(pin.pin_type, "value") else str(pin.pin_type)
+            print(f"{pin.number:<6} {pin.name:<20} {pin_type:<12}")
+
 
 @dataclass
 class LibraryStats:
@@ -1171,3 +1230,38 @@ def set_symbol_cache(cache: SymbolLibraryCache):
     """Set the global symbol cache instance."""
     global _global_cache
     _global_cache = cache
+
+
+def get_symbol_info(lib_id: str) -> "SymbolDefinition":
+    """
+    Get symbol information from the library.
+
+    Convenience function that uses the global symbol cache to retrieve
+    complete symbol information including pins, description, and metadata.
+
+    Args:
+        lib_id: Library identifier (e.g., "Device:R", "RF_Module:ESP32-WROOM-32")
+
+    Returns:
+        SymbolDefinition with complete symbol information
+
+    Raises:
+        LibraryError: If symbol not found
+
+    Example:
+        >>> import kicad_sch_api as ksa
+        >>> symbol = ksa.get_symbol_info('RF_Module:ESP32-WROOM-32')
+        >>> symbol.show_pins()  # Display pin table
+        Pins for RF_Module:ESP32-WROOM-32:
+        Description: WiFi/Bluetooth module
+        Pin#   Name                 Type
+        ----------------------------------------
+        1      GND                  POWER_IN
+        2      3V3                  POWER_IN
+        ...
+
+        >>> pins = symbol.list_pins()  # Get pin data
+        >>> print(f"Symbol has {len(pins)} pins")
+    """
+    cache = get_symbol_cache()
+    return cache.get_symbol(lib_id)
