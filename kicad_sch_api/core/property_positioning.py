@@ -95,50 +95,45 @@ POSITIONING_RULES = {
         value_offset=PropertyOffset(x=0.635, y=-5.08, rotation=0),
         footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
     ),
-    # IC Components (Issue #176)
-    # RF Module: ESP32-WROOM-32 - Large RF module (40mm × 86mm)
-    # Properties positioned FAR ABOVE component due to large size
-    "RF_Module:ESP32-WROOM-32": ComponentPositioningRule(
-        reference_offset=PropertyOffset(x=-12.7, y=34.29, rotation=0),
-        value_offset=PropertyOffset(x=1.27, y=34.29, rotation=0),
-        footprint_offset=PropertyOffset(x=0, y=-38.1, rotation=0),
-    ),
-    # Logic IC: 74LS245 - SOIC-20W level shifter
-    # LEFT positioning with large vertical spacing (16-pin IC)
-    "74xx:74LS245": ComponentPositioningRule(
-        reference_offset=PropertyOffset(x=-7.62, y=16.51, rotation=0),
-        value_offset=PropertyOffset(x=-7.62, y=-16.51, rotation=0),
-        footprint_offset=PropertyOffset(x=0, y=0, rotation=0),
-    ),
-    # UART Interface: MAX3485 - SOIC-8 transceiver
-    # Properties ABOVE component with moderate spacing
-    "Interface_UART:MAX3485": ComponentPositioningRule(
-        reference_offset=PropertyOffset(x=-6.985, y=13.97, rotation=0),
-        value_offset=PropertyOffset(x=1.905, y=13.97, rotation=0),
-        footprint_offset=PropertyOffset(x=0, y=-17.78, rotation=0),
-    ),
-    # Linear Regulator: AMS1117-3.3 - SOT-223 LDO
-    # Centered ABOVE component with small spacing
-    "Regulator_Linear:AMS1117-3.3": ComponentPositioningRule(
-        reference_offset=PropertyOffset(x=-3.81, y=3.175, rotation=0),
-        value_offset=PropertyOffset(x=0, y=3.175, rotation=0),
-        footprint_offset=PropertyOffset(x=0, y=5.08, rotation=0),
-    ),
-    # Switching Regulator: TPS54202DDC - SOT-23-6 buck converter
-    # LEFT positioning ABOVE component
-    "Regulator_Switching:TPS54202DDC": ComponentPositioningRule(
-        reference_offset=PropertyOffset(x=-7.62, y=6.35, rotation=0),
-        value_offset=PropertyOffset(x=0, y=6.35, rotation=0),
-        footprint_offset=PropertyOffset(x=1.27, y=-8.89, rotation=0),
-    ),
-    # P-Channel FET: AO3401A - SOT-23 transistor
-    # RIGHT positioning with stacked properties
-    "Transistor_FET:AO3401A": ComponentPositioningRule(
-        reference_offset=PropertyOffset(x=5.08, y=1.905, rotation=0),
-        value_offset=PropertyOffset(x=5.08, y=0, rotation=0),
-        footprint_offset=PropertyOffset(x=5.08, y=-1.905, rotation=0),
-    ),
+    # NOTE: Additional component positioning rules are loaded dynamically from
+    # KiCAD symbol library files. See _get_offset_from_symbol_library() function.
+    # Hard-coded rules above remain for backward compatibility and fallback.
 }
+
+
+def _get_offset_from_symbol_library(lib_id: str, property_name: str) -> Optional[PropertyOffset]:
+    """
+    Get property offset from symbol library data.
+
+    Attempts to load the symbol from the cache and extract property positions.
+
+    Args:
+        lib_id: Component library ID (e.g., "Device:R")
+        property_name: Property name ("Reference", "Value", "Footprint")
+
+    Returns:
+        PropertyOffset if found in symbol library, None otherwise
+    """
+    try:
+        from ..library.cache import get_symbol_cache
+
+        cache = get_symbol_cache()
+        symbol = cache.get_symbol(lib_id)
+
+        if symbol and symbol.property_positions:
+            position = symbol.property_positions.get(property_name)
+            if position:
+                x, y, rotation = position
+                logger.debug(
+                    f"Using symbol library position for {lib_id}.{property_name}: ({x}, {y}, {rotation})"
+                )
+                return PropertyOffset(x=x, y=y, rotation=rotation)
+
+        return None
+
+    except Exception as e:
+        logger.debug(f"Could not load symbol library data for {lib_id}: {e}")
+        return None
 
 
 def get_property_position(
@@ -149,6 +144,9 @@ def get_property_position(
 ) -> Tuple[float, float, float]:
     """
     Calculate KiCAD-exact property position for a component.
+
+    Property positions are extracted dynamically from KiCAD symbol library files.
+    Hard-coded fallback rules exist only for compatibility with older code paths.
 
     Args:
         lib_id: Component library ID (e.g., "Device:R")
@@ -164,23 +162,27 @@ def get_property_position(
         >>> pos
         (102.54, 98.7299, 0.0)
     """
-    # Get positioning rule for this component type
-    rule = POSITIONING_RULES.get(lib_id)
+    # Try to get property position from symbol library
+    offset = _get_offset_from_symbol_library(lib_id, property_name)
 
-    if rule is None:
-        logger.warning(f"No positioning rule for {lib_id}, using default resistor pattern")
-        rule = POSITIONING_RULES["Device:R"]  # Default fallback
+    if offset is None:
+        # Fall back to hard-coded rules (for backward compatibility)
+        rule = POSITIONING_RULES.get(lib_id)
 
-    # Select offset based on property name
-    if property_name == "Reference":
-        offset = rule.reference_offset
-    elif property_name == "Value":
-        offset = rule.value_offset
-    elif property_name == "Footprint":
-        offset = rule.footprint_offset or PropertyOffset(0, 0, 0)
-    else:
-        logger.warning(f"Unknown property name: {property_name}")
-        offset = PropertyOffset(0, 0, 0)
+        if rule is None:
+            logger.warning(f"No positioning rule for {lib_id}, using default resistor pattern")
+            rule = POSITIONING_RULES["Device:R"]  # Default fallback
+
+        # Select offset based on property name
+        if property_name == "Reference":
+            offset = rule.reference_offset
+        elif property_name == "Value":
+            offset = rule.value_offset
+        elif property_name == "Footprint":
+            offset = rule.footprint_offset or PropertyOffset(0, 0, 0)
+        else:
+            logger.warning(f"Unknown property name: {property_name}")
+            offset = PropertyOffset(0, 0, 0)
 
     # Apply rotation transform
     comp_x, comp_y = component_position

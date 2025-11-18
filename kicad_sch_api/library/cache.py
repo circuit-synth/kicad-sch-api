@@ -41,6 +41,10 @@ class SymbolDefinition:
     power_symbol: bool = False
     graphic_elements: List[Dict[str, Any]] = field(default_factory=list)
 
+    # Property positions from symbol library (for auto-placement)
+    # Maps property name to (x, y, rotation) tuple
+    property_positions: Dict[str, Tuple[float, float, float]] = field(default_factory=dict)
+
     # Raw KiCAD data for exact format preservation
     raw_kicad_data: Any = None
 
@@ -491,6 +495,9 @@ class SymbolLibraryCache:
                 pins=symbol_data.get("pins", []),
                 units=symbol_data.get("units", 1),  # Use extracted unit count
                 extends=symbol_data.get("extends"),  # Store extends information
+                property_positions=symbol_data.get(
+                    "property_positions", {}
+                ),  # Property positions for auto-placement
                 load_time=time.time() - start_time,
             )
 
@@ -556,6 +563,7 @@ class SymbolLibraryCache:
                 "datasheet": "~",
                 "pins": [],
                 "extends": extends_symbol,  # Should be None after resolution
+                "property_positions": {},  # Property positions for auto-placement
             }
 
             # Extract properties from the symbol
@@ -566,6 +574,16 @@ class SymbolLibraryCache:
                         prop_value = item[2]
 
                         logger.debug(f"🔧 Processing property: {prop_name} = {prop_value}")
+
+                        # Extract property position (at x y rotation)
+                        prop_position = self._extract_property_position(item)
+                        if prop_position:
+                            prop_name_str = str(prop_name).strip('"')
+                            result["property_positions"][prop_name_str] = prop_position
+                            logger.debug(
+                                f"🔧 Extracted position for {prop_name_str}: {prop_position}"
+                            )
+
                         if prop_name == sexpdata.Symbol("Reference"):
                             result["reference_prefix"] = str(prop_value)
                             logger.debug(f"🔧 Set reference_prefix: {str(prop_value)}")
@@ -710,6 +728,32 @@ class SymbolLibraryCache:
 
         logger.debug(f"🔧 MERGE: Merged symbol has {len(merged)} elements")
         return merged
+
+    def _extract_property_position(
+        self, property_item: List
+    ) -> Optional[Tuple[float, float, float]]:
+        """
+        Extract position (at x y rotation) from a property S-expression.
+
+        Args:
+            property_item: Property S-expression like (property "Reference" "U" (at x y rotation) ...)
+
+        Returns:
+            Tuple of (x, y, rotation) or None if no position found
+        """
+        try:
+            # Look for (at x y rotation) in property item
+            for sub_item in property_item:
+                if isinstance(sub_item, list) and len(sub_item) >= 3:
+                    if sub_item[0] == sexpdata.Symbol("at"):
+                        x = float(sub_item[1])
+                        y = float(sub_item[2])
+                        rotation = float(sub_item[3]) if len(sub_item) > 3 else 0.0
+                        return (x, y, rotation)
+            return None
+        except (ValueError, IndexError, TypeError) as e:
+            logger.debug(f"Failed to extract property position: {e}")
+            return None
 
     def _extract_pins_from_symbol(self, symbol_data: List) -> List[SchematicPin]:
         """Extract pins from symbol data."""
