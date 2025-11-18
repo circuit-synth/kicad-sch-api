@@ -41,7 +41,7 @@ class SymbolParser(BaseElementParser):
                 "hidden_properties": set(),  # Properties with (hide yes) flag
                 "in_bom": True,
                 "on_board": True,
-                "fields_autoplaced": True,
+                "fields_autoplaced": False,
                 "unit": 1,  # Multi-unit component support: unit number (default 1)
                 "instances": [],
             }

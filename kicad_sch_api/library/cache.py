@@ -41,6 +41,10 @@ class SymbolDefinition:
     power_symbol: bool = False
     graphic_elements: List[Dict[str, Any]] = field(default_factory=list)
 
+    # Property positions from symbol library (for auto-placement)
+    # Maps property name to (x, y, rotation) tuple
+    property_positions: Dict[str, Tuple[float, float, float]] = field(default_factory=dict)
+
     # Raw KiCAD data for exact format preservation
     raw_kicad_data: Any = None
 
@@ -125,6 +129,65 @@ class SymbolDefinition:
         self.access_count += 1
         self.last_accessed = time.time()
         return [pin for pin in self.pins if pin.pin_type == pin_type]
+
+    def list_pins(self) -> List[Dict[str, Any]]:
+        """
+        List all pins for this symbol.
+
+        Returns:
+            List of pin dictionaries with keys:
+            - number: Pin number (str)
+            - name: Pin name (str)
+            - type: Pin electrical type (str)
+            - position: Pin position in symbol space (Point)
+
+        Example:
+            >>> symbol = get_symbol_info("Device:R")
+            >>> pins = symbol.list_pins()
+            >>> print(f"Symbol has {len(pins)} pins")
+            >>> for pin in pins:
+            ...     print(f"Pin {pin['number']}: {pin['name']}")
+        """
+        self.access_count += 1
+        self.last_accessed = time.time()
+        return [
+            {
+                "number": pin.number,
+                "name": pin.name,
+                "type": pin.pin_type.value if hasattr(pin.pin_type, "value") else str(pin.pin_type),
+                "position": pin.position,
+            }
+            for pin in self.pins
+        ]
+
+    def show_pins(self) -> None:
+        """
+        Display pin information in readable table format.
+
+        Prints a formatted table showing pin number, name, and electrical type
+        for all pins in the symbol.
+
+        Example:
+            >>> symbol = get_symbol_info("Device:R")
+            >>> symbol.show_pins()
+            Pins for Device:R:
+            Pin#   Name                 Type
+            ----------------------------------------
+            1      ~                    PASSIVE
+            2      ~                    PASSIVE
+        """
+        self.access_count += 1
+        self.last_accessed = time.time()
+
+        print(f"\nPins for {self.lib_id}:")
+        if self.description:
+            print(f"Description: {self.description}")
+        print(f"{'Pin#':<6} {'Name':<20} {'Type':<12}")
+        print("-" * 40)
+
+        for pin in self.pins:
+            pin_type = pin.pin_type.value if hasattr(pin.pin_type, "value") else str(pin.pin_type)
+            print(f"{pin.number:<6} {pin.name:<20} {pin_type:<12}")
 
 
 @dataclass
@@ -491,6 +554,9 @@ class SymbolLibraryCache:
                 pins=symbol_data.get("pins", []),
                 units=symbol_data.get("units", 1),  # Use extracted unit count
                 extends=symbol_data.get("extends"),  # Store extends information
+                property_positions=symbol_data.get(
+                    "property_positions", {}
+                ),  # Property positions for auto-placement
                 load_time=time.time() - start_time,
             )
 
@@ -556,6 +622,7 @@ class SymbolLibraryCache:
                 "datasheet": "~",
                 "pins": [],
                 "extends": extends_symbol,  # Should be None after resolution
+                "property_positions": {},  # Property positions for auto-placement
             }
 
             # Extract properties from the symbol
@@ -566,6 +633,16 @@ class SymbolLibraryCache:
                         prop_value = item[2]
 
                         logger.debug(f"🔧 Processing property: {prop_name} = {prop_value}")
+
+                        # Extract property position (at x y rotation)
+                        prop_position = self._extract_property_position(item)
+                        if prop_position:
+                            prop_name_str = str(prop_name).strip('"')
+                            result["property_positions"][prop_name_str] = prop_position
+                            logger.debug(
+                                f"🔧 Extracted position for {prop_name_str}: {prop_position}"
+                            )
+
                         if prop_name == sexpdata.Symbol("Reference"):
                             result["reference_prefix"] = str(prop_value)
                             logger.debug(f"🔧 Set reference_prefix: {str(prop_value)}")
@@ -710,6 +787,32 @@ class SymbolLibraryCache:
 
         logger.debug(f"🔧 MERGE: Merged symbol has {len(merged)} elements")
         return merged
+
+    def _extract_property_position(
+        self, property_item: List
+    ) -> Optional[Tuple[float, float, float]]:
+        """
+        Extract position (at x y rotation) from a property S-expression.
+
+        Args:
+            property_item: Property S-expression like (property "Reference" "U" (at x y rotation) ...)
+
+        Returns:
+            Tuple of (x, y, rotation) or None if no position found
+        """
+        try:
+            # Look for (at x y rotation) in property item
+            for sub_item in property_item:
+                if isinstance(sub_item, list) and len(sub_item) >= 3:
+                    if sub_item[0] == sexpdata.Symbol("at"):
+                        x = float(sub_item[1])
+                        y = float(sub_item[2])
+                        rotation = float(sub_item[3]) if len(sub_item) > 3 else 0.0
+                        return (x, y, rotation)
+            return None
+        except (ValueError, IndexError, TypeError) as e:
+            logger.debug(f"Failed to extract property position: {e}")
+            return None
 
     def _extract_pins_from_symbol(self, symbol_data: List) -> List[SchematicPin]:
         """Extract pins from symbol data."""
@@ -1127,3 +1230,36 @@ def set_symbol_cache(cache: SymbolLibraryCache):
     """Set the global symbol cache instance."""
     global _global_cache
     _global_cache = cache
+
+
+def get_symbol_info(lib_id: str) -> Optional["SymbolDefinition"]:
+    """
+    Get symbol information from the library.
+
+    Convenience function that uses the global symbol cache to retrieve
+    complete symbol information including pins, description, and metadata.
+
+    Args:
+        lib_id: Library identifier (e.g., "Device:R", "RF_Module:ESP32-WROOM-32")
+
+    Returns:
+        SymbolDefinition with complete symbol information, or None if not found
+
+    Example:
+        >>> import kicad_sch_api as ksa
+        >>> symbol = ksa.get_symbol_info('RF_Module:ESP32-WROOM-32')
+        >>> if symbol:
+        ...     symbol.show_pins()  # Display pin table
+        Pins for RF_Module:ESP32-WROOM-32:
+        Description: WiFi/Bluetooth module
+        Pin#   Name                 Type
+        ----------------------------------------
+        1      GND                  POWER_IN
+        2      3V3                  POWER_IN
+        ...
+
+        >>> pins = symbol.list_pins()  # Get pin data
+        >>> print(f"Symbol has {len(pins)} pins")
+    """
+    cache = get_symbol_cache()
+    return cache.get_symbol(lib_id)
