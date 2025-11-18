@@ -1232,7 +1232,7 @@ def set_symbol_cache(cache: SymbolLibraryCache):
     _global_cache = cache
 
 
-def get_symbol_info(lib_id: str) -> "SymbolDefinition":
+def get_symbol_info(lib_id: str) -> Optional["SymbolDefinition"]:
     """
     Get symbol information from the library.
 
@@ -1243,15 +1243,13 @@ def get_symbol_info(lib_id: str) -> "SymbolDefinition":
         lib_id: Library identifier (e.g., "Device:R", "RF_Module:ESP32-WROOM-32")
 
     Returns:
-        SymbolDefinition with complete symbol information
-
-    Raises:
-        LibraryError: If symbol not found
+        SymbolDefinition with complete symbol information, or None if not found
 
     Example:
         >>> import kicad_sch_api as ksa
         >>> symbol = ksa.get_symbol_info('RF_Module:ESP32-WROOM-32')
-        >>> symbol.show_pins()  # Display pin table
+        >>> if symbol:
+        ...     symbol.show_pins()  # Display pin table
         Pins for RF_Module:ESP32-WROOM-32:
         Description: WiFi/Bluetooth module
         Pin#   Name                 Type
