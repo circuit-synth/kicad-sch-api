@@ -174,6 +174,18 @@ class Component:
             return True
         return False
 
+    def has_property(self, name: str) -> bool:
+        """
+        Check if component has a property.
+
+        Args:
+            name: Property name to check
+
+        Returns:
+            True if property exists, False otherwise
+        """
+        return name in self._data.properties
+
     # Pin access
     @property
     def pins(self) -> List[SchematicPin]:

@@ -225,6 +225,18 @@ class Component:
             return True
         return False
 
+    def has_property(self, name: str) -> bool:
+        """
+        Check if component has a property.
+
+        Args:
+            name: Property name to check
+
+        Returns:
+            True if property exists, False otherwise
+        """
+        return name in self._data.properties
+
     def add_property(self, name: str, value: str, hidden: bool = False) -> None:
         """
         Add or update a component property with visibility control.
