@@ -382,3 +382,113 @@ class TestFormatPreservation:
 
         # Should NOT contain hide flag
         assert "(hide yes)" not in notes_section
+
+
+class TestHasPropertyMethod:
+    """Test the has_property() method."""
+
+    def test_has_property_returns_true_when_property_exists(self):
+        """has_property() should return True when property exists."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+        r1.add_property("MPN", "RC0603FR-0710KL")
+
+        assert r1.has_property("MPN") is True
+
+    def test_has_property_returns_false_when_property_missing(self):
+        """has_property() should return False when property doesn't exist."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+
+        assert r1.has_property("MPN") is False
+
+    def test_has_property_with_custom_properties(self):
+        """has_property() should work with custom user properties."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+
+        # Add some custom properties
+        r1.add_property("Tolerance", "1%")
+        r1.add_property("Power", "0.1W")
+
+        # Should detect custom properties
+        assert r1.has_property("Tolerance") is True
+        assert r1.has_property("Power") is True
+        assert r1.has_property("NonExistent") is False
+
+    def test_has_property_case_sensitive(self):
+        """has_property() should be case-sensitive."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+        r1.add_property("MPN", "TEST")
+
+        assert r1.has_property("MPN") is True
+        assert r1.has_property("mpn") is False
+        assert r1.has_property("Mpn") is False
+
+    def test_has_property_after_adding_property(self):
+        """has_property() should return True after adding property."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+
+        assert r1.has_property("Manufacturer") is False
+
+        r1.add_property("Manufacturer", "Yageo")
+
+        assert r1.has_property("Manufacturer") is True
+
+    def test_has_property_after_removing_property(self):
+        """has_property() should return False after removing property."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+        r1.add_property("TempProp", "TempValue")
+
+        assert r1.has_property("TempProp") is True
+
+        r1.remove_property("TempProp")
+
+        assert r1.has_property("TempProp") is False
+
+    def test_has_property_with_empty_value(self):
+        """has_property() should return True even if value is empty."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+        r1.add_property("EmptyProp", "")
+
+        assert r1.has_property("EmptyProp") is True
+        assert r1.get_property("EmptyProp") == ""
+
+    def test_has_property_with_hidden_property(self):
+        """has_property() should return True for hidden properties."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+        r1.add_property("HiddenProp", "HiddenValue", hidden=True)
+
+        # Property exists regardless of visibility
+        assert r1.has_property("HiddenProp") is True
+        assert "HiddenProp" in r1.hidden_properties
+
+    def test_has_property_usage_example_from_docs(self):
+        """Test the usage example from documentation (RECIPES.md)."""
+        sch = ksa.create_schematic("Test")
+        r1 = sch.components.add("Device:R", "R1", "10k", position=(100, 100))
+
+        # Example from RECIPES.md
+        issues = []
+        for comp in sch.components:
+            if not comp.has_property("MPN"):
+                issues.append(f"{comp.reference}: Missing MPN property")
+
+        # Should find issue for R1
+        assert len(issues) == 1
+        assert "R1" in issues[0]
+        assert "Missing MPN" in issues[0]
+
+        # Add MPN and verify issue goes away
+        r1.add_property("MPN", "RC0603FR-0710KL")
+        issues = []
+        for comp in sch.components:
+            if not comp.has_property("MPN"):
+                issues.append(f"{comp.reference}: Missing MPN property")
+
+        assert len(issues) == 0
