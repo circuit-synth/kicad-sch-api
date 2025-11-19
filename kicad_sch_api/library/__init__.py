@@ -5,6 +5,7 @@ from .cache import (
     SymbolLibraryCache,
     get_symbol_cache,
     get_symbol_info,
+    search_symbols,
     set_symbol_cache,
 )
 
@@ -14,4 +15,5 @@ __all__ = [
     "get_symbol_cache",
     "set_symbol_cache",
     "get_symbol_info",
+    "search_symbols",
 ]

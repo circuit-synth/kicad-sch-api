@@ -1263,3 +1263,39 @@ def get_symbol_info(lib_id: str) -> Optional["SymbolDefinition"]:
     """
     cache = get_symbol_cache()
     return cache.get_symbol(lib_id)
+
+
+def search_symbols(
+    query: str, library: Optional[str] = None, limit: int = 50
+) -> List["SymbolDefinition"]:
+    """
+    Search for symbols by name, description, or keywords.
+
+    Convenience function that uses the global symbol cache to search for symbols
+    matching the query string.
+
+    Args:
+        query: Search query string (searches in name, description, keywords)
+        library: Optional library name to search within (e.g., "Device", "RF_Module")
+        limit: Maximum number of results to return (default: 50)
+
+    Returns:
+        List of SymbolDefinition objects matching the query
+
+    Example:
+        >>> import kicad_sch_api as ksa
+        >>> # Search for all resistors
+        >>> resistors = ksa.search_symbols('resistor')
+        >>> for symbol in resistors:
+        ...     print(f"{symbol.lib_id}: {symbol.description}")
+
+        >>> # Search only in Device library
+        >>> devices = ksa.search_symbols('capacitor', library='Device')
+
+        >>> # Search for ESP32 modules
+        >>> esp_modules = ksa.search_symbols('ESP32', library='RF_Module')
+        >>> for module in esp_modules:
+        ...     module.show_pins()
+    """
+    cache = get_symbol_cache()
+    return cache.search_symbols(query, library=library, limit=limit)

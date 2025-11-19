@@ -59,7 +59,7 @@ from .core.exceptions import (
 # Core imports for public API
 from .core.schematic import Schematic
 from .core.types import PinInfo
-from .library.cache import SymbolLibraryCache, get_symbol_cache, get_symbol_info
+from .library.cache import SymbolLibraryCache, get_symbol_cache, get_symbol_info, search_symbols
 from .utils.validation import ValidationError, ValidationIssue
 
 # Version info
@@ -75,6 +75,7 @@ __all__ = [
     "SymbolLibraryCache",
     "get_symbol_cache",
     "get_symbol_info",
+    "search_symbols",
     # Configuration
     "KiCADConfig",
     "config",
