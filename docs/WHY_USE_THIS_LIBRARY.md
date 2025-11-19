@@ -192,7 +192,7 @@ for ic in ics:
 
 # Resistor power ratings?
 for r in sch.components.filter(lib_id="Device:R"):
-    if not r.has_property("Power"):
+    if "Power" not in r.properties:
         issues.append(f"{r.reference} missing power rating")
 
 # Generate report

@@ -259,12 +259,12 @@ def validate_design(sch):
 
     # Check for missing MPNs (for production)
     for comp in sch.components:
-        if not comp.has_property("MPN"):
+        if "MPN" not in comp.properties:
             issues.append(f"{comp.reference}: Missing MPN property")
 
     # Check resistor power ratings
     for r in sch.components.filter(lib_id="Device:R"):
-        if not r.has_property("Power"):
+        if "Power" not in r.properties:
             issues.append(f"{r.reference}: Missing power rating")
 
     # Check for duplicate references (shouldn't happen, but check anyway)
