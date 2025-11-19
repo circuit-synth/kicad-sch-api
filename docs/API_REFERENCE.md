@@ -282,7 +282,7 @@ comp.pins          # List[SchematicPin]: Pin information
 # Property management
 comp.set_property("MPN", "RC0805FR-0710KL")
 comp.get_property("MPN", default="")
-comp.has_property("MPN")  # Returns bool
+"MPN" in comp.properties  # Check if property exists
 comp.remove_property("MPN")
 
 # Pin operations

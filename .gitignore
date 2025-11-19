@@ -151,3 +151,4 @@ test_*.kicad_sch
 
 # Hook logs (runtime generated)
 .claude/hook_logs/
+agents/hook_logs/

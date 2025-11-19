@@ -227,7 +227,7 @@ resistor.set_property("Tolerance", "1%")
 resistor.set_property("Power", "0.1W")
 
 # Read properties later
-if resistor.has_property("MPN"):
+if "MPN" in resistor.properties:
     mpn = resistor.get_property("MPN")
     print(f"Order part number: {mpn}")
 ```
