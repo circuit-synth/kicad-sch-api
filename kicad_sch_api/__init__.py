@@ -42,7 +42,7 @@ Advanced Usage:
         print(f"Found {len(issues)} validation issues")
 """
 
-__version__ = "0.5.1"
+__version__ = "0.5.5"
 __author__ = "Circuit-Synth"
 __email__ = "info@circuit-synth.com"
 
