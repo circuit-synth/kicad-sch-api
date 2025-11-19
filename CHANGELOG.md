@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2025-11-19
+
+### Added
+- BOM property management module for auditing, updating, and transforming component properties
+- `BOMPropertyAuditor` class for comprehensive property management operations
+- `PropertyMatcher` class with flexible pattern matching (exact, wildcard, regex)
+- `ksa-bom` CLI tool with audit, update, and transform commands
+- CSV report generation for BOM compliance audits
+- Support for bulk property updates with dry-run mode
+- Property transformation (copy/rename) with safety options
+- DNP (Do-Not-Populate) component filtering
+- Comprehensive test suite with 30+ tests for BOM functionality
+- Complete BOM user guide documentation (`docs/BOM_USER_GUIDE.md`)
+
+### Changed
+- Updated README to mention BOM property management feature
+
 ### Added
 
 - **Pin-Aligned Component Placement** (#137) - Revolutionary new API for placing components by pin position
