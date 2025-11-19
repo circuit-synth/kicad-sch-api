@@ -193,6 +193,61 @@ class Component:
         """Get absolute position of pin."""
         return self._data.get_pin_position(pin_number)
 
+    def list_pins(self) -> List[Dict[str, Any]]:
+        """
+        List all pins for this component.
+
+        Returns:
+            List of pin dictionaries with keys:
+            - number: Pin number (str)
+            - name: Pin name (str)
+            - type: Pin electrical type (str)
+            - position: Absolute pin position (Point)
+
+        Example:
+            >>> comp = sch.components.get("U1")
+            >>> pins = comp.list_pins()
+            >>> for pin in pins:
+            ...     print(f"Pin {pin['number']}: {pin['name']} ({pin['type']})")
+            Pin 1: GND (POWER_IN)
+            Pin 2: 3V3 (POWER_IN)
+        """
+        return [
+            {
+                "number": pin.number,
+                "name": pin.name,
+                "type": pin.pin_type.value,
+                "position": pin.position,
+            }
+            for pin in self.pins
+        ]
+
+    def show_pins(self) -> None:
+        """
+        Display pin information in readable table format.
+
+        Prints a formatted table showing pin numbers, names, and types
+        for all pins on this component. Useful for interactive exploration
+        and debugging.
+
+        Example:
+            >>> comp = sch.components.get("U1")
+            >>> comp.show_pins()
+
+            Pins for U1 (RF_Module:ESP32-WROOM-32):
+            Pin#   Name                 Type
+            ----------------------------------------
+            1      GND                  POWER_IN
+            2      3V3                  POWER_IN
+            3      EN                   INPUT
+            ...
+        """
+        print(f"\nPins for {self.reference} ({self.lib_id}):")
+        print(f"{'Pin#':<6} {'Name':<20} {'Type':<12}")
+        print("-" * 40)
+        for pin in self.pins:
+            print(f"{pin.number:<6} {pin.name:<20} {pin.pin_type.value:<12}")
+
     # Component state
     @property
     def in_bom(self) -> bool:

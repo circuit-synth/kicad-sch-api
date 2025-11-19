@@ -24,6 +24,7 @@ Read and write KiCAD schematic files programmatically. This library parses and g
 - **Hierarchical design** - Complete support for multi-sheet schematic projects
 - **Component bounding boxes** - Calculate precise component boundaries for layout algorithms
 - **Wire routing** - Manhattan-style orthogonal routing with basic obstacle avoidance
+- **BOM property management** - Audit, update, and transform component properties for manufacturing
 - **MCP server** - 15 tools for programmatic schematic manipulation via Model Context Protocol
 
 ## Quick Start
