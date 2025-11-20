@@ -101,19 +101,39 @@ class Component:
 
     @property
     def position(self) -> Point:
-        """Component position in schematic (mm)."""
-        return self._data.position
+        """
+        Component position in schematic (mm).
+
+        Returns position in API format (standard or inverted Y-axis based on config).
+        """
+        from ..core.config import convert_y_from_kicad
+
+        # Convert internal KiCAD Y to API Y
+        internal_pos = self._data.position
+        api_y = convert_y_from_kicad(internal_pos.y)
+        return Point(internal_pos.x, api_y)
 
     @position.setter
     def position(self, value: Union[Point, Tuple[float, float]]):
         """
         Set component position.
 
+        Accepts position in API format (standard or inverted Y-axis based on config).
+
         Args:
-            value: Position as Point or (x, y) tuple
+            value: Position as Point or (x, y) tuple in API format
         """
+        from ..core.types import point_from_dict_or_tuple
+
+        # Convert from API format to KiCAD internal format
         if isinstance(value, tuple):
-            value = Point(value[0], value[1])
+            value = point_from_dict_or_tuple(value, convert_y=True)
+        elif isinstance(value, Point):
+            # Point might already be in internal format, apply conversion
+            from ..core.config import convert_y_to_kicad
+
+            value = Point(value.x, convert_y_to_kicad(value.y))
+
         self._data.position = value
         self._collection._mark_modified()
 
@@ -816,12 +836,27 @@ class ComponentCollection(BaseCollection[Component]):
         elif isinstance(position, tuple):
             # Convert grid units to mm if requested
             if grid_units:
-                position = Point(position[0] * grid_size, position[1] * grid_size)
+                from ..core.config import convert_y_to_kicad
+
+                x_mm = position[0] * grid_size
+                y_mm = position[1] * grid_size
+                # Apply Y-axis conversion
+                y_kicad = convert_y_to_kicad(y_mm)
+                position = Point(x_mm, y_kicad)
             else:
-                position = Point(position[0], position[1])
+                # Use point_from_dict_or_tuple to apply Y-axis conversion
+                from ..core.types import point_from_dict_or_tuple
+
+                position = point_from_dict_or_tuple(position, convert_y=True)
         elif grid_units and isinstance(position, Point):
             # Convert Point from grid units to mm
-            position = Point(position.x * grid_size, position.y * grid_size)
+            from ..core.config import convert_y_to_kicad
+
+            x_mm = position.x * grid_size
+            y_mm = position.y * grid_size
+            # Apply Y-axis conversion
+            y_kicad = convert_y_to_kicad(y_mm)
+            position = Point(x_mm, y_kicad)
 
         # Always snap component position to KiCAD grid (1.27mm = 50mil)
         from ..core.geometry import snap_to_grid

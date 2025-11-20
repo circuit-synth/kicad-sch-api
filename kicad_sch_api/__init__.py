@@ -200,5 +200,35 @@ def use_grid_units(enabled: bool = True) -> None:
     config.positioning.use_grid_units = enabled
 
 
+def use_standard_y_axis(enabled: bool = True) -> None:
+    """
+    Enable or disable standard Y-axis orientation.
+
+    When enabled, higher Y values mean higher on screen (like standard mathematics).
+    When disabled (default), higher Y values mean lower on screen (KiCAD's inverted Y-axis).
+
+    Args:
+        enabled: If True, use standard Y-axis; if False, use KiCAD's inverted Y-axis
+
+    Example:
+        >>> import kicad_sch_api as ksa
+        >>> ksa.use_standard_y_axis(True)
+        >>> sch = ksa.create_schematic("MyCircuit")
+        >>> # Now Y increases upward (intuitive for LLMs and math/physics users)
+        >>> sch.components.add('power:VCC', position=(50, 100))  # Top (high Y)
+        >>> sch.components.add('Device:R', 'R1', '10k', position=(50, 80))  # Below VCC
+        >>> sch.components.add('power:GND', position=(50, 60))  # Bottom (low Y)
+    """
+    config.positioning.use_standard_y_axis = enabled
+
+
 # Add convenience functions to __all__
-__all__.extend(["load_schematic", "create_schematic", "schematic_to_python", "use_grid_units"])
+__all__.extend(
+    [
+        "load_schematic",
+        "create_schematic",
+        "schematic_to_python",
+        "use_grid_units",
+        "use_standard_y_axis",
+    ]
+)

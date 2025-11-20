@@ -37,6 +37,7 @@ class Point:
 
 def point_from_dict_or_tuple(
     position: Union[Point, Dict[str, float], Tuple[float, float], List[float], Any],
+    convert_y: bool = True,
 ) -> Point:
     """
     Convert various position formats to a Point object.
@@ -47,11 +48,15 @@ def point_from_dict_or_tuple(
     - Tuple/List with 2 elements: Creates Point from coordinates
     - Other: Returns as-is (assumes it's already a Point-like object)
 
+    When convert_y=True (default), applies Y-axis conversion based on
+    config.positioning.use_standard_y_axis setting.
+
     Args:
         position: Position in any supported format
+        convert_y: If True, apply Y-axis conversion from API to KiCAD format
 
     Returns:
-        Point object
+        Point object with KiCAD internal coordinates
 
     Example:
         >>> point_from_dict_or_tuple({"x": 10, "y": 20})
@@ -61,12 +66,22 @@ def point_from_dict_or_tuple(
         >>> point_from_dict_or_tuple(Point(10, 20))
         Point(x=10.0, y=20.0)
     """
+    from ..core.config import convert_y_to_kicad
+
     if isinstance(position, Point):
         return position
     elif isinstance(position, dict):
-        return Point(position.get("x", 0), position.get("y", 0))
+        x = position.get("x", 0)
+        y = position.get("y", 0)
+        if convert_y:
+            y = convert_y_to_kicad(y)
+        return Point(x, y)
     elif isinstance(position, (list, tuple)) and len(position) >= 2:
-        return Point(position[0], position[1])
+        x = position[0]
+        y = position[1]
+        if convert_y:
+            y = convert_y_to_kicad(y)
+        return Point(x, y)
     else:
         # Assume it's already a Point-like object or will be handled by caller
         return position
