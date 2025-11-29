@@ -242,10 +242,13 @@ class ConnectivityAnalyzer:
             wire_points: Points along the wire
         """
         # Check if any of these pins are already in a net
-        existing_nets = set()
+        # Use list instead of set since Net objects are mutable (not hashable)
+        existing_nets = []
         for pin in pins:
             if pin in self._pin_to_net:
-                existing_nets.add(self._pin_to_net[pin])
+                net = self._pin_to_net[pin]
+                if net not in existing_nets:
+                    existing_nets.append(net)
 
         if existing_nets:
             # Merge all existing nets into the first one
