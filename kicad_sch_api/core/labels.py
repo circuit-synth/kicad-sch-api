@@ -150,6 +150,8 @@ class LabelCollection(BaseCollection[LabelElement]):
         rotation: float = 0.0,
         size: float = 1.27,
         label_uuid: Optional[str] = None,
+        justify_h: str = "left",
+        justify_v: str = "bottom",
     ) -> LabelElement:
         """
         Add a new label element to the schematic.
@@ -160,6 +162,8 @@ class LabelCollection(BaseCollection[LabelElement]):
             rotation: Label rotation in degrees
             size: Label text size
             label_uuid: Specific UUID for label (auto-generated if None)
+            justify_h: Horizontal justification ("left", "right", "center")
+            justify_v: Vertical justification ("top", "bottom", "center")
 
         Returns:
             Newly created LabelElement
@@ -194,6 +198,8 @@ class LabelCollection(BaseCollection[LabelElement]):
             text=text.strip(),
             rotation=rotation,
             size=size,
+            justify_h=justify_h,
+            justify_v=justify_v,
         )
 
         # Create wrapper and add to collection

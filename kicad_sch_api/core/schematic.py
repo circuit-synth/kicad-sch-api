@@ -818,6 +818,8 @@ class Schematic:
         uuid: Optional[str] = None,
         grid_units: Optional[bool] = None,
         grid_size: Optional[float] = None,
+        justify_h: Optional[str] = None,
+        justify_v: Optional[str] = None,
     ) -> str:
         """
         Add a text label to the schematic.
@@ -832,6 +834,8 @@ class Schematic:
             uuid: Specific UUID for label (auto-generated if None)
             grid_units: If True, interpret position as grid units; if None, use config.positioning.use_grid_units
             grid_size: Grid size in mm; if None, use config.positioning.grid_size
+            justify_h: Horizontal justification ("left", "right", "center") - auto-calculated if pin provided
+            justify_v: Vertical justification ("top", "bottom", "center")
 
         Returns:
             UUID of created label
@@ -861,9 +865,11 @@ class Schematic:
         if position is not None and pin is not None:
             raise ValueError("Cannot provide both position and pin")
 
-        # Handle pin-based placement
-        justify_h = "left"
-        justify_v = "bottom"
+        # Handle pin-based placement - use provided justify or defaults
+        if justify_h is None:
+            justify_h = "left"
+        if justify_v is None:
+            justify_v = "bottom"
 
         if pin is not None:
             component_ref, pin_number = pin
