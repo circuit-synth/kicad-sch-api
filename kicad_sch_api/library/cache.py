@@ -20,6 +20,7 @@ import sexpdata
 
 from ..core.types import PinShape, PinType, Point, SchematicPin
 from ..utils.validation import ValidationError
+from .sym_lib_table import SymLibTableParser, SymLibTableVariableResolver
 
 logger = logging.getLogger(__name__)
 
@@ -354,6 +355,7 @@ class SymbolLibraryCache:
         """
         self._symbols: Dict[str, SymbolDefinition] = {}
         self._library_paths: Set[Path] = set()
+        self._project_dir: Optional[Path] = None  # For ${KIPRJMOD} resolution
 
         # Cache configuration
         self._cache_dir = cache_dir or Path.home() / ".cache" / "kicad-sch-api" / "symbols"
@@ -416,6 +418,77 @@ class SymbolLibraryCache:
         logger.info(f"Added library: {library_name} ({library_path})")
         return True
 
+    def set_project_context(self, project_dir: Union[str, Path]) -> int:
+        """
+        Set project directory for ${KIPRJMOD} resolution and discover project libraries.
+
+        This method should be called when loading a schematic to enable discovery
+        of project-local symbol libraries specified in the project's sym-lib-table.
+
+        Args:
+            project_dir: Path to the project directory (containing .kicad_pro file)
+
+        Returns:
+            Number of additional libraries discovered from project sym-lib-table
+        """
+        project_dir = Path(project_dir)
+        if not project_dir.exists():
+            logger.warning(f"Project directory not found: {project_dir}")
+            return 0
+
+        self._project_dir = project_dir
+        logger.info(f"Set project context: {project_dir}")
+
+        # Re-discover libraries from sym-lib-table with project context
+        return self._discover_from_sym_lib_tables()
+
+    def _discover_from_sym_lib_tables(self) -> int:
+        """
+        Discover libraries from global and project sym-lib-table files.
+
+        This method parses sym-lib-table files and resolves path variables
+        to discover additional symbol libraries.
+
+        Returns:
+            Number of libraries discovered and added
+        """
+        discovered_count = 0
+        resolver = SymLibTableVariableResolver(self._project_dir)
+
+        # 1. Parse global sym-lib-table
+        global_path = SymLibTableParser.get_global_sym_lib_table_path()
+        if global_path:
+            table = SymLibTableParser.parse(global_path)
+            if table:
+                for entry in table.entries:
+                    resolved_path = resolver.resolve(entry.uri)
+                    if resolved_path and resolved_path.exists():
+                        if self.add_library_path(resolved_path):
+                            discovered_count += 1
+                            logger.debug(f"Added library from global sym-lib-table: {entry.name}")
+                    else:
+                        logger.debug(f"Could not resolve library path: {entry.name} -> {entry.uri}")
+
+        # 2. Parse project sym-lib-table (if project context set)
+        if self._project_dir:
+            project_table_path = SymLibTableParser.get_project_sym_lib_table_path(self._project_dir)
+            if project_table_path:
+                table = SymLibTableParser.parse(project_table_path)
+                if table:
+                    for entry in table.entries:
+                        resolved_path = resolver.resolve(entry.uri)
+                        if resolved_path and resolved_path.exists():
+                            if self.add_library_path(resolved_path):
+                                discovered_count += 1
+                                logger.info(f"Added library from project sym-lib-table: {entry.name}")
+                        else:
+                            logger.debug(f"Could not resolve project library path: {entry.name} -> {entry.uri}")
+
+        if discovered_count > 0:
+            logger.info(f"Discovered {discovered_count} libraries from sym-lib-table files")
+
+        return discovered_count
+
     def discover_libraries(self, search_paths: List[Union[str, Path]] = None) -> int:
         """
         Automatically discover KiCAD symbol libraries.
@@ -465,23 +538,30 @@ class SymbolLibraryCache:
                 if self.add_library_path(lib_file):
                     discovered_count += 1
 
+        # Also discover libraries from sym-lib-table files
+        sym_lib_count = self._discover_from_sym_lib_tables()
+        discovered_count += sym_lib_count
+
         if discovered_count == 0:
             logger.warning(
                 "No KiCAD symbol libraries found.\n\n"
                 "Tried the following:\n"
                 "  - Environment variables: KICAD_SYMBOL_DIR, KICAD8_SYMBOL_DIR, KICAD7_SYMBOL_DIR\n"
-                "  - System paths: Default KiCAD installation locations\n\n"
+                "  - System paths: Default KiCAD installation locations\n"
+                "  - sym-lib-table files (global and project)\n\n"
                 "Solutions:\n"
                 "  1. Set environment variable:\n"
                 "     export KICAD_SYMBOL_DIR=/path/to/kicad/symbols\n\n"
                 "  2. Add library path programmatically:\n"
                 "     cache = get_symbol_cache()\n"
                 "     cache.add_library_path('/path/to/library.kicad_sym')\n\n"
-                "  3. Discover libraries manually:\n"
+                "  3. Set project context for project-local libraries:\n"
+                "     cache.set_project_context('/path/to/project')\n\n"
+                "  4. Discover libraries manually:\n"
                 "     cache.discover_libraries(['/custom/path'])\n"
             )
         else:
-            logger.info(f"Discovered {discovered_count} libraries")
+            logger.info(f"Discovered {discovered_count} libraries ({sym_lib_count} from sym-lib-table)")
 
         return discovered_count
 
