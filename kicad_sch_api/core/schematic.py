@@ -214,6 +214,13 @@ class Schematic:
         file_io_manager = FileIOManager()
         schematic_data = file_io_manager.load_schematic(file_path)
 
+        # Set project context for library discovery (enables project-local libraries)
+        project_dir = file_path.parent
+        cache = get_symbol_cache()
+        discovered = cache.set_project_context(project_dir)
+        if discovered > 0:
+            logger.info(f"Discovered {discovered} project-local libraries from sym-lib-table")
+
         load_time = time.time() - start_time
         logger.info(f"Loaded schematic in {load_time:.3f}s")
 
